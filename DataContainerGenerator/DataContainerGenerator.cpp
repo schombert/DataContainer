@@ -263,7 +263,7 @@ int main(int argc, char *argv[]) {
 		
 		const std::string output_file_name = [otemp = std::string(argv[1])]() mutable {
 			if(otemp.length() >= 4 && otemp[otemp.length() - 4] == '.') {
-				otemp[otemp.length() - 3] = 'c';
+				otemp[otemp.length() - 3] = 'h';
 				otemp[otemp.length() - 2] = 'p';
 				otemp[otemp.length() - 1] = 'p';
 				return otemp;
@@ -1850,7 +1850,10 @@ int main(int argc, char *argv[]) {
 								} else if(cr.indexed_as == index_type::at_most_one) {
 									output += "\t\t\t\t" + co.name + "_remove_" + cr.relation_name + "_as_" + cr.property_name + "(id_removed));\r\n";
 
-									// TODO renumber last_item id
+									// renumber last_item id
+									output += "\t\t\t\tif(auto bk = " + cr.relation_name + ".m_link_back_" + cr.property_name + ".vptr()[last_id.index()]; bool(bk)) {\r\n";
+									output += "\t\t\t\t\t" + cr.relation_name + ".m_" + cr.property_name + ".vptr()[bk.index()] = id_removed;\r\n";
+									output += "\t\t\t\t}\r\n";
 
 									output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".vptr()[id_removed.index()] = "
 										+ cr.relation_name + ".m_link_back_" + cr.property_name + ".vptr()[last_id.index()];\r\n";
@@ -1862,7 +1865,10 @@ int main(int argc, char *argv[]) {
 								} else if(cr.indexed_as == index_type::many) {
 									output += "\t\t\t\t" + co.name + "_remove_all_" + cr.relation_name + "_as_" + cr.property_name + "(id_removed);\r\n";
 
-									// TODO renumber last_item id
+									// renumber last_item id
+									output += "\t\t\t\t" + co.name + "_for_each_" + cr.relation_name + "_as_" + cr.property_name
+										+ "(last_id, [t = this](" + cr.relation_name + "_id i){ t->"
+										+ cr.relation_name + "." + cr.property_name + ".vptr()[i.index()] = id_removed; });\r\n";
 
 									if(co.is_expandable) {
 										if(cr.listed_as == list_type::list) {
