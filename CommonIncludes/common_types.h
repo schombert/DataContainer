@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <intrin.h>
 #include <atomic>
+#include <cstddef>
 
 #ifdef NDEBUG 
 #ifdef _MSC_VER 
@@ -38,6 +39,129 @@ namespace dcon {
 		const uint32_t sub_index = uint32_t(index) & 7ui32;
 		return (v[real_index].v & (1ui32 << sub_index)) != 0;
 	}
+
+	bool char_span_equals_str(char const* start, char const* end, char const* n) {
+		while(start != end) {
+			if(*start != *n)
+				return false;
+			++n;
+			++start;
+		}
+		return *n == 0;
+	}
+
+	struct record_header {
+		uint64_t record_size;
+
+		char const* type_name_start;
+		char const* type_name_end;
+
+		char const* object_name_start;
+		char const* object_name_end;
+
+		char const* property_name_start;
+		char const* property_name_end;
+
+		record_header() {}
+		record_header(uint64_t sz, char  const* type, char  const* object, char const* property) : 
+			record_size(uint32_t(sz)), type_name_start(type), object_name_start(object), property_name_start(property) {
+			type_name_end = type_name_start + strlen(type_name_start);
+			object_name_end = object_name_start + strlen(object_name_start);
+			property_name_end = property_name_start + strlen(property_name_start);
+		}
+
+		uint64_t serialize_size() {
+			return sizeof(uint64_t) + (type_name_end - type_name_start) + (object_name_end - object_name_start) + (property_name_end - property_name_start) + 3;
+		}
+		uint64_t serialize(std::byte*& output_buffer) {
+			uint64_t* sz = reinterpret_cast<uint64_t*>(output_buffer);
+			*sz = record_size;
+
+			char* output = reinterpret_cast<char*>(output_buffer + sizeof(uint64_t));
+			memcpy(output + sizeof(uint64_t), type_name_start, type_name_end - type_name_start);
+			output += (type_name_end - type_name_start);
+			*output = 0;
+			++output;
+			memcpy(output + sizeof(uint64_t), object_name_start, object_name_end - object_name_start);
+			output += (object_name_end - object_name_start);
+			*output = 0;
+			++output;
+			memcpy(output + sizeof(uint64_t), property_name_start, property_name_end - property_name_start);
+			output += (property_name_end - property_name_start);
+			*output = 0;
+			++output;
+
+			output_buffer += sizeof(uint64_t) + (type_name_end - type_name_start) + (object_name_end - object_name_start) + (property_name_end - property_name_start) + 3;
+		}
+		uint64_t deserialize(std::byte const*& input_buffer, std::byte const* end) {
+			record_size = 0;
+			type_name_start = nullptr;
+			type_name_end = nullptr;
+			object_name_start = nullptr;
+			object_name_end = nullptr;
+			property_name_start = nullptr;
+			property_name_end = nullptr;
+
+			if(end - input_buffer < sizeof(uint64_t)) {
+				return;
+			}
+			uint64_t const* sz = reinterpret_cast<uint64_t const*>(input_buffer);
+			record_size = *sz;
+			input_buffer += 4;
+			type_name_start = reinterpret_cast<char const*>(input_buffer);
+			while(input_buffer < end && *input_buffer != 0 ) {
+				++input_buffer;
+			}
+			type_name_end = reinterpret_cast<char const*>(input_buffer);
+			++input_buffer;
+
+			object_name_start = reinterpret_cast<char const*>(input_buffer);
+			while(input_buffer < end && *input_buffer != 0) {
+				++input_buffer;
+			}
+			object_name_end = reinterpret_cast<char const*>(input_buffer);
+			++input_buffer;
+
+			property_name_start = reinterpret_cast<char const*>(input_buffer);
+			while(input_buffer < end && *input_buffer != 0) {
+				++input_buffer;
+			}
+			property_name_end = reinterpret_cast<char const*>(input_buffer);
+			++input_buffer;
+		}
+
+		bool is_type(char const* n) {
+			char const* i = type_name_start;
+			while(i != type_name_end) {
+				if(*i != *n)
+					return false;
+				++n;
+				++i;
+			}
+			return *n == 0;
+		}
+		bool is_object(char const* n) {
+			char const* i = object_name_start;
+			while(i != object_name_end) {
+				if(*i != *n)
+					return false;
+				++n;
+				++i;
+			}
+			return *n == 0;
+		}
+		bool is_property(char const* n) {
+			char const* i = property_name_start;
+			while(i != property_name_end) {
+				if(*i != *n)
+					return false;
+				++n;
+				++i;
+			}
+			return *n == 0;
+		}
+	};
+
 
 	using stable_mk_2_tag = uint32_t;
 
@@ -316,6 +440,30 @@ namespace dcon {
 		}
 	}
 
+	template<typename object_type, uint32_t minimum_size, size_t memory_size>
+	void load_range(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag& i, object_type const* first, object_type const* last) {
+		storage.increase_capacity(i, static_cast<uint32_t>(last - first));
+		if(i != std::numeric_limits<stable_mk_2_tag>::max()) {
+			detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
+			header->size = static_cast<uint16_t>(last - first);
+			memcpy(detail::to_data<object_type>(header), first, (last - first) * sizeof(object_type));
+		}
+	}
+
+	template<typename object_type, uint32_t minimum_size, size_t memory_size>
+	void resize(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag& i, uint32_t new_size) {
+		auto old_size = get_size(storage, i.value);
+		if(new_size < old_size) {
+			detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
+			header->size = uint16_t(new_size);
+		} else if(new_size > old_size) {
+			storage.increase_capacity(i.value, new_size);
+			detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
+			std::fill(detail::to_data<object_type>(header) + header->size, detail::to_data<object_type>(header) + new_size, object_type());
+			header->size = uint16_t(new_size);
+		}
+
+	}
 }
 
 #undef COM_RELEASE_INLINE

@@ -17,7 +17,7 @@ std::string extract_string(char const* & input, char const* end) {
 	bool in_quote = false;
 	int in_lt = 0;
 
-	while(input < end && (in_quote || in_lt > 0 || (*input != ' ' && *input != '\t' && *input != ',' && *input != '\r' && *input != '\n'))) {
+	while(input < end && (in_quote || in_lt > 0 || (*input != ' ' && *input != '\t' && *input != '\r' && *input != '\n'))) {
 		if(!in_quote && *input == '<')
 			++in_lt;
 		else if(!in_quote && *input == '>')
@@ -111,10 +111,14 @@ struct conversion_def {
 struct file_def {
 	std::string namspace = "dcon";
 	std::vector<std::string> includes;
+	std::vector<std::string> globals;
+	std::vector<std::string> legacy_types;
 
 	std::vector<relationship_object_def> relationship_objects;
 	std::vector<load_save_def> load_save_routines;
 	std::vector<conversion_def> conversion_list;
+
+	std::vector<std::string> object_types;
 };
 
 relationship_object_def* find_by_name(file_def& def, std::string const& name) {
@@ -131,7 +135,7 @@ std::string make_relationship_parameters(relationship_object_def const& o) {
 	for(auto& i : o.indexed_objects) {
 		if(result.length() != 0) 
 			result += ", ";
-		result += i.type_name + "_id " + i.property_name + " _p";
+		result += i.type_name + "_id " + i.property_name + "_p";
 	}
 	return result;
 }
@@ -187,6 +191,32 @@ bool is_vectorizable_type(file_def& def, std::string const& name) {
 			return name.length() >= 4 && name[name.length() - 1] == 'd' && name[name.length() - 2] == 'i' &&
 				name[name.length() - 3] == '_' && find_by_name(def, name.substr(0, name.length() - 3)) != nullptr;
 		}();
+}
+
+std::vector<std::string> common_types{ std::string("int8_t"), std::string("uint8_t"), std::string("int16_t"), std::string("uint16_t")
+	, std::string("int32_t"), std::string("uint32_t"), std::string("int64_t"), std::string("uint64_t"), std::string("float"), std::string("double") };
+
+std::string normalize_type(std::string in) {
+	if(in == "char" || in == "unsigned char")
+		return "uint8_t";
+	if(in == "signed char")
+		return "int8_t";
+	if(in == "short")
+		return "int16_t";
+	if(in == "unsigned short")
+		return "uint16_t";
+	if(in == "int" || in == "long")
+		return "int32_t";
+	if(in == "unsigned int" || in == "unsigned long")
+		return "uint32_t";
+	if(in == "size_t" || in == "unsigned long long")
+		return "uint64_t";
+	if(in == "long long")
+		return "int64_t";
+}
+
+bool is_common_type(std::string in) {
+	return std::find(common_types.begin(), common_types.end(), normalize_type(in)) != common_types.end();
 }
 
 std::string size_to_tag_type(size_t sz) {
@@ -260,7 +290,7 @@ int main(int argc, char *argv[]) {
 	if(argc > 1) {
 		std::fstream input_file;
 		input_file.open(argv[1], std::ios::in);
-		
+
 		const std::string output_file_name = [otemp = std::string(argv[1])]() mutable {
 			if(otemp.length() >= 4 && otemp[otemp.length() - 4] == '.') {
 				otemp[otemp.length() - 3] = 'h';
@@ -309,7 +339,7 @@ int main(int argc, char *argv[]) {
 			} else if(first_term == "object:") {
 				pstate = parsing_state::in_object_relation;
 				if(second_term.size() == 0) {
-					error_to_file(output_file_name, std::string("All objects must be named (line: ") + std::to_string(line_count) + ")" );
+					error_to_file(output_file_name, std::string("All objects must be named (line: ") + std::to_string(line_count) + ")");
 				}
 				parsed_file.relationship_objects.emplace_back();
 				last_obj = &(parsed_file.relationship_objects.back());
@@ -341,6 +371,38 @@ int main(int argc, char *argv[]) {
 			} else if(first_term == "convert:") {
 				pstate = parsing_state::outer;
 				parsed_file.conversion_list.push_back(conversion_def{ second_term , extract_string(str_ptr, str_end) });
+
+			} else if(first_term == "global:") {
+				pstate = parsing_state::outer;
+
+				std::string gstr;
+				if(second_term.size() > 0)
+					gstr += second_term;
+
+				while(str_ptr < str_end) {
+					auto const extra_term = extract_string(str_ptr, str_end);
+					if(extra_term.size() > 0) {
+						if(gstr.length() > 0) gstr += " ";
+						gstr += extra_term;
+					}
+				}
+
+				parsed_file.globals.push_back(gstr);
+
+			} else if(first_term == "legacy_type:") {
+				pstate = parsing_state::outer;
+
+				if(second_term.size() > 0)
+					parsed_file.legacy_types.push_back(second_term);
+
+				while(str_ptr < str_end) {
+					auto const extra_term = extract_string(str_ptr, str_end);
+					if(extra_term.size() > 0) {
+						parsed_file.legacy_types.push_back(extra_term);
+					}
+				}
+
+
 
 			} else if(first_term.size() > 0) {
 				switch(pstate) {
@@ -536,7 +598,7 @@ int main(int argc, char *argv[]) {
 
 				for(auto& link : r.indexed_objects) {
 					if(link.index != index_type::none)
-						link.related_to->relationships_involved_in.push_back(in_relation_information{r.name, link.property_name,
+						link.related_to->relationships_involved_in.push_back(in_relation_information{ r.name, link.property_name,
 							r.primary_key == link.related_to, link.index, link.ltype, &r });
 				}
 
@@ -555,14 +617,23 @@ int main(int argc, char *argv[]) {
 
 		// compile list of objects that need serailization stubs
 		std::vector<std::string> needs_serialize;
+		std::vector<std::string> needs_load_only;
 
 		for(auto& r : parsed_file.relationship_objects) {
 			for(auto& p : r.properties) {
 				if(p.is_object) {
 					if(std::find(needs_serialize.begin(), needs_serialize.end(), p.data_type) == needs_serialize.end()) {
 						needs_serialize.push_back(p.data_type);
+						parsed_file.object_types.push_back(p.data_type);
 					}
 				}
+			}
+		}
+		for(auto &lt : parsed_file.legacy_types) {
+			if(std::find(needs_serialize.begin(), needs_serialize.end(), lt) == needs_serialize.end()
+				&& std::find(needs_load_only.begin(), needs_load_only.end(), lt) == needs_load_only.end()) {
+				needs_load_only.push_back(lt);
+				parsed_file.object_types.push_back(lt);
 			}
 		}
 
@@ -572,6 +643,7 @@ int main(int argc, char *argv[]) {
 		//includes
 		output += "#pragma once\r\n";
 		output += "#include <cstdint>\r\n";
+		output += "#include <cstddef>\r\n";
 		output += "#include <utility>\r\n";
 		output += "#include <vector>\r\n";
 		output += "#include <algorithem>\r\n";
@@ -598,6 +670,23 @@ int main(int argc, char *argv[]) {
 		output += "\r\n";
 		output += "namespace " + parsed_file.namspace + " {\r\n";
 
+		//load record type
+		output += "\tstruct load_record{\r\n";
+		for(auto& o : parsed_file.relationship_objects) {
+			output += "\t\tbool " + o.name + " = false;\r\n";
+			if(o.store_type == storage_type::erasable) {
+				output += "\t\t\tbool " + o.name + "__index = false;\r\n";
+			}
+			for(auto& io : o.indexed_objects) {
+				output += "\t\tbool " + o.name + "_" + io.property_name + " = false;\r\n";
+			}
+			for(auto& prop : o.properties) {
+				output += "\t\tbool " + o.name + "_" + prop.name + " = false;\r\n";
+			}
+		}
+		output += "\t}\r\n\r\n";
+
+		
 
 		//id types definitions
 		for(auto& o : parsed_file.relationship_objects) {
@@ -969,7 +1058,7 @@ int main(int argc, char *argv[]) {
 						output += "\t\t\treturn r;\r\n";
 						output += "\t\t}\r\n";
 					} else if(is_vectorizable_type(parsed_file, p.data_type)) {
-						output += "\t\t" + p.data_type + " get_ " + o.name + " _" + p.name + "(" + id_name + " id) const;\r\n";
+						output += "\t\t" + p.data_type + " get_ " + o.name + "_" + p.name + "(" + id_name + " id) const;\r\n";
 
 						output += "\t\tve::value_to_vector_type<" + p.data_type + "> get_ " + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id) const {\r\n";
 						output += "\t\t\tve::value_to_vector_type<" + p.data_type + "> r;\r\n";
@@ -992,7 +1081,7 @@ int main(int argc, char *argv[]) {
 						output += "\t\t\treturn r;\r\n";
 						output += "\t\t}\r\n";
 					} else {
-						output += "\t\t" + p.data_type + " get_ " + o.name + " _" + p.name + "(" + id_name + " id) const;\r\n";
+						output += "\t\t" + p.data_type + " get_ " + o.name + "_" + p.name + "(" + id_name + " id) const;\r\n";
 					}
 				}
 				if(p.hook_set) {
@@ -1715,29 +1804,7 @@ int main(int argc, char *argv[]) {
 					output += "\t\t\tconst uint32_t old_size = " + co.name + ".size_used;\r\n";
 					output += "\t\t\tif(new_size < old_size) {\r\n"; // contracting
 
-					for(auto& cr : co.relationships_involved_in) {
-						if(cr.as_primary_key) {
-
-						} else if(cr.indexed_as == index_type::at_most_one) {
-							if(!co.is_expandable)
-								output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_link_back_" + cr.property_name
-								+ ".vptr() + new_size, old_size - new_size, " + cr.relation_name + "_id());\r\n";
-						} else if(cr.indexed_as == index_type::many) {
-							if(cr.listed_as == list_type::list) {
-								if(!co.is_expandable)
-									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_head_back_" + cr.property_name
-									+ ".vptr() + new_size, old_size - new_size, " + cr.relation_name + "_id());\r\n";
-							} else if(cr.listed_as == list_type::array) {
-								output += "\t\t\t\tstd::for_each(" + cr.relation_name + ".m_" + cr.property_name + ".vptr() + new_size, "
-									+ cr.relation_name + ".m_" + cr.property_name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->"
-									+ cr.relation_name + "." + cr.property_name + "_storage.release(i); });\r\n";
-							} else if(cr.listed_as == list_type::std_vector) {
-								if(!co.is_expandable)
-									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_" + cr.property_name + ".vptr() + new_size, old_size - new_size, std::vector<" + cr.relation_name + " _id>());\r\n";
-							}
-
-						}
-					}
+					
 					for(auto& cp : co.properties) {
 						if(cp.is_derived) {
 						} else if(cp.is_special_vector) {
@@ -1762,6 +1829,27 @@ int main(int argc, char *argv[]) {
 
 					//both
 					if(co.is_expandable) {
+						for(auto& cr : co.relationships_involved_in) {
+							if(cr.as_primary_key) {
+
+							} else if(cr.indexed_as == index_type::at_most_one) {
+								output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_link_back_" + cr.property_name
+									+ ".vptr(), new_size, " + cr.relation_name + "_id());\r\n";
+							} else if(cr.indexed_as == index_type::many) {
+								if(cr.listed_as == list_type::list) {
+									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_head_back_" + cr.property_name
+										+ ".vptr(), new_size, " + cr.relation_name + "_id());\r\n";
+								} else if(cr.listed_as == list_type::array) {
+									output += "\t\t\t\tstd::for_each(" + cr.relation_name + ".m_" + cr.property_name + ".vptr(), "
+										+ cr.relation_name + ".m_" + cr.property_name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->"
+										+ cr.relation_name + "." + cr.property_name + "_storage.release(i); });\r\n";
+								} else if(cr.listed_as == list_type::std_vector) {
+									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_" + cr.property_name + ".vptr(), new_size, std::vector<" + cr.relation_name + "_id>());\r\n";
+								}
+
+							}
+						}
+
 						for(auto& cr : co.relationships_involved_in) {
 							if(cr.as_primary_key) {
 								output += "\t\t\t\t" + cr.relation_name + ".resize(new_size);\r\n";
@@ -1789,6 +1877,26 @@ int main(int argc, char *argv[]) {
 							}
 						}
 					} else {
+						for(auto& cr : co.relationships_involved_in) {
+							if(cr.as_primary_key) {
+
+							} else if(cr.indexed_as == index_type::at_most_one) {
+								output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_link_back_" + cr.property_name
+									+ ".vptr(), old_size, " + cr.relation_name + "_id());\r\n";
+							} else if(cr.indexed_as == index_type::many) {
+								if(cr.listed_as == list_type::list) {
+									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_head_back_" + cr.property_name
+										+ ".vptr(), old_size, " + cr.relation_name + "_id());\r\n";
+								} else if(cr.listed_as == list_type::array) {
+									output += "\t\t\t\tstd::for_each(" + cr.relation_name + ".m_" + cr.property_name + ".vptr(), "
+										+ cr.relation_name + ".m_" + cr.property_name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->"
+										+ cr.relation_name + "." + cr.property_name + "_storage.release(i); });\r\n";
+								} else if(cr.listed_as == list_type::std_vector) {
+									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_" + cr.property_name + ".vptr(), old_size, std::vector<" + cr.relation_name + "_id>());\r\n";
+								}
+							}
+						}
+
 						for(auto& cr : co.relationships_involved_in) {
 							if(cr.as_primary_key) {
 								output += "\t\t\t\t" + cr.relation_name + ".resize(new_size);\r\n";
@@ -2156,7 +2264,7 @@ int main(int argc, char *argv[]) {
 					output += "\t\t\treturn new_id;\r\n";
 					output += "\t\t}\r\n"; // end create
 
-					// resize
+					//resize
 					output += "\t\tvoid " + co.name + "_resize(uint32_t new_size) {\r\n";
 
 					if(!co.is_expandable)
@@ -2186,29 +2294,7 @@ int main(int argc, char *argv[]) {
 					output += "\t\t\t\t}\r\n\r\n";
 
 
-					for(auto& cr : co.relationships_involved_in) {
-						if(cr.as_primary_key) {
-
-						} else if(cr.indexed_as == index_type::at_most_one) {
-							if(!co.is_expandable)
-								output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_link_back_" + cr.property_name
-								+ ".vptr() + new_size, old_size - new_size, " + cr.relation_name + "_id());\r\n";
-						} else if(cr.indexed_as == index_type::many) {
-							if(cr.listed_as == list_type::list) {
-								if(!co.is_expandable)
-									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_head_back_" + cr.property_name
-									+ ".vptr() + new_size, old_size - new_size, " + cr.relation_name + "_id());\r\n";
-							} else if(cr.listed_as == list_type::array) {
-								output += "\t\t\t\tstd::for_each(" + cr.relation_name + ".m_" + cr.property_name + ".vptr() + new_size, "
-									+ cr.relation_name + ".m_" + cr.property_name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->"
-									+ cr.relation_name + "." + cr.property_name + "_storage.release(i); });\r\n";
-							} else if(cr.listed_as == list_type::std_vector) {
-								if(!co.is_expandable)
-									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_" + cr.property_name + ".vptr() + new_size, old_size - new_size, std::vector<" + cr.relation_name + " _id>());\r\n";
-							}
-
-						}
-					}
+					
 					for(auto& cp : co.properties) {
 						if(cp.is_derived) {
 						} else if(cp.is_special_vector) {
@@ -2257,6 +2343,27 @@ int main(int argc, char *argv[]) {
 					if(co.is_expandable) {
 						for(auto& cr : co.relationships_involved_in) {
 							if(cr.as_primary_key) {
+
+							} else if(cr.indexed_as == index_type::at_most_one) {
+								output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_link_back_" + cr.property_name
+									+ ".vptr(), new_size, " + cr.relation_name + "_id());\r\n";
+							} else if(cr.indexed_as == index_type::many) {
+								if(cr.listed_as == list_type::list) {
+									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_head_back_" + cr.property_name
+										+ ".vptr(), new_size, " + cr.relation_name + "_id());\r\n";
+								} else if(cr.listed_as == list_type::array) {
+									output += "\t\t\t\tstd::for_each(" + cr.relation_name + ".m_" + cr.property_name + ".vptr(), "
+										+ cr.relation_name + ".m_" + cr.property_name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->"
+										+ cr.relation_name + "." + cr.property_name + "_storage.release(i); });\r\n";
+								} else if(cr.listed_as == list_type::std_vector) {
+									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_" + cr.property_name + ".vptr(), new_size, std::vector<" + cr.relation_name + "_id>());\r\n";
+								}
+
+							}
+						}
+
+						for(auto& cr : co.relationships_involved_in) {
+							if(cr.as_primary_key) {
 								output += "\t\t\t\t" + cr.relation_name + ".resize(new_size);\r\n";
 							} else if(cr.indexed_as == index_type::at_most_one) {
 								output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".values.resize(1 + new_size);\r\n";
@@ -2284,6 +2391,27 @@ int main(int argc, char *argv[]) {
 					} else {
 						for(auto& cr : co.relationships_involved_in) {
 							if(cr.as_primary_key) {
+
+							} else if(cr.indexed_as == index_type::at_most_one) {
+								output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_link_back_" + cr.property_name
+									+ ".vptr(), old_size, " + cr.relation_name + "_id());\r\n";
+							} else if(cr.indexed_as == index_type::many) {
+								if(cr.listed_as == list_type::list) {
+									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_head_back_" + cr.property_name
+										+ ".vptr(), old_size, " + cr.relation_name + "_id());\r\n";
+								} else if(cr.listed_as == list_type::array) {
+									output += "\t\t\t\tstd::for_each(" + cr.relation_name + ".m_" + cr.property_name + ".vptr(), "
+										+ cr.relation_name + ".m_" + cr.property_name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->"
+										+ cr.relation_name + "." + cr.property_name + "_storage.release(i); });\r\n";
+								} else if(cr.listed_as == list_type::std_vector) {
+									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_" + cr.property_name + ".vptr(), old_size, std::vector<" + cr.relation_name + "_id>());\r\n";
+								}
+
+							}
+						}
+
+						for(auto& cr : co.relationships_involved_in) {
+							if(cr.as_primary_key) {
 								output += "\t\t\t\t" + cr.relation_name + ".resize(new_size);\r\n";
 							}
 						}
@@ -2297,20 +2425,14 @@ int main(int argc, char *argv[]) {
 					output += "\t\t}\r\n";
 				}
 			} else if(co.primary_key) { // primary key relationship
+				//resize
 				output += "\t\tvoid " + co.name + "_resize(uint32_t sz) {\r\n";
 				if(!co.is_expandable)
 					output += "\t\t\tif(new_size > " + std::to_string(co.size) + ") std::abort();\r\n";
 				output += "\t\t\tconst uint32_t old_size = " + co.name + ".size_used;\r\n";
 				output += "\t\t\tif(new_size < old_size) {\r\n"; // contracting
 
-				if(!co.is_expandable) {
-					for(auto& io : co.indexed_objects) {
-						output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + io.property_name + ".vptr() + new_size, old_size - new_size, " + io.type_name + "_id());\r\n";
-						if(io.ltype == list_type::list)
-							output += "\t\t\t\tstd::fill_n(" + co.name + ".m_link_" + io.property_name + ".vptr() + new_size, old_size - new_size, " + io.type_name + "_id_pair());\r\n";
-
-					}
-				}
+				
 
 				for(auto& cp : co.properties) {
 					if(cp.is_derived) {
@@ -2337,6 +2459,13 @@ int main(int argc, char *argv[]) {
 				//both
 				if(co.is_expandable) {
 					for(auto& io : co.indexed_objects) {
+						output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + io.property_name + ".vptr(), new_size, " + io.type_name + "_id());\r\n";
+						if(io.ltype == list_type::list)
+							output += "\t\t\t\tstd::fill_n(" + co.name + ".m_link_" + io.property_name + ".vptr(), new_size, " + io.type_name + "_id_pair());\r\n";
+
+					}
+
+					for(auto& io : co.indexed_objects) {
 						output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".values.resize(1 + new_size);\r\n";
 						if(io.ltype == list_type::list)
 							output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.resize(1 + new_size);\r\n";
@@ -2351,6 +2480,13 @@ int main(int argc, char *argv[]) {
 						} else {
 							output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size);\r\n";
 						}
+					}
+				} else {
+					for(auto& io : co.indexed_objects) {
+						output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + io.property_name + ".vptr(), old_size, " + io.type_name + "_id());\r\n";
+						if(io.ltype == list_type::list)
+							output += "\t\t\t\tstd::fill_n(" + co.name + ".m_link_" + io.property_name + ".vptr(), old_size, " + io.type_name + "_id_pair());\r\n";
+
 					}
 				}
 				output += "\t\t\t" + co.name + ".size_used = new_size;\r\n";
@@ -2431,6 +2567,9 @@ int main(int argc, char *argv[]) {
 						output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[old_id.index()] = " + cp.data_type + "{};\r\n";
 					}
 				}
+				if(co.hook_move)
+					output += "\t\t\t\ton_move_" + co.name + "(new_id, old_id);\r\n";
+
 				output += "\t\t}\r\n"; // end internal_move_relationship
 
 				output += "\t\tpublic:\r\n";
@@ -2439,8 +2578,8 @@ int main(int argc, char *argv[]) {
 				for(auto& io : co.indexed_objects) {
 					if(io.related_to != co.primary_key) {
 						if(io.index == index_type::at_most_one) {
-							output += "\t\t\tif(bool(" + io.property_name + " _p) && bool("
-								+ co.name + ".m_link_" + io.property_name + ".vptr()[" + io.property_name + " _p.index()])) return " + id_name + "();\r\n";
+							output += "\t\t\tif(bool(" + io.property_name + "_p) && bool("
+								+ co.name + ".m_link_" + io.property_name + ".vptr()[" + io.property_name + "_p.index()])) return " + id_name + "();\r\n";
 						}
 					} else {
 						output += "\t\t\tif(is_valid_" + co.name + "(" + io.property_name + "_p)) return " + id_name + "();\r\n";
@@ -2457,7 +2596,7 @@ int main(int argc, char *argv[]) {
 
 				for(auto& io : co.indexed_objects) {
 					if(io.related_to != co.primary_key) {
-						output += "\t\t\t\tset_ " + co.name + "_" + io.property_name + "(new_id, " + io.property_name + " _p);\r\n";
+						output += "\t\t\t\tset_ " + co.name + "_" + io.property_name + "(new_id, " + io.property_name + "_p);\r\n";
 					}
 				}
 
@@ -2477,7 +2616,7 @@ int main(int argc, char *argv[]) {
 
 				for(auto& io : co.indexed_objects) {
 					if(io.related_to != co.primary_key) {
-						output += "\t\t\t\tset_ " + co.name + "_" + io.property_name + "(new_id, " + io.property_name + " _p);\r\n";
+						output += "\t\t\t\tset_ " + co.name + "_" + io.property_name + "(new_id, " + io.property_name + "_p);\r\n";
 					}
 				}
 
@@ -2535,14 +2674,6 @@ int main(int argc, char *argv[]) {
 					output += "\t\t\tconst uint32_t old_size = " + co.name + ".size_used;\r\n";
 					output += "\t\t\tif(new_size < old_size) {\r\n"; // contracting
 
-					if(!co.is_expandable) {
-						for(auto& io : co.indexed_objects) {
-							output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + io.property_name + ".vptr() + new_size, old_size - new_size, " + io.type_name + "_id());\r\n";
-							if(io.ltype == list_type::list)
-								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_link_" + io.property_name + ".vptr() + new_size, old_size - new_size, " + io.type_name + "_id_pair());\r\n";
-
-						}
-					}
 					for(auto& cp : co.properties) {
 						if(cp.is_derived) {
 						} else if(cp.is_special_vector) {
@@ -2568,6 +2699,13 @@ int main(int argc, char *argv[]) {
 					//both
 					if(co.is_expandable) {
 						for(auto& io : co.indexed_objects) {
+							output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + io.property_name + ".vptr(), new_size, " + io.type_name + "_id());\r\n";
+							if(io.ltype == list_type::list)
+								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_link_" + io.property_name + ".vptr(), new_size, " + io.type_name + "_id_pair());\r\n";
+
+						}
+
+						for(auto& io : co.indexed_objects) {
 							output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".values.resize(1 + new_size);\r\n";
 							if(io.ltype == list_type::list)
 								output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.resize(1 + new_size);\r\n";
@@ -2584,7 +2722,14 @@ int main(int argc, char *argv[]) {
 								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size);\r\n";
 							}
 						}
-					} 
+					} else {
+						for(auto& io : co.indexed_objects) {
+							output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + io.property_name + ".vptr(), old_size, " + io.type_name + "_id());\r\n";
+							if(io.ltype == list_type::list)
+								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_link_" + io.property_name + ".vptr(), old_size, " + io.type_name + "_id_pair());\r\n";
+
+						}
+					}
 					output += "\t\t\t" + co.name + ".size_used = new_size;\r\n";
 					output += "\t\t}\r\n"; // end resize
 
@@ -2677,7 +2822,7 @@ int main(int argc, char *argv[]) {
 						for(auto& i : co.indexed_objects) {
 							if(result.length() != 0)
 								result += ", ";
-							result += i.property_name + " _p";
+							result += i.property_name + "_p";
 						}
 						return result;
 					}())
@@ -2711,7 +2856,7 @@ int main(int argc, char *argv[]) {
 					}
 
 					for(auto& io : co.indexed_objects) {
-						output += "\t\t\t\tset_ " + co.name + "_" + io.property_name + "(new_id, " + io.property_name + " _p);\r\n";
+						output += "\t\t\t\tset_ " + co.name + "_" + io.property_name + "(new_id, " + io.property_name + "_p);\r\n";
 					}
 
 					output += "\t\t\t++" + co.name + ".size_used;\r\n";
@@ -2766,7 +2911,7 @@ int main(int argc, char *argv[]) {
 						for(auto& i : co.indexed_objects) {
 							if(result.length() != 0)
 								result += ", ";
-							result += i.property_name + " _p";
+							result += i.property_name + "_p";
 						}
 						return result;
 					}()) + ");\r\n";
@@ -2934,6 +3079,956 @@ int main(int argc, char *argv[]) {
 				}
 			} // end case relationship no primary key
 		} // end creation / deletion reoutines creation loop
+
+		//write save and load object stubs
+		output += "\r\n";
+		for(auto& ostr : needs_serialize) {
+			output += "\t\tuint64_t serialize_size(" + ostr + " const& obj) const;\r\n";
+			output += "\t\tvoid serialize(std::byte*& output_buffer, " + ostr + " const& obj) const;\r\n";
+			output += "\t\tvoid deserialize(std::byte const*& input_buffer, " + ostr + " & obj, std::byte const* end) const;\r\n";
+		}
+		for(auto& ostr : needs_load_only) {
+			output += "\t\tvoid deserialize(std::byte const*& input_buffer, " + ostr + "& obj, std::byte const* end) const;\r\n";
+		}
+
+		// type conversion stubs
+		for(auto& con : parsed_file.conversion_list) {
+			if(std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.to) != parsed_file.object_types.end() ||
+				std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.from) != parsed_file.object_types.end()) {
+				output += "\t\t" + con.to + " convert_type(" + con.from + " const* source, " + con.to + "* overload_selector) const;\r\n";
+			}
+		}
+
+		output += "\r\n";
+		
+		for(auto& rt : parsed_file.load_save_routines) {
+			output += "\t\tload_record make_serialize_record_" + rt.name + "() const noexcept {\r\n";
+			output += "\t\t\tload_record result;\r\n";
+
+			for(auto& o : parsed_file.relationship_objects) {
+				bool passed_filter = false;
+				if(rt.pos_obj_tags.size() == 0) {
+					passed_filter = true;
+				} else {
+					for(auto& tg : rt.pos_obj_tags) {
+						if(std::find(o.obj_tags.begin(), o.obj_tags.end(), tg) != o.obj_tags.end())
+							passed_filter = true;
+					}
+				}
+				for(auto& tg : rt.neg_obj_tags) {
+					if(std::find(o.obj_tags.begin(), o.obj_tags.end(), tg) != o.obj_tags.end())
+						passed_filter = false;
+				}
+				if(passed_filter) {
+					output += "\t\t\tresult." + o.name + " = true;\r\n";
+					for(auto& io : o.indexed_objects) {
+						output += "\t\t\tresult." + o.name + "_" + io.property_name + " = true;\r\n";
+
+					}
+					if(o.store_type == storage_type::erasable) {
+						output += "\t\t\tresult." + o.name + "__index = true;\r\n";
+					}
+					for(auto& prop : o.properties) {
+						bool passed_sub_filter = false;
+						if(rt.pos_property_tags.size() == 0) {
+							passed_sub_filter = true;
+						} else {
+							for(auto& tg : rt.pos_property_tags) {
+								if(std::find(prop.property_tags.begin(), prop.property_tags.end(), tg) != prop.property_tags.end())
+									passed_sub_filter = true;
+							}
+						}
+						for(auto& tg : rt.neg_property_tags) {
+							if(std::find(prop.property_tags.begin(), prop.property_tags.end(), tg) != prop.property_tags.end())
+								passed_sub_filter = false;
+						}
+
+						if(passed_sub_filter) {
+							output += "\t\t\tresult." + o.name + "_" + prop.name + " = true;\r\n";
+						}
+					}
+				}
+			}
+			output += "\t\t\treturn result;\r\n";
+			output += "\t\t}\r\n";
+		}
+
+
+		output += "\r\n";
+
+		//serialize_size
+		output += "\t\tuint64_t serialize_size(load_record const& serialize_selection) const {\r\n";
+		output += "\t\t\tuint64_t total_size = 0;\r\n";
+		for(auto& o : parsed_file.relationship_objects) {
+			output += "\t\t\tif(serialize_selection." + o.name + ") {\r\n";
+			output += "\t\t\t\tdcon::record_header header(sizeof(uint32_t), \"uint32_t\", \"" + o.name + "\", \"@size\");\r\n";
+			output += "\t\t\t\ttotal_size += header.serialize_size();\r\n";
+			output += "\t\t\t\ttotal_size += sizeof(uint32_t);\r\n";
+			output += "\t\t\t}\r\n";
+
+			if(o.store_type == storage_type::erasable) {
+				output += "\t\t\tif(serialize_selection." + o.name + "__index) {\r\n";
+				output += "\t\t\t\tdcon::record_header header(sizeof(" + o.name + "_id) * " + o.name + ".size_used, \"" + size_to_tag_type(o.size) + "\", \"" + o.name + "\", \"_index\");\r\n";
+				output += "\t\t\t\ttotal_size += header.serialize_size();\r\n";
+				output += "\t\t\t\ttotal_size += sizeof(" + o.name + "_id) * " + o.name + ".size_used;\r\n";
+				output += "\t\t\t}\r\n";
+			}
+
+			for(auto& io : o.indexed_objects) {
+				if(io.related_to != o.primary_key) {
+					output += "\t\t\tif(serialize_selection." + o.name + "_" + io.property_name + ") {\r\n";
+					output += "\t\t\t\tdcon::record_header header(sizeof(" + io.type_name + "_id) * " + o.name + ".size_used, \""
+						+ size_to_tag_type(io.related_to->size) + "\", \"" + o.name + "\", \"" + io.property_name + "\");\r\n";
+					output += "\t\t\t\ttotal_size += header.serialize_size();\r\n";
+					output += "\t\t\t\ttotal_size += sizeof(" + io.type_name + "_id) * " + o.name + ".size_used;\r\n";
+					output += "\t\t\t}\r\n";
+				}
+			}
+
+			for(auto& prop : o.properties) {
+				if(prop.is_derived) {
+
+				} else if(prop.is_bitfield) {
+					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\r\n";
+					output += "\t\t\t\tdcon::record_header header((" + o.name + ".size_used + 7) / 8, \""
+						+ "bitfield" + "\", \"" + o.name + "\", \"" + prop.name + "\");\r\n";
+					output += "\t\t\t\ttotal_size += header.serialize_size();\r\n";
+					output += "\t\t\t\ttotal_size += (" + o.name + ".size_used + 7) / 8;\r\n";
+					output += "\t\t\t}\r\n";
+				} else if(prop.is_special_vector) {
+					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\r\n";
+					output += "\t\t\t\tstd::for_each(" + o.name + ".m_" + prop.name + ".vptr(), "
+						+ o.name + ".m_" + prop.name + ".vptr() " + o.name + ".size_used, [t = this, &total_size](stable_mk_2_tag obj){\r\n";
+					output += "\t\t\t\t\tauto rng = dcon::get_range(t->" + o.name + "." + prop.name + "_storage, obj);\r\n";
+					output += "\t\t\t\t\ttotal_size += sizeof(uint16_t); total_size += sizeof(" + prop.data_type + ") * (rng.second - rng.first); });\r\n";
+					output += "\t\t\t\ttotal_size += " + std::to_string(prop.data_type.length() + 1) + ";\r\n";
+					output += "\t\t\t\tdcon::record_header header(total_size, \"stable_mk_2_tag\", \"" + o.name + "\", \"" + prop.name + "\");\r\n";
+					output += "\t\t\t\ttotal_size += header.serialize_size();\r\n";
+
+					output += "\t\t\t}\r\n";
+				} else if(prop.is_object) {
+					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\r\n";
+					output += "\t\t\t\tstd::for_each(" + o.name + ".m_" + prop.name + ".vptr(), "
+						+ o.name + ".m_" + prop.name + ".vptr() " + o.name + ".size_used, [t = this, &total_size]("
+						+ prop.data_type + " const& obj){ total_size += t->serialize_size(obj); });\r\n";
+					output += "\t\t\t\tdcon::record_header header(total_size, \""
+						+ prop.data_type + "\", \"" + o.name + "\", \"" + prop.name + "\");\r\n";
+					output += "\t\t\t\ttotal_size += header.serialize_size();\r\n";
+					output += "\t\t\t}\r\n";
+				} else {
+					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\r\n";
+					output += "\t\t\t\tdcon::record_header header(sizeof(" + prop.data_type + ") * " + o.name + ".size_used, \""
+						+ prop.data_type + "\", \"" + o.name + "\", \"" + prop.name + "\");\r\n";
+					output += "\t\t\t\ttotal_size += header.serialize_size();\r\n";
+					output += "\t\t\t\ttotal_size += sizeof(" + prop.data_type + ") * " + o.name + ".size_used;\r\n";
+					output += "\t\t\t}\r\n";
+				}
+			}
+		}
+		output += "\t\t\treturn total_size;\r\n";
+		output += "\t\t}\r\n";
+
+		//serialize
+		output += "\t\tvoid serialize(std::byte*& output_buffer, load_record const& serialize_selection) const {\r\n";
+
+		for(auto& o : parsed_file.relationship_objects) {
+			output += "\t\t\tif(serialize_selection." + o.name + ") {\r\n";
+			output += "\t\t\t\tdcon::record_header header(sizeof(uint32_t), \"uint32_t\", \"" + o.name + "\", \"@size\");\r\n";
+			output += "\t\t\t\theader.serialize(output_buffer);\r\n";
+			output += "\t\t\t\t*(reinterpret_cast<uint32_t*>(output_buffer)) = " + o.name + ".size_used;\r\n";
+			output += "\t\t\t\toutput_buffer += sizeof(uint32_t);\r\n";
+			output += "\t\t\t}\r\n";
+
+			if(o.store_type == storage_type::erasable) {
+				output += "\t\t\tif(serialize_selection." + o.name + "__index) {\r\n";
+				output += "\t\t\t\tdcon::record_header header(sizeof(" + o.name + "_id) * " + o.name + ".size_used, \"" + size_to_tag_type(o.size) + "\", \"" + o.name + "\", \"_index\");\r\n";
+				output += "\t\t\t\theader.serialize(output_buffer);\r\n";
+				output += "\t\t\t\tmemcpy(reinterpret_cast<" + o.name + "_id*>(output_buffer), "
+					+ o.name + ".m__index.vptr(), sizeof(" + o.name + "_id) * " + o.name + ".size_used);\r\n";
+				output += "\t\t\t\toutput_buffer += sizeof(" + o.name + "_id) * " + o.name + ".size_used;\r\n";
+				output += "\t\t\t}\r\n";
+			}
+
+			for(auto& io : o.indexed_objects) {
+				if(io.related_to != o.primary_key) {
+					output += "\t\t\tif(serialize_selection." + o.name + "_" + io.property_name + ") {\r\n";
+					output += "\t\t\t\tdcon::record_header header(sizeof(" + io.type_name + "_id) * " + o.name + ".size_used, \""
+						+ size_to_tag_type(io.related_to->size) + "\", \"" + o.name + "\", \"" + io.property_name + "\");\r\n";
+					output += "\t\t\t\theader.serialize(output_buffer);\r\n";
+					output += "\t\t\t\tmemcpy(reinterpret_cast<" + io.type_name + "_id*>(output_buffer), "
+						+ o.name + ".m_" + io.property_name + ".vptr(), sizeof(" + io.type_name + "_id) * " + o.name + ".size_used);\r\n";
+					output += "\t\t\t\toutput_buffer += sizeof(" + io.type_name + "_id) * " + o.name + ".size_used;\r\n";
+					output += "\t\t\t}\r\n";
+				}
+			}
+
+			for(auto& prop : o.properties) {
+				if(prop.is_derived) {
+
+				} else if(prop.is_bitfield) {
+					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\r\n";
+					output += "\t\t\t\tdcon::record_header header((" + o.name + ".size_used + 7) / 8, \""
+						+ "bitfield" + "\", \"" + o.name + "\", \"" + prop.name + "\");\r\n";
+					output += "\t\t\t\theader.serialize(output_buffer);\r\n";
+					output += "\t\t\t\tmemcpy(reinterpret_cast<bitfield_type*>(output_buffer), "
+						+ o.name + ".m_" + prop.name  + ".vptr(), (" + o.name + ".size_used + 7) / 8);\r\n";
+					output += "\t\t\t\toutput_buffer += (" + o.name + ".size_used + 7) / 8;\r\n";
+					output += "\t\t\t}\r\n";
+				} else if(prop.is_special_vector) {
+					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\r\n";
+
+					output += "\t\t\t\tsize_t total_size = 0;\r\n";
+					output += "\t\t\t\tstd::for_each(" + o.name + ".m_" + prop.name + ".vptr(), "
+						+ o.name + ".m_" + prop.name + ".vptr() " + o.name + ".size_used, [t = this, &total_size](stable_mk_2_tag obj){\r\n";
+					output += "\t\t\t\t\tauto rng = dcon::get_range(t->" + o.name + "." + prop.name + "_storage, obj);\r\n";
+					output += "\t\t\t\t\ttotal_size += sizeof(uint16_t); total_size += sizeof(" + prop.data_type + ") * (rng.second - rng.first); });\r\n";
+					output += "\t\t\t\ttotal_size += " + std::to_string(prop.data_type.length() + 1) + ";\r\n";
+
+					output += "\t\t\t\tdcon::record_header header(total_size, \"stable_mk_2_tag\", \"" + o.name + "\", \"" + prop.name + "\");\r\n";
+					output += "\t\t\t\theader.serialize(output_buffer);\r\n";
+
+					output += "\t\t\t\tmemcpy(reinterpret_cast<char*>(output_buffer), \"" + prop.data_type + "\", " + std::to_string(prop.data_type.length() + 1) + ");\r\n";
+					output += "\t\t\t\toutput_buffer += " + std::to_string(prop.data_type.length() + 1) + ";\r\n";
+
+					output += "\t\t\t\tstd::for_each(" + o.name + ".m_" + prop.name + ".vptr(), "
+						+ o.name + ".m_" + prop.name + ".vptr() " + o.name + ".size_used, [t = this, output_buffer](stable_mk_2_tag obj){\r\n";
+					output += "\t\t\t\t\tauto rng = dcon::get_range(t->" + o.name + "." + prop.name + "_storage, obj);\r\n";
+					output += "\t\t\t\t\t*(reinterpret_cast<uint16_t*>(output_buffer)) = uint16_t(rng.second - rng.first);\r\n";
+					output += "\t\t\t\t\toutput_buffer += sizeof(uint16_t);\r\n";
+					output += "\t\t\t\t\tmemcpy(reinterpret_cast<" + prop.data_type + "*>(output_buffer), rng.first, sizeof(" + prop.data_type + ") * (rng.second - rng.first));\r\n"
+						+ o.name + ".m_" + prop.name + ".vptr(), sizeof(" + prop.data_type + ") * " + o.name + ".size_used);\r\n";
+					output += "\t\t\t\t\toutput_buffer += sizeof(" + prop.data_type + ") * (rng.second - rng.first);\r\n";
+					output += "\t\t\t\t\t});\r\n";
+
+					output += "\t\t\t}\r\n";
+				} else if(prop.is_object) {
+					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\r\n";
+					output += "\t\t\t\tsize_t total_size = 0;\r\n";
+					output += "\t\t\t\tstd::for_each(" + o.name + ".m_" + prop.name + ".vptr(), "
+						+ o.name + ".m_" + prop.name + ".vptr() " + o.name + ".size_used, [t = this, &total_size](" 
+						+ prop.data_type + " const& obj){ total_size += t->serialize_size(obj); });\r\n";
+					output += "\t\t\t\tdcon::record_header header(total_size, \""
+						+ prop.data_type + "\", \"" + o.name + "\", \"" + prop.name + "\");\r\n";
+					output += "\t\t\t\theader.serialize(output_buffer);\r\n";
+					output += "\t\t\t\tstd::for_each(" + o.name + ".m_" + prop.name + ".vptr(), "
+						+ o.name + ".m_" + prop.name + ".vptr() " + o.name + ".size_used, [t = this, &output_buffer]("
+						+ prop.data_type + " const& obj){ t->serialize(output_buffer, obj); });\r\n";
+					output += "\t\t\t}\r\n";
+				} else {
+					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\r\n";
+					output += "\t\t\t\tdcon::record_header header(sizeof(" + prop.data_type + ") * " + o.name + ".size_used, \""
+						+ prop.data_type + "\", \"" + o.name + "\", \"" + prop.name + "\");\r\n";
+					output += "\t\t\t\theader.serialize(output_buffer);\r\n";
+					output += "\t\t\t\tmemcpy(reinterpret_cast<" + prop.data_type + "*>(output_buffer), "
+						+ o.name + ".m_" + prop.name + ".vptr(), sizeof(" + prop.data_type + ") * " + o.name + ".size_used);\r\n";
+					output += "\t\t\t\toutput_buffer += sizeof(" + prop.data_type + ") * " + o.name + ".size_used;\r\n";
+					output += "\t\t\t}\r\n";
+				}
+			}
+		}
+		output += "\t\t}\r\n";
+
+		//deserialize (no mask)
+		output += "\t\tvoid deserialize(std::byte const*& input_buffer, std::byte const* end, load_record& serialize_selection) {\r\n";
+		output += "\t\t\twhile(input_buffer < end) {\r\n"; // loop over input buffer
+		output += "\t\t\t\tdcon::record_header header;\r\n";
+		output += "\t\t\t\theader.deserialize(input_buffer, end);\r\n";
+
+		output += "\t\t\t\tif(input_buffer + header.record_size <= end) {\r\n"; // wrap: gaurantee enough space to read entire buffer
+
+		bool first = true;
+		for(auto& o : parsed_file.relationship_objects) {
+			if(first) {
+				output += "\t\t\t\tif(header.is_object(\"" + o.name + "\")) {\r\n"; //has matched object
+				first = false;
+			} else {
+				output += "\t\t\t\telse if(header.is_object(\"" + o.name + "\")) {\r\n"; //has matched object
+			}
+			output += "\t\t\t\t\tif(header.is_property(\"@size\") && header.record_size == sizeof(uint32_t)) {\r\n"; // is size
+			output += "\t\t\t\t\t\t" + o.name + ".resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));\r\n";
+			output += "\t\t\t\t\t\tserialize_selection" + o.name + " = true;\r\n";
+			output += "\t\t\t\t\t}\r\n"; // end is size
+
+			if(o.store_type == storage_type::erasable) {
+				output += "\t\t\t\t\telse if(header.is_property(\"__index\")) {\r\n"; // matches
+				output += "\t\t\t\t\tif(header.is_type(\"" + size_to_tag_type(o.size)  + "\")) {\r\n"; //correct type
+				output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m__index.vptr(), reinterpret_cast<" + size_to_tag_type(o.size) + " const*>(input_buffer), "
+					", std::min(size_t(" + o.name + ".size_used) * sizeof(" + size_to_tag_type(o.size) + "), "
+					"header.record_size));\r\n";
+				output += "\t\t\t\t\t\tserialize_selection" + o.name + "__index = true;\r\n";
+				output += "\t\t\t\t\t}\r\n";// end correct type
+				if(size_to_tag_type(o.size) != "uint8_t") {
+					output += "\t\t\t\t\telse if(header.is_type(\"uint8_t\")) {\r\n"; //wrong type uint8_t
+					output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i)\r\n";
+					output += "\t\t\t\t\t\t\t" + o.name + ".m__index.vptr()[i].value = "
+						+ size_to_tag_type(o.size) + "(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));\r\n";
+					output += "\t\t\t\t\t\tserialize_selection" + o.name + "__index = true;\r\n";
+					output += "\t\t\t\t\t}\r\n";// end wrong type uint8_t
+				}
+				if(size_to_tag_type(o.size) != "uint16_t") {
+					output += "\t\t\t\t\telse if(header.is_type(\"uint16_t\")) {\r\n"; //wrong type uint16_t
+					output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i)\r\n";
+					output += "\t\t\t\t\t\t\t" + o.name + ".m__index.vptr()[i].value = "
+						+ size_to_tag_type(o.size) + "(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));\r\n";
+					output += "\t\t\t\t\t\tserialize_selection" + o.name + "__index = true;\r\n";
+					output += "\t\t\t\t\t}\r\n";// end wrong type uint16_t
+				}
+				if(size_to_tag_type(o.size) != "uint32_t") {
+					output += "\t\t\t\t\telse if(header.is_type(\"uint32_t\")) {\r\n"; //wrong type uint32_t
+					output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i)\r\n";
+					output += "\t\t\t\t\t\t\t" + o.name + ".m__index.vptr()[i].value = "
+						+ size_to_tag_type(o.size) + "(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));\r\n";
+					output += "\t\t\t\t\t\tserialize_selection" + o.name + "__index = true;\r\n";
+					output += "\t\t\t\t\t}\r\n";// end wrong type uint32_t
+				}
+
+				//redo free list
+				output += "\t\t\t\t\t\tif(serialize_selection" + o.name + "__index == true){\r\n";
+				output += "\t\t\t\t\t" + o.name + ".first_free = " + o.name + "_id();\r\n";
+				output += "\t\t\t\t\tfor(int32_t j = int32_t(" + std::to_string(o.size) + "); j >= 0; --j) {\r\n";
+				output += "\t\t\t\t\t\tif(" + o.name + ".m__index.vptr()[j] != " + o.name + "_id(" + size_to_tag_type(o.size) + "(j))) {\r\n";
+				output += "\t\t\t\t\t\t\t" + o.name + ".m__index.vptr()[j] = " + o.name + ".first_free;\r\n";
+				output += "\t\t\t\t\t\t\t" + o.name + ".first_free = " + o.name + "_id(" + size_to_tag_type(o.size) + "(j));\r\n";
+				output += "\t\t\t\t\t\t}\r\n";
+				output += "\t\t\t\t\t}\r\n\r\n";
+				output += "\t\t\t\t\t}\r\n\r\n";
+
+				output += "\t\t\t\t\t}\r\n"; //end index match
+			} // end: load index handling for erasable
+
+			for(auto& io : o.indexed_objects) {
+				output += "\t\t\t\t\telse if(header.is_property(\"" + io.property_name + "\")) {\r\n"; // matches
+				
+				output += "\t\t\t\t\tif(header.is_type(\"uint8_t\")) {\r\n"; //type uint8_t
+				output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i)\r\n";
+				output += "\t\t\t\t\t\t\t" + o.name + "_id temp;\r\n";
+				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));\r\n";
+				output += "\t\t\t\t\t\t\tset_ " + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\r\n";
+				output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + io.property_name + " = true;\r\n";
+				output += "\t\t\t\t\t}\r\n";// end type uint8_t
+				output += "\t\t\t\t\telse if(header.is_type(\"uint16_t\")) {\r\n"; //type uint16_t
+				output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i)\r\n";
+				output += "\t\t\t\t\t\t\t" + o.name + "_id temp;\r\n";
+				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));\r\n";
+				output += "\t\t\t\t\t\t\tset_ " + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size)  + "(i)), temp);\r\n";
+				output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + io.property_name + " = true;\r\n";
+				output += "\t\t\t\t\t}\r\n";// end type uint16_t
+				output += "\t\t\t\t\telse if(header.is_type(\"uint32_t\")) {\r\n"; //type uint16_t
+				output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i)\r\n";
+				output += "\t\t\t\t\t\t\t" + o.name + "_id temp;\r\n";
+				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));\r\n";
+				output += "\t\t\t\t\t\t\tset_ " + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\r\n";
+				output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + io.property_name + " = true;\r\n";
+				output += "\t\t\t\t\t}\r\n";// end type uint32_t
+
+				output += "\t\t\t\t\t}\r\n"; //end property match
+			} // end index properties
+
+			for(auto& prop : o.properties) {
+				output += "\t\t\t\t\telse if(header.is_property(\"" + prop.name + "\")) {\r\n"; // matches
+				if(prop.is_derived) {
+
+				} else if(prop.is_bitfield) {
+					output += "\t\t\t\t\tif(header.is_type(\"bitfield\")) {\r\n"; //correct type
+					output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m_" + prop.name + ".vptr(), reinterpret_cast<bitfield_type const*>(input_buffer), "
+						", std::min(size_t(" + o.name + ".size_used + 7) / 8, header.record_size));\r\n";
+					output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+					output += "\t\t\t\t\t}\r\n";// end correct type
+
+					for(auto& con : parsed_file.conversion_list) {
+						if(con.to == "bool") {
+							if(std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.from) != parsed_file.object_types.end()) {
+								// from is an object
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
+								output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\r\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i) {\r\n";
+								output += "\t\t\t\t\t\t\t" + con.from + " temp;\r\n";
+								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\r\n";
+								output += "\t\t\t\t\t\t\tdcon::bit_vector_set(" + o.name + ".m_" + prop.name + ".vptr(), i, convert_type(&temp, (" + con.to + "*)nullptr));\r\n";
+								output += "\t\t\t\t\t\t}\r\n";
+								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+								output += "\t\t\t\t\t}\r\n";
+							} else {
+								// from not an object
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i)\r\n";
+								output += "\t\t\t\t\t\t\tdcon::bit_vector_set(" + o.name + ".m_" + prop.name + ".vptr(), i, "
+									"convert_type(reinterpret_cast<" + con.from + " const*>(input_buffer) + i, (" + con.to + "*)nullptr));\r\n";
+								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+								output += "\t\t\t\t\t}\r\n";
+							}
+						}
+					}
+				} else if(prop.is_special_vector) {
+					output += "\t\t\t\t\tif(header.is_type(\"stable_mk_2_tag\")) {\r\n"; //correct type
+					output += "\t\t\t\t\t\t\tuint32_t ix = 0;\r\n";
+
+					//read internal data type
+					output += "\t\t\t\tstd::byte const* zero_pos = std::find(input_buffer, input_buffer + header.record_size, 0);\r\n";
+					
+					output += "\t\t\t\t\tif(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), "
+						"reinterpret_cast<char const*>(zero_pos), \"" + prop.data_type + "\")) {\r\n"; //correct type
+
+					output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ){\r\n";
+					output += "\t\t\t\t\t\t\tuint16_t sz = 0;\r\n";
+					
+					output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\r\n";
+					output += "\t\t\t\t\t\t\t\tsz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), "
+						"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + prop.data_type + ") ));\r\n";
+					output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\r\n";
+					output += "\t\t\t\t\t\t\t}\r\n"; // endif
+
+					output += "\t\t\t\t\t\t\tdcon::load_range(" + o.name + "." + prop.name + "_storage, " 
+						+ o.name + ".m_" + prop.name + ".vptr()[ix], reinterpret_cast<" + prop.data_type + " const*>(icpy), "
+						"reinterpret_cast<" + prop.data_type + " const*>(icpy) + sz)\r\n";
+					output += "\t\t\t\t\t\t\ticpy += sz * sizeof(" + prop.data_type + ");\r\n";
+					output += "\t\t\t\t\t\t\t++ix;\r\n";
+					output += "\t\t\t\t\t\t}\r\n"; //end for
+
+					output += "\t\t\t\t\t}\r\n"; // end correct type
+
+					for(auto& con : parsed_file.conversion_list) {
+						if(con.to == prop.data_type) {
+							if(std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.from) != parsed_file.object_types.end()) {
+								// from is an object
+								output += "\t\t\t\t\telse if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), "
+									"reinterpret_cast<char const*>(zero_pos), \"" + con.from + "\")) {\r\n"; // if = from
+								
+								output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ) {\r\n";
+								output += "\t\t\t\t\t\t\tuint16_t sz = 0;\r\n"; // 2
+
+								output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\r\n"; // if read sz
+								output += "\t\t\t\t\t\t\t\tsz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), "
+									"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + con.from + ") ));\r\n";
+								output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\r\n";
+								output += "\t\t\t\t\t\t\t}\r\n"; // endif read sz
+
+								output += "\t\t\t\t\t\t\tdcon::resize(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], sz);\r\n";
+								
+								output += "\t\t\t\t\t\t\tfor(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {\r\n"; // ii for
+								output += "\t\t\t\t\t\t\t" + con.from + " temp;\r\n";
+								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\r\n";
+								output += "\t\t\t\t\t\t\tdcon::get(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], ii) = "
+									"convert_type(&temp, (" + con.to + "*)nullptr);\r\n";
+								output += "\t\t\t\t\t\t\t}\r\n"; //end ii for
+
+								output += "\t\t\t\t\t\t\t++ix;\r\n";
+								output += "\t\t\t\t\t\t}\r\n"; //end for
+
+								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+								output += "\t\t\t\t\t}\r\n"; // end if = from
+							} else {
+								// from not an object
+								output += "\t\t\t\t\telse if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), "
+									"reinterpret_cast<char const*>(zero_pos), \"" + con.from + "\")) {\r\n"; // if = from
+
+								output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ) {\r\n";
+								output += "\t\t\t\t\t\t\tuint16_t sz = 0;\r\n"; // 2
+
+								output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\r\n"; // if read sz
+								output += "\t\t\t\t\t\t\t\tsz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), "
+									"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + con.from + ") ));\r\n";
+								output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\r\n";
+								output += "\t\t\t\t\t\t\t}\r\n"; // endif read sz
+
+								output += "\t\t\t\t\t\t\tdcon::resize(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], sz);\r\n";
+
+								output += "\t\t\t\t\t\t\tfor(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {\r\n"; // ii for
+								output += "\t\t\t\t\t\t\tdcon::get(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], ii) = "
+									"convert_type(reinterpret_cast<" + con.from + " const*>(icpy), (" + con.to + "*)nullptr);\r\n";
+								output += "\t\t\t\t\t\t\ticpy += sizeof(" + con.from + ");\r\n";
+								output += "\t\t\t\t\t\t\t}\r\n"; //end ii for
+
+								output += "\t\t\t\t\t\t\t++ix;\r\n";
+								output += "\t\t\t\t\t\t}\r\n"; //end for
+
+								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+								output += "\t\t\t\t\t}\r\n"; // end if = from
+
+							}
+						}
+					} // end for each in conversion list
+					if(is_common_type(prop.data_type)) {
+						const auto normed_type = normalize_type(prop.data_type);
+						for(auto& basic_type : common_types) {
+							if(basic_type != normed_type) {
+								output += "\t\t\t\t\telse if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), "
+									"reinterpret_cast<char const*>(zero_pos), \"" + basic_type + "\")) {\r\n"; // if = from
+
+								output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ) {\r\n";
+								output += "\t\t\t\t\t\t\tuint16_t sz = 0;\r\n"; // 2
+
+								output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\r\n"; // if read sz
+								output += "\t\t\t\t\t\t\t\tsz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), "
+									"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + basic_type + ") ));\r\n";
+								output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\r\n";
+								output += "\t\t\t\t\t\t\t}\r\n"; // endif read sz
+
+								output += "\t\t\t\t\t\t\tdcon::resize(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], sz);\r\n";
+
+								output += "\t\t\t\t\t\t\tfor(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {\r\n"; // ii for
+								output += "\t\t\t\t\t\t\tdcon::get(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], ii) = "
+									+ prop.data_type + "(*(reinterpret_cast<" + basic_type + " const*>(icpy) + i));\r\n";
+								output += "\t\t\t\t\t\t\ticpy += sizeof(" + basic_type + ");\r\n";
+								output += "\t\t\t\t\t\t\t}\r\n"; //end ii for
+
+								output += "\t\t\t\t\t\t\t++ix;\r\n";
+								output += "\t\t\t\t\t\t}\r\n"; //end for
+
+								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+								output += "\t\t\t\t\t}\r\n"; // end if = from
+							}
+						}
+					}
+					// end if prop is special array
+				} else if(prop.is_object) {
+					output += "\t\t\t\t\tif(header.is_type(\"" + prop.data_type + "\")) {\r\n"; //correct type
+
+					output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\r\n";
+					output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + prop.data_type + "))); ++i) {\r\n";
+					output += "\t\t\t\t\t\t\tdeserialize(icpy, " + o.name + ".m_" + prop.name + ".vptr()[i], input_buffer + header.record_size);\r\n";
+					output += "\t\t\t\t\t\t}\r\n";
+					output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+
+					output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m_" + prop.name + ".vptr(), reinterpret_cast<" + prop.data_type + " const*>(input_buffer), "
+						", std::min(size_t(" + o.name + ".size_used) * sizeof(" + prop.data_type + "), header.record_size));\r\n";
+					output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+					output += "\t\t\t\t\t}\r\n";// end correct type
+					for(auto& con : parsed_file.conversion_list) {
+						if(con.to == prop.data_type) {
+							if(std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.from) != parsed_file.object_types.end()) {
+								// from is an object
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
+								output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\r\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i) {\r\n";
+								output += "\t\t\t\t\t\t\t" + con.from + " temp;\r\n";
+								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\r\n";
+								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = convert_type(&temp, (" + con.to + "*)nullptr);\r\n";
+								output += "\t\t\t\t\t\t}\r\n";
+								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+								output += "\t\t\t\t\t}\r\n";
+							} else {
+								// from not an object
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i)\r\n";
+								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = "
+									+ "convert_type(reinterpret_cast<" + con.from + " const*>(input_buffer, (" + con.to + "*)nullptr) + i);\r\n";
+								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+								output += "\t\t\t\t\t}\r\n";
+
+							}
+						}
+					}
+				} else {
+					output += "\t\t\t\t\tif(header.is_type(\"" + prop.data_type + "\")) {\r\n"; //correct type
+					output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m_" + prop.name + ".vptr(), reinterpret_cast<" + prop.data_type + " const*>(input_buffer), "
+						", std::min(size_t(" + o.name + ".size_used) * sizeof(" + prop.data_type + "), header.record_size));\r\n";
+					output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+					output += "\t\t\t\t\t}\r\n";// end correct type
+					for(auto& con : parsed_file.conversion_list) {
+						if(con.to == prop.data_type) {
+							if(std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.from) != parsed_file.object_types.end()) {
+								// from is an object
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
+								output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\r\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i) {\r\n";
+								output += "\t\t\t\t\t\t\t" + con.from + " temp;\r\n";
+								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\r\n";
+								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = convert_type(&temp, (" + con.to + "*)nullptr);\r\n";
+								output += "\t\t\t\t\t\t}\r\n";
+								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+								output += "\t\t\t\t\t}\r\n";
+							} else {
+								// from not an object
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i)\r\n";
+								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = "
+									+ "convert_type(reinterpret_cast<" + con.from + " const*>(input_buffer) + i, (" + con.to + "*)nullptr);\r\n";
+								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+								output += "\t\t\t\t\t}\r\n";
+
+							}
+						}
+					}
+					if(is_common_type(prop.data_type)) {
+						const auto normed_type = normalize_type(prop.data_type);
+						for(auto& basic_type : common_types) {
+							if(basic_type != normed_type) {
+								output += "\t\t\t\t\telse if(header.is_type(\"" + basic_type + "\")) {\r\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + basic_type + "))); ++i)\r\n";
+								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = "
+									+ prop.data_type + "(*(reinterpret_cast<" + basic_type + " const*>(input_buffer) + i));\r\n";
+								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+								output += "\t\t\t\t\t}\r\n";
+							}
+						}
+					}
+				}
+				output += "\t\t\t\t\t}\r\n"; //end property match
+			} // end properties
+
+			output += "\t\t\t\t}\r\n"; // end has matched object
+		}
+		output += "\t\t\t\t}\r\n"; // end wrap: gaurantee enough space to read entire buffer
+		output += "\t\t\t\tinput_buffer += header.record_size;\r\n";
+
+		output += "\t\t\t}\r\n"; // end loop -- input buffer exhausted
+		output += "\t\t}\r\n"; // end deserialize (no mask)
+
+
+		//deserialize (with mask)
+		output += "\t\tvoid deserialize(std::byte const*& input_buffer, std::byte const* end, load_record& serialize_selection, load_record const& mask) {\r\n";
+		output += "\t\t\twhile(input_buffer < end) {\r\n"; // loop over input buffer
+		output += "\t\t\t\tdcon::record_header header;\r\n";
+		output += "\t\t\t\theader.deserialize(input_buffer, end);\r\n";
+
+		output += "\t\t\t\tif(input_buffer + header.record_size <= end) {\r\n"; // wrap: gaurantee enough space to read entire buffer
+
+		bool first = true;
+		for(auto& o : parsed_file.relationship_objects) {
+			if(first) {
+				output += "\t\t\t\tif(header.is_object(\"" + o.name + "\") && mask." + o.name + ") {\r\n"; //has matched object
+				first = false;
+			} else {
+				output += "\t\t\t\telse if(header.is_object(\"" + o.name + "\")) {\r\n"; //has matched object
+			}
+			output += "\t\t\t\t\tif(header.is_property(\"@size\") && header.record_size == sizeof(uint32_t)) {\r\n"; // is size
+			output += "\t\t\t\t\t\t" + o.name + ".resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));\r\n";
+			output += "\t\t\t\t\t\tserialize_selection" + o.name + " = true;\r\n";
+			output += "\t\t\t\t\t}\r\n"; // end is size
+
+			if(o.store_type == storage_type::erasable) {
+				output += "\t\t\t\t\telse if(header.is_property(\"__index\") && mask." + o.name + "__index) {\r\n"; // matches
+				output += "\t\t\t\t\tif(header.is_type(\"" + size_to_tag_type(o.size) + "\")) {\r\n"; //correct type
+				output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m__index.vptr(), reinterpret_cast<" + size_to_tag_type(o.size) + " const*>(input_buffer), "
+					", std::min(size_t(" + o.name + ".size_used) * sizeof(" + size_to_tag_type(o.size) + "), "
+					"header.record_size));\r\n";
+				output += "\t\t\t\t\t\tserialize_selection" + o.name + "__index = true;\r\n";
+				output += "\t\t\t\t\t}\r\n";// end correct type
+				if(size_to_tag_type(o.size) != "uint8_t") {
+					output += "\t\t\t\t\telse if(header.is_type(\"uint8_t\")) {\r\n"; //wrong type uint8_t
+					output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i)\r\n";
+					output += "\t\t\t\t\t\t\t" + o.name + ".m__index.vptr()[i].value = "
+						+ size_to_tag_type(o.size) + "(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));\r\n";
+					output += "\t\t\t\t\t\tserialize_selection" + o.name + "__index = true;\r\n";
+					output += "\t\t\t\t\t}\r\n";// end wrong type uint8_t
+				}
+				if(size_to_tag_type(o.size) != "uint16_t") {
+					output += "\t\t\t\t\telse if(header.is_type(\"uint16_t\")) {\r\n"; //wrong type uint16_t
+					output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i)\r\n";
+					output += "\t\t\t\t\t\t\t" + o.name + ".m__index.vptr()[i].value = "
+						+ size_to_tag_type(o.size) + "(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));\r\n";
+					output += "\t\t\t\t\t\tserialize_selection" + o.name + "__index = true;\r\n";
+					output += "\t\t\t\t\t}\r\n";// end wrong type uint16_t
+				}
+				if(size_to_tag_type(o.size) != "uint32_t") {
+					output += "\t\t\t\t\telse if(header.is_type(\"uint32_t\")) {\r\n"; //wrong type uint32_t
+					output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i)\r\n";
+					output += "\t\t\t\t\t\t\t" + o.name + ".m__index.vptr()[i].value = "
+						+ size_to_tag_type(o.size) + "(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));\r\n";
+					output += "\t\t\t\t\t\tserialize_selection" + o.name + "__index = true;\r\n";
+					output += "\t\t\t\t\t}\r\n";// end wrong type uint32_t
+				}
+
+				//redo free list
+				output += "\t\t\t\t\t\tif(serialize_selection" + o.name + "__index == true){\r\n";
+				output += "\t\t\t\t\t" + o.name + ".first_free = " + o.name + "_id();\r\n";
+				output += "\t\t\t\t\tfor(int32_t j = int32_t(" + std::to_string(o.size) + "); j >= 0; --j) {\r\n";
+				output += "\t\t\t\t\t\tif(" + o.name + ".m__index.vptr()[j] != " + o.name + "_id(" + size_to_tag_type(o.size) + "(j))) {\r\n";
+				output += "\t\t\t\t\t\t\t" + o.name + ".m__index.vptr()[j] = " + o.name + ".first_free;\r\n";
+				output += "\t\t\t\t\t\t\t" + o.name + ".first_free = " + o.name + "_id(" + size_to_tag_type(o.size) + "(j));\r\n";
+				output += "\t\t\t\t\t\t}\r\n";
+				output += "\t\t\t\t\t}\r\n\r\n";
+				output += "\t\t\t\t\t}\r\n\r\n";
+
+				output += "\t\t\t\t\t}\r\n"; //end index match
+			} // end: load index handling for erasable
+
+			for(auto& io : o.indexed_objects) {
+				output += "\t\t\t\t\telse if(header.is_property(\"" + io.property_name + "\") && mask." + o.name + "_" + io.property_name + ") {\r\n"; // matches
+
+				output += "\t\t\t\t\tif(header.is_type(\"uint8_t\")) {\r\n"; //type uint8_t
+				output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i)\r\n";
+				output += "\t\t\t\t\t\t\t" + o.name + "_id temp;\r\n";
+				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));\r\n";
+				output += "\t\t\t\t\t\t\tset_ " + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\r\n";
+				output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + io.property_name + " = true;\r\n";
+				output += "\t\t\t\t\t}\r\n";// end type uint8_t
+				output += "\t\t\t\t\telse if(header.is_type(\"uint16_t\")) {\r\n"; //type uint16_t
+				output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i)\r\n";
+				output += "\t\t\t\t\t\t\t" + o.name + "_id temp;\r\n";
+				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));\r\n";
+				output += "\t\t\t\t\t\t\tset_ " + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\r\n";
+				output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + io.property_name + " = true;\r\n";
+				output += "\t\t\t\t\t}\r\n";// end type uint16_t
+				output += "\t\t\t\t\telse if(header.is_type(\"uint32_t\")) {\r\n"; //type uint16_t
+				output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i)\r\n";
+				output += "\t\t\t\t\t\t\t" + o.name + "_id temp;\r\n";
+				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));\r\n";
+				output += "\t\t\t\t\t\t\tset_ " + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\r\n";
+				output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + io.property_name + " = true;\r\n";
+				output += "\t\t\t\t\t}\r\n";// end type uint32_t
+
+				output += "\t\t\t\t\t}\r\n"; //end property match
+			} // end index properties
+
+			for(auto& prop : o.properties) {
+				output += "\t\t\t\t\telse if(header.is_property(\"" + prop.name + "\") && mask." + o.name + "_" + prop.name + ") {\r\n"; // matches
+				if(prop.is_derived) {
+
+				} else if(prop.is_bitfield) {
+					output += "\t\t\t\t\tif(header.is_type(\"bitfield\")) {\r\n"; //correct type
+					output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m_" + prop.name + ".vptr(), reinterpret_cast<bitfield_type const*>(input_buffer), "
+						", std::min(size_t(" + o.name + ".size_used + 7) / 8, header.record_size));\r\n";
+					output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+					output += "\t\t\t\t\t}\r\n";// end correct type
+
+					for(auto& con : parsed_file.conversion_list) {
+						if(con.to == "bool") {
+							if(std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.from) != parsed_file.object_types.end()) {
+								// from is an object
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
+								output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\r\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i) {\r\n";
+								output += "\t\t\t\t\t\t\t" + con.from + " temp;\r\n";
+								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\r\n";
+								output += "\t\t\t\t\t\t\tdcon::bit_vector_set(" + o.name + ".m_" + prop.name + ".vptr(), i, convert_type(&temp, (" + con.to + "*)nullptr));\r\n";
+								output += "\t\t\t\t\t\t}\r\n";
+								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+								output += "\t\t\t\t\t}\r\n";
+							} else {
+								// from not an object
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i)\r\n";
+								output += "\t\t\t\t\t\t\tdcon::bit_vector_set(" + o.name + ".m_" + prop.name + ".vptr(), i, "
+									"convert_type(reinterpret_cast<" + con.from + " const*>(input_buffer) + i, (" + con.to + "*)nullptr));\r\n";
+								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+								output += "\t\t\t\t\t}\r\n";
+							}
+						}
+					}
+				} else if(prop.is_special_vector) {
+					output += "\t\t\t\t\tif(header.is_type(\"stable_mk_2_tag\")) {\r\n"; //correct type
+					output += "\t\t\t\t\t\t\tuint32_t ix = 0;\r\n";
+
+					//read internal data type
+					output += "\t\t\t\tstd::byte const* zero_pos = std::find(input_buffer, input_buffer + header.record_size, 0);\r\n";
+
+					output += "\t\t\t\t\tif(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), "
+						"reinterpret_cast<char const*>(zero_pos), \"" + prop.data_type + "\")) {\r\n"; //correct type
+
+					output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ){\r\n";
+					output += "\t\t\t\t\t\t\tuint16_t sz = 0;\r\n";
+
+					output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\r\n";
+					output += "\t\t\t\t\t\t\t\tsz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), "
+						"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + prop.data_type + ") ));\r\n";
+					output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\r\n";
+					output += "\t\t\t\t\t\t\t}\r\n"; // endif
+
+					output += "\t\t\t\t\t\t\tdcon::load_range(" + o.name + "." + prop.name + "_storage, "
+						+ o.name + ".m_" + prop.name + ".vptr()[ix], reinterpret_cast<" + prop.data_type + " const*>(icpy), "
+						"reinterpret_cast<" + prop.data_type + " const*>(icpy) + sz)\r\n";
+					output += "\t\t\t\t\t\t\ticpy += sz * sizeof(" + prop.data_type + ");\r\n";
+					output += "\t\t\t\t\t\t\t++ix;\r\n";
+					output += "\t\t\t\t\t\t}\r\n"; //end for
+
+					output += "\t\t\t\t\t}\r\n"; // end correct type
+
+					for(auto& con : parsed_file.conversion_list) {
+						if(con.to == prop.data_type) {
+							if(std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.from) != parsed_file.object_types.end()) {
+								// from is an object
+								output += "\t\t\t\t\telse if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), "
+									"reinterpret_cast<char const*>(zero_pos), \"" + con.from + "\")) {\r\n"; // if = from
+
+								output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ) {\r\n";
+								output += "\t\t\t\t\t\t\tuint16_t sz = 0;\r\n"; // 2
+
+								output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\r\n"; // if read sz
+								output += "\t\t\t\t\t\t\t\tsz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), "
+									"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + con.from + ") ));\r\n";
+								output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\r\n";
+								output += "\t\t\t\t\t\t\t}\r\n"; // endif read sz
+
+								output += "\t\t\t\t\t\t\tdcon::resize(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], sz);\r\n";
+
+								output += "\t\t\t\t\t\t\tfor(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {\r\n"; // ii for
+								output += "\t\t\t\t\t\t\t" + con.from + " temp;\r\n";
+								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\r\n";
+								output += "\t\t\t\t\t\t\tdcon::get(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], ii) = "
+									"convert_type(&temp, (" + con.to + "*)nullptr);\r\n";
+								output += "\t\t\t\t\t\t\t}\r\n"; //end ii for
+
+								output += "\t\t\t\t\t\t\t++ix;\r\n";
+								output += "\t\t\t\t\t\t}\r\n"; //end for
+
+								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+								output += "\t\t\t\t\t}\r\n"; // end if = from
+							} else {
+								// from not an object
+								output += "\t\t\t\t\telse if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), "
+									"reinterpret_cast<char const*>(zero_pos), \"" + con.from + "\")) {\r\n"; // if = from
+
+								output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ) {\r\n";
+								output += "\t\t\t\t\t\t\tuint16_t sz = 0;\r\n"; // 2
+
+								output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\r\n"; // if read sz
+								output += "\t\t\t\t\t\t\t\tsz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), "
+									"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + con.from + ") ));\r\n";
+								output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\r\n";
+								output += "\t\t\t\t\t\t\t}\r\n"; // endif read sz
+
+								output += "\t\t\t\t\t\t\tdcon::resize(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], sz);\r\n";
+
+								output += "\t\t\t\t\t\t\tfor(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {\r\n"; // ii for
+								output += "\t\t\t\t\t\t\tdcon::get(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], ii) = "
+									"convert_type(reinterpret_cast<" + con.from + " const*>(icpy), (" + con.to + "*)nullptr);\r\n";
+								output += "\t\t\t\t\t\t\ticpy += sizeof(" + con.from + ");\r\n";
+								output += "\t\t\t\t\t\t\t}\r\n"; //end ii for
+
+								output += "\t\t\t\t\t\t\t++ix;\r\n";
+								output += "\t\t\t\t\t\t}\r\n"; //end for
+
+								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+								output += "\t\t\t\t\t}\r\n"; // end if = from
+
+							}
+						}
+					} // end for each in conversion list
+					if(is_common_type(prop.data_type)) {
+						const auto normed_type = normalize_type(prop.data_type);
+						for(auto& basic_type : common_types) {
+							if(basic_type != normed_type) {
+								output += "\t\t\t\t\telse if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), "
+									"reinterpret_cast<char const*>(zero_pos), \"" + basic_type + "\")) {\r\n"; // if = from
+
+								output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ) {\r\n";
+								output += "\t\t\t\t\t\t\tuint16_t sz = 0;\r\n"; // 2
+
+								output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\r\n"; // if read sz
+								output += "\t\t\t\t\t\t\t\tsz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), "
+									"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + basic_type + ") ));\r\n";
+								output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\r\n";
+								output += "\t\t\t\t\t\t\t}\r\n"; // endif read sz
+
+								output += "\t\t\t\t\t\t\tdcon::resize(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], sz);\r\n";
+
+								output += "\t\t\t\t\t\t\tfor(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {\r\n"; // ii for
+								output += "\t\t\t\t\t\t\tdcon::get(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], ii) = "
+									+ prop.data_type + "(*(reinterpret_cast<" + basic_type + " const*>(icpy) + i));\r\n";
+								output += "\t\t\t\t\t\t\ticpy += sizeof(" + basic_type + ");\r\n";
+								output += "\t\t\t\t\t\t\t}\r\n"; //end ii for
+
+								output += "\t\t\t\t\t\t\t++ix;\r\n";
+								output += "\t\t\t\t\t\t}\r\n"; //end for
+
+								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+								output += "\t\t\t\t\t}\r\n"; // end if = from
+							}
+						}
+					}
+					// end if prop is special array
+				} else if(prop.is_object) {
+					output += "\t\t\t\t\tif(header.is_type(\"" + prop.data_type + "\")) {\r\n"; //correct type
+
+					output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\r\n";
+					output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + prop.data_type + "))); ++i) {\r\n";
+					output += "\t\t\t\t\t\t\tdeserialize(icpy, " + o.name + ".m_" + prop.name + ".vptr()[i], input_buffer + header.record_size);\r\n";
+					output += "\t\t\t\t\t\t}\r\n";
+					output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+
+					output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m_" + prop.name + ".vptr(), reinterpret_cast<" + prop.data_type + " const*>(input_buffer), "
+						", std::min(size_t(" + o.name + ".size_used) * sizeof(" + prop.data_type + "), header.record_size));\r\n";
+					output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+					output += "\t\t\t\t\t}\r\n";// end correct type
+					for(auto& con : parsed_file.conversion_list) {
+						if(con.to == prop.data_type) {
+							if(std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.from) != parsed_file.object_types.end()) {
+								// from is an object
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
+								output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\r\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i) {\r\n";
+								output += "\t\t\t\t\t\t\t" + con.from + " temp;\r\n";
+								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\r\n";
+								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = convert_type(&temp, (" + con.to + "*)nullptr);\r\n";
+								output += "\t\t\t\t\t\t}\r\n";
+								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+								output += "\t\t\t\t\t}\r\n";
+							} else {
+								// from not an object
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i)\r\n";
+								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = "
+									+ "convert_type(reinterpret_cast<" + con.from + " const*>(input_buffer, (" + con.to + "*)nullptr) + i);\r\n";
+								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+								output += "\t\t\t\t\t}\r\n";
+
+							}
+						}
+					}
+				} else {
+					output += "\t\t\t\t\tif(header.is_type(\"" + prop.data_type + "\")) {\r\n"; //correct type
+					output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m_" + prop.name + ".vptr(), reinterpret_cast<" + prop.data_type + " const*>(input_buffer), "
+						", std::min(size_t(" + o.name + ".size_used) * sizeof(" + prop.data_type + "), header.record_size));\r\n";
+					output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+					output += "\t\t\t\t\t}\r\n";// end correct type
+					for(auto& con : parsed_file.conversion_list) {
+						if(con.to == prop.data_type) {
+							if(std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.from) != parsed_file.object_types.end()) {
+								// from is an object
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
+								output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\r\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i) {\r\n";
+								output += "\t\t\t\t\t\t\t" + con.from + " temp;\r\n";
+								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\r\n";
+								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = convert_type(&temp, (" + con.to + "*)nullptr);\r\n";
+								output += "\t\t\t\t\t\t}\r\n";
+								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+								output += "\t\t\t\t\t}\r\n";
+							} else {
+								// from not an object
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i)\r\n";
+								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = "
+									+ "convert_type(reinterpret_cast<" + con.from + " const*>(input_buffer) + i, (" + con.to + "*)nullptr);\r\n";
+								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+								output += "\t\t\t\t\t}\r\n";
+
+							}
+						}
+					}
+					if(is_common_type(prop.data_type)) {
+						const auto normed_type = normalize_type(prop.data_type);
+						for(auto& basic_type : common_types) {
+							if(basic_type != normed_type) {
+								output += "\t\t\t\t\telse if(header.is_type(\"" + basic_type + "\")) {\r\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + basic_type + "))); ++i)\r\n";
+								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = "
+									+ prop.data_type + "(*(reinterpret_cast<" + basic_type + " const*>(input_buffer) + i));\r\n";
+								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+								output += "\t\t\t\t\t}\r\n";
+							}
+						}
+					}
+				}
+				output += "\t\t\t\t\t}\r\n"; //end property match
+			} // end properties
+
+			output += "\t\t\t\t}\r\n"; // end has matched object
+		}
+		output += "\t\t\t\t}\r\n"; // end wrap: gaurantee enough space to read entire buffer
+		output += "\t\t\t\tinput_buffer += header.record_size;\r\n";
+
+		output += "\t\t\t}\r\n"; // end loop -- input buffer exhausted
+		output += "\t\t}\r\n"; // end deserialize (with mask)
+
+		output += "\r\n";
+		//write globals
+		output += "\r\n";
+		for(auto& gstr : parsed_file.globals) {
+			output += "\t\t" + gstr + "\r\n";
+		}
 
 		//class data_container end
 		output += "\t};\r\n\r\n";
