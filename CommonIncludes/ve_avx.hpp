@@ -8,10 +8,6 @@
 
 namespace ve {
 	constexpr int32_t vector_size = 8;
-	using fp_vector_internal = __m256;
-
-	constexpr int32_t full_mask = 0x00FF;
-	constexpr int32_t empty_mask = 0;
 
 	struct int_vector;
 
@@ -67,7 +63,7 @@ namespace ve {
 				0x00000001, 0x00000002, 0x00000004, 0x00000008,
 				0x00000010, 0x00000020, 0x00000040, 0x00000080);
 			//value = _mm256_castsi256_ps(_mm256_xor_si256(_mm256_and_si256(repeated_mask, mask_filter), _mm256_set1_epi32(-1)));
-			value = _mm256_cmp_ps(_mm256_castsi256_ps(mask_filter), _mm256_castsi256_ps(_mm256_and_si256(repeated_mask, mask_filter)), _CMP_NEQ_OQ);
+			value = _mm256_cmp_ps(_mm256_setzero_ps(), _mm256_castsi256_ps(_mm256_and_si256(repeated_mask, mask_filter)), _CMP_NEQ_UQ);
 		}
 		RELEASE_INLINE constexpr mask_vector(__m256 v) : value(v) {}
 		RELEASE_INLINE constexpr operator __m256() const {
@@ -75,6 +71,11 @@ namespace ve {
 		}
 		RELEASE_INLINE bool operator[](uint32_t i) const noexcept {
 			return _mm256_castps_si256(value).m256i_i32[i] != 0;
+		}
+		RELEASE_INLINE void set(uint32_t i, bool v) noexcept {
+			auto tmp = _mm256_castps_si256(value);
+			tmp.m256i_i32[i] = -(int32_t(v));
+			value = _mm256_castsi256_ps(tmp);
 		}
 	};
 
@@ -187,7 +188,7 @@ namespace ve {
 
 		__m256i value;
 
-		RELEASE_INLINE tagged_vector() : value(_mm256_setzero_si256()) {}
+		RELEASE_INLINE tagged_vector() : value(_mm256_set1_epi32(-1)) {}
 		RELEASE_INLINE constexpr tagged_vector(__m256i v) : value(v) {}
 		RELEASE_INLINE tagged_vector(int32_t v) : value(_mm256_set1_epi32(v)) {}
 		RELEASE_INLINE tagged_vector(int32_t a, int32_t b, int32_t c, int32_t d, int32_t e, int32_t f, int32_t g, int32_t h) : value(_mm256_setr_epi32(a, b, c, d, e, f, g, h))

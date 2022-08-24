@@ -7,9 +7,6 @@
 namespace ve {
 	constexpr int32_t vector_size = 4;
 
-	constexpr int32_t full_mask = 0x000F;
-	constexpr int32_t empty_mask = 0;
-
 	struct int_vector;
 
 	template<typename tag_type>
@@ -63,7 +60,7 @@ namespace ve {
 			const auto mask_filter = _mm_setr_epi32(
 				0x00000001, 0x00000002, 0x00000004, 0x00000008);
 			//value = _mm_castsi128_ps(_mm_xor_si128(_mm_and_si128(repeated_mask, mask_filter), _mm_set1_epi32(-1)));
-			value = _mm_cmp_ps(_mm_castsi128_ps(mask_filter), _mm_castsi128_ps(_mm_and_si128(repeated_mask, mask_filter)), _CMP_NEQ_OQ);
+			value = _mm_cmp_ps(_mm_setzero_ps(), _mm_castsi128_ps(_mm_and_si128(repeated_mask, mask_filter)), _CMP_NEQ_OQ);
 		}
 		RELEASE_INLINE constexpr mask_vector(__m128 v) : value(v) {}
 		RELEASE_INLINE constexpr operator __m128() const {
@@ -71,6 +68,11 @@ namespace ve {
 		}
 		RELEASE_INLINE bool operator[](uint32_t i) const noexcept {
 			return _mm_castps_si128(value).m128i_i32[i] != 0;
+		}
+		RELEASE_INLINE void set(uint32_t i, bool v) noexcept {
+			auto tmp = _mm_castps_si128(value);
+			tmp.m128i_i32[i] = -(int32_t(v));
+			value =_mm_castsi128_ps(tmp);
 		}
 	};
 
@@ -163,7 +165,7 @@ namespace ve {
 
 		__m128i value;
 
-		RELEASE_INLINE tagged_vector() : value(_mm_setzero_si128()) {}
+		RELEASE_INLINE tagged_vector() : value(_mm_set1_epi32(-1)) {}
 		RELEASE_INLINE constexpr tagged_vector(__m128i v) : value(v) {}
 		RELEASE_INLINE tagged_vector(int32_t v) : value(_mm_set1_epi32(v)) {}
 		RELEASE_INLINE tagged_vector(int32_t a, int32_t b, int32_t c, int32_t d) : value(_mm_setr_epi32(a, b, c, d)) {}
