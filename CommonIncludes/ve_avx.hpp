@@ -1,7 +1,10 @@
 #pragma once
+
+//
+// This file provided as part of the DataContainer project
+//
+
 #include <intrin.h>
-#undef min
-#undef max
 
 namespace ve {
 	constexpr int32_t vector_size = 8;
@@ -49,7 +52,7 @@ namespace ve {
 		return vbitfield_type{ uint8_t(a.v & (~b.v)) };
 	}
 
-	struct mask_vector {
+	struct alignas(__m256) mask_vector {
 		using wrapped_value = bool;
 
 		__m256 value;
@@ -75,7 +78,7 @@ namespace ve {
 		}
 	};
 
-	struct fp_vector {
+	struct alignas(__m256) fp_vector {
 		using wrapped_value = float;
 
 		__m256 value;
@@ -107,7 +110,7 @@ namespace ve {
 		}
 	};
 
-	struct int_vector {
+	struct alignas(__m128i) int_vector {
 		using wrapped_value = int32_t;
 
 		__m128i value_low;
@@ -142,20 +145,24 @@ namespace ve {
 	};
 
 	template<typename tag_type>
-	struct tagged_vector {
+	struct alignas(__m256i) tagged_vector {
 		using wrapped_value = tag_type;
 		static_assert(sizeof(tag_type::value_base_t) <= 4);
 
 		__m256i value;
 
-		RELEASE_INLINE tagged_vector() : value(tag_type::zero_is_null_t::value ? _mm256_setzero_si256() : _mm256_set1_epi32(-1)) {}
-		RELEASE_INLINE constexpr tagged_vector(__m256i v) : value(v) {}
-		RELEASE_INLINE tagged_vector(tag_type v) : value(_mm256_set1_epi32(tag_type::zero_is_null_t::value ? int32_t(v.value) : v.index())) {}
+		RELEASE_INLINE tagged_vector() : value(_mm256_set_m128i(_mm_set1_epi32(-1), _mm_set1_epi32(-1))) {}
+		RELEASE_INLINE tagged_vector(__m256i v) {
+			if constexpr(tag_type::zero_is_null_t::value) {
+				value = _mm256_set_m128i(_mm_sub_epi32(_mm256_extractf128_si256(v, 1), _mm_set1_epi32(int32_t(1))), _mm_sub_epi32(_mm256_extractf128_si256(v, 0), _mm_set1_epi32(int32_t(1))));
+			} else {
+				value = v;
+			}
+		}
+		RELEASE_INLINE tagged_vector(tag_type v) : value(_mm256_set_m128i(_mm_set1_epi32(v.index()), _mm_set1_epi32(v.index()))) {}
 		RELEASE_INLINE tagged_vector(tag_type a, tag_type b, tag_type c, tag_type d, tag_type e, tag_type f, tag_type g, tag_type h) :
-			value(tag_type::zero_is_null_t::value ?
-				_mm256_setr_epi32(int32_t(a.value), int32_t(b.value), int32_t(c.value), int32_t(d.value), int32_t(e.value), int32_t(f.value), int32_t(g.value), int32_t(h.value)) :
-				_mm256_setr_epi32(a,index(), b.index(), c.index(), d.index(), e.index(), f.index(), g.index(), h.index())
-			) {}
+			value(_mm256_setr_epi32(a.index(), b.index(), c.index(), d.index(), e.index(), f.index(), g.index(), h.index())) 
+		{}
 
 		RELEASE_INLINE constexpr operator __m256i() const {
 			return value;
@@ -164,61 +171,40 @@ namespace ve {
 		RELEASE_INLINE tag_type operator[](uint32_t i) const noexcept {
 			if constexpr(tag_type::zero_is_null_t::value) {
 				tag_type r;
-				r.value = typename tag_type::value_base_t(value.m256i_i32[i]);
+				r.value = typename tag_type::value_base_t(value.m256i_i32[i] + 1);
 				return r;
 			} else
 				return tag_type(typename tag_type::value_base_t(value.m256i_i32[i]));
 		}
 		RELEASE_INLINE void set(uint32_t i, tag_type v) noexcept {
-			if constexpr(tag_type::zero_is_null_t::value)
-				value.m256i_i32[i] = int32_t(v.value);
-			else
-				value.m256i_i32[i] = v.index();
+			value.m256i_i32[i] = v.index();
 		}
 	};
 
-	template<typename tag_type>
-	RELEASE_INLINE int_vector to_int(tagged_vector<tag_type> v) {
-		return v.value;
-	}
-
-	template<typename value_base, typename individuator>
-	RELEASE_INLINE int32_t to_int(tag_type<value_base, std::true_type, individuator> v) {
-		return int32_t(v.value);
-	}
-
 	template<>
-	struct tagged_vector<union_tag> {
-		using tag_type = union_tag;
-		using wrapped_value = tag_type;
+	struct alignas(__m256i) tagged_vector<int32_t> {
+		using wrapped_value = int32_t;
 
 		__m256i value;
 
 		RELEASE_INLINE tagged_vector() : value(_mm256_setzero_si256()) {}
 		RELEASE_INLINE constexpr tagged_vector(__m256i v) : value(v) {}
-		template<typename T>
-		RELEASE_INLINE constexpr tagged_vector(tagged_vector<T> v) : value(v.value) {}
-		RELEASE_INLINE tagged_vector(tag_type v) : value(_mm256_set1_epi32(v.value)) {}
-		RELEASE_INLINE tagged_vector(tag_type a, tag_type b, tag_type c, tag_type d, tag_type e, tag_type f, tag_type g, tag_type h) :
-			value(_mm256_setr_epi32(a.value, b.value, c.value, d.value, e.value, f.value, g.value, h.value)) {}
+		RELEASE_INLINE tagged_vector(int32_t v) : value(_mm256_set1_epi32(v)) {}
+		RELEASE_INLINE tagged_vector(int32_t a, int32_t b, int32_t c, int32_t d, int32_t e, int32_t f, int32_t g, int32_t h) : value(_mm256_setr_epi32(a, b, c, d, e, f, g, h))
+			{}
 
 		RELEASE_INLINE constexpr operator __m256i() const {
 			return value;
 		}
 
-		RELEASE_INLINE union_tag operator[](uint32_t i) const noexcept {
-			return union_tag(value.m256i_i32[i], std::true_type());
+		RELEASE_INLINE int32_t operator[](uint32_t i) const noexcept {
+			return value.m256i_i32[i];
 		}
-		RELEASE_INLINE void set(uint32_t i, union_tag v) noexcept {
-			value.m256i_i32[i] = v.value;
-		}
-		template<typename T>
-		RELEASE_INLINE constexpr operator tagged_vector<T>() {
-			return tagged_vector<T>(value);
+		RELEASE_INLINE void set(uint32_t i, int32_t v) noexcept {
+			value.m256i_i32[i] = v;
 		}
 	};
 
-	using union_tag_vector = tagged_vector<union_tag>;
 
 	template<typename tag_type>
 	struct contiguous_tags_base {
@@ -359,15 +345,6 @@ namespace ve {
 	struct value_to_vector_type_s<bool> {
 		using type = mask_vector;
 	};
-	template<>
-	struct value_to_vector_type_s<union_tag> {
-		using type = union_tag_vector;
-	};
-
-	template<typename value_base, typename individuator>
-	struct value_to_vector_type_s<tag_type<value_base, std::true_type, individuator>> {
-		using type = tagged_vector<tag_type<value_base, std::true_type, individuator>>;
-	};
 
 	template<>
 	struct value_to_vector_type_s<int_vector> {
@@ -385,13 +362,13 @@ namespace ve {
 	struct value_to_vector_type_s<tagged_vector<T>> {
 		using type = tagged_vector<T>;
 	};
-	template<typename T, int32_t i>
-	struct value_to_vector_type_s<contiguous_tags<T, i>> {
-		using type = contiguous_tags<T, i>;
+	template<typename T>
+	struct value_to_vector_type_s<contiguous_tags<T>> {
+		using type = contiguous_tags<T>;
 	};
-	template<typename T, int32_t i>
-	struct value_to_vector_type_s<unaligned_contiguous_tags<T, i>> {
-		using type = unaligned_contiguous_tags<T, i>;
+	template<typename T>
+	struct value_to_vector_type_s<unaligned_contiguous_tags<T>> {
+		using type = unaligned_contiguous_tags<T>;
 	};
 	template<typename T>
 	struct value_to_vector_type_s<partial_contiguous_tags<T>> {
@@ -421,12 +398,12 @@ namespace ve {
 	struct is_vector_type_s<tagged_vector<T>> {
 		constexpr static bool value = true;
 	};
-	template<typename T, int32_t i>
-	struct is_vector_type_s<contiguous_tags<T, i>> {
+	template<typename T>
+	struct is_vector_type_s<contiguous_tags<T>> {
 		constexpr static bool value = true;
 	};
-	template<typename T, int32_t i>
-	struct is_vector_type_s<unaligned_contiguous_tags<T, i>> {
+	template<typename T>
+	struct is_vector_type_s<unaligned_contiguous_tags<T>> {
 		constexpr static bool value = true;
 	};
 	template<typename T>
@@ -901,119 +878,6 @@ namespace ve {
 		0x00000000
 	};
 
-	template<typename F>
-	class alignas(__m256i) true_accumulator : public F {
-	private:
-		__m256i value;
-		uint32_t index = 0;
-		int32_t accumulated_mask = 0;
-	public:
-		bool result = false;
-
-		true_accumulator(F&& f) : value(_mm256_setzero_si256()), F(std::move(f)) {}
-
-		void add_value(int32_t v) {
-			if(!result) {
-				accumulated_mask |= (int32_t(v != 0) << index);
-				value.m256i_i32[index++] = v;
-
-				if(index == 8) {
-					result = (ve::compress_mask(F::operator()(value)) & accumulated_mask) != 0;
-					value = _mm256_setzero_si256();
-					index = 0;
-					accumulated_mask = 0;
-				}
-			}
-		}
-		void flush() {
-			if(int32_t(index != 0) & ~int32_t(result)) {
-				result = (ve::compress_mask(F::operator()(value)) & accumulated_mask) != 0;
-				index = 0;
-			}
-		}
-	};
-
-	template<typename F>
-	class alignas(__m256i) false_accumulator : public F {
-	private:
-		__m256i value;
-		uint32_t index = 0;
-		int32_t accumulated_mask = 0;
-	public:
-		bool result = true;
-
-		false_accumulator(F&& f) : value(_mm256_setzero_si256()), F(std::move(f)) {}
-
-		void add_value(int32_t v) {
-			if(result) {
-				accumulated_mask |= (int32_t(v != 0) << index);
-				value.m256i_i32[index++] = v;
-
-				if(index == 8) {
-					result = (ve::compress_mask(F::operator()(value)) & accumulated_mask) == accumulated_mask;
-					value = _mm256_setzero_si256();
-					index = 0;
-					accumulated_mask = 0;
-				}
-			}
-		}
-		void flush() {
-			if((index != 0) & result) {
-				result = (ve::compress_mask(F::operator()(value)) & accumulated_mask) == accumulated_mask;
-				index = 0;
-			}
-		}
-	};
-
-	template<typename TAG, typename F>
-	class alignas(__m256i) value_accumulator : public F {
-	private:
-		fp_vector value;
-		tagged_vector<TAG> store;
-
-		uint32_t index = 0;
-		int32_t accumulated_mask = 0;
-	public:
-
-		value_accumulator(F&& f) : F(std::move(f)) {}
-
-		void add_value(TAG v) {
-			accumulated_mask |= (int32_t(is_valid_index(v)) << index);
-			store.set(index++, v);
-
-			if(index == ve::vector_size) {
-				value = value + ve::select(accumulated_mask, F::operator()(store), 0.0f);
-				index = 0;
-				accumulated_mask = 0;
-			}
-
-		}
-		float flush() {
-			if(index != 0) {
-				value = value + ve::select(accumulated_mask, F::operator()(store), 0.0f);
-				index = 0;
-			}
-
-			return value.reduce();
-		}
-	};
-
-
-	template<typename F>
-	auto make_true_accumulator(F&& f) -> true_accumulator<F> {
-		return true_accumulator<F>(std::forward<F>(f));
-	}
-
-	template<typename F>
-	auto make_false_accumulator(F&& f) -> false_accumulator<F> {
-		return false_accumulator<F>(std::forward<F>(f));
-	}
-
-	template<typename TAG, typename F>
-	auto make_value_accumulator(F&& f) -> value_accumulator<TAG, F> {
-		return value_accumulator<TAG, F>(std::forward<F>(f));
-	}
-
 
 	template<typename T, typename U>
 	RELEASE_INLINE U partial_mask(contiguous_tags<T> e, U value) {
@@ -1037,14 +901,16 @@ namespace ve {
 		return value;
 	}
 
-
-	RELEASE_INLINE vbitfield_type load(contiguous_tags<int32_t> e, dcon::bitfield_type const* source) {
+	template<typename T>
+	RELEASE_INLINE vbitfield_type load(contiguous_tags<T> e, dcon::bitfield_type const* source) {
 		return vbitfield_type{ source[e.value / 8ui32].v };
 	}
-	RELEASE_INLINE vbitfield_type load(unaligned_contiguous_tags<int32_t> e, dcon::bitfield_type const* source) {
+	template<typename T>
+	RELEASE_INLINE vbitfield_type load(unaligned_contiguous_tags<T> e, dcon::bitfield_type const* source) {
 		return vbitfield_type{ source[e.value / 8ui32].v };
 	}
-	RELEASE_INLINE vbitfield_type load(partial_contiguous_tags<int32_t> e, dcon::bitfield_type const* source) {
+	template<typename T>
+	RELEASE_INLINE vbitfield_type load(partial_contiguous_tags<T> e, dcon::bitfield_type const* source) {
 		return vbitfield_type{ source[e.value / 8ui32].v };
 	}
 
@@ -1074,23 +940,23 @@ namespace ve {
 			_mm256_setr_m128i(_mm_sub_epi32(_mm_setzero_si128(), gathered_low_bits), _mm_sub_epi32(_mm_setzero_si128(), gathered_high_bits)));
 	}
 
-	template< typename U>
-	RELEASE_INLINE auto load(contiguous_tags<int32_t> e, U const* source) -> std::enable_if_t<sizeof(U) == 4, value_to_vector_type<U>> {
+	template<typename T, typename U>
+	RELEASE_INLINE auto load(contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 4, value_to_vector_type<U>> {
 		assert((intptr_t(source + e.value) & 31) == 0);
 		if constexpr(std::is_same_v<U, float>)
 			return _mm256_load_ps(source + e.value);
 		else
 			return _mm256_load_si256((const __m256i *)(source + e.value));
 	}
-	template< typename U>
-	RELEASE_INLINE auto load(unaligned_contiguous_tags<int32_t> e, U const* source) -> std::enable_if_t<sizeof(U) == 4, value_to_vector_type<U>> {
+	template<typename T, typename U>
+	RELEASE_INLINE auto load(unaligned_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 4, value_to_vector_type<U>> {
 		if constexpr(std::is_same_v<U, float>)
 			return _mm256_loadu_ps(source + e.value);
 		else
 			return _mm256_loadu_si256((const __m256i *)(source + e.value));
 	}
-	template<typename U>
-	RELEASE_INLINE auto load(partial_contiguous_tags<int32_t> e, U const* source) -> std::enable_if_t<sizeof(U) == 4, value_to_vector_type<U>> {
+	template<typename T, typename U>
+	RELEASE_INLINE auto load(partial_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 4, value_to_vector_type<U>> {
 		auto mask = _mm256_loadu_ps((float const*)(load_masks) + 8ui32 - e.subcount);
 
 		if constexpr(std::is_same_v<U, float>) {
@@ -1157,8 +1023,8 @@ namespace ve {
 #pragma warning( push )
 #pragma warning( disable : 4245)
 
-	template<typename U>
-	RELEASE_INLINE auto load(contiguous_tags<int32_t> e, U const* source) -> std::enable_if_t<sizeof(U) == 2, value_to_vector_type<U>> {
+	template<typename T, typename U>
+	RELEASE_INLINE auto load(contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 2, value_to_vector_type<U>> {
 		if constexpr(U(-2) < U(0)) {
 			auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
 			auto const vh = _mm_loadl_epi64((const __m128i *)(source + e.value + 4));
@@ -1183,8 +1049,8 @@ namespace ve {
 				return _mm256_setr_m128i(cl, ch);
 		}
 	}
-	template< typename U>
-	RELEASE_INLINE auto load(unaligned_contiguous_tags<int32_t> e, U const* source) -> std::enable_if_t<sizeof(U) == 2, value_to_vector_type<U>> {
+	template<typename T, typename U>
+	RELEASE_INLINE auto load(unaligned_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 2, value_to_vector_type<U>> {
 		if constexpr(U(-2) < U(0)) {
 			auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
 			auto const vh = _mm_loadl_epi64((const __m128i *)(source + e.value + 4));
@@ -1209,8 +1075,8 @@ namespace ve {
 				return _mm256_setr_m128i(cl, ch);
 		}
 	}
-	template<typename U>
-	RELEASE_INLINE auto load(partial_contiguous_tags<int32_t> e, U const* source) -> std::enable_if_t<sizeof(U) == 2, value_to_vector_type<U>> {
+	template<typename T, typename U>
+	RELEASE_INLINE auto load(partial_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 2, value_to_vector_type<U>> {
 		if constexpr(U(-2) < U(0)) {
 			auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
 			auto const vh = _mm_loadl_epi64((const __m128i *)(source + e.value + 4));
@@ -1302,8 +1168,8 @@ namespace ve {
 		}
 	}
 
-	template< typename U>
-	RELEASE_INLINE auto load(contiguous_tags<int32_t> e, U const* source) -> std::enable_if_t<sizeof(U) == 1 && !std::is_same_v<U, dcon::bitfield_type>, value_to_vector_type<U>> {
+	template<typename T, typename U>
+	RELEASE_INLINE auto load(contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 1 && !std::is_same_v<U, dcon::bitfield_type>, value_to_vector_type<U>> {
 		if constexpr(U(-2) < U(0)) {
 			auto const vl = _mm_loadu_si32(source + e.value);
 			auto const vh = _mm_loadu_si32(source + e.value + 4);
@@ -1328,8 +1194,8 @@ namespace ve {
 				return _mm256_setr_m128i(cl, ch);
 		}
 	}
-	template< typename U>
-	RELEASE_INLINE auto load(unaligned_contiguous_tags<int32_t> e, U const* source) -> std::enable_if_t<sizeof(U) == 1 && !std::is_same_v<U, dcon::bitfield_type>, value_to_vector_type<U>> {
+	template<typename T, typename U>
+	RELEASE_INLINE auto load(unaligned_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 1 && !std::is_same_v<U, dcon::bitfield_type>, value_to_vector_type<U>> {
 		if constexpr(U(-2) < U(0)) {
 			auto const vl = _mm_loadu_si32(source + e.value);
 			auto const vh = _mm_loadu_si32(source + e.value + 4);
@@ -1354,8 +1220,8 @@ namespace ve {
 				return _mm256_setr_m128i(cl, ch);
 		}
 	}
-	template<typename U>
-	RELEASE_INLINE auto load(partial_contiguous_tags<int32_t> e, U const* source) -> std::enable_if_t<sizeof(U) == 1 && !std::is_same_v<U, dcon::bitfield_type>, value_to_vector_type<U>> {
+	template<typename T, typename U>
+	RELEASE_INLINE auto load(partial_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 1 && !std::is_same_v<U, dcon::bitfield_type>, value_to_vector_type<U>> {
 		if constexpr(U(-2) < U(0)) {
 			auto const vl = _mm_loadu_si32(source + e.value);
 			auto const vh = _mm_loadu_si32(source + e.value + 4);
@@ -1451,114 +1317,17 @@ namespace ve {
 
 	//-----
 
-	template<typename T,  typename U>
-	RELEASE_INLINE auto load(contiguous_tags<typename ve_identity<T>::type> e, tagged_array_view<U, T> source) {
-		return ve::load(contiguous_tags<int32_t>(e.value), source.data());
-	}
-	template<typename T,  typename U>
-	RELEASE_INLINE auto load(unaligned_contiguous_tags<typename ve_identity<T>::type> e, tagged_array_view<U, T> source) {
-		return ve::load(unaligned_contiguous_tags<int32_t>(e.value), source.data());
-	}
-	template<typename T, typename U>
-	RELEASE_INLINE auto load(partial_contiguous_tags<typename ve_identity<T>::type> e, tagged_array_view<U, T> source) {
-		return ve::load(partial_contiguous_tags<int32_t>(e.value, e.subcount), source.data());
-	}
-	template<typename T, typename U>
-	RELEASE_INLINE auto load(tagged_vector<typename ve_identity<T>::type> indices, tagged_array_view<U, T> source) {
-		if constexpr(!std::is_same_v<std::remove_cv_t<U>, dcon::bitfield_type>) {
-			return ve::load(indices.value, source.data() - int32_t(T::zero_is_null_t::value));
-		} else if constexpr(T::zero_is_null_t::value) {
-			return ve::load(int_vector(indices.value) - 1, source.data());
-		} else {
-			return ve::load(indices.value, source.data());
-		}
-	}
-	//-----
-
-	template<int32_t cache_lines, typename T, typename U>
-	RELEASE_INLINE auto prefetch(contiguous_tags<T> e, U const* source) -> void {
-		if constexpr(i % (8 / sizeof(U)) == 0) {
-			_mm_prefetch((char const*)(source + e.value) + 64 * cache_lines, _MM_HINT_T0);
-		}
-	}
-	template<int32_t cache_lines, typename T, typename U>
-	RELEASE_INLINE auto prefetch(contiguous_tags<T> e, tagged_array_view<U, typename ve_identity<T>::type> source) -> void {
-		if constexpr(i % (8 / sizeof(U)) == 0) {
-			_mm_prefetch((char const*)(source.data() + e.value) + 64 * cache_lines, _MM_HINT_T0);
-		}
-	}
-	template<int32_t cache_lines, typename T, typename U>
-	RELEASE_INLINE auto prefetch(unaligned_contiguous_tags<T> e, U source) -> void {}
-	template<int32_t cache_lines, typename T, typename U>
-	RELEASE_INLINE auto prefetch(partial_contiguous_tags<T> e, U source) -> void {}
-	template<int32_t cache_lines, typename U>
-	RELEASE_INLINE auto prefetch(int_vector indices, U source) -> void {}
-	template<int32_t cache_lines, typename T, typename U>
-	RELEASE_INLINE auto prefetch(tagged_vector<T> indices, U source) -> void {}
-
-
-	template<int32_t cache_lines, typename T, typename U>
-	RELEASE_INLINE auto nt_prefetch(contiguous_tags<T> e, U const* source) -> void {
-		if constexpr(i % (8 / sizeof(U)) == 0) {
-			_mm_prefetch((char const*)(source + e.value) + 64 * cache_lines, _MM_HINT_NTA);
-		}
-	}
-	template<int32_t cache_lines, typename T, typename U>
-	RELEASE_INLINE auto nt_prefetch(contiguous_tags<T> e, tagged_array_view<U, typename ve_identity<T>::type> source) -> void {
-		if constexpr(i % (8 / sizeof(U)) == 0) {
-			_mm_prefetch((char const*)(source.data() + e.value) + 64 * cache_lines, _MM_HINT_T0);
-		}
-	}
-	template<int32_t cache_lines, typename T, typename U>
-	RELEASE_INLINE auto nt_prefetch(unaligned_contiguous_tags<T> e, U source) -> void {}
-	template<int32_t cache_lines, typename T, typename U>
-	RELEASE_INLINE auto nt_prefetch(partial_contiguous_tags<T> e, U source) -> void {}
-	template<int32_t cache_lines, typename U>
-	RELEASE_INLINE auto nt_prefetch(int_vector indices, U source) -> void {}
-	template<int32_t cache_lines, typename T, typename U>
-	RELEASE_INLINE auto nt_prefetch(tagged_vector<T> indices, U source) -> void {}
-
-	template<int32_t stride>
-	struct prefetch_stride {
-		int32_t offset;
-	};
-
-	template<int32_t stride, typename T>
-	RELEASE_INLINE auto prefetch(prefetch_stride<stride> e, T* source) -> void {
-		static_assert(sizeof(T) <= 4);
-		if constexpr((stride % (4 / sizeof(T))) == 0) {
-			_mm_prefetch((char const*)(source + 16 * e.offset), _MM_HINT_T0);
-		}
-	}
-
-	template<int32_t stride, typename T, typename U>
-	RELEASE_INLINE auto prefetch(prefetch_stride<stride> e, tagged_array_view<T, U> source) -> void {
-		prefetch(e, source.data());
-	}
-
-	template<int32_t stride, typename T>
-	RELEASE_INLINE auto nt_prefetch(prefetch_stride<stride> e, T* source) -> void {
-		static_assert(sizeof(T) <= 4);
-		if constexpr((stride % (4 / sizeof(T))) == 0) {
-			_mm_prefetch((char const*)(source + 16 * e.offset), _MM_HINT_NTA);
-		}
-	}
-
-	template<int32_t stride, typename T, typename U>
-	RELEASE_INLINE auto nt_prefetch(prefetch_stride<stride> e, tagged_array_view<T, U> source) -> void {
-		prefetch(e, source.data());
-	}
-
-	template<int32_t i>
-	RELEASE_INLINE void store(contiguous_tags<int32_t, i> e, float* dest, fp_vector values) {
+	template<typename T>
+	RELEASE_INLINE void store(contiguous_tags<T> e, float* dest, fp_vector values) {
 		assert((intptr_t(dest + e.value) & 31) == 0);
 		return _mm256_store_ps(dest + e.value, values);
 	}
-	template<int32_t i>
-	RELEASE_INLINE void store(unaligned_contiguous_tags<int32_t, i> e, float* dest, fp_vector values) {
+	template<typename T>
+	RELEASE_INLINE void store(unaligned_contiguous_tags<T> e, float* dest, fp_vector values) {
 		return _mm256_storeu_ps(dest + e.value, values);
 	}
-	RELEASE_INLINE void store(partial_contiguous_tags<int32_t> e, float* dest, fp_vector values) {
+	template<typename T>
+	RELEASE_INLINE void store(partial_contiguous_tags<T> e, float* dest, fp_vector values) {
 		switch(e.subcount) {
 			default:
 				// fallthrough
@@ -1591,18 +1360,6 @@ namespace ve {
 		}
 	}
 
-	template<typename T>
-	RELEASE_INLINE void store(contiguous_tags<typename ve_identity<T>::type> e, tagged_array_view<float, T> dest, fp_vector values) {
-		ve::store(contiguous_tags<int32_t>(e.value), dest.data(), values);
-	}
-	template<typename T>
-	RELEASE_INLINE void store(unaligned_contiguous_tags<typename ve_identity<T>::type> e, tagged_array_view<float, T> dest, fp_vector values) {
-		ve::store(unaligned_contiguous_tags<int32_t>(e.value), dest.data(), values);
-	}
-	template<typename T>
-	RELEASE_INLINE void store(partial_contiguous_tags<typename ve_identity<T>::type> e, tagged_array_view<float, T> dest, fp_vector values) {
-		ve::store(partial_contiguous_tags<int32_t>(e.value, e.subcount), dest.data(), values);
-	}
 
 	RELEASE_INLINE void store(__m256i indices, float* dest, fp_vector values) {
 		dest[indices.m256i_i32[0]] = values[0];
@@ -1625,8 +1382,4 @@ namespace ve {
 		dest[indices[7]] = values[7];
 	}
 	
-	template<typename T>
-	RELEASE_INLINE void store(tagged_vector<typename ve_identity<T>::type> indices, tagged_array_view<float, T> dest, fp_vector values) {
-		ve::store(indices.value, dest.data() - int32_t(T::zero_is_null_t::value), values);
-	}
 }

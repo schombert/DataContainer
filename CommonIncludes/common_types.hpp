@@ -1,10 +1,16 @@
 #pragma once
+
+//
+// This file provided as part of the DataContainer project
+//
+
 #include <cstdint>
 #include <utility>
 #include <algorithm>
 #include <intrin.h>
 #include <atomic>
 #include <cstddef>
+#include <new>
 
 #ifdef NDEBUG 
 #ifdef _MSC_VER 
@@ -93,7 +99,7 @@ namespace dcon {
 
 			output_buffer += sizeof(uint64_t) + (type_name_end - type_name_start) + (object_name_end - object_name_start) + (property_name_end - property_name_start) + 3;
 		}
-		uint64_t deserialize(std::byte const*& input_buffer, std::byte const* end) {
+		void deserialize(std::byte const*& input_buffer, std::byte const* end) {
 			record_size = 0;
 			type_name_start = nullptr;
 			type_name_end = nullptr;
@@ -109,21 +115,21 @@ namespace dcon {
 			record_size = *sz;
 			input_buffer += 4;
 			type_name_start = reinterpret_cast<char const*>(input_buffer);
-			while(input_buffer < end && *input_buffer != 0 ) {
+			while(input_buffer < end && *input_buffer != std::byte(0) ) {
 				++input_buffer;
 			}
 			type_name_end = reinterpret_cast<char const*>(input_buffer);
 			++input_buffer;
 
 			object_name_start = reinterpret_cast<char const*>(input_buffer);
-			while(input_buffer < end && *input_buffer != 0) {
+			while(input_buffer < end && *input_buffer != std::byte(0)) {
 				++input_buffer;
 			}
 			object_name_end = reinterpret_cast<char const*>(input_buffer);
 			++input_buffer;
 
 			property_name_start = reinterpret_cast<char const*>(input_buffer);
-			while(input_buffer < end && *input_buffer != 0) {
+			while(input_buffer < end && *input_buffer != std::byte(0)) {
 				++input_buffer;
 			}
 			property_name_end = reinterpret_cast<char const*>(input_buffer);
@@ -280,7 +286,7 @@ namespace dcon {
 				}
 			}
 		}
-		void shrink_capacity(stable_mk_2_tag& i)[
+		void shrink_capacity(stable_mk_2_tag& i) {
 			detail::mk_2_header* header = (detail::mk_2_header*)(backing_storage + i);
 
 			if(header->size == 0ui16) {
@@ -296,12 +302,12 @@ namespace dcon {
 
 				detail::mk_2_header* new_header = (detail::mk_2_header*)(backing_storage + new_item);
 				new_header->size = header->size;
-				std::copy(detail::to_data<object_type, align>(header), detail::to_data<object_type, align>(header) + header->size, detail::to_data<object_type, align>(new_header));
+				std::copy(detail::to_data<object_type>(header), detail::to_data<object_type>(header) + header->size, detail::to_data<object_type>(new_header));
 
 				release(i);
 				i = new_item;
 			}
-		]
+		}
 		void release(stable_mk_2_tag& i) {
 			if(i == std::numeric_limits<stable_mk_2_tag>::max())
 				return;
@@ -346,9 +352,9 @@ namespace dcon {
 
 			new_header->capacity = uint16_t(real_capacity);
 			new_header->size = 0ui16;
-			new_header->next_free = null_value_of<stable_mk_2_tag>;
+			new_header->next_free = std::numeric_limits<stable_mk_2_tag>::max();
 
-			object_type* objects = detail::to_data<object_type, align>(new_header);
+			object_type* objects = detail::to_data<object_type>(new_header);
 			for(int32_t i = int32_t(real_capacity) - 1; i >= 0; --i)
 				new (objects + i) object_type();
 
@@ -370,7 +376,7 @@ namespace dcon {
 	template<typename object_type, uint32_t minimum_size, size_t memory_size>
 	object_type& get(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size> const& storage, stable_mk_2_tag i, uint32_t inner_index) {
 		detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
-		return *(detail::to_data<object_type, align>(header) + inner_index);
+		return *(detail::to_data<object_type>(header) + inner_index);
 	}
 
 	template<typename object_type, uint32_t minimum_size, size_t memory_size, int32_t align>
@@ -399,7 +405,7 @@ namespace dcon {
 			storage.increase_capacity(i, 1);
 			detail::mk_2_header*header = (detail::mk_2_header*)(storage.backing_storage + i);
 
-			*detail::to_data<object_type, align>(header) = obj;
+			*detail::to_data<object_type>(header) = obj;
 			header->size = 1ui16;
 		} else {
 			detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
@@ -407,7 +413,7 @@ namespace dcon {
 				storage.increase_capacity(i, header->size + 1);
 				header = (detail::mk_2_header*)(storage.backing_storage + i);
 			}
-			*(detail::to_data<object_type, align>(header) + header->size) = obj;
+			*(detail::to_data<object_type>(header) + header->size) = obj;
 			++header->size;
 		}
 	}
@@ -464,6 +470,27 @@ namespace dcon {
 		}
 
 	}
+
+	template <typename T>
+	struct cache_aligned_allocator {
+		using value_type = T;
+
+		cache_aligned_allocator() noexcept {}
+		template<class U> cache_aligned_allocator(const cache_aligned_allocator<U>&) noexcept {}
+		template<class U> bool operator==(const cache_aligned_allocator<U>&) const noexcept {
+			return true;
+		}
+		template<class U> bool operator!=(const cache_aligned_allocator<U>&) const noexcept {
+			return false;
+		}
+
+		T* allocate(size_t n) {
+			return (T*)(::operator new(n * sizeof(T), std::align_val_t{ 64 }));
+		}
+		void deallocate(T* p, size_t n) {
+			::operator delete(p, std::align_val_t{ 64 });
+		}
+	};
 }
 
 #undef COM_RELEASE_INLINE

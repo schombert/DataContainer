@@ -1,3 +1,7 @@
+//
+// This file provided as part of the DataContainer project
+//
+
 #include <string>
 #include <vector>
 #include <fstream>
@@ -647,7 +651,8 @@ int main(int argc, char *argv[]) {
 		output += "#include <utility>\r\n";
 		output += "#include <vector>\r\n";
 		output += "#include <algorithem>\r\n";
-		output += "#include \"ve.h\"\r\n";
+		output += "#include <cassert>\r\n";
+		output += "#include \"ve.hpp\"\r\n";
 		for(auto& i : parsed_file.includes) {
 			output += "#include ";
 			output += i;
@@ -704,10 +709,10 @@ int main(int argc, char *argv[]) {
 				output += std::string("\t\t") + underlying_type + " value;\r\n\r\n";
 
 				//constructors
-				output += std::string("\t\texplicit constexpr ") + o.name + "_id(" + underlying_type + " v) noexcept : value(v + 1);\r\n";
-				output += std::string("\t\tconstexpr ") + o.name + "_id(const " + o.name + "_id& v) noexcept = default\r\n";
-				output += std::string("\t\tconstexpr ") + o.name + "_id(" + o.name + "_id&& v) noexcept = default\r\n";
-				output += std::string("\t\tconstexpr ") + o.name + "_id() noexcept : value(" + underlying_type + "(0));\r\n\r\n";
+				output += std::string("\t\texplicit constexpr ") + o.name + "_id(" + underlying_type + " v) noexcept : value(v + 1) {}\r\n";
+				output += std::string("\t\tconstexpr ") + o.name + "_id(const " + o.name + "_id& v) noexcept = default;\r\n";
+				output += std::string("\t\tconstexpr ") + o.name + "_id(" + o.name + "_id&& v) noexcept = default;\r\n";
+				output += std::string("\t\tconstexpr ") + o.name + "_id() noexcept : value(" + underlying_type + "(0)) {}\r\n\r\n";
 
 				//operators
 				output += "\t\t" + o.name + "_id& operator=(" + o.name + "_id&& v) noexcept = default;\r\n";
@@ -1142,11 +1147,11 @@ int main(int argc, char *argv[]) {
 						output += "\t\t)\r\n";
 
 						output += "\t\tDCON_RELEASE_INLINE ve::vbitfield_type get_ " + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id) const noexcept (\r\n";
-						output += "\t\t\treturn ve::load(" + con_tags_type + "<int32_t>(id.value), " + o.name + ".m_" + p.name + ".vptr());\r\n";
+						output += "\t\t\treturn ve::load(id, " + o.name + ".m_" + p.name + ".vptr());\r\n";
 						output += "\t\t)\r\n";
 
 						output += "\t\tDCON_RELEASE_INLINE ve::vbitfield_type get_ " + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept (\r\n";
-						output += "\t\t\treturn ve::load(ve::partial_contiguous_tags<int32_t>(id.value, id.subcount), " + o.name + ".m_" + p.name + ".vptr());\r\n";
+						output += "\t\t\treturn ve::load(id, " + o.name + ".m_" + p.name + ".vptr());\r\n";
 						output += "\t\t)\r\n";
 
 						output += "\t\tDCON_RELEASE_INLINE ve::vbitfield_type get_ " + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id) const noexcept (\r\n";
@@ -1160,12 +1165,12 @@ int main(int argc, char *argv[]) {
 
 						output += "\t\tDCON_RELEASE_INLINE " "void set_ " + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id, "
 							"ve::vbitfield_type values) noexcept (\r\n";
-						output += "\t\t\tve::store(" + con_tags_type + "<int32_t>(id.value), " + o.name + ".m_" + p.name + ".vptr(), values);\r\n";
+						output += "\t\t\tve::store(id, " + o.name + ".m_" + p.name + ".vptr(), values);\r\n";
 						output += "\t\t)\r\n";
 
 						output += "\t\tDCON_RELEASE_INLINE " "void set_ " + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
 							"ve::vbitfield_type values) noexcept (\r\n";
-						output += "\t\t\tve::store(ve::partial_contiguous_tags<int32_t>(id.value, id.subcount), " + o.name + ".m_" + p.name + ".vptr(), values);\r\n";
+						output += "\t\t\tve::store(id, " + o.name + ".m_" + p.name + ".vptr(), values);\r\n";
 						output += "\t\t)\r\n";
 
 						output += "\t\tDCON_RELEASE_INLINE " "void set_ " + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id, "
@@ -1237,11 +1242,11 @@ int main(int argc, char *argv[]) {
 						output += "\t\t)\r\n";
 
 						output += "\t\tDCON_RELEASE_INLINE ve::value_to_vector_type<" + p.data_type + "> get_ " + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id) const noexcept (\r\n";
-						output += "\t\t\treturn ve::load(" + con_tags_type + "<int32_t>(id.value), " + o.name + ".m_" + p.name + ".vptr());\r\n";
+						output += "\t\t\treturn ve::load(id, " + o.name + ".m_" + p.name + ".vptr());\r\n";
 						output += "\t\t)\r\n";
 
 						output += "\t\tDCON_RELEASE_INLINE ve::value_to_vector_type<" + p.data_type + "> get_ " + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept (\r\n";
-						output += "\t\t\treturn ve::load(ve::partial_contiguous_tags<int32_t>(id.value, id.subcount), " + o.name + ".m_" + p.name + ".vptr());\r\n";
+						output += "\t\t\treturn ve::load(id, " + o.name + ".m_" + p.name + ".vptr());\r\n";
 						output += "\t\t)\r\n";
 
 						output += "\t\tDCON_RELEASE_INLINE ve::value_to_vector_type<" + p.data_type + "> get_ " + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id) const noexcept (\r\n";
@@ -1255,12 +1260,12 @@ int main(int argc, char *argv[]) {
 
 						output += "\t\tDCON_RELEASE_INLINE " "void set_ " + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id, "
 							"ve::value_to_vector_type<" + p.data_type + "> values) noexcept (\r\n";
-						output += "\t\t\tve::store(" + con_tags_type + "<int32_t>(id.value), " + o.name + ".m_" + p.name + ".vptr(), values);\r\n";
+						output += "\t\t\tve::store(id, " + o.name + ".m_" + p.name + ".vptr(), values);\r\n";
 						output += "\t\t)\r\n";
 
 						output += "\t\tDCON_RELEASE_INLINE " "void set_ " + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
 							"ve::value_to_vector_type<" + p.data_type + "> values) noexcept (\r\n";
-						output += "\t\t\tve::store(ve::partial_contiguous_tags<int32_t>(id.value, id.subcount), " + o.name + ".m_" + p.name + ".vptr(), values);\r\n";
+						output += "\t\t\tve::store(id, " + o.name + ".m_" + p.name + ".vptr(), values);\r\n";
 						output += "\t\t)\r\n";
 
 						output += "\t\tDCON_RELEASE_INLINE " "void set_ " + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id, "
@@ -1453,11 +1458,11 @@ int main(int argc, char *argv[]) {
 					output += "\t\t)\r\n";
 
 					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_ " + r.name + "_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\treturn ve::load(" + relation_con_tags_type + "<int32_t>(id.value), " + r.name + ".m_" + i.property_name + ".vptr());\r\n";
+					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\r\n";
 					output += "\t\t)\r\n";
 
 					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_ " + r.name + "_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\treturn ve::load(ve::partial_contiguous_tags<int32_t>(id.value, id.subcount), " + r.name + ".m_" + i.property_name + ".vptr());\r\n";
+					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\r\n";
 					output += "\t\t)\r\n";
 
 					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_ " + r.name + "_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept (\r\n";
@@ -1486,12 +1491,12 @@ int main(int argc, char *argv[]) {
 
 					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_ " + i.type_name + "_" + r.name + "_as_" + i.property_name +
 						"(" + con_tags_type + "<" + id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\treturn ve::load(" + con_tags_type + "<int32_t>(id.value), " + r.name + ".m_link_back_" + i.property_name + ".vptr());\r\n";
+					output += "\t\t\treturn ve::load(id, " + r.name + ".m_link_back_" + i.property_name + ".vptr());\r\n";
 					output += "\t\t)\r\n";
 
 					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_ " + i.type_name + "_" + r.name + "_as_" + i.property_name +
 						"(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\treturn ve::load(ve::partial_contiguous_tags<int32_t>(id.value, id.subcount), " + r.name + ".m_link_back_" + i.property_name + ".vptr());\r\n";
+					output += "\t\t\treturn ve::load(id, " + r.name + ".m_link_back_" + i.property_name + ".vptr());\r\n";
 					output += "\t\t)\r\n";
 
 					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_ " + i.type_name + "_" + r.name + "_as_" + i.property_name +
@@ -1517,11 +1522,11 @@ int main(int argc, char *argv[]) {
 					output += "\t\t)\r\n";
 
 					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_ " + r.name + "_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\treturn ve::load(" + relation_con_tags_type + "<int32_t>(id.value), " + r.name + ".m_" + i.property_name + ".vptr());\r\n";
+					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\r\n";
 					output += "\t\t)\r\n";
 
 					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_ " + r.name + "_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\treturn ve::load(ve::partial_contiguous_tags<int32_t>(id.value, id.subcount), " + r.name + ".m_" + i.property_name + ".vptr());\r\n";
+					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\r\n";
 					output += "\t\t)\r\n";
 
 					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_ " + r.name + "_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept (\r\n";
@@ -1665,11 +1670,11 @@ int main(int argc, char *argv[]) {
 					output += "\t\t)\r\n";
 
 					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_ " + r.name + "_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\treturn ve::load(" + relation_con_tags_type + "<int32_t>(id.value), " + r.name + ".m_" + i.property_name + ".vptr());\r\n";
+					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\r\n";
 					output += "\t\t)\r\n";
 
 					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_ " + r.name + "_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\treturn ve::load(ve::partial_contiguous_tags<int32_t>(id.value, id.subcount), " + r.name + ".m_" + i.property_name + ".vptr());\r\n";
+					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\r\n";
 					output += "\t\t)\r\n";
 
 					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_ " + r.name + "_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept (\r\n";
@@ -1684,12 +1689,12 @@ int main(int argc, char *argv[]) {
 
 					output += "\t\tDCON_RELEASE_INLINE " "void set_ " + r.name + "_" + i.property_name + "(" + relation_con_tags_type + "<" + id_name + "> id, "
 						"ve::tagged_vector<" + id_name + "> values) noexcept (\r\n";
-					output += "\t\t\tve::store(" + relation_con_tags_type + "<int32_t>(id.value), " + r.name + ".m_" + i.property_name + ".vptr(), values);\r\n";
+					output += "\t\t\tve::store(id, " + r.name + ".m_" + i.property_name + ".vptr(), values);\r\n";
 					output += "\t\t)\r\n";
 
 					output += "\t\tDCON_RELEASE_INLINE " "void set_ " + r.name + "_" + i.property_name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
 						"ve::tagged_vector<" + id_name + "> values) noexcept (\r\n";
-					output += "\t\t\tve::store(ve::partial_contiguous_tags<int32_t>(id.value, id.subcount), " + r.name + ".m_" + i.property_name + ".vptr(), values);\r\n";
+					output += "\t\t\tve::store(id, " + r.name + ".m_" + i.property_name + ".vptr(), values);\r\n";
 					output += "\t\t)\r\n";
 
 					output += "\t\tDCON_RELEASE_INLINE " "void set_ " + r.name + "_" + i.property_name + "(ve::tagged_vector<" + id_name + "> id, "
@@ -3100,7 +3105,43 @@ int main(int argc, char *argv[]) {
 		}
 
 		output += "\r\n";
+
+		//make ve interface
+
+		for(auto& o : parsed_file.relationship_objects) {
+			output += "\t\tve::vectorizable_buffer<float, " + o.name + "_id> " + o.name + "_make_vectorizable_float_buffer() const noexcept {\r\n";
+			output += "\t\t\treturn ve::vectorizable_buffer<float, " + o.name + "_id>(" + o.name + ".size_used);\r\n";
+			output += "\t\t}\r\n";
+			output += "\t\tve::vectorizable_buffer<int32_t, " + o.name + "_id> " + o.name + "_make_vectorizable_int_buffer() const noexcept {\r\n";
+			output += "\t\t\treturn ve::vectorizable_buffer<int32_t, " + o.name + "_id>(" + o.name + ".size_used);\r\n";
+			output += "\t\t}\r\n";
+			output += "\t\ttemplate<typename F>\r\n";
+			if(!o.is_expandable) {
+				output += "\t\tDCON_RELEASE_INLINE void execute_serial_over_" + o.name + "(F functor) {\r\n";
+				output += "\t\t\tve::execute_serial(" + o.name + ".size_used, functor);\r\n";
+				output += "\t\t}\r\n";
+				output += "#ifndef VE_NO_TBB\r\n";
+				output += "\t\tDCON_RELEASE_INLINE void execute_parallel_over_" + o.name + "(F functor) {\r\n";
+				output += "\t\t\tve::execute_parallel_exact(" + o.name + ".size_used, functor);\r\n";
+				output += "\t\t}\r\n";
+				output += "#endif\r\n";
+			} else {
+				output += "\t\tDCON_RELEASE_INLINE void execute_serial_over_" + o.name + "(F functor) {\r\n";
+				output += "\t\t\tve::execute_serial_unaligned(" + o.name + ".size_used, functor);\r\n";
+				output += "\t\t}\r\n";
+				output += "#ifndef VE_NO_TBB\r\n";
+				output += "\t\tDCON_RELEASE_INLINE void execute_parallel_over_" + o.name + "(F functor) {\r\n";
+				output += "\t\t\tve::execute_parallel_unaligned(" + o.name + ".size_used, functor);\r\n";
+				output += "\t\t}\r\n";
+				output += "#endif\r\n";
+			}
+		}
+
 		
+
+		output += "\r\n";
+		
+		//make serialize records
 		for(auto& rt : parsed_file.load_save_routines) {
 			output += "\t\tload_record make_serialize_record_" + rt.name + "() const noexcept {\r\n";
 			output += "\t\t\tload_record result;\r\n";
@@ -3152,7 +3193,7 @@ int main(int argc, char *argv[]) {
 			output += "\t\t\treturn result;\r\n";
 			output += "\t\t}\r\n";
 		}
-
+		// make serialize records
 
 		output += "\r\n";
 

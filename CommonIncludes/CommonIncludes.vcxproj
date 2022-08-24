@@ -123,11 +123,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="common_types.h" />
-    <ClInclude Include="ve.h" />
-    <ClInclude Include="ve_avx.h" />
-    <ClInclude Include="ve_avx2.h" />
-    <ClInclude Include="ve_sse.h" />
+    <ClInclude Include="catch.hpp" />
+    <ClInclude Include="common_types.hpp" />
+    <ClInclude Include="ve.hpp" />
+    <ClInclude Include="ve_avx.hpp" />
+    <ClInclude Include="ve_avx2.hpp" />
+    <ClInclude Include="ve_sse.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\ve_documentation.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
