@@ -1331,10 +1331,263 @@ TEST_CASE("loads and stores", "[ve_tests]") {
 	}
 
 
-	SECTION("gather loads") {
-	}
+#ifdef __AVX2__
+	ve::tagged_vector<dummy_id> tvec(dummy_id(8), dummy_id(7), dummy_id(5), dummy_id(1), dummy_id(10), dummy_id(11), dummy_id(19), dummy_id(2));
+	ve::mask_vector mvec(true, true, false, true, false, true, false, false);
+#else
+#ifdef __AVX__
+	ve::tagged_vector<dummy_id> tvec(dummy_id(8), dummy_id(7), dummy_id(5), dummy_id(1), dummy_id(10), dummy_id(11), dummy_id(19), dummy_id(2));
+	ve::mask_vector mvec(true, true, false, true, false, true, false, false);
+#else // SSE
+	ve::tagged_vector<dummy_id> tvec(dummy_id(8), dummy_id(7), dummy_id(5), dummy_id(1));
+	ve::mask_vector mvec(true, true, false, true);
+#endif
+#endif
 
 	SECTION("scatter stores") {
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), int_data);
+			ve::store(tvec, int_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(int_data[tvec[i].index()] == res[i]);
+			}
+		}
+		{
+			ve::fp_vector res = ve::load(ve::contiguous_tags<int32_t>(16), float_data);
+			ve::store(tvec, float_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(float_data[tvec[i].index()] == res[i]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), uint_data);
+			ve::store(tvec, uint_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(uint_data[tvec[i].index()] == res[i]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), int16_data);
+			ve::store(tvec, int16_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(int16_data[tvec[i].index()] == res[i]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), uint16_data);
+			ve::store(tvec, uint16_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(uint16_data[tvec[i].index()] == res[i]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), int8_data);
+			ve::store(tvec, int8_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(int8_data[tvec[i].index()] == res[i]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), uint8_data);
+			ve::store(tvec, uint8_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(uint8_data[tvec[i].index()] == res[i]);
+			}
+		}
+		{
+			ve::tagged_vector<dummy_id> res = ve::load(ve::contiguous_tags<int32_t>(16), t_data);
+			ve::store(tvec, t_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(t_data[tvec[i].index()] == res[i]);
+			}
+		}
+		{
+			ve::mask_vector res = ve::load(ve::contiguous_tags<int32_t>(16), b_data);
+			ve::store(tvec, b_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(dcon::bit_vector_test(b_data, tvec[i].index()) == res[i]);
+			}
+		}
+	}
+	SECTION("masked scatter stores") {
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), int_data);
+			ve::store(tvec, mvec, int_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(int_data[tvec[i].index()] == (mvec[i] ? res[i] : reference_int_data[tvec[i].index()]) );
+			}
+		}
+		{
+			ve::fp_vector res = ve::load(ve::contiguous_tags<int32_t>(16), float_data);
+			ve::store(tvec, mvec, float_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(float_data[tvec[i].index()] == (mvec[i] ? res[i] : reference_float_data[tvec[i].index()]));
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), uint_data);
+			ve::store(tvec, mvec, uint_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(uint_data[tvec[i].index()] == (mvec[i] ? res[i] : reference_uint_data[tvec[i].index()]));
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), int16_data);
+			ve::store(tvec, mvec, int16_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(int16_data[tvec[i].index()] == (mvec[i] ? res[i] : reference_int16_data[tvec[i].index()]));
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), uint16_data);
+			ve::store(tvec, mvec, uint16_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(uint16_data[tvec[i].index()] == (mvec[i] ? res[i] : reference_uint16_data[tvec[i].index()]));
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), int8_data);
+			ve::store(tvec, mvec, int8_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(int8_data[tvec[i].index()] == (mvec[i] ? res[i] : reference_int8_data[tvec[i].index()]));
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), uint8_data);
+			ve::store(tvec, mvec, uint8_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(uint8_data[tvec[i].index()] == (mvec[i] ? res[i] : reference_uint8_data[tvec[i].index()]));
+			}
+		}
+		{
+			ve::tagged_vector<dummy_id> res = ve::load(ve::contiguous_tags<int32_t>(16), t_data);
+			ve::store(tvec, mvec, t_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(t_data[tvec[i].index()] == (mvec[i] ? res[i] : reference_t_data[tvec[i].index()]));
+			}
+		}
+		{
+			ve::mask_vector res = ve::load(ve::contiguous_tags<int32_t>(16), b_data);
+			ve::store(tvec, mvec, b_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(dcon::bit_vector_test(b_data, tvec[i].index()) ==
+					(mvec[i] ? res[i] : dcon::bit_vector_test(reference_b_data, tvec[i].index())));
+			}
+		}
+	}
+
+	SECTION("gather loads") {
+		{
+			ve::fp_vector res = ve::load(tvec, float_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(float_data[tvec[i].index()] == res[i]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(tvec, int_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(int_data[tvec[i].index()] == res[i]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(tvec, uint_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(uint_data[tvec[i].index()] == res[i]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(tvec, int16_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(int16_data[tvec[i].index()] == res[i]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(tvec, uint16_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(uint16_data[tvec[i].index()] == res[i]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(tvec, int8_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(int8_data[tvec[i].index()] == res[i]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(tvec, uint8_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(uint8_data[tvec[i].index()] == res[i]);
+			}
+		}
+		{
+			ve::tagged_vector<dummy_id> res = ve::load(tvec, t_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(t_data[tvec[i].index()] == res[i]);
+			}
+		}
+		{
+			ve::mask_vector res = ve::load(tvec, b_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(dcon::bit_vector_test(b_data, tvec[i].index()) == res[i]);
+			}
+		}
+	}
+
+	SECTION("masked gather loads") {
+		{
+			ve::fp_vector res = ve::load(tvec, mvec, float_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE((mvec[i] ? float_data[tvec[i].index()] : 0.0f) == res[i]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(tvec, mvec, int_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE((mvec[i] ? int_data[tvec[i].index()] : 0) == res[i]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(tvec, mvec, uint_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE((mvec[i] ? uint_data[tvec[i].index()] : 0) == res[i]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(tvec, mvec, int16_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE((mvec[i] ? int16_data[tvec[i].index()] : 0) == res[i]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(tvec, mvec, uint16_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE((mvec[i] ? uint16_data[tvec[i].index()] : 0 ) == res[i]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(tvec, mvec, int8_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE((mvec[i] ? int8_data[tvec[i].index()] : 0 ) == res[i]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(tvec, mvec, uint8_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE((mvec[i] ? uint8_data[tvec[i].index()] : 0) == res[i]);
+			}
+		}
+		{
+			ve::tagged_vector<dummy_id> res = ve::load(tvec, mvec, t_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE((mvec[i] ? t_data[tvec[i].index()] : dummy_id()) == res[i]);
+			}
+		}
+		{
+			ve::mask_vector res = ve::load(tvec, mvec, b_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE((mvec[i] ? dcon::bit_vector_test(b_data, tvec[i].index()) : false) == res[i]);
+			}
+		}
 	}
 
 

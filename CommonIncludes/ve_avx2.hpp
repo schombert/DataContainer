@@ -865,13 +865,6 @@ namespace ve {
 			| (((e.value & 0x7) != 0 ? (source[1 + e.value / 8ui32].v) : 0) << (8 - (e.value & 0x07))))
 		) };
 	}
-	RELEASE_INLINE mask_vector load(__m256i indices, dcon::bitfield_type const* source) {
-		const auto byte_indices = _mm256_srai_epi32(indices, 3);
-		const auto bit_indices = _mm256_and_si256(indices, _mm256_set1_epi32(0x00000007));
-		auto const gathered = _mm256_i32gather_epi32((int32_t const*)(source), byte_indices, 1);
-		auto const shifted = _mm256_and_si256(_mm256_srlv_epi32(gathered, bit_indices), _mm256_set1_epi32(0x00000001));
-		return _mm256_castsi256_ps(_mm256_sub_epi32(_mm256_setzero_si256(), shifted));
-	}
 
 	template<typename T>
 	RELEASE_INLINE fp_vector load(contiguous_tags<T> e, float const* source) {
@@ -933,14 +926,6 @@ namespace ve {
 	RELEASE_INLINE auto load(partial_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 4, tagged_vector<U>> {
 		auto mask = _mm256_loadu_si256((__m256i const*)(load_masks + 8ui32 - e.subcount));
 		return _mm256_maskload_epi32((int32_t const*)(source + e.value), mask);
-	}
-
-	template<typename U>
-	RELEASE_INLINE auto load(__m256i indices, U const* source) -> std::enable_if_t<sizeof(U) == 4, value_to_vector_type<U>> {
-		if constexpr(std::is_same_v<U, float>)
-			return _mm256_i32gather_ps(source, indices, 4);
-		else
-			return _mm256_i32gather_epi32((int32_t const*)source, indices, 4);
 	}
 
 #pragma warning( push )
@@ -1013,16 +998,7 @@ namespace ve {
 		}
 	}
 
-	template<typename U>
-	RELEASE_INLINE auto load(__m256i indices, U const* source) -> std::enable_if_t<sizeof(U) == 2, value_to_vector_type<U>> {
-		if constexpr(std::is_signed_v<U>) {
-			auto v = _mm256_i32gather_epi32((int32_t const*)source, _mm256_sub_epi32(indices, _mm256_set1_epi32(1)), 2);
-			return _mm256_srai_epi32(v, 16);
-		} else {
-			auto v = _mm256_i32gather_epi32((int32_t const*)source, indices, 2);
-			return _mm256_and_si256(v, _mm256_set1_epi32(0xFFFF));
-		}
-	}
+	
 
 
 	template<typename T>
@@ -1091,13 +1067,130 @@ namespace ve {
 		}
 	}
 
+	// gather unmasked
+	template<typename T>
+	RELEASE_INLINE mask_vector load(tagged_vector<T> indices, dcon::bitfield_type const* source) {
+		const auto byte_indices = _mm256_srai_epi32(indices.value, 3);
+		const auto bit_indices = _mm256_and_si256(indices.value, _mm256_set1_epi32(0x00000007));
+		auto const gathered = _mm256_i32gather_epi32((int32_t const*)(source), byte_indices, 1);
+		auto const shifted = _mm256_and_si256(_mm256_srlv_epi32(gathered, bit_indices), _mm256_set1_epi32(0x00000001));
+		return _mm256_castsi256_ps(_mm256_sub_epi32(_mm256_setzero_si256(), shifted));
+	}
 	template<typename U>
-	RELEASE_INLINE auto load(__m256i indices, U const* source) -> std::enable_if_t<sizeof(U) == 1 && !std::is_same_v<std::remove_cv_t<U>, dcon::bitfield_type>, value_to_vector_type<U>> {
-		if constexpr(std::is_signed_v<U>) {
-			auto v = _mm256_i32gather_epi32((int32_t const*)source, _mm256_sub_epi32(indices, _mm256_set1_epi32(3)), 1);
+	RELEASE_INLINE fp_vector load(tagged_vector<U> indices, float const* source) {
+		return _mm256_i32gather_ps(source, indices.value, 4);
+	}
+	template<typename T, typename U>
+	RELEASE_INLINE auto load(tagged_vector<T> indices, U const* source) -> std::enable_if_t<std::numeric_limits<U>::is_integer && sizeof(U) == 4, value_to_vector_type<U>> {
+		return _mm256_i32gather_epi32((int32_t const*)source, indices.value, 4);
+	}
+
+	template<typename T>
+	RELEASE_INLINE int_vector load(tagged_vector<T> indices, int16_t const* source) {
+		auto v = _mm256_i32gather_epi32((int32_t const*)source, _mm256_sub_epi32(indices.value, _mm256_set1_epi32(1)), 2);
+		return _mm256_srai_epi32(v, 16);
+	}
+	template<typename T>
+	RELEASE_INLINE int_vector load(tagged_vector<T> indices, uint16_t const* source) {
+		auto v = _mm256_i32gather_epi32((int32_t const*)source, indices.value, 2);
+		return _mm256_and_si256(v, _mm256_set1_epi32(0xFFFF));
+	}
+	template<typename T>
+	RELEASE_INLINE int_vector load(tagged_vector<T> indices, int8_t const* source) {
+		auto v = _mm256_i32gather_epi32((int32_t const*)source, _mm256_sub_epi32(indices.value, _mm256_set1_epi32(3)), 1);
+		return _mm256_srai_epi32(v, 24);
+	}
+	template<typename T>
+	RELEASE_INLINE int_vector load(tagged_vector<T> indices, uint8_t const* source) {
+		auto v = _mm256_i32gather_epi32((int32_t const*)source, indices.value, 1);
+		return _mm256_and_si256(v, _mm256_set1_epi32(0xFF));
+	}
+
+	template<typename T, typename U>
+	RELEASE_INLINE auto load(tagged_vector<T> indices, U const* source) -> std::enable_if_t<!std::numeric_limits<U>::is_integer && sizeof(U) == 4, tagged_vector<U>> {
+		return _mm256_i32gather_epi32((int32_t const*)source, indices.value, 4);
+	}
+	template<typename T, typename U>
+	RELEASE_INLINE auto load(tagged_vector<T> indices, U const* source)  -> std::enable_if_t<!std::numeric_limits<U>::is_integer && sizeof(U) == 2, tagged_vector<U>> {
+		if constexpr(!U::zero_is_null_t{}) {
+			auto v = _mm256_i32gather_epi32((int32_t const*)source, _mm256_sub_epi32(indices.value, _mm256_set1_epi32(1)), 2);
+			return _mm256_srai_epi32(v, 16);
+		} else {
+			auto v = _mm256_i32gather_epi32((int32_t const*)source, indices.value, 2);
+			return _mm256_and_si256(v, _mm256_set1_epi32(0xFFFF));
+		}
+	}
+	template<typename T, typename U>
+	RELEASE_INLINE auto load(tagged_vector<T> indices, U const* source) -> std::enable_if_t<!std::numeric_limits<U>::is_integer && sizeof(U) == 1, tagged_vector<U>> {
+		if constexpr(!U::zero_is_null_t{}) {
+			auto v = _mm256_i32gather_epi32((int32_t const*)source, _mm256_sub_epi32(indices.value, _mm256_set1_epi32(3)), 1);
 			return _mm256_srai_epi32(v, 24);
 		} else {
-			auto v = _mm256_i32gather_epi32((int32_t const*)source, indices, 1);
+			auto v = _mm256_i32gather_epi32((int32_t const*)source, indices.value, 1);
+			return _mm256_and_si256(v, _mm256_set1_epi32(0xFF));
+		}
+	}
+
+	// gather masked
+	template<typename T>
+	RELEASE_INLINE mask_vector load(tagged_vector<T> indices, mask_vector mask, dcon::bitfield_type const* source) {
+		const auto byte_indices = _mm256_srai_epi32(indices.value, 3);
+		const auto bit_indices = _mm256_and_si256(indices.value, _mm256_set1_epi32(0x00000007));
+		auto const gathered = _mm256_mask_i32gather_epi32(_mm256_setzero_si256(), (int32_t const*)(source), byte_indices, _mm256_castps_si256(mask.value), 1);
+		auto const shifted = _mm256_and_si256(_mm256_srlv_epi32(gathered, bit_indices), _mm256_set1_epi32(0x00000001));
+		return _mm256_castsi256_ps(_mm256_sub_epi32(_mm256_setzero_si256(), shifted));
+	}
+	template<typename U>
+	RELEASE_INLINE fp_vector load(tagged_vector<U> indices, mask_vector mask, float const* source) {
+		return _mm256_mask_i32gather_ps(_mm256_setzero_ps(), source, indices.value, mask.value, 4);
+	}
+	template<typename T, typename U>
+	RELEASE_INLINE auto load(tagged_vector<T> indices, mask_vector mask, U const* source) -> std::enable_if_t<std::numeric_limits<U>::is_integer && sizeof(U) == 4, value_to_vector_type<U>> {
+		return _mm256_mask_i32gather_epi32(_mm256_setzero_si256(), (int32_t const*)source, indices.value, _mm256_castps_si256(mask.value), 4);
+	}
+
+	template<typename T>
+	RELEASE_INLINE int_vector load(tagged_vector<T> indices, mask_vector mask, int16_t const* source) {
+		auto v = _mm256_mask_i32gather_epi32(_mm256_setzero_si256(), (int32_t const*)source, _mm256_sub_epi32(indices.value, _mm256_set1_epi32(1)), _mm256_castps_si256(mask.value), 2);
+		return _mm256_srai_epi32(v, 16);
+	}
+	template<typename T>
+	RELEASE_INLINE int_vector load(tagged_vector<T> indices, mask_vector mask, uint16_t const* source) {
+		auto v = _mm256_mask_i32gather_epi32(_mm256_setzero_si256(), (int32_t const*)source, indices.value, _mm256_castps_si256(mask.value), 2);
+		return _mm256_and_si256(v, _mm256_set1_epi32(0xFFFF));
+	}
+	template<typename T>
+	RELEASE_INLINE int_vector load(tagged_vector<T> indices, mask_vector mask, int8_t const* source) {
+		auto v = _mm256_mask_i32gather_epi32(_mm256_setzero_si256(), (int32_t const*)source, _mm256_sub_epi32(indices.value, _mm256_set1_epi32(3)), _mm256_castps_si256(mask.value), 1);
+		return _mm256_srai_epi32(v, 24);
+	}
+	template<typename T>
+	RELEASE_INLINE int_vector load(tagged_vector<T> indices, mask_vector mask, uint8_t const* source) {
+		auto v = _mm256_mask_i32gather_epi32(_mm256_setzero_si256(), (int32_t const*)source, indices.value, _mm256_castps_si256(mask.value), 1);
+		return _mm256_and_si256(v, _mm256_set1_epi32(0xFF));
+	}
+
+	template<typename T, typename U>
+	RELEASE_INLINE auto load(tagged_vector<T> indices, mask_vector mask, U const* source)  -> std::enable_if_t<!std::numeric_limits<U>::is_integer && sizeof(U) == 4, tagged_vector<U>> {
+		return _mm256_mask_i32gather_epi32(_mm256_setzero_si256(), (int32_t const*)source, indices.value, _mm256_castps_si256(mask.value), 4);
+	}
+	template<typename T, typename U>
+	RELEASE_INLINE auto load(tagged_vector<T> indices, mask_vector mask, U const* source)  -> std::enable_if_t<!std::numeric_limits<U>::is_integer && sizeof(U) == 2, tagged_vector<U>> {
+		if constexpr(!U::zero_is_null_t{}) {
+			auto v = _mm256_mask_i32gather_epi32(_mm256_setzero_si256(), (int32_t const*)source, _mm256_sub_epi32(indices.value, _mm256_set1_epi32(1)), _mm256_castps_si256(mask.value), 2);
+			return _mm256_srai_epi32(v, 16);
+		} else {
+			auto v = _mm256_mask_i32gather_epi32(_mm256_setzero_si256(), (int32_t const*)source, indices.value, _mm256_castps_si256(mask.value), 2);
+			return _mm256_and_si256(v, _mm256_set1_epi32(0xFFFF));
+		}
+	}
+	template<typename T, typename U>
+	RELEASE_INLINE auto load(tagged_vector<T> indices, mask_vector mask, U const* source)  -> std::enable_if_t<!std::numeric_limits<U>::is_integer && sizeof(U) == 1, tagged_vector<U>> {
+		if constexpr(!U::zero_is_null_t{}) {
+			auto v = _mm256_mask_i32gather_epi32(_mm256_setzero_si256(), (int32_t const*)source, _mm256_sub_epi32(indices.value, _mm256_set1_epi32(3)), _mm256_castps_si256(mask.value), 1);
+			return _mm256_srai_epi32(v, 24);
+		} else {
+			auto v = _mm256_mask_i32gather_epi32(_mm256_setzero_si256(), (int32_t const*)source, indices.value, _mm256_castps_si256(mask.value), 1);
 			return _mm256_and_si256(v, _mm256_set1_epi32(0xFF));
 		}
 	}
@@ -1309,14 +1402,104 @@ namespace ve {
 		store(e, dest, compress_mask(values));
 	}
 
-	RELEASE_INLINE void store(__m256i indices, float* dest, fp_vector values) {
-		dest[indices.m256i_i32[0]] = values[0];
-		dest[indices.m256i_i32[1]] = values[1];
-		dest[indices.m256i_i32[2]] = values[2];
-		dest[indices.m256i_i32[3]] = values[3];
-		dest[indices.m256i_i32[4]] = values[4];
-		dest[indices.m256i_i32[5]] = values[5];
-		dest[indices.m256i_i32[6]] = values[6];
-		dest[indices.m256i_i32[7]] = values[7];
+	template<typename U>
+	RELEASE_INLINE void store(tagged_vector<U> indices, float* dest, fp_vector values) {
+		for(int32_t i = 0; i < vector_size; ++i)
+			dest[indices.value.m256i_i32[i]] = values[i];
+
+	}
+	template<typename U, typename I>
+	RELEASE_INLINE auto store(tagged_vector<U> indices, I* dest, int_vector values) -> std::enable_if_t<std::numeric_limits<I>::is_integer && sizeof(I) <= 4, void> {
+		for(int32_t i = 0; i < vector_size; ++i)
+			dest[indices.value.m256i_i32[i]] = I(values[i]);
+	}
+	template<typename U, typename T>
+	RELEASE_INLINE void store(tagged_vector<U> indices, T* dest, tagged_vector<T> values) {
+		for(int32_t i = 0; i < vector_size; ++i)
+			dest[indices.value.m256i_i32[i]] = values[i];
+	}
+	template<typename U>
+	RELEASE_INLINE void store(tagged_vector<U> indices, dcon::bitfield_type* dest, vbitfield_type values) {
+		for(int32_t i = 0; i < vector_size; ++i)
+			dcon::bit_vector_set(dest, indices.value.m256i_i32[i], (values.v >> i) != 0);
+	}
+	template<typename U>
+	RELEASE_INLINE void store(tagged_vector<U> indices, dcon::bitfield_type* dest, mask_vector values) {
+		for(int32_t i = 0; i < vector_size; ++i)
+			dcon::bit_vector_set(dest, indices.value.m256i_i32[i], values[i]);
+	}
+
+	template<typename U>
+	RELEASE_INLINE void store(tagged_vector<U> indices, vbitfield_type mask, float* dest, fp_vector values) {
+		for(int32_t i = 0; i < vector_size; ++i) {
+			if((mask.v >> i) != 0)
+				dest[indices.value.m256i_i32[i]] = values[i];
+		}
+
+	}
+	template<typename U, typename I>
+	RELEASE_INLINE auto store(tagged_vector<U> indices, vbitfield_type mask, I* dest, int_vector values) -> std::enable_if_t<std::numeric_limits<I>::is_integer && sizeof(I) <= 4, void> {
+		for(int32_t i = 0; i < vector_size; ++i) {
+			if((mask.v >> i) != 0)
+				dest[indices.value.m256i_i32[i]] = I(values[i]);
+		}
+	}
+	template<typename U, typename T>
+	RELEASE_INLINE void store(tagged_vector<U> indices, vbitfield_type mask, T* dest, tagged_vector<T> values) {
+		for(int32_t i = 0; i < vector_size; ++i) {
+			if((mask.v >> i) != 0)
+				dest[indices.value.m256i_i32[i]] = values[i];
+		}
+	}
+	template<typename U>
+	RELEASE_INLINE void store(tagged_vector<U> indices, vbitfield_type mask, dcon::bitfield_type* dest, vbitfield_type values) {
+		for(int32_t i = 0; i < vector_size; ++i) {
+			if((mask.v >> i) != 0)
+				dcon::bit_vector_set(dest, indices.value.m256i_i32[i], (values.v >> i) != 0);
+		}
+	}
+	template<typename U>
+	RELEASE_INLINE void store(tagged_vector<U> indices, vbitfield_type mask, dcon::bitfield_type* dest, mask_vector values) {
+		for(int32_t i = 0; i < vector_size; ++i) {
+			if((mask.v >> i) != 0)
+				dcon::bit_vector_set(dest, indices.value.m256i_i32[i], values[i]);
+		}
+	}
+
+	template<typename U>
+	RELEASE_INLINE void store(tagged_vector<U> indices, mask_vector mask, float* dest, fp_vector values) {
+		for(int32_t i = 0; i < vector_size; ++i) {
+			if(mask[i])
+				dest[indices.value.m256i_i32[i]] = values[i];
+		}
+
+	}
+	template<typename U, typename I>
+	RELEASE_INLINE auto store(tagged_vector<U> indices, mask_vector mask, I* dest, int_vector values) -> std::enable_if_t<std::numeric_limits<I>::is_integer && sizeof(I) <= 4, void> {
+		for(int32_t i = 0; i < vector_size; ++i) {
+			if(mask[i])
+				dest[indices.value.m256i_i32[i]] = I(values[i]);
+		}
+	}
+	template<typename U, typename T>
+	RELEASE_INLINE void store(tagged_vector<U> indices, mask_vector mask, T* dest, tagged_vector<T> values) {
+		for(int32_t i = 0; i < vector_size; ++i) {
+			if(mask[i])
+				dest[indices.value.m256i_i32[i]] = values[i];
+		}
+	}
+	template<typename U>
+	RELEASE_INLINE void store(tagged_vector<U> indices, mask_vector mask, dcon::bitfield_type* dest, vbitfield_type values) {
+		for(int32_t i = 0; i < vector_size; ++i) {
+			if(mask[i])
+				dcon::bit_vector_set(dest, indices.value.m256i_i32[i], (values.v >> i) != 0);
+		}
+	}
+	template<typename U>
+	RELEASE_INLINE void store(tagged_vector<U> indices, mask_vector mask, dcon::bitfield_type* dest, mask_vector values) {
+		for(int32_t i = 0; i < vector_size; ++i) {
+			if(mask[i])
+				dcon::bit_vector_set(dest, indices.value.m256i_i32[i], values[i]);
+		}
 	}
 }
