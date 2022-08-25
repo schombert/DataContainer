@@ -1,4 +1,4 @@
-#pragma once																																																																																																																																																																																																								   #pragma once
+#pragma once
 
 //
 // This file provided as part of the DataContainer project
@@ -888,22 +888,249 @@ namespace ve {
 	}
 
 	template<typename U>
-	RELEASE_INLINE auto load(__m128i indices, U const* source) -> std::enable_if_t<sizeof(U) == 4, value_to_vector_type<U>> {
-		if constexpr(std::is_same_v<U, float>) {
-			return _mm_setr_ps(
-				source[indices.m128i_i32[0]],
-				source[indices.m128i_i32[1]],
-				source[indices.m128i_i32[2]],
-				source[indices.m128i_i32[3]]
+	RELEASE_INLINE fp_vector load(tagged_vector<U> indices, float const* source) {
+		return fp_vector(
+			source[indices.value.m128i_i32[0]],
+			source[indices.value.m128i_i32[1]],
+			source[indices.value.m128i_i32[2]],
+			source[indices.value.m128i_i32[3]]
+		);
+	}
+	template<typename U>
+	RELEASE_INLINE int_vector load(tagged_vector<U> indices, int32_t const* source) {
+		return int_vector(
+			source[indices.value.m128i_i32[0]],
+			source[indices.value.m128i_i32[1]],
+			source[indices.value.m128i_i32[2]],
+			source[indices.value.m128i_i32[3]]
+		);
+	}
+	template<typename U>
+	RELEASE_INLINE int_vector load(tagged_vector<U> indices, uint32_t const* source) {
+		return int_vector(
+			int32_t(source[indices.value.m128i_i32[0]]),
+			int32_t(source[indices.value.m128i_i32[1]]),
+			int32_t(source[indices.value.m128i_i32[2]]),
+			int32_t(source[indices.value.m128i_i32[3]])
+		);
+	}
+	template<typename U>
+	RELEASE_INLINE int_vector load(tagged_vector<U> indices, int16_t const* source) {
+		return int_vector(
+			int32_t(source[indices.value.m128i_i32[0]]),
+			int32_t(source[indices.value.m128i_i32[1]]),
+			int32_t(source[indices.value.m128i_i32[2]]),
+			int32_t(source[indices.value.m128i_i32[3]])
+		);
+	}
+	template<typename U>
+	RELEASE_INLINE int_vector load(tagged_vector<U> indices, uint16_t const* source) {
+		return int_vector(
+			int32_t(source[indices.value.m128i_i32[0]]),
+			int32_t(source[indices.value.m128i_i32[1]]),
+			int32_t(source[indices.value.m128i_i32[2]]),
+			int32_t(source[indices.value.m128i_i32[3]])
+		);
+	}
+	template<typename U>
+	RELEASE_INLINE int_vector load(tagged_vector<U> indices, int8_t const* source) {
+		return int_vector(
+			int32_t(source[indices.value.m128i_i32[0]]),
+			int32_t(source[indices.value.m128i_i32[1]]),
+			int32_t(source[indices.value.m128i_i32[2]]),
+			int32_t(source[indices.value.m128i_i32[3]])
+		);
+	}
+	template<typename U>
+	RELEASE_INLINE int_vector load(tagged_vector<U> indices, uint8_t const* source) {
+		return int_vector(
+			int32_t(source[indices.value.m128i_i32[0]]),
+			int32_t(source[indices.value.m128i_i32[1]]),
+			int32_t(source[indices.value.m128i_i32[2]]),
+			int32_t(source[indices.value.m128i_i32[3]])
+		);
+	}
+	template<typename U, typename T>
+	RELEASE_INLINE tagged_vector<T> load(tagged_vector<U> indices, T const* source) {
+		return tagged_vector<T>(
+			source[indices.value.m128i_i32[0]],
+			source[indices.value.m128i_i32[1]],
+			source[indices.value.m128i_i32[2]],
+			source[indices.value.m128i_i32[3]]
+		);
+	}
+	template<typename U, typename T>
+	RELEASE_INLINE vbitfield_type load(tagged_vector<U> indices, dcon::bitfield_type const* source) {
+		return vbitfield_type{ uint8_t(
+			(int32_t(dcon::bit_vector_test(source, indices.value.m128i_i32[0])) << 0) |
+			(int32_t(dcon::bit_vector_test(source, indices.value.m128i_i32[1])) << 1) |
+			(int32_t(dcon::bit_vector_test(source, indices.value.m128i_i32[2])) << 2) |
+			(int32_t(dcon::bit_vector_test(source, indices.value.m128i_i32[3])) << 3) 
+		) };
+	}
+
+	template<typename U>
+	RELEASE_INLINE fp_vector load(tagged_vector<U> indices, mask_vector mask, float const* source) {
+		return fp_vector(
+			(mask[0]) != 0 ? source[indices.value.m128i_i32[0]] : 0.0f,
+			(mask[1]) != 0 ? source[indices.value.m128i_i32[1]] : 0.0f,
+			(mask[2]) != 0 ? source[indices.value.m128i_i32[2]] : 0.0f,
+			(mask[3]) != 0 ? source[indices.value.m128i_i32[3]] : 0.0f
+		);
+	}
+	template<typename U>
+	RELEASE_INLINE int_vector load(tagged_vector<U> indices, mask_vector mask, int32_t const* source) {
+		return int_vector(
+			(mask[0]) != 0 ? source[indices.value.m128i_i32[0]] : 0,
+			(mask[1]) != 0 ? source[indices.value.m128i_i32[1]] : 0,
+			(mask[2]) != 0 ? source[indices.value.m128i_i32[2]] : 0,
+			(mask[3]) != 0 ? source[indices.value.m128i_i32[3]] : 0
+		);
+	}
+	template<typename U>
+	RELEASE_INLINE int_vector load(tagged_vector<U> indices, mask_vector mask, uint32_t const* source) {
+		return int_vector(
+			(mask[0]) != 0 ? int32_t(source[indices.value.m128i_i32[0]]) : 0,
+			(mask[1]) != 0 ? int32_t(source[indices.value.m128i_i32[1]]) : 0,
+			(mask[2]) != 0 ? int32_t(source[indices.value.m128i_i32[2]]) : 0,
+			(mask[3]) != 0 ? int32_t(source[indices.value.m128i_i32[3]]) : 0
+		);
+	}
+	template<typename U>
+	RELEASE_INLINE int_vector load(tagged_vector<U> indices, mask_vector mask, int16_t const* source) {
+		return int_vector(
+			(mask[0]) != 0 ? int32_t(source[indices.value.m128i_i32[0]]) : 0,
+			(mask[1]) != 0 ? int32_t(source[indices.value.m128i_i32[1]]) : 0,
+			(mask[2]) != 0 ? int32_t(source[indices.value.m128i_i32[2]]) : 0,
+			(mask[3]) != 0 ? int32_t(source[indices.value.m128i_i32[3]]) : 0
+		);
+	}
+	template<typename U>
+	RELEASE_INLINE int_vector load(tagged_vector<U> indices, mask_vector mask, uint16_t const* source) {
+		return int_vector(
+			(mask[0]) != 0 ? int32_t(source[indices.value.m128i_i32[0]]) : 0,
+			(mask[1]) != 0 ? int32_t(source[indices.value.m128i_i32[1]]) : 0,
+			(mask[2]) != 0 ? int32_t(source[indices.value.m128i_i32[2]]) : 0,
+			(mask[3]) != 0 ? int32_t(source[indices.value.m128i_i32[3]]) : 0
+		);
+	}
+	template<typename U>
+	RELEASE_INLINE int_vector load(tagged_vector<U> indices, mask_vector mask, int8_t const* source) {
+		return int_vector(
+			(mask[0]) != 0 ? int32_t(source[indices.value.m128i_i32[0]]) : 0,
+			(mask[1]) != 0 ? int32_t(source[indices.value.m128i_i32[1]]) : 0,
+			(mask[2]) != 0 ? int32_t(source[indices.value.m128i_i32[2]]) : 0,
+			(mask[3]) != 0 ? int32_t(source[indices.value.m128i_i32[3]]) : 0
+		);
+	}
+	template<typename U>
+	RELEASE_INLINE int_vector load(tagged_vector<U> indices, mask_vector mask, uint8_t const* source) {
+		return int_vector(
+			(mask[0]) != 0 ? int32_t(source[indices.value.m128i_i32[0]]) : 0,
+			(mask[1]) != 0 ? int32_t(source[indices.value.m128i_i32[1]]) : 0,
+			(mask[2]) != 0 ? int32_t(source[indices.value.m128i_i32[2]]) : 0,
+			(mask[3]) != 0 ? int32_t(source[indices.value.m128i_i32[3]]) : 0
+		);
+	}
+	template<typename U, typename T>
+	RELEASE_INLINE tagged_vector<T> load(tagged_vector<U> indices, mask_vector mask, T const* source) {
+		return tagged_vector<T>(
+			(mask[0]) != 0 ? source[indices.value.m128i_i32[0]] : U(),
+			(mask[1]) != 0 ? source[indices.value.m128i_i32[1]] : U(),
+			(mask[2]) != 0 ? source[indices.value.m128i_i32[2]] : U(),
+			(mask[3]) != 0 ? source[indices.value.m128i_i32[3]] : U()
 			);
-		} else {
-			return _mm_setr_epi32(
-				source[indices.m128i_i32[0]],
-				source[indices.m128i_i32[1]],
-				source[indices.m128i_i32[2]],
-				source[indices.m128i_i32[3]]
+	}
+	template<typename U, typename T>
+	RELEASE_INLINE vbitfield_type load(tagged_vector<U> indices, mask_vector mask, dcon::bitfield_type const* source) {
+		return vbitfield_type{ uint8_t(
+			(int32_t((mask[0]) ? dcon::bit_vector_test(source, indices.value.m128i_i32[0]) : false) << 0) |
+			(int32_t((mask[1]) ? dcon::bit_vector_test(source, indices.value.m128i_i32[1]) : false) << 1) |
+			(int32_t((mask[2]) ? dcon::bit_vector_test(source, indices.value.m128i_i32[2]) : false) << 2) |
+			(int32_t((mask[3]) ? dcon::bit_vector_test(source, indices.value.m128i_i32[3]) : false) << 3)
+		) };
+	}
+
+	template<typename U>
+	RELEASE_INLINE fp_vector load(tagged_vector<U> indices, vbitfield_type mask, float const* source) {
+		return fp_vector(
+			(mask.v & 0x01) != 0 ? source[indices.value.m128i_i32[0]] : 0.0f,
+			(mask.v & 0x02) != 0 ? source[indices.value.m128i_i32[1]] : 0.0f,
+			(mask.v & 0x04) != 0 ? source[indices.value.m128i_i32[2]] : 0.0f,
+			(mask.v & 0x08) != 0 ? source[indices.value.m128i_i32[3]] : 0.0f
+		);
+	}
+	template<typename U>
+	RELEASE_INLINE int_vector load(tagged_vector<U> indices, vbitfield_type mask, int32_t const* source) {
+		return int_vector(
+			(mask.v & 0x01) != 0 ? source[indices.value.m128i_i32[0]] : 0,
+			(mask.v & 0x02) != 0 ? source[indices.value.m128i_i32[1]] : 0,
+			(mask.v & 0x04) != 0 ? source[indices.value.m128i_i32[2]] : 0,
+			(mask.v & 0x08) != 0 ? source[indices.value.m128i_i32[3]] : 0
+		);
+	}
+	template<typename U>
+	RELEASE_INLINE int_vector load(tagged_vector<U> indices, vbitfield_type mask, uint32_t const* source) {
+		return int_vector(
+			(mask.v & 0x01) != 0 ? int32_t(source[indices.value.m128i_i32[0]]) : 0,
+			(mask.v & 0x02) != 0 ? int32_t(source[indices.value.m128i_i32[1]]) : 0,
+			(mask.v & 0x04) != 0 ? int32_t(source[indices.value.m128i_i32[2]]) : 0,
+			(mask.v & 0x08) != 0 ? int32_t(source[indices.value.m128i_i32[3]]) : 0
+		);
+	}
+	template<typename U>
+	RELEASE_INLINE int_vector load(tagged_vector<U> indices, vbitfield_type mask, int16_t const* source) {
+		return int_vector(
+			(mask.v & 0x01) != 0 ? int32_t(source[indices.value.m128i_i32[0]]) : 0,
+			(mask.v & 0x02) != 0 ? int32_t(source[indices.value.m128i_i32[1]]) : 0,
+			(mask.v & 0x04) != 0 ? int32_t(source[indices.value.m128i_i32[2]]) : 0,
+			(mask.v & 0x08) != 0 ? int32_t(source[indices.value.m128i_i32[3]]) : 0
+		);
+	}
+	template<typename U>
+	RELEASE_INLINE int_vector load(tagged_vector<U> indices, vbitfield_type mask, uint16_t const* source) {
+		return int_vector(
+			(mask.v & 0x01) != 0 ? int32_t(source[indices.value.m128i_i32[0]]) : 0,
+			(mask.v & 0x02) != 0 ? int32_t(source[indices.value.m128i_i32[1]]) : 0,
+			(mask.v & 0x04) != 0 ? int32_t(source[indices.value.m128i_i32[2]]) : 0,
+			(mask.v & 0x08) != 0 ? int32_t(source[indices.value.m128i_i32[3]]) : 0
+		);
+	}
+	template<typename U>
+	RELEASE_INLINE int_vector load(tagged_vector<U> indices, vbitfield_type mask, int8_t const* source) {
+		return int_vector(
+			(mask.v & 0x01) != 0 ? int32_t(source[indices.value.m128i_i32[0]]) : 0,
+			(mask.v & 0x02) != 0 ? int32_t(source[indices.value.m128i_i32[1]]) : 0,
+			(mask.v & 0x04) != 0 ? int32_t(source[indices.value.m128i_i32[2]]) : 0,
+			(mask.v & 0x08) != 0 ? int32_t(source[indices.value.m128i_i32[3]]) : 0
+		);
+	}
+	template<typename U>
+	RELEASE_INLINE int_vector load(tagged_vector<U> indices, vbitfield_type mask, uint8_t const* source) {
+		return int_vector(
+			(mask.v & 0x01) != 0 ? int32_t(source[indices.value.m128i_i32[0]]) : 0,
+			(mask.v & 0x02) != 0 ? int32_t(source[indices.value.m128i_i32[1]]) : 0,
+			(mask.v & 0x04) != 0 ? int32_t(source[indices.value.m128i_i32[2]]) : 0,
+			(mask.v & 0x08) != 0 ? int32_t(source[indices.value.m128i_i32[3]]) : 0
+		);
+	}
+	template<typename U, typename T>
+	RELEASE_INLINE tagged_vector<T> load(tagged_vector<U> indices, vbitfield_type mask, T const* source) {
+		return tagged_vector<T>(
+			(mask.v & 0x01) != 0 ? source[indices.value.m128i_i32[0]] : U(),
+			(mask.v & 0x02) != 0 ? source[indices.value.m128i_i32[1]] : U(),
+			(mask.v & 0x04) != 0 ? source[indices.value.m128i_i32[2]] : U(),
+			(mask.v & 0x08) != 0 ? source[indices.value.m128i_i32[3]] : U()
 			);
-		}
+	}
+	template<typename U, typename T>
+	RELEASE_INLINE vbitfield_type load(tagged_vector<U> indices, vbitfield_type mask, dcon::bitfield_type const* source) {
+		return vbitfield_type{ uint8_t(
+			(int32_t((mask.v & 0x01) != 0 ? dcon::bit_vector_test(source, indices.value.m128i_i32[0]) : false) << 0) |
+			(int32_t((mask.v & 0x02) != 0 ? dcon::bit_vector_test(source, indices.value.m128i_i32[1]) : false) << 1) |
+			(int32_t((mask.v & 0x04) != 0 ? dcon::bit_vector_test(source, indices.value.m128i_i32[2]) : false) << 2) |
+			(int32_t((mask.v & 0x08) != 0 ? dcon::bit_vector_test(source, indices.value.m128i_i32[3]) : false) << 3)
+		) };
 	}
 
 #pragma warning( push )
@@ -984,27 +1211,6 @@ namespace ve {
 		}
 	}
 
-	template<typename U>
-	RELEASE_INLINE auto load(__m128i indices, U const* source) -> std::enable_if_t<sizeof(U) == 2, value_to_vector_type<U>> {
-		if constexpr(std::is_signed_v<U>) {
-			const auto casted_source = (int16_t const*)source;
-			return _mm_setr_epi32(
-				casted_source[indices.m128i_i32[0]],
-				casted_source[indices.m128i_i32[1]],
-				casted_source[indices.m128i_i32[2]],
-				casted_source[indices.m128i_i32[3]]
-			);
-		} else {
-			const auto casted_source = (uint16_t const*)source;
-			return _mm_setr_epi32(
-				casted_source[indices.m128i_i32[0]],
-				casted_source[indices.m128i_i32[1]],
-				casted_source[indices.m128i_i32[2]],
-				casted_source[indices.m128i_i32[3]]
-			);
-		}
-	}
-
 	template<typename T>
 	RELEASE_INLINE int_vector load(contiguous_tags<T> e, int8_t const* source) {
 		auto const vl = _mm_loadu_si32(source + e.value);
@@ -1077,27 +1283,6 @@ namespace ve {
 
 			auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + 4ui32 - e.subcount));
 			return _mm_blendv_epi8(_mm_setzero_si128(), cl, mask_l);
-		}
-	}
-
-	template<typename U>
-	RELEASE_INLINE auto load(__m128i indices, U const* source) -> std::enable_if_t<sizeof(U) == 1 && !std::is_same_v<std::remove_cv_t<U>, dcon::bitfield_type>, value_to_vector_type<U>> {
-		if constexpr(std::is_signed_v<U>) {
-			const auto casted_source = (int8_t const*)source;
-			return _mm_setr_epi32(
-				casted_source[indices.m128i_i32[0]],
-				casted_source[indices.m128i_i32[1]],
-				casted_source[indices.m128i_i32[2]],
-				casted_source[indices.m128i_i32[3]]
-			);
-		} else {
-			const auto casted_source = (uint8_t const*)source;
-			return _mm_setr_epi32(
-				casted_source[indices.m128i_i32[0]],
-				casted_source[indices.m128i_i32[1]],
-				casted_source[indices.m128i_i32[2]],
-				casted_source[indices.m128i_i32[3]]
-			);
 		}
 	}
 

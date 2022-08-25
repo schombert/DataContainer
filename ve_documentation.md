@@ -392,7 +392,7 @@ ve::store(partial_contiguous_tags<T>, dcon::bitfield_type*, vbitfield_type)
 
 ### Gathering and scattering with loads and stores
 
-The gathering family of load functions allows you to load a SIMD vector by populating each slot with the value from the array at the index stored in the corresponding slot of the first parameter. Thus, the gathering family of load functions allows you to go from a collection of indexes to the corresponding collection of values that they index.
+The gathering family of load functions allows you to load a SIMD vector by populating each slot with the value from the array at the index stored in the corresponding slot of the first parameter. Thus, the gathering family of load functions allows you to go from a collection of indexes to the corresponding collection of values that they index. NOTE: only the AVX2 instruction set provides any built-in gather instructions.
 
 ```
 ve::load(tagged_vector<tag_type>, float const*)
@@ -406,7 +406,7 @@ ve::load(tagged_vector<tag_type>, tag_type_b const*)
 ve::load(tagged_vector<tag_type>, dcon::bitfield_type const*)
 ```
 
-The scattering family of store functions is the complement to the gathering loads family. It allows you to store values packed in a SIMD vector back into an array according to the indexes contained in the first parameter. HOWEVER, executing a scattering store when the first parameter contains two or more of the same index is undefined behavior. Thus the practical usefulness of scattering stores may be quite limited. 
+The scattering family of store functions is the complement to the gathering loads family. It allows you to store values packed in a SIMD vector back into an array according to the indexes contained in the first parameter. HOWEVER, executing a scattering store when the first parameter contains two or more of the same index is undefined behavior. Thus the practical usefulness of scattering stores may be quite limited. NOTE: none of the currently supported instruction sets provide built-in scatter instructions.
 
 ```
 ve::store(tagged_vector<tag_type>, float*, fp_vector)
