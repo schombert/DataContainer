@@ -24,13 +24,13 @@
     <ClInclude Include="ve_avx2.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ve_sse.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ve.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="catch.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ve_sse.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <new>
 #include <cassert>
+#include <type_traits>
 #include "common_types.hpp"
 
 #ifndef VE_NO_TBB
@@ -69,59 +70,16 @@ namespace ve {
 		RELEASE_INLINE value_to_vector_type<T> get(contiguous_tags<index_type> i) const noexcept { return ve::load(i, vptr()); }
 		RELEASE_INLINE value_to_vector_type<T> get(unaligned_contiguous_tags<index_type> i) const noexcept { return ve::load(i, vptr()); }
 		RELEASE_INLINE value_to_vector_type<T> get(partial_contiguous_tags<index_type> i) const noexcept { return ve::load(i, vptr()); }
-		RELEASE_INLINE value_to_vector_type<T> get(tagged_vector<index_type> i) const noexcept { return ve::load(i.value, vptr()); }
+		RELEASE_INLINE value_to_vector_type<T> get(tagged_vector<index_type> i) const noexcept { return ve::load(i, vptr()); }
 
 		RELEASE_INLINE void set(index_type i, T value) noexcept { vptr()[i.index()] = value; }
 		RELEASE_INLINE void set(contiguous_tags<index_type> i, value_to_vector_type<T> values) noexcept { ve::store(i, vptr(), values); }
 		RELEASE_INLINE void set(unaligned_contiguous_tags<index_type> i, value_to_vector_type<T> values) noexcept { ve::store(i, vptr(), values); }
 		RELEASE_INLINE void set(partial_contiguous_tags<index_type> i, value_to_vector_type<T> values) noexcept { ve::store(i, vptr(), values); }
-		RELEASE_INLINE void set(tagged_vector<index_type> i, value_to_vector_type<T> values) noexcept { ve::store(i.value, vptr(), values); }
+		RELEASE_INLINE void set(tagged_vector<index_type> i, value_to_vector_type<T> values) noexcept { ve::store(i, vptr(), values); }
 
 	};
 
-
-	RELEASE_INLINE constexpr float to_float(int32_t value) { return float(value); }
-	RELEASE_INLINE constexpr bool and_not(bool a, bool b) { return (!b) && a; }
-	RELEASE_INLINE constexpr float inverse(float a) { return 1.0f / a; }
-	RELEASE_INLINE float sqrt(float a) { return std::sqrt(a); }
-	RELEASE_INLINE float inverse_sqrt(float a) { return 1.0f / std::sqrt(a); }
-
-	RELEASE_INLINE constexpr float multiply_and_add(float a, float b, float c) { return a * b + c; }
-	RELEASE_INLINE constexpr float multiply_and_subtract(float a, float b, float c) { return a * b - c; }
-	RELEASE_INLINE float negate_multiply_and_add(float a, float b, float c) { return c - (a * b); }
-	RELEASE_INLINE float negate_multiply_and_subtract(float a, float b, float c) { return -(a * b) - c; }
-	RELEASE_INLINE constexpr float min(float a, float b) { return std::min(a,b); }
-	RELEASE_INLINE constexpr float max(float a, float b) { return std::max(a,b); }
-	RELEASE_INLINE float ceil(float a) { return std::ceil(a); }
-	RELEASE_INLINE float floor(float a) { return std::floor(a); }
-	RELEASE_INLINE bool compress_mask(bool mask) { return mask; }
-
-	RELEASE_INLINE constexpr float select(bool t, float a, float b) { return t ? a : b; }
-	RELEASE_INLINE constexpr int32_t select(bool t, int32_t a, int32_t b) { return t ? a : b; }
-	RELEASE_INLINE mask_vector widen_mask(mask_vector mask) { return mask; }
-	RELEASE_INLINE bool widen_mask(bool mask) { return mask; }
-	RELEASE_INLINE bool bit_test(int32_t val, int32_t bits) { return (val & bits) == bits; }
-
-	template<typename T>
-	RELEASE_INLINE auto improved_inverse(T a) {
-		auto i = inverse(a);
-		//return  -(a * i * i) + (i + i);
-		return negate_multiply_and_add(a, i * i, i + i);
-	}
-
-	
-	RELEASE_INLINE bool load(int32_t e, dcon::bitfield_type const* source) {
-		return dcon::bit_vector_test(source, uint32_t(e));
-	}
-
-	template<typename U>
-	RELEASE_INLINE auto load(int32_t e, U const* source) -> std::enable_if_t < !std::is_same_v<std::remove_cv_t<U>, dcon::bitfield_type>, U> {
-		return source[e];
-	}
-
-	RELEASE_INLINE void store(int32_t e, float* dest, float value) {
-		dest[e] = value;
-	}
 
 	struct partition_range {
 		uint32_t low;

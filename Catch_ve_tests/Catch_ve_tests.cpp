@@ -2,6 +2,7 @@
 
 #include "..\CommonIncludes\catch.hpp"
 #include "..\CommonIncludes\ve.hpp"
+#include "..\CommonIncludes\common_types.hpp"
 
 
 class dummy_id {
@@ -33,6 +34,13 @@ public:
 		return int32_t(value) - 1;
 	}
 };
+
+template<>
+struct ve::value_to_vector_type_s<dummy_id> {
+	using type = tagged_vector<dummy_id>;
+};
+
+static_assert(sizeof(dummy_id) == 2);
 
 TEST_CASE("constructors", "[ve_tests]") {
 	SECTION("default construction") {
@@ -387,3 +395,958 @@ TEST_CASE("fp_vector reduction test", "[ve_tests]") {
 #endif
 #endif
 }
+
+TEST_CASE("vectorizable buffer", "[ve_tests]") {
+	ve::vectorizable_buffer<float, dummy_id> buf(31);
+
+	REQUIRE((reinterpret_cast<size_t>(&(buf.get(dummy_id(0)))) & 63ui64) == 0); // first address is aligned
+	REQUIRE(&(buf.get(dummy_id(0))) - &(buf.get(dummy_id())) == 1); // invalid address is one prior
+
+	REQUIRE(buf.get(dummy_id(0)) == 0.0f); // values are initially zero
+	REQUIRE(buf.get(dummy_id(17)) == 0.0f);
+
+	auto mask_result = buf.get(ve::contiguous_tags<dummy_id>(16)) == ve::fp_vector();
+	REQUIRE(mask_result[0]);
+	REQUIRE(mask_result[1]);
+	REQUIRE(mask_result[2]);
+	REQUIRE(mask_result[3]);
+	if(ve::vector_size > 4) {
+		REQUIRE(mask_result[4]);
+		REQUIRE(mask_result[5]);
+		REQUIRE(mask_result[6]);
+		REQUIRE(mask_result[7]);
+	}
+
+#ifdef __AVX2__
+	ve::tagged_vector<dummy_id> tvec(dummy_id(8), dummy_id(0), dummy_id(5), dummy_id(1), dummy_id(10), dummy_id(11), dummy_id(19), dummy_id(2));
+	ve::fp_vector inc1(1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.5f, 7.0f, 8.0f);
+	ve::fp_vector inc2(10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.5f, 70.0f, 80.0f);
+#else
+#ifdef __AVX__
+	ve::tagged_vector<dummy_id> tvec(dummy_id(8), dummy_id(0), dummy_id(5), dummy_id(1), dummy_id(10), dummy_id(11), dummy_id(19), dummy_id(2));
+	ve::fp_vector inc1(1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.5f, 7.0f, 8.0f);
+	ve::fp_vector inc2(10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.5f, 70.0f, 80.0f);
+#else // SSE
+	ve::tagged_vector<dummy_id> tvec(dummy_id(8), dummy_id(0), dummy_id(5), dummy_id(1));
+	ve::fp_vector inc1(1.0f, 2.0f, 3.0f, 4.0f);
+	ve::fp_vector inc1b(5.0f, 6.5f, 7.0f, 8.0f);
+	ve::fp_vector inc2(10.0f, 20.0f, 30.0f, 40.0f);
+	ve::fp_vector inc2b(50.0f, 60.5f, 70.0f, 80.0f);
+#endif
+#endif
+
+	mask_result = buf.get(tvec) == ve::fp_vector();
+	REQUIRE(mask_result[0]);
+	REQUIRE(mask_result[1]);
+	REQUIRE(mask_result[2]);
+	REQUIRE(mask_result[3]);
+	if(ve::vector_size > 4) {
+		REQUIRE(mask_result[4]);
+		REQUIRE(mask_result[5]);
+		REQUIRE(mask_result[6]);
+		REQUIRE(mask_result[7]);
+	}
+
+	
+
+#ifdef __AVX2__
+	buf.set(ve::contiguous_tags<dummy_id>(0), inc1);
+	buf.set(ve::contiguous_tags<dummy_id>(8), inc2);
+#else
+#ifdef __AVX__
+	buf.set(ve::contiguous_tags<dummy_id>(0), inc1);
+	buf.set(ve::contiguous_tags<dummy_id>(8), inc2);
+#else // SSE
+	buf.set(ve::contiguous_tags<dummy_id>(0), inc1);
+	buf.set(ve::contiguous_tags<dummy_id>(4), inc1b);
+	buf.set(ve::contiguous_tags<dummy_id>(8), inc2);
+	buf.set(ve::contiguous_tags<dummy_id>(12), inc2b);
+#endif
+#endif
+
+#ifdef __AVX2__
+	mask_result = buf.get(ve::contiguous_tags<dummy_id>(0)) == inc1;
+#else
+#ifdef __AVX__
+	mask_result = buf.get(ve::contiguous_tags<dummy_id>(0)) == inc1;
+#else // SSE
+	mask_result = buf.get(ve::contiguous_tags<dummy_id>(4)) == inc1b;
+#endif
+#endif
+	
+	REQUIRE(mask_result[0]);
+	REQUIRE(mask_result[1]);
+	REQUIRE(mask_result[2]);
+	REQUIRE(mask_result[3]);
+	if(ve::vector_size > 4) {
+		REQUIRE(mask_result[4]);
+		REQUIRE(mask_result[5]);
+		REQUIRE(mask_result[6]);
+		REQUIRE(mask_result[7]);
+	}
+
+	
+#ifdef __AVX2__
+	mask_result = buf.get(tvec) == ve::fp_vector(10.0f, 1.0f, 6.5f, 2.0f, 30.0f, 40.0f, 0.0f, 3.0f);
+#else
+#ifdef __AVX__
+	mask_result = buf.get(tvec) == ve::fp_vector(10.0f, 1.0f, 6.5f, 2.0f, 30.0f, 40.0f, 0.0f, 3.0f);
+#else // SSE
+	mask_result = buf.get(tvec) == ve::fp_vector(10.0f, 1.0f, 6.5f, 2.0f);
+#endif
+#endif
+
+	REQUIRE(mask_result[0]);
+	REQUIRE(mask_result[1]);
+	REQUIRE(mask_result[2]);
+	REQUIRE(mask_result[3]);
+	if(ve::vector_size > 4) {
+		REQUIRE(mask_result[4]);
+		REQUIRE(mask_result[5]);
+		REQUIRE(mask_result[6]);
+		REQUIRE(mask_result[7]);
+	}
+
+	REQUIRE(buf.get(dummy_id(5)) == 6.5f); 
+
+
+#ifdef __AVX2__
+	buf.set(tvec, inc1);
+	mask_result = buf.get(tvec) == inc1;
+#else
+#ifdef __AVX__
+	buf.set(tvec, inc1);
+	mask_result = buf.get(tvec) == inc1;
+#else // SSE
+	buf.set(tvec, inc1);
+	mask_result = buf.get(tvec) == inc1;
+#endif
+#endif
+
+	REQUIRE(mask_result[0]);
+	REQUIRE(mask_result[1]);
+	REQUIRE(mask_result[2]);
+	REQUIRE(mask_result[3]);
+	if(ve::vector_size > 4) {
+		REQUIRE(mask_result[4]);
+		REQUIRE(mask_result[5]);
+		REQUIRE(mask_result[6]);
+		REQUIRE(mask_result[7]);
+	}
+
+	REQUIRE(buf.get(tvec[3]) == inc1[3]);
+	REQUIRE(buf.get(dummy_id(5)) == 3.0f);
+}
+
+TEST_CASE("mathematical operations", "[ve_tests]") {
+
+#ifdef __AVX2__
+	ve::tagged_vector<dummy_id> tveca(dummy_id(8), dummy_id(0), dummy_id(5), dummy_id(3), dummy_id(), dummy_id(11), dummy_id(9), dummy_id(2));
+	ve::tagged_vector<dummy_id> tvecb(dummy_id(), dummy_id(0), dummy_id(7), dummy_id(1), dummy_id(10), dummy_id(11), dummy_id(19), dummy_id(4));
+	ve::fp_vector fveca(1.0f, 2.0f, 0.0f, 11.0f, 5.0f, 6.5f, 7.0f, 8.0f);
+	ve::fp_vector fvecb(10.0f, 2.0f, 3.0f, 7.0f, 5.0f, 60.5f, 1.0f, 0.5f);
+	ve::int_vector iveca(1, 2, 0, -5, 10, 4, 9, -2);
+	ve::int_vector ivecb(6, 33, 6, -5, 1, 4, 2, 0);
+	ve::mask_vector mveca(true, true, false, true, false, true, false, false);
+	ve::mask_vector mvecb(true, false, false, true, false, true, true, false);
+#else
+#ifdef __AVX__
+	ve::tagged_vector<dummy_id> tveca(dummy_id(8), dummy_id(0), dummy_id(5), dummy_id(3), dummy_id(), dummy_id(11), dummy_id(9), dummy_id(2));
+	ve::tagged_vector<dummy_id> tvecb(dummy_id(), dummy_id(0), dummy_id(7), dummy_id(1), dummy_id(10), dummy_id(11), dummy_id(19), dummy_id(4));
+	ve::fp_vector fveca(1.0f, 2.0f, 0.0f, 11.0f, 5.0f, 6.5f, 7.0f, 8.0f);
+	ve::fp_vector fvecb(10.0f, 2.0f, 3.0f, 7.0f, 5.0f, 60.5f, 1.0f, 0.5f);
+	ve::int_vector iveca(1, 2, 0, -5, 10, 4, 9, -2);
+	ve::int_vector ivecb(6, 33, 6, -5, 1, 4, 2, 0);
+	ve::mask_vector mveca(true, true, false, true, false, true, false, false);
+	ve::mask_vector mvecb(true, false, false, true, false, true, true, false);
+#else // SSE
+	ve::tagged_vector<dummy_id> tveca(dummy_id(8), dummy_id(0), dummy_id(5), dummy_id(3));
+	ve::tagged_vector<dummy_id> tvecb(dummy_id(), dummy_id(0), dummy_id(7), dummy_id(1));
+	ve::fp_vector fveca(1.0f, 2.0f, 0.0f, 11.0f);
+	ve::fp_vector fvecb(10.0f, 2.0f, 3.0f, 7.0f);
+	ve::int_vector iveca(1, 2, 0, -5);
+	ve::int_vector ivecb(6, 33, 6, -5);
+	ve::mask_vector mveca(true, true, false, true);
+	ve::mask_vector mvecb(true, false, false, true);
+#endif
+#endif
+
+
+	auto fres = fveca + fvecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(fres[i] == Approx(fveca[i] + fvecb[i]));
+	}
+	fres = 4.0f + fvecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(fres[i] == Approx(4.0f + fvecb[i]));
+	}
+	fres = fveca * fvecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(fres[i] == Approx(fveca[i] * fvecb[i]));
+	}
+	fres = 4.0f * fvecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(fres[i] == Approx(4.0f * fvecb[i]));
+	}
+	fres = fveca - fvecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(fres[i] == Approx(fveca[i] - fvecb[i]));
+	}
+	fres = fveca / fvecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(fres[i] == Approx(fveca[i] / fvecb[i]));
+	}
+	fres = -fveca;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(fres[i] == -(fveca[i]));
+	}
+
+	auto ires = iveca + ivecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(ires[i] == iveca[i] + ivecb[i]);
+	}
+	ires = 4 + ivecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(ires[i] == 4 + ivecb[i]);
+	}
+	ires = iveca * ivecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(ires[i] == iveca[i] * ivecb[i]);
+	}
+	ires = 4 * ivecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(ires[i] == 4 * ivecb[i]);
+	}
+	ires = iveca - ivecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(ires[i] == iveca[i] - ivecb[i]);
+	}
+	ires = -iveca;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(ires[i] == -(iveca[i]));
+	}
+
+	fres = ve::inverse(fvecb);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(fres[i] == Approx(1.0f / (fvecb[i])).margin(0.001));
+	}
+	fres = ve::sqrt(fvecb);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(fres[i] == Approx(std::sqrt( (fvecb[i]))));
+	}
+	fres = ve::inverse_sqrt(fvecb);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(fres[i] == Approx(1.0f / std::sqrt((fvecb[i]))).margin(0.001));
+	}
+	fres = ve::abs(fvecb);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(fres[i] == std::abs(fvecb[i]));
+	}
+
+	ires = ve::abs(ivecb);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(ires[i] == std::abs(ivecb[i]));
+	}
+
+	fres = ve::multiply_and_add(fveca, fveca + fvecb, fvecb);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(fres[i] == Approx( (fveca[i] * (fveca[i] + fvecb[i])) + fvecb[i] ));
+	}
+	fres = ve::multiply_and_subtract(fveca, fveca + fvecb, fvecb);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(fres[i] == Approx((fveca[i] * (fveca[i] + fvecb[i])) - fvecb[i]));
+	}
+	fres = ve::negate_multiply_and_add(fveca, fveca + fvecb, fvecb);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(fres[i] == Approx(-(fveca[i] * (fveca[i] + fvecb[i])) + fvecb[i]));
+	}
+	fres = ve::negate_multiply_and_subtract(fveca, fveca + fvecb, fvecb);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(fres[i] == Approx(-(fveca[i] * (fveca[i] + fvecb[i])) - fvecb[i]));
+	}
+
+	// conversion
+
+	fres = ve::to_float(ivecb);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(fres[i] == Approx(float(ivecb[i])));
+	}
+
+	ires = ve::to_int(fvecb);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(ires[i] == int32_t(fvecb[i]));
+	}
+
+	fres = ve::floor(fveca);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(fres[i] == std::floor(fveca[i]));
+	}
+	fres = ve::ceil(fveca);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(fres[i] == std::ceil(fveca[i]));
+	}
+
+#ifdef __AVX2__
+	auto mvres = ve::compress_mask(mveca);
+	REQUIRE(mvres.v == uint8_t(0x01 | 0x02 | 0x08 | 0x20));
+#else
+#ifdef __AVX__
+	auto mvres = ve::compress_mask(mveca);
+	REQUIRE(mvres.v == uint8_t(0x01 | 0x02 | 0x08 | 0x20));
+#else // SSE
+	auto mvres = ve::compress_mask(mveca);
+	REQUIRE(mvres.v == uint8_t(0x01 | 0x02 | 0x08));
+#endif
+#endif
+
+	auto mres = mveca & mvecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(mres[i] == ((mveca[i]) && (mvecb[i]) ));
+	}
+
+	mres = mveca | mvecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(mres[i] == ( (mveca[i]) || (mvecb[i]) ));
+	}
+
+	mres = mveca ^ mvecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(mres[i] == ( (mveca[i]) != (mvecb[i]) ));
+	}
+
+	mres = ~mveca;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(mres[i] == ( !(mveca[i]) ));
+	}
+
+	mres = ve::and_not(mveca, mvecb);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(mres[i] == ((mveca[i]) && !(mvecb[i])));
+	}
+
+	mres = fveca < fvecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(mres[i] == ( (fveca[i]) < (fvecb[i]) ));
+	}
+
+	mres = fveca <= fvecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(mres[i] == ((fveca[i]) <= (fvecb[i])));
+	}
+
+	mres = fveca > fvecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(mres[i] == ((fveca[i]) > (fvecb[i])));
+	}
+
+	mres = fveca >= fvecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(mres[i] == ((fveca[i]) >= (fvecb[i])));
+	}
+
+	mres = fveca == fvecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(mres[i] == ((fveca[i]) == (fvecb[i])));
+	}
+
+	mres = fveca != fvecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(mres[i] == ((fveca[i]) != (fvecb[i])));
+	}
+
+	mres = iveca < ivecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(mres[i] == ((iveca[i]) < (ivecb[i])));
+	}
+
+	mres = iveca <= ivecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(mres[i] == ((iveca[i]) <= (ivecb[i])));
+	}
+
+	mres = iveca > ivecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(mres[i] == ((iveca[i]) > (ivecb[i])));
+	}
+
+	mres = iveca >= ivecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(mres[i] == ((iveca[i]) >= (ivecb[i])));
+	}
+
+	mres = iveca == ivecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(mres[i] == ((iveca[i]) == (ivecb[i])));
+	}
+
+	mres = iveca != ivecb;
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(mres[i] == ((iveca[i]) != (ivecb[i])));
+	}
+
+	mres = (mveca != mvecb);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(mres[i] == ((mveca[i]) != (mvecb[i])));
+	}
+	mres = (mveca == mvecb);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(mres[i] == ((mveca[i]) == (mvecb[i])));
+	}
+
+	mres = (tveca == tvecb);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(mres[i] == ((tveca[i]) == (tvecb[i])));
+	}
+	mres = (tveca != tvecb);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(mres[i] == ((tveca[i]) != (tvecb[i])));
+	}
+
+	fres = ve::min(fveca, fvecb);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(fres[i] == std::min(fveca[i], fvecb[i]));
+	}
+	fres = ve::max(fveca, fvecb);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(fres[i] == std::max(fveca[i], fvecb[i]));
+	}
+	fres = ve::select(mveca, fveca, fvecb);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(fres[i] == (mveca[i] ? fveca[i] : fvecb[i]));
+	}
+	ires = ve::select(mveca, iveca, ivecb);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(ires[i] == (mveca[i] ? iveca[i] : ivecb[i]));
+	}
+	auto tres = ve::select(mveca, tveca, tvecb);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(tres[i] == (mveca[i] ? tveca[i] : tvecb[i]));
+	}
+}
+
+TEST_CASE("loads and stores", "[ve_tests]") {
+	int32_t reference_int_data[] = { 1, 23, 5, 1, -3, 5, 0, 1, 5, 23, 5, 2, 6, 235, 23, 35, 235, 253, 36, 486, 586,
+		100, 101, 102, 104, 102, 104, 5034, 1234, 88, 77, 66};
+	int32_t* int_data = dcon::cache_aligned_allocator<int32_t>().allocate(32);
+	memcpy(int_data, reference_int_data, sizeof(int32_t) * 32);
+
+	uint32_t reference_uint_data[] = { 1, 23, 5, 1, 3, 5, 0, 1, 5, 23, 5, 2, 6, 235, 23, 35, 235, 253, 36, 486, 586,
+		100, 101, 102, 104, 102, 104, 5034, 1234, 88, 77, 66 };
+	uint32_t* uint_data = dcon::cache_aligned_allocator<uint32_t>().allocate(32);
+	memcpy(uint_data, reference_uint_data, sizeof(uint32_t) * 32);
+
+	float reference_float_data[] = { 1.0f, 2.0f, 0.5f, 1.4f, 1.2f, 3.3f, 4.4f, 55.0f, 66.0f, 1.0f, 0.0f, -1.0f, -2.0f,
+		11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 17.0f, 77.7f, 9.0f, 20.0f, 21.0f, 22.0f, 23.0f, 24.0f, 2.6f, 2.8f, 3.9f, 
+		40.0f, 42.0f, 43.0f};
+	float* float_data = dcon::cache_aligned_allocator<float>().allocate(32);
+	memcpy(float_data, reference_float_data, sizeof(float) * 32);
+
+	int16_t reference_int16_data[] = { 1, 23, 5, 1, -3, 5, 0, 1, 5, 23, 5, 2, 6, 235, 23, 35, 235, 253, 36, 486, 586,
+		100, 101, 102, 104, 102, 104, 5034, 1234, 88, 77, 66 };
+	int16_t* int16_data = dcon::cache_aligned_allocator<int16_t>().allocate(32);
+	memcpy(int16_data, reference_int16_data, sizeof(int16_t) * 32);
+
+	uint16_t reference_uint16_data[] = { 1, 23, 5, 1, uint16_t(-3), 5, 0, 1, 5, 23, 5, 2, 6, 235, 23, 35, 235, 253, 36, 486, 586,
+		100, 101, 102, 104, 102, 104, 5034, 1234, 88, 77, 66 };
+	uint16_t* uint16_data = dcon::cache_aligned_allocator<uint16_t>().allocate(32);
+	memcpy(uint16_data, reference_uint16_data, sizeof(uint16_t) * 32);
+
+	int8_t reference_int8_data[] = { 1i8, 23i8, 5i8, 1i8, -3i8, 5i8, 0i8, 1i8, 5i8, 23i8, 5i8, 2i8, 6i8, 235i8, 23i8, 35i8, 235i8, 253i8, 36i8, 186i8, 86i8,
+		100i8, 101i8, 102i8, 104i8, 102i8, 104i8, 34i8, 234i8, 88i8, 77i8, 66i8 };
+	int8_t* int8_data = dcon::cache_aligned_allocator<int8_t>().allocate(32);
+	memcpy(int8_data, reference_int8_data, sizeof(int8_t) * 32);
+
+	uint8_t reference_uint8_data[] = { 1ui8, 23ui8, 5ui8, 1ui8, 3ui8, 5ui8, 0ui8, 1ui8, 5ui8, 23ui8, 5ui8, 2ui8, 6ui8, 235ui8, 23ui8, 35ui8, 235ui8, 253ui8, 36ui8, 186ui8, 86ui8,
+		100ui8, 101ui8, 102ui8, 104ui8, 102ui8, 104ui8, 34ui8, 234ui8, 88ui8, 77ui8, 66ui8 };
+	uint8_t* uint8_data = dcon::cache_aligned_allocator<uint8_t>().allocate(32);
+	memcpy(uint8_data, reference_uint8_data, sizeof(uint8_t) * 32);
+
+	dummy_id reference_t_data[] = { dummy_id(1), dummy_id(23), dummy_id(5), dummy_id(1), dummy_id(3),
+		dummy_id(5), dummy_id(0), dummy_id(1), dummy_id(5), dummy_id(23), dummy_id(5), dummy_id(),
+		dummy_id(6), dummy_id(235), dummy_id(23), dummy_id(35), dummy_id(235), dummy_id(253), dummy_id(36), dummy_id(186),
+		dummy_id(86), dummy_id(100), dummy_id(101), dummy_id(102), dummy_id(104), dummy_id(102), dummy_id(104), dummy_id(),
+		dummy_id(234), dummy_id(88), dummy_id(77), dummy_id(66) };
+	dummy_id* t_data = dcon::cache_aligned_allocator<dummy_id>().allocate(32);
+	memcpy(t_data, reference_t_data, sizeof(dummy_id) * 32);
+
+	dcon::bitfield_type reference_b_data[] = { dcon::bitfield_type{ 0x8Bui8}, dcon::bitfield_type{ 0xA1ui8},
+		dcon::bitfield_type{ 0x04ui8}, dcon::bitfield_type{ 0xCDui8} };
+	dcon::bitfield_type* b_data = dcon::cache_aligned_allocator<dcon::bitfield_type>().allocate(4);
+	memcpy(b_data, reference_b_data, sizeof(dcon::bitfield_type) * 4);
+
+	SECTION("basic loads") {
+		//int32_t
+		{
+			ve::int_vector ires = ve::load(ve::contiguous_tags<int32_t>(8), int_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == int_data[i + 8]);
+			}
+		}
+		{
+			ve::int_vector ires = ve::load(ve::unaligned_contiguous_tags<int32_t>(5), int_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == int_data[i + 5]);
+			}
+		}
+		{
+			ve::int_vector ires = ve::load(ve::partial_contiguous_tags<int32_t>(1, 3), int_data);
+			for(int32_t i = 0; i < 3; ++i) {
+				REQUIRE(ires[i] == int_data[i + 1]);
+			}
+			for(int32_t i = 3; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == 0);
+			}
+		}
+		//uint32_t
+		{
+			ve::int_vector ires = ve::load(ve::contiguous_tags<int32_t>(8), uint_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == int32_t(uint_data[i + 8]));
+			}
+		}
+		{
+			ve::int_vector ires = ve::load(ve::unaligned_contiguous_tags<int32_t>(5), uint_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == int32_t(uint_data[i + 5]));
+			}
+		}
+		{
+			ve::int_vector ires = ve::load(ve::partial_contiguous_tags<int32_t>(1, 3), uint_data);
+			for(int32_t i = 0; i < 3; ++i) {
+				REQUIRE(ires[i] == int32_t(uint_data[i + 1]));
+			}
+			for(int32_t i = 3; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == 0);
+			}
+		}
+		//int16_t
+		{
+			ve::int_vector ires = ve::load(ve::contiguous_tags<int32_t>(8), int16_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == int32_t(int16_data[i + 8]));
+			}
+		}
+		{
+			ve::int_vector ires = ve::load(ve::unaligned_contiguous_tags<int32_t>(5), int16_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == int32_t(int16_data[i + 5]));
+			}
+		}
+		{
+			ve::int_vector ires = ve::load(ve::partial_contiguous_tags<int32_t>(1, 3), int16_data);
+			for(int32_t i = 0; i < 3; ++i) {
+				REQUIRE(ires[i] == int32_t(int16_data[i + 1]));
+			}
+			for(int32_t i = 3; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == 0);
+			}
+		}
+		//uint16_t
+		{
+			ve::int_vector ires = ve::load(ve::contiguous_tags<int32_t>(8), uint16_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == int32_t(uint16_data[i + 8]));
+			}
+		}
+		{
+			ve::int_vector ires = ve::load(ve::unaligned_contiguous_tags<int32_t>(5), uint16_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == int32_t(uint16_data[i + 5]));
+			}
+		}
+		{
+			ve::int_vector ires = ve::load(ve::partial_contiguous_tags<int32_t>(1, 3), uint16_data);
+			for(int32_t i = 0; i < 3; ++i) {
+				REQUIRE(ires[i] == int32_t(uint16_data[i + 1]));
+			}
+			for(int32_t i = 3; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == 0);
+			}
+		}
+		//uint8_t
+		{
+			ve::int_vector ires = ve::load(ve::contiguous_tags<int32_t>(8), uint8_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == int32_t(uint8_data[i + 8]));
+			}
+		}
+		{
+			ve::int_vector ires = ve::load(ve::unaligned_contiguous_tags<int32_t>(5), uint8_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == int32_t(uint8_data[i + 5]));
+			}
+		}
+		{
+			ve::int_vector ires = ve::load(ve::partial_contiguous_tags<int32_t>(1, 3), uint8_data);
+			for(int32_t i = 0; i < 3; ++i) {
+				REQUIRE(ires[i] == int32_t(uint8_data[i + 1]));
+			}
+			for(int32_t i = 3; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == 0);
+			}
+		}
+		//int8_t
+		{
+			ve::int_vector ires = ve::load(ve::contiguous_tags<int32_t>(8), int8_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == int32_t(int8_data[i + 8]));
+			}
+		}
+		{
+			ve::int_vector ires = ve::load(ve::unaligned_contiguous_tags<int32_t>(5), int8_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == int32_t(int8_data[i + 5]));
+			}
+		}
+		{
+			ve::int_vector ires = ve::load(ve::partial_contiguous_tags<int32_t>(1, 3), int8_data);
+			for(int32_t i = 0; i < 3; ++i) {
+				REQUIRE(ires[i] == int32_t(int8_data[i + 1]));
+			}
+			for(int32_t i = 3; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == 0);
+			}
+		}
+		//float
+		{
+			ve::fp_vector ires = ve::load(ve::contiguous_tags<int32_t>(8), float_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == float_data[i + 8]);
+			}
+		}
+		{
+			ve::fp_vector ires = ve::load(ve::unaligned_contiguous_tags<int32_t>(5), float_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == float_data[i + 5]);
+			}
+		}
+		{
+			ve::fp_vector ires = ve::load(ve::partial_contiguous_tags<int32_t>(1, 3), float_data);
+			for(int32_t i = 0; i < 3; ++i) {
+				REQUIRE(ires[i] == float_data[i + 1]);
+			}
+			for(int32_t i = 3; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == 0.0f);
+			}
+		}
+
+		//tags
+		{
+			ve::tagged_vector<dummy_id> ires = ve::load(ve::contiguous_tags<int32_t>(8), t_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == t_data[i + 8]);
+			}
+		}
+		{
+			ve::tagged_vector<dummy_id> ires = ve::load(ve::unaligned_contiguous_tags<int32_t>(5), t_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == t_data[i + 5]);
+			}
+		}
+		{
+			ve::tagged_vector<dummy_id> ires = ve::load(ve::partial_contiguous_tags<int32_t>(1, 3), t_data);
+			for(int32_t i = 0; i < 3; ++i) {
+				REQUIRE(ires[i] == t_data[i + 1]);
+			}
+			for(int32_t i = 3; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == dummy_id());
+			}
+		}
+
+		//bitfield
+		{
+			ve::vbitfield_type ires = ve::load(ve::contiguous_tags<int32_t>(8), b_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE((((ires.v >> i) & 0x01) != 0) == dcon::bit_vector_test(b_data, 8 + i));
+			}
+		}
+		{
+			ve::vbitfield_type ires = ve::load(ve::unaligned_contiguous_tags<int32_t>(1), b_data);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE((((ires.v >> i) & 0x01) != 0) == dcon::bit_vector_test(b_data, 1 + i));
+			}
+		}
+		{
+			ve::vbitfield_type ires = ve::load(ve::partial_contiguous_tags<int32_t>(1, 3), b_data);
+			for(int32_t i = 0; i < 3; ++i) {
+				REQUIRE((((ires.v >> i) & 0x01) != 0) == dcon::bit_vector_test(b_data, 1 + i));
+			}
+			for(int32_t i = 3; i < ve::vector_size; ++i) {
+				REQUIRE((((ires.v >> i) & 0x01) != 0) == false);
+			}
+		}
+	}
+	
+	SECTION("basic stores, aligned") {
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), int_data);
+			ve::store(ve::contiguous_tags<int32_t>(0), int_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(res[i] == int_data[i + 0]);
+			}
+		}
+		{
+			ve::fp_vector res = ve::load(ve::contiguous_tags<int32_t>(16), float_data);
+			ve::store(ve::contiguous_tags<int32_t>(0), float_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(res[i] == float_data[i + 0]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), uint_data);
+			ve::store(ve::contiguous_tags<int32_t>(0), uint_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(res[i] == uint_data[i + 0]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), int16_data);
+			ve::store(ve::contiguous_tags<int32_t>(0), int16_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(res[i] == int16_data[i + 0]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), uint16_data);
+			ve::store(ve::contiguous_tags<int32_t>(0), uint16_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(res[i] == uint16_data[i + 0]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), int8_data);
+			ve::store(ve::contiguous_tags<int32_t>(0), int8_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(res[i] == int8_data[i + 0]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), uint8_data);
+			ve::store(ve::contiguous_tags<int32_t>(0), uint8_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(res[i] == uint8_data[i + 0]);
+			}
+		}
+		{
+			ve::tagged_vector<dummy_id> res = ve::load(ve::contiguous_tags<int32_t>(16), t_data);
+			ve::store(ve::contiguous_tags<int32_t>(0), t_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(res[i] == t_data[i + 0]);
+			}
+		}
+		{
+			ve::vbitfield_type ires = ve::load(ve::contiguous_tags<int32_t>(8), b_data);
+			ve::store(ve::contiguous_tags<int32_t>(0), b_data, ires);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE((((ires.v >> i) & 0x01) != 0) == dcon::bit_vector_test(b_data, 0 + i));
+			}
+		}
+	}
+
+	SECTION("basic stores, unaligned") {
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), int_data);
+			ve::store(ve::unaligned_contiguous_tags<int32_t>(3), int_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(res[i] == int_data[i + 3]);
+			}
+		}
+		{
+			ve::fp_vector res = ve::load(ve::contiguous_tags<int32_t>(16), float_data);
+			ve::store(ve::unaligned_contiguous_tags<int32_t>(3), float_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(res[i] == float_data[i + 3]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), uint_data);
+			ve::store(ve::unaligned_contiguous_tags<int32_t>(3), uint_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(res[i] == uint_data[i + 3]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), int16_data);
+			ve::store(ve::unaligned_contiguous_tags<int32_t>(3), int16_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(res[i] == int16_data[i + 3]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), uint16_data);
+			ve::store(ve::unaligned_contiguous_tags<int32_t>(3), uint16_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(res[i] == uint16_data[i + 3]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), int8_data);
+			ve::store(ve::unaligned_contiguous_tags<int32_t>(3), int8_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(res[i] == int8_data[i + 3]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), uint8_data);
+			ve::store(ve::unaligned_contiguous_tags<int32_t>(3), uint8_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(res[i] == uint8_data[i + 3]);
+			}
+		}
+		{
+			ve::tagged_vector<dummy_id> res = ve::load(ve::contiguous_tags<int32_t>(16), t_data);
+			ve::store(ve::unaligned_contiguous_tags<int32_t>(3), t_data, res);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(res[i] == t_data[i + 3]);
+			}
+		}
+		{
+			ve::vbitfield_type ires = ve::load(ve::contiguous_tags<int32_t>(8), b_data);
+			ve::store(ve::unaligned_contiguous_tags<int32_t>(3), b_data, ires);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE((((ires.v >> i) & 0x01) != 0) == dcon::bit_vector_test(b_data, 3 + i));
+			}
+		}
+	}
+
+	SECTION("basic stores, partial") {
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), int_data);
+			ve::store(ve::partial_contiguous_tags<int32_t>(3, 3), int_data, res);
+			for(int32_t i = 0; i < 3; ++i) {
+				REQUIRE(res[i] == int_data[i + 3]);
+			}
+			for(int32_t i = 3; i < ve::vector_size; ++i) {
+				REQUIRE(int_data[i + 3] == reference_int_data[i + 3]);
+			}
+		}
+		{
+			ve::fp_vector res = ve::load(ve::contiguous_tags<int32_t>(16), float_data);
+			ve::store(ve::partial_contiguous_tags<int32_t>(3, 3), float_data, res);
+			for(int32_t i = 0; i < 3; ++i) {
+				REQUIRE(res[i] == float_data[i + 3]);
+			}
+			for(int32_t i = 3; i < ve::vector_size; ++i) {
+				REQUIRE(float_data[i + 3] == reference_float_data[i + 3]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), uint_data);
+			ve::store(ve::partial_contiguous_tags<int32_t>(3, 3), uint_data, res);
+			for(int32_t i = 0; i < 3; ++i) {
+				REQUIRE(res[i] == uint_data[i + 3]);
+			}
+			for(int32_t i = 3; i < ve::vector_size; ++i) {
+				REQUIRE(uint_data[i + 3] == reference_uint_data[i + 3]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), int16_data);
+			ve::store(ve::partial_contiguous_tags<int32_t>(3, 3), int16_data, res);
+			for(int32_t i = 0; i < 3; ++i) {
+				REQUIRE(res[i] == int16_data[i + 3]);
+			}
+			for(int32_t i = 3; i < ve::vector_size; ++i) {
+				REQUIRE(int16_data[i + 3] == reference_int16_data[i + 3]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), uint16_data);
+			ve::store(ve::partial_contiguous_tags<int32_t>(3, 3), uint16_data, res);
+			for(int32_t i = 0; i < 3; ++i) {
+				REQUIRE(res[i] == uint16_data[i + 3]);
+			}
+			for(int32_t i = 3; i < ve::vector_size; ++i) {
+				REQUIRE(uint16_data[i + 3] == reference_uint16_data[i + 3]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), int8_data);
+			ve::store(ve::partial_contiguous_tags<int32_t>(3, 3), int8_data, res);
+			for(int32_t i = 0; i < 3; ++i) {
+				REQUIRE(res[i] == int8_data[i + 3]);
+			}
+			for(int32_t i = 3; i < ve::vector_size; ++i) {
+				REQUIRE(int8_data[i + 3] == reference_int8_data[i + 3]);
+			}
+		}
+		{
+			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), uint8_data);
+			ve::store(ve::partial_contiguous_tags<int32_t>(3, 3), uint8_data, res);
+			for(int32_t i = 0; i < 3; ++i) {
+				REQUIRE(res[i] == uint8_data[i + 3]);
+			}
+			for(int32_t i = 3; i < ve::vector_size; ++i) {
+				REQUIRE(uint8_data[i + 3] == reference_uint8_data[i + 3]);
+			}
+		}
+		{
+			ve::tagged_vector<dummy_id> res = ve::load(ve::contiguous_tags<int32_t>(16), t_data);
+			ve::store(ve::partial_contiguous_tags<int32_t>(3, 3), t_data, res);
+			for(int32_t i = 0; i < 3; ++i) {
+				REQUIRE(res[i] == t_data[i + 3]);
+			}
+			for(int32_t i = 3; i < ve::vector_size; ++i) {
+				REQUIRE(t_data[i + 3] == reference_t_data[i + 3]);
+			}
+		}
+		{
+			ve::vbitfield_type ires = ve::load(ve::contiguous_tags<int32_t>(8), b_data);
+			ve::store(ve::partial_contiguous_tags<int32_t>(3, 3), b_data, ires);
+			for(int32_t i = 0; i < 3; ++i) {
+				REQUIRE((((ires.v >> i) & 0x01) != 0) == dcon::bit_vector_test(b_data, 3 + i));
+			}
+			for(int32_t i = 3; i < ve::vector_size; ++i) {
+				REQUIRE(dcon::bit_vector_test(reference_b_data, 3 + i) == dcon::bit_vector_test(b_data, 3 + i));
+			}
+		}
+	}
+	SECTION("misc mask vector stores A") {
+		{
+			ve::mask_vector ires = ve::load(ve::contiguous_tags<int32_t>(8), b_data);
+			ve::store(ve::partial_contiguous_tags<int32_t>(3, 3), b_data, ires);
+			for(int32_t i = 0; i < 3; ++i) {
+				REQUIRE(ires[i] == dcon::bit_vector_test(b_data, 3 + i));
+			}
+			for(int32_t i = 3; i < ve::vector_size; ++i) {
+				REQUIRE(dcon::bit_vector_test(reference_b_data, 3 + i) == dcon::bit_vector_test(b_data, 3 + i));
+			}
+		}
+	}
+	SECTION("misc mask vector stores B") {
+		{
+			ve::mask_vector ires = ve::load(ve::contiguous_tags<int32_t>(8), b_data);
+			ve::store(ve::unaligned_contiguous_tags<int32_t>(3), b_data, ires);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				REQUIRE(ires[i] == dcon::bit_vector_test(b_data, 3 + i));
+			}
+		}
+	}
+	SECTION("misc mask vector stores C") {
+		ve::mask_vector ires = ve::load(ve::contiguous_tags<int32_t>(8), b_data);
+		ve::store(ve::contiguous_tags<int32_t>(0), b_data, ires);
+		for(int32_t i = 0; i < ve::vector_size; ++i) {
+			REQUIRE(ires[i] == dcon::bit_vector_test(b_data, 0 + i));
+		}
+	}
+
+
+	SECTION("gather loads") {
+	}
+
+	SECTION("scatter stores") {
+	}
+
+
+	dcon::cache_aligned_allocator<int32_t>().deallocate(int_data, 32);
+	dcon::cache_aligned_allocator<uint32_t>().deallocate(uint_data, 32);
+	dcon::cache_aligned_allocator<float>().deallocate(float_data, 32);
+	dcon::cache_aligned_allocator<int16_t>().deallocate(int16_data, 32);
+	dcon::cache_aligned_allocator<uint16_t>().deallocate(uint16_data, 32);
+	dcon::cache_aligned_allocator<int8_t>().deallocate(int8_data, 32);
+	dcon::cache_aligned_allocator<uint8_t>().deallocate(uint8_data, 32);
+	dcon::cache_aligned_allocator<dummy_id>().deallocate(t_data, 32);
+	dcon::cache_aligned_allocator<dcon::bitfield_type>().deallocate(b_data, 4);
+
+}
+
