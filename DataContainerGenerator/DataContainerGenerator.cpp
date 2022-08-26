@@ -1065,101 +1065,101 @@ int main(int argc, char *argv[]) {
 
 				if(p.hook_get) {
 					if(p.is_bitfield) {
-						output += "\t\tbool get_" + o.name + "_" + p.name + "(" + id_name + " id) const;\n";
+						output += "\t\tbool " + o.name + "_get_" + p.name + "(" + id_name + " id) const;\n";
 
-						output += "\t\tve::vbitfield_type get_" + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id) const {\n";
+						output += "\t\tve::vbitfield_type " + o.name + "_get_" + p.name + "(" + con_tags_type + "<" + id_name + "> id) const {\n";
 						output += "\t\t\tve::vbitfield_type r; r.v = 0;\n";
 						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
-						output += "\t\t\t\tr.v |= (get_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i))) << i;\n";
+						output += "\t\t\t\tr.v |= (" + o.name + "_get_" + p.name + "(" + id_name + "(id.value + i))) << i;\n";
 						output += "\t\t\treturn r;\n";
 						output += "\t\t}\n";
 
-						output += "\t\tve::vbitfield_type get_" + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id) const {\n";
+						output += "\t\tve::vbitfield_type " + o.name + "_get_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id) const {\n";
 						output += "\t\t\tve::vbitfield_type r; r.v = 0;\n";
 						output += "\t\t\tfor(int32_t i = 0; i < id.subcount; ++i)\n";
-						output += "\t\t\t\tr.v |= (get_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i))) << i;\n";
+						output += "\t\t\t\tr.v |= (" + o.name + "_get_" + p.name + "(" + id_name + "(id.value + i))) << i;\n";
 						output += "\t\t\treturn r;\n";
 						output += "\t\t}\n";
 
-						output += "\t\tve::vbitfield_type get_" + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id) const {\n";
+						output += "\t\tve::vbitfield_type " + o.name + "_get_" + p.name + "(ve::tagged_vector<" + id_name + "> id) const {\n";
 						output += "\t\t\tve::vbitfield_type r; r.v = 0;\n";
 						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
-						output += "\t\t\t\tr.v |= (get_" + o.name + "_" + p.name + "(id[i])) << i;\n";
+						output += "\t\t\t\tr.v |= (" + o.name + "_get_" + p.name + "(id[i])) << i;\n";
 						output += "\t\t\treturn r;\n";
 						output += "\t\t}\n";
 					} else if(is_vectorizable_type(parsed_file, p.data_type)) {
-						output += "\t\t" + p.data_type + " get_" + o.name + "_" + p.name + "(" + id_name + " id) const;\n";
+						output += "\t\t" + p.data_type + " " + o.name + "_get_" + p.name + "(" + id_name + " id) const;\n";
 
-						output += "\t\tve::value_to_vector_type<" + p.data_type + "> get_" + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id) const {\n";
+						output += "\t\tve::value_to_vector_type<" + p.data_type + "> " + o.name + "_get_" + p.name + "(" + con_tags_type + "<" + id_name + "> id) const {\n";
 						output += "\t\t\tve::value_to_vector_type<" + p.data_type + "> r;\n";
 						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
-						output += "\t\t\t\tr.set(i, get_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i)));\n";
+						output += "\t\t\t\tr.set(i, " + o.name + "_get_" + p.name + "(" + id_name + "(id.value + i)));\n";
 						output += "\t\t\treturn r;\n";
 						output += "\t\t}\n";
 
-						output += "\t\tve::value_to_vector_type<" + p.data_type + "> get_" + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id) const {\n";
+						output += "\t\tve::value_to_vector_type<" + p.data_type + "> " + o.name + "_get_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id) const {\n";
 						output += "\t\t\tve::value_to_vector_type<" + p.data_type + "> r;\n";
 						output += "\t\t\tfor(int32_t i = 0; i < id.subcount; ++i)\n";
-						output += "\t\t\t\tr.set(i, get_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i)));\n";
+						output += "\t\t\t\tr.set(i, " + o.name + "_get_" + p.name + "(" + id_name + "(id.value + i)));\n";
 						output += "\t\t\treturn r;\n";
 						output += "\t\t}\n";
 
-						output += "\t\tve::value_to_vector_type<" + p.data_type + "> get_" + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id) const {\n";
+						output += "\t\tve::value_to_vector_type<" + p.data_type + "> " + o.name + "_get_" + p.name + "(ve::tagged_vector<" + id_name + "> id) const {\n";
 						output += "\t\t\tve::value_to_vector_type<" + p.data_type + "> r;\n";
 						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
-						output += "\t\t\t\tr.set(i, get_" + o.name + "_" + p.name + "(id[i]));\n";
+						output += "\t\t\t\tr.set(i, " + o.name + "_get_" + p.name + "(id[i]));\n";
 						output += "\t\t\treturn r;\n";
 						output += "\t\t}\n";
 					} else {
-						output += "\t\t" + p.data_type + " get_" + o.name + "_" + p.name + "(" + id_name + " id) const;\n";
+						output += "\t\t" + p.data_type + " " + o.name + "_get_" + p.name + "(" + id_name + " id) const;\n";
 					}
 				}
 				if(p.hook_set) {
 					if(p.is_bitfield) {
-						output += "\t\t" "void set_" + o.name + "_" + p.name + "(" + id_name + " id, bool value);\n";
+						output += "\t\t" "void " + o.name + "_set_" + p.name + "(" + id_name + " id, bool value);\n";
 
-						output += "\t\t" "void set_" + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id, "
+						output += "\t\t" "void " + o.name + "_set_" + p.name + "(" + con_tags_type + "<" + id_name + "> id, "
 							"ve::vbitfield_type value) {\n";
 						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
-						output += "\t\t\t\tset_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i), (value.v & uint8_t(1 << i)) != 0);\n";
+						output += "\t\t\t\t" + o.name + "_set_" + p.name + "(" + id_name + "(id.value + i), (value.v & uint8_t(1 << i)) != 0);\n";
 						output += "\t\t}\n";
 
-						output += "\t\t" "void set_" + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
+						output += "\t\t" "void " + o.name + "_set_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
 							"ve::vbitfield_type value) {\n";
 						output += "\t\t\tfor(int32_t i = 0; i < id.subcount; ++i)\n";
-						output += "\t\t\t\tset_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i), (value.v & uint8_t(1 << i)) != 0);\n";
+						output += "\t\t\t\t" + o.name + "_set_" + p.name + "(" + id_name + "(id.value + i), (value.v & uint8_t(1 << i)) != 0);\n";
 						output += "\t\t}\n";
 
-						output += "\t\t" "void set_" + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id, "
+						output += "\t\t" "void " + o.name + "_set_" + p.name + "(ve::tagged_vector<" + id_name + "> id, "
 							"ve::vbitfield_type value) {\n";
 						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
-						output += "\t\t\t\tset_" + o.name + "_" + p.name + "(id[i], (value.v & uint8_t(1 << i)) != 0);\n";
+						output += "\t\t\t\t" + o.name + "_set_" + p.name + "(id[i], (value.v & uint8_t(1 << i)) != 0);\n";
 						output += "\t\t}\n";
 
 					} else if(is_vectorizable_type(parsed_file, p.data_type)) {
-						output += "\t\t" "void set_" + o.name + "_" + p.name + "(" + id_name + " id, " + p.data_type + " value);\n";
+						output += "\t\t" "void " + o.name + "_set_" + p.name + "(" + id_name + " id, " + p.data_type + " value);\n";
 
-						output += "\t\t" "void set_" + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id, "
+						output += "\t\t" "void " + o.name + "_set_" + p.name + "(" + con_tags_type + "<" + id_name + "> id, "
 							"ve::value_to_vector_type<" + p.data_type + "> value) {\n";
 						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
-						output += "\t\t\t\tset_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i), value[i]);\n";
+						output += "\t\t\t\t" + o.name + "_set_" + p.name + "(" + id_name + "(id.value + i), value[i]);\n";
 						output += "\t\t}\n";
 
 
-						output += "\t\t" "void set_" + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
+						output += "\t\t" "void " + o.name + "_set_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
 							"ve::value_to_vector_type<" + p.data_type + "> value) {\n";
 						output += "\t\t\tfor(int32_t i = 0; i < id.subcount; ++i)\n";
-						output += "\t\t\t\tset_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i), value[i]);\n";
+						output += "\t\t\t\t" + o.name + "_set_" + p.name + "(" + id_name + "(id.value + i), value[i]);\n";
 						output += "\t\t}\n";
 
-						output += "\t\t" "void set_" + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id, "
+						output += "\t\t" "void " + o.name + "_set_" + p.name + "(ve::tagged_vector<" + id_name + "> id, "
 							"ve::value_to_vector_type<" + p.data_type + "> value) {\n";
 						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
-						output += "\t\t\t\tset_" + o.name + "_" + p.name + "(id[i], value[i]);\n";
+						output += "\t\t\t\t" + o.name + "_set_" + p.name + "(id[i], value[i]);\n";
 						output += "\t\t}\n";
 
 					} else {
-						output += "\t\t" "void set_" + o.name + "_" + p.name + "(" + id_name + " id, " + p.data_type + " const& value);\n";
+						output += "\t\t" "void " + o.name + "_set_" + p.name + "(" + id_name + " id, " + p.data_type + " const& value);\n";
 					}
 				}
 
@@ -1167,72 +1167,72 @@ int main(int argc, char *argv[]) {
 
 				} else if(p.is_bitfield) {
 					if(!p.hook_get) {
-						output += "\t\t" "DCON_RELEASE_INLINE bool get_" + o.name + "_" + p.name + "(" + id_name + " id) const noexcept {\n";
+						output += "\t\t" "DCON_RELEASE_INLINE bool " + o.name + "_get_" + p.name + "(" + id_name + " id) const noexcept {\n";
 						output += "\t\t\treturn dcon::bit_vector_test(" + o.name + ".m_" + p.name + ".vptr()[id.index()]);\n";
 						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE ve::vbitfield_type get_" + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id) const noexcept {\n";
+						output += "\t\tDCON_RELEASE_INLINE ve::vbitfield_type " + o.name + "_get_" + p.name + "(" + con_tags_type + "<" + id_name + "> id) const noexcept {\n";
 						output += "\t\t\treturn ve::load(id, " + o.name + ".m_" + p.name + ".vptr());\n";
 						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE ve::vbitfield_type get_" + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept {\n";
+						output += "\t\tDCON_RELEASE_INLINE ve::vbitfield_type " + o.name + "_get_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept {\n";
 						output += "\t\t\treturn ve::load(id, " + o.name + ".m_" + p.name + ".vptr());\n";
 						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE ve::vbitfield_type get_" + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id) const noexcept {\n";
+						output += "\t\tDCON_RELEASE_INLINE ve::vbitfield_type " + o.name + "_get_" + p.name + "(ve::tagged_vector<" + id_name + "> id) const noexcept {\n";
 						output += "\t\t\treturn ve::load(id, " + o.name + ".m_" + p.name + ".vptr());\n";
 						output += "\t\t}\n";
 					}
 					if(!p.hook_set) {
-						output += "\t\t" "DCON_RELEASE_INLINE void set_" + o.name + "_" + p.name + "(" + id_name + " id, bool value) {\n";
+						output += "\t\t" "DCON_RELEASE_INLINE void " + o.name + "_set_" + p.name + "(" + id_name + " id, bool value) {\n";
 						output += "\t\t\tdcon::bit_vector_set(" + o.name + ".m_" + p.name + ".vptr(), id.index(), value);\n";
 						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE " "void set_" + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id, "
+						output += "\t\tDCON_RELEASE_INLINE " "void " + o.name + "_set_" + p.name + "(" + con_tags_type + "<" + id_name + "> id, "
 							"ve::vbitfield_type values) noexcept {\n";
 						output += "\t\t\tve::store(id, " + o.name + ".m_" + p.name + ".vptr(), values);\n";
 						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE " "void set_" + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
+						output += "\t\tDCON_RELEASE_INLINE " "void " + o.name + "_set_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
 							"ve::vbitfield_type values) noexcept {\n";
 						output += "\t\t\tve::store(id, " + o.name + ".m_" + p.name + ".vptr(), values);\n";
 						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE " "void set_" + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id, "
+						output += "\t\tDCON_RELEASE_INLINE " "void " + o.name + "_set_" + p.name + "(ve::tagged_vector<" + id_name + "> id, "
 							"ve::vbitfield_type values) noexcept {\n";
 						output += "\t\t\tve::store(id, " + o.name + ".m_" + p.name + ".vptr(), values);\n";
 						output += "\t\t}\n";
 					}
 				} else if(p.is_object) {
 					if(!p.hook_get) {
-						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + " const& get_" + o.name + "_" + p.name + "(" + id_name + " id) const noexcept {\n";
+						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + " const& " + o.name + "_get_" + p.name + "(" + id_name + " id) const noexcept {\n";
 						output += "\t\t\treturn " + o.name + ".m_" + p.name + ".vptr()[id.index()];\n";
 						output += "\t\t}\n";
-						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + "& get_" + o.name + "_" + p.name + "(" + id_name + " id) noexcept {\n";
+						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + "& " + o.name + "_get_" + p.name + "(" + id_name + " id) noexcept {\n";
 						output += "\t\t\treturn " + o.name + ".m_" + p.name + ".vptr()[id.index()];\n";
 						output += "\t\t}\n";
 					}
 					if(!p.hook_set) {
-						output += "\t\tDCON_RELEASE_INLINE void set_" + o.name + "_" + p.name + "(" + id_name + " id, " + p.data_type + " const& value) noexcept {\n";
+						output += "\t\tDCON_RELEASE_INLINE void " + o.name + "_set_" + p.name + "(" + id_name + " id, " + p.data_type + " const& value) noexcept {\n";
 						output += "\t\t\t" + o.name + ".m_" + p.name + ".vptr()[id.index()] = value;\n";
 						output += "\t\t}\n";
 					}
 				} else if(p.is_special_vector) {
 
 					if(!p.hook_get) {
-						output += "\t\tstd::pair<" + p.data_type + "*, " + p.data_type + "*> get_" + o.name + "_" + p.name + "_range(" + id_name + " id) const noexcept {\n";
+						output += "\t\tstd::pair<" + p.data_type + "*, " + p.data_type + "*> " + o.name + "_get_" + p.name + "_range(" + id_name + " id) const noexcept {\n";
 						output += "\t\t\treturn dcon::get_range(" + o.name + "." + p.name + "_storage, " + o.name + ".m_" + p.name + ".vptr()[id.index()]);\n";
 						output += "\t\t}\n";
 
-						output += "\t\t" + p.data_type + "& get_" + o.name + "_" + p.name + "_at(" + id_name + " id, uint32_t inner_index) const noexcept {\n";
+						output += "\t\t" + p.data_type + "& " + o.name + "_get_" + p.name + "_at(" + id_name + " id, uint32_t inner_index) const noexcept {\n";
 						output += "\t\t\treturn dcon::get(" + o.name + "." + p.name + "_storage, " + o.name + ".m_" + p.name + ".vptr()[id.index()], inner_index);\n";
 						output += "\t\t}\n";
 
-						output += "\t\tuint32_t get_" + o.name + "_" + p.name + "_capacity(" + id_name + " id) const noexcept {\n";
+						output += "\t\tuint32_t " + o.name + "_get_" + p.name + "_capacity(" + id_name + " id) const noexcept {\n";
 						output += "\t\t\treturn dcon::get_capacity(" + o.name + "." + p.name + "_storage, " + o.name + ".m_" + p.name + ".vptr()[id.index()]);\n";
 						output += "\t\t}\n";
 
-						output += "\t\tuint32_t get_" + o.name + "_" + p.name + "_size(" + id_name + " id) const noexcept {\n";
+						output += "\t\tuint32_t " + o.name + "_get_" + p.name + "_size(" + id_name + " id) const noexcept {\n";
 						output += "\t\t\treturn dcon::get_size(" + o.name + "." + p.name + "_storage, " + o.name + ".m_" + p.name + ".vptr()[id.index()]);\n";
 						output += "\t\t}\n";
 
@@ -1259,56 +1259,56 @@ int main(int argc, char *argv[]) {
 					}
 				} else if(is_vectorizable_type(parsed_file, p.data_type)) {
 					if(!p.hook_get) {
-						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + " const& get_" + o.name + "_" + p.name + "(" + id_name + " id) const noexcept {\n";
+						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + " const& " + o.name + "_get_" + p.name + "(" + id_name + " id) const noexcept {\n";
 						output += "\t\t\treturn " + o.name + ".m_" + p.name + ".vptr()[id.index()];\n";
 						output += "\t\t}\n";
-						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + "& get_" + o.name + "_" + p.name + "(" + id_name + " id) noexcept {\n";
+						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + "& " + o.name + "_get_" + p.name + "(" + id_name + " id) noexcept {\n";
 						output += "\t\t\treturn " + o.name + ".m_" + p.name + ".vptr()[id.index()];\n";
 						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE ve::value_to_vector_type<" + p.data_type + "> get_" + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id) const noexcept {\n";
+						output += "\t\tDCON_RELEASE_INLINE ve::value_to_vector_type<" + p.data_type + "> " + o.name + "_get_" + p.name + "(" + con_tags_type + "<" + id_name + "> id) const noexcept {\n";
 						output += "\t\t\treturn ve::load(id, " + o.name + ".m_" + p.name + ".vptr());\n";
 						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE ve::value_to_vector_type<" + p.data_type + "> get_" + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept {\n";
+						output += "\t\tDCON_RELEASE_INLINE ve::value_to_vector_type<" + p.data_type + "> " + o.name + "_get_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept {\n";
 						output += "\t\t\treturn ve::load(id, " + o.name + ".m_" + p.name + ".vptr());\n";
 						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE ve::value_to_vector_type<" + p.data_type + "> get_" + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id) const noexcept {\n";
+						output += "\t\tDCON_RELEASE_INLINE ve::value_to_vector_type<" + p.data_type + "> " + o.name + "_get_" + p.name + "(ve::tagged_vector<" + id_name + "> id) const noexcept {\n";
 						output += "\t\t\treturn ve::load(id, " + o.name + ".m_" + p.name + ".vptr());\n";
 						output += "\t\t}\n";
 					}
 					if(!p.hook_set) {
-						output += "\t\tDCON_RELEASE_INLINE void set_" + o.name + "_" + p.name + "(" + id_name + " id, " + p.data_type + " value) noexcept {\n";
+						output += "\t\tDCON_RELEASE_INLINE void " + o.name + "_set_" + p.name + "(" + id_name + " id, " + p.data_type + " value) noexcept {\n";
 						output += "\t\t\t" + o.name + ".m_" + p.name + ".vptr()[id.index()] = value;\n";
 						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE " "void set_" + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id, "
+						output += "\t\tDCON_RELEASE_INLINE " "void " + o.name + "_set_" + p.name + "(" + con_tags_type + "<" + id_name + "> id, "
 							"ve::value_to_vector_type<" + p.data_type + "> values) noexcept {\n";
 						output += "\t\t\tve::store(id, " + o.name + ".m_" + p.name + ".vptr(), values);\n";
 						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE " "void set_" + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
+						output += "\t\tDCON_RELEASE_INLINE " "void " + o.name + "_set_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
 							"ve::value_to_vector_type<" + p.data_type + "> values) noexcept {\n";
 						output += "\t\t\tve::store(id, " + o.name + ".m_" + p.name + ".vptr(), values);\n";
 						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE " "void set_" + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id, "
+						output += "\t\tDCON_RELEASE_INLINE " "void " + o.name + "_set_" + p.name + "(ve::tagged_vector<" + id_name + "> id, "
 							"ve::value_to_vector_type<" + p.data_type + "> values) noexcept {\n";
 						output += "\t\t\tve::store(id, " + o.name + ".m_" + p.name + ".vptr(), values);\n";
 						output += "\t\t}\n";
 					}
 				} else { // nonvectorizable data type w/o special handling
 					if(!p.hook_get) {
-						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + " const& get_" + o.name + "_" + p.name + "(" + id_name + " id) const noexcept {\n";
+						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + " const& " + o.name + "_get_" + p.name + "(" + id_name + " id) const noexcept {\n";
 						output += "\t\t\treturn " + o.name + ".m_" + p.name + ".vptr()[id.index()];\n";
 						output += "\t\t}\n";
-						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + "& get_" + o.name + "_" + p.name + "(" + id_name + " id) noexcept {\n";
+						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + "& " + o.name + "_get_" + p.name + "(" + id_name + " id) noexcept {\n";
 						output += "\t\t\treturn " + o.name + ".m_" + p.name + ".vptr()[id.index()];\n";
 						output += "\t\t}\n";
 					}
 					if(!p.hook_set) {
-						output += "\t\tDCON_RELEASE_INLINE void set_" + o.name + "_" + p.name + "(" + id_name + " id, " + p.data_type + " const& value) noexcept {\n";
+						output += "\t\tDCON_RELEASE_INLINE void " + o.name + "_set_" + p.name + "(" + id_name + " id, " + p.data_type + " const& value) noexcept {\n";
 						output += "\t\t\t" + o.name + ".m_" + p.name + ".vptr()[id.index()] = value;\n";
 						output += "\t\t}\n";
 					}
@@ -1328,7 +1328,7 @@ int main(int argc, char *argv[]) {
 				output += "\t\tvoid on_move_" + o.name + "(" + id_name + " new_id," + id_name + " old_id);\n";
 			}
 
-			output += "\t\tuint32_t " + o.name + "_size() const noexcept { return " + o.name + ".size_used; }\n";
+			output += "\t\tuint32_t " + o.name + "_size() const noexcept { return " + o.name + ".size_used; }\n\n";
 		} // end getters / setters creation loop over relationships / objects
 
 
@@ -1372,47 +1372,47 @@ int main(int argc, char *argv[]) {
 
 					// getter in relationship
 
-					output += "\t\tDCON_RELEASE_INLINE " + id_name + " get_" + r.name + "_" + i.property_name + "(" + relation_id_name + " id) const noexcept {\n";
+					output += "\t\tDCON_RELEASE_INLINE " + id_name + " " + r.name + "_get_" + i.property_name + "(" + relation_id_name + " id) const noexcept {\n";
 					output += "\t\t\treturn id;\n";
 					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept {\n";
 					output += "\t\t\tve::tagged_vector<" + relation_id_name + "> result;\n";
 					output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
 					output += "\t\t\t\tresult.set(uint32_t(i), id[i]);\n";
 					output += "\t\t\treturn result;\n";
 					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept {\n";
 					output += "\t\t\tve::tagged_vector<" + relation_id_name + "> result;\n";
 					output += "\t\t\tfor(uint32_t i = 0; i < id.subcount; ++i)\n";
 					output += "\t\t\t\tresult.set(i, id[i]);\n";
 					output += "\t\t\treturn result;\n";
 					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept {\n";
 					output += "\t\t\treturn id;\n";
 					output += "\t\t}\n";
 
 					// setter in relationship
 
-					output += "\t\tvoid set_" + r.name + "_" + i.property_name + "(" + relation_id_name + " id, " + id_name + " value) noexcept {\n";
+					output += "\t\tvoid " + r.name + "_set_" + i.property_name + "(" + relation_id_name + " id, " + id_name + " value) noexcept {\n";
 					output += "\t\t\tif(value) {\n";
-					output += "\t\t\tdelete_" + r.name + "(value);\n";
-					output += "\t\t\tinternal_move_relationship_" + r.name + "(id, value);\n";
+					output += "\t\t\t\tdelete_" + r.name + "(value);\n";
+					output += "\t\t\t\tinternal_move_relationship_" + r.name + "(id, value);\n";
 					output += "\t\t\t} else {\n";
-					output += "\t\t\tdelete_" + r.name + "(id);\n";
+					output += "\t\t\t\tdelete_" + r.name + "(id);\n";
 					output += "\t\t\t}\n";
 					output += "\t\t}\n";
 
 					// getter in related object
 
-					output += "\t\tDCON_RELEASE_INLINE " + relation_id_name + " get_" + i.type_name + "_" + r.name + "_as_" + i.property_name +
+					output += "\t\tDCON_RELEASE_INLINE " + relation_id_name + " get_" + r.name + "_from_" + i.type_name + "_as_" + i.property_name +
 						"(" + id_name + " id) const noexcept {\n";
 					output += "\t\t\treturn id;\n";
 					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + i.type_name + "_" + r.name + "_as_" + i.property_name +
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name + "_as_" + i.property_name +
 						"(" + con_tags_type + "<" + id_name + "> id) const noexcept {\n";
 					output += "\t\t\tve::tagged_vector<" + relation_id_name + "> result;\n";
 					output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
@@ -1420,7 +1420,7 @@ int main(int argc, char *argv[]) {
 					output += "\t\t\treturn result;\n";
 					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + i.type_name + "_" + r.name + "_as_" + i.property_name +
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name + "_as_" + i.property_name +
 						"(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept {\n";
 					output += "\t\t\tve::tagged_vector<" + relation_id_name + "> result;\n";
 					output += "\t\t\tfor(uint32_t i = 0; i < id.subcount; ++i)\n";
@@ -1428,7 +1428,7 @@ int main(int argc, char *argv[]) {
 					output += "\t\t\treturn result;\n";
 					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + i.type_name + "_" + r.name + "_as_" + i.property_name +
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name + "_as_" + i.property_name +
 						"(ve::tagged_vector<" + id_name + "> id) const noexcept {\n";
 					output += "\t\t\treturn id;\n";
 					output += "\t\t}\n";
@@ -1439,31 +1439,77 @@ int main(int argc, char *argv[]) {
 					output += "\t\t\tif(bool(id))\n";
 					output += "\t\t\t\tdelete_" + r.name + "(id);\n";
 					output += "\t\t}\n";
+
+					{
+						bool is_only_of_type = true;
+						for(auto ir : r.indexed_objects) {
+							if(ir.type_name == i.type_name && ir.property_name != i.property_name)
+								is_only_of_type = false;
+						}
+
+						if(is_only_of_type) { //make shortcut function names
+							// getter in related object
+
+							output += "\t\tDCON_RELEASE_INLINE " + relation_id_name + " get_" + r.name + "_from_" + i.type_name +
+								"(" + id_name + " id) const noexcept {\n";
+							output += "\t\t\treturn id;\n";
+							output += "\t\t}\n";
+
+							output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name +
+								"(" + con_tags_type + "<" + id_name + "> id) const noexcept {\n";
+							output += "\t\t\tve::tagged_vector<" + relation_id_name + "> result;\n";
+							output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
+							output += "\t\t\t\tresult.set(uint32_t(i), id[i]);\n";
+							output += "\t\t\treturn result;\n";
+							output += "\t\t}\n";
+
+							output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name +
+								"(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept {\n";
+							output += "\t\t\tve::tagged_vector<" + relation_id_name + "> result;\n";
+							output += "\t\t\tfor(uint32_t i = 0; i < id.subcount; ++i)\n";
+							output += "\t\t\t\tresult.set(i, id[i]);\n";
+							output += "\t\t\treturn result;\n";
+							output += "\t\t}\n";
+
+							output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name + 
+								"(ve::tagged_vector<" + id_name + "> id) const noexcept {\n";
+							output += "\t\t\treturn id;\n";
+							output += "\t\t}\n";
+
+							// setter in related object
+
+							output += "\t\tDCON_RELEASE_INLINE void " + i.type_name + "_remove_" + r.name + "(" + id_name + " id) noexcept {\n";
+							output += "\t\t\tif(bool(id))\n";
+							output += "\t\t\t\tdelete_" + r.name + "(id);\n";
+							output += "\t\t}\n";
+						}
+					}
+
 				} else if(i.index == index_type::at_most_one) {
 					// first: getter in the relationship itself
 
 					const std::string id_name = i.type_name + "_id";
 					const std::string con_tags_type = i.related_to->is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags";
 
-					output += "\t\tDCON_RELEASE_INLINE " + id_name + " get_" + r.name + "_" + i.property_name + "(" + relation_id_name + " id) const noexcept {\n";
+					output += "\t\tDCON_RELEASE_INLINE " + id_name + " " + r.name + "_get_" + i.property_name + "(" + relation_id_name + " id) const noexcept {\n";
 					output += "\t\t\treturn " + r.name + ".m_" + i.property_name + ".vptr()[id.index()];\n";
 					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept {\n";
 					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
 					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept {\n";
 					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
 					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept {\n";
 					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
 					output += "\t\t}\n";
 
 					// second: setter in the relationship itself
 
-					output += "\t\tvoid set_" + r.name + "_" + i.property_name + "(" + relation_id_name + " id, " + id_name + " value) noexcept {\n";
+					output += "\t\tvoid " + r.name + "_set_" + i.property_name + "(" + relation_id_name + " id, " + id_name + " value) noexcept {\n";
 					output += "\t\t\tif(auto old_value = " + r.name + ".m_" + i.property_name + ".vptr()[id.index()]; bool(old_value))\n";
 					output += "\t\t\t\t" + r.name + ".m_link_back_" + i.property_name + ".vptr()[old_value].index()] = " + relation_id_name + "();\n";
 					output += "\t\t\t" + r.name + ".m_" + i.property_name + ".vptr()[id.index()] = value;\n";
@@ -1476,22 +1522,22 @@ int main(int argc, char *argv[]) {
 
 					// third: getter in the object related to
 
-					output += "\t\tDCON_RELEASE_INLINE " + relation_id_name + " get_" + i.type_name + "_" + r.name + "_as_" + i.property_name +
+					output += "\t\tDCON_RELEASE_INLINE " + relation_id_name + " get_" + r.name + "_from_" + i.type_name + "_as_" + i.property_name +
 						"(" + id_name + " id) const noexcept {\n";
 					output += "\t\t\treturn " + r.name + ".m_link_back_" + i.property_name + ".vptr()[id.index()];\n";
 					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + i.type_name + "_" + r.name + "_as_" + i.property_name +
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name + "_as_" + i.property_name +
 						"(" + con_tags_type + "<" + id_name + "> id) const noexcept {\n";
 					output += "\t\t\treturn ve::load(id, " + r.name + ".m_link_back_" + i.property_name + ".vptr());\n";
 					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + i.type_name + "_" + r.name + "_as_" + i.property_name +
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name + "_as_" + i.property_name +
 						"(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept {\n";
 					output += "\t\t\treturn ve::load(id, " + r.name + ".m_link_back_" + i.property_name + ".vptr());\n";
 					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + i.type_name + "_" + r.name + "_as_" + i.property_name +
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name + "_as_" + i.property_name +
 						"(ve::tagged_vector<" + id_name + "> id) const noexcept {\n";
 					output += "\t\t\treturn ve::load(id, " + r.name + ".m_link_back_" + i.property_name + ".vptr());\n";
 					output += "\t\t}\n";
@@ -1503,31 +1549,68 @@ int main(int argc, char *argv[]) {
 					output += "\t\t\t\tdelete_" + r.name + "(id);\n";
 					output += "\t\t}\n";
 
+					{
+						bool is_only_of_type = true;
+						for(auto ir : r.indexed_objects) {
+							if(ir.type_name == i.type_name && ir.property_name != i.property_name)
+								is_only_of_type = false;
+						}
+
+						if(is_only_of_type) { //make shortcut function names
+							output += "\t\tDCON_RELEASE_INLINE " + relation_id_name + " get_" + r.name + "_from_" + i.type_name +
+								"(" + id_name + " id) const noexcept {\n";
+							output += "\t\t\treturn " + r.name + ".m_link_back_" + i.property_name + ".vptr()[id.index()];\n";
+							output += "\t\t}\n";
+
+							output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name + 
+								"(" + con_tags_type + "<" + id_name + "> id) const noexcept {\n";
+							output += "\t\t\treturn ve::load(id, " + r.name + ".m_link_back_" + i.property_name + ".vptr());\n";
+							output += "\t\t}\n";
+
+							output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name + 
+								"(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept {\n";
+							output += "\t\t\treturn ve::load(id, " + r.name + ".m_link_back_" + i.property_name + ".vptr());\n";
+							output += "\t\t}\n";
+
+							output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name +
+								"(ve::tagged_vector<" + id_name + "> id) const noexcept {\n";
+							output += "\t\t\treturn ve::load(id, " + r.name + ".m_link_back_" + i.property_name + ".vptr());\n";
+							output += "\t\t}\n";
+
+							// fourth: setter in the object related to
+
+							output += "\t\tDCON_RELEASE_INLINE void " + i.type_name + "_remove_" + r.name + "(" + id_name + " id) noexcept {\n";
+							output += "\t\t\tif(auto id = " + r.name + ".m_link_back_" + i.property_name + ".vptr()[value.index()]; bool(id))\n";
+							output += "\t\t\t\tdelete_" + r.name + "(id);\n";
+							output += "\t\t}\n";
+						}
+					}
+
 				} else if(i.index == index_type::many) {
 					// first: getter in the relationship itself
 
 					const std::string id_name = i.type_name + "_id";
 					const std::string con_tags_type = i.related_to->is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags";
 
-					output += "\t\tDCON_RELEASE_INLINE " + id_name + " get_" + r.name + "_" + i.property_name + "(" + relation_id_name + " id) const noexcept {\n";
+					output += "\t\tDCON_RELEASE_INLINE " + id_name + " " + r.name + "_get_" + i.property_name + "(" + relation_id_name + " id) const noexcept {\n";
 					output += "\t\t\treturn " + r.name + ".m_" + i.property_name + ".vptr()[id.index()];\n";
 					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept {\n";
 					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
 					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept {\n";
 					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
 					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept {\n";
 					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
 					output += "\t\t}\n";
 
 					// second: setter in the relationship itself
 
-					output += "\t\tvoid set_" + r.name + "_" + i.property_name + "(" + relation_id_name + " id, " + id_name + " value) noexcept {\n";
+					output += "\t\tvoid " + r.name + "_set_" + i.property_name + "(" + relation_id_name + " id, " + id_name + " value) noexcept {\n";
 
 					if(i.ltype == list_type::list) {
 						output += "\t\t\tif(auto old_value = " + r.name + ".m_" + i.property_name + ".vptr()[id.index()]; bool(old_value)) {\n";
@@ -1588,7 +1671,7 @@ int main(int argc, char *argv[]) {
 
 					output += "\t\ttemplate<typename T>\n";
 					output += "\t\tDCON_RELEASE_INLINE void " + i.type_name + "_for_each_" + r.name + "_as_" + i.property_name + "("
-						+ id_name + " id, T func) const {\n";
+						+ id_name + " id, T&& func) const {\n";
 
 					if(i.ltype == list_type::list) {
 						output += "\t\t\tif(bool(id)) {\n";
@@ -1652,44 +1735,121 @@ int main(int argc, char *argv[]) {
 					}
 					output += "\t\t}\n";
 
+					{
+						bool is_only_of_type = true;
+						for(auto ir : r.indexed_objects) {
+							if(ir.type_name == i.type_name && ir.property_name != i.property_name)
+								is_only_of_type = false;
+						}
+						if(is_only_of_type) { // shortcut functions
+							// third: getter in the object related to
+
+							output += "\t\ttemplate<typename T>\n";
+							output += "\t\tDCON_RELEASE_INLINE void " + i.type_name + "_for_each_" + r.name + "("
+								+ id_name + " id, T&& func) const {\n";
+
+							if(i.ltype == list_type::list) {
+								output += "\t\t\tif(bool(id)) {\n";
+								output += "\t\t\t\tfor(auto list_pos = " + r.name + ".m_head_back_" + i.property_name + ".vptr()[id.index()]; "
+									+ "bool(list_pos); list_pos = " + r.name + ".m_link_" + i.property_name + ".vptr()[list_pos.index()].right) {\n";
+								output += "\t\t\t\t\tfunc(list_pos);";
+								output += "\t\t\t\t}\n";
+								output += "\t\t\t}\n";
+
+							} else if(i.ltype == list_type::array) {
+								output += "\t\t\tif(bool(id)) {\n";
+								output += "\t\t\t\tauto vrange = dcon::get_range(" + r.name + "." + i.property_name + "_storage, "
+									+ r.name + ".m_array_" + i.property_name + ".vptr()[id.index()]);\n";
+								output += "\t\t\t\tstd::for_each(vrange.first, vrange.second, func);\n";
+								output += "\t\t\t}\n";
+							} else if(i.ltype == list_type::std_vector) {
+								output += "\t\t\tif(bool(id)) {\n";
+								output += "\t\t\t\tauto& vref = " + r.name + ".m_array_" + i.property_name + ".vptr()[id.index()];\n";
+								output += "\t\t\t\tstd::for_each(vref.begin(), vref.end(), func);\n";
+								output += "\t\t\t}\n";
+							}
+							output += "\t\t}\n";
+
+
+							if(i.ltype == list_type::array) {
+								output += "\t\tDCON_RELEASE_INLINE std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*> "
+									+ i.type_name + "_range_of_" + r.name + "(" + id_name + " id) const {\n";
+								output += "\t\t\tif(bool(id)) {\n";
+								output += "\t\t\t\tauto vrange = dcon::get_range(" + r.name + "." + i.property_name + "_storage, "
+									+ r.name + ".m_array_" + i.property_name + ".vptr()[id.index()]);\n";
+								output += "\t\t\t\treturn std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*>(vrange.first, vrange.second);\n";
+								output += "\t\t\t} else {\n";
+								output += "\t\t\t\treturn std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*>(nullptr, nullptr);\n";
+								output += "\t\t\t}\n";
+								output += "\t\t}\n";
+							} else if(i.ltype == list_type::std_vector) {
+								output += "\t\tDCON_RELEASE_INLINE std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*> "
+									+ i.type_name + "_range_of_" + r.name + "(" + id_name + " id) const {\n";
+								output += "\t\t\tif(bool(id)) {\n";
+								output += "\t\t\t\tauto& vref = " + r.name + ".m_array_" + i.property_name + ".vptr()[id.index()];\n";
+								output += "\t\t\t\treturn std::pair<" + relation_id_name + " const*, " + relation_id_name
+									+ " const*>(&(*vref.begin()), &(*vref.end()));\n";
+								output += "\t\t\t} else {\n";
+								output += "\t\t\t\treturn std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*>(nullptr, nullptr);\n";
+								output += "\t\t\t}\n";
+								output += "\t\t}\n";
+							}
+
+							// fourth: setter in the object related to
+
+							output += "\t\tvoid " + i.type_name + "_remove_all_" + r.name + "(" + id_name + " id) noexcept {\n";
+							if(i.ltype == list_type::array || i.ltype == list_type::std_vector) {
+								output += "\t\t\tauto rng = " + i.type_name + "_range_of_" + r.name + "(id);\n";
+								output += "\t\t\tstd::vector<" + relation_id_name + "> temp(rng.first, rng.second);\n";
+								output += "\t\t\tstd::for_each(temp.begin(), temp.end(), [t = this](" + relation_id_name + " i) { t->delete_" + r.name + "(i); });\n";
+							} else {
+								output += "\t\t\tstd::vector<" + relation_id_name + "> temp;\n";
+								output += "\t\t\t" + i.type_name + "_for_each_" + r.name +
+									"(id, [&](" + relation_id_name + " j) { temp.push_back(j); });\n";
+								output += "\t\t\tstd::for_each(temp.begin(), temp.end(), [t = this](" + relation_id_name + " i) { t->delete_" + r.name + "(i); });\n";
+							}
+							output += "\t\t}\n";
+						} //end shortcut functions in relationship
+					}
+
 				} else if(i.index == index_type::none) {
 					// first: getter in the relationship itself
 
 					const std::string id_name = i.type_name + "_id";
 
-					output += "\t\tDCON_RELEASE_INLINE " + id_name + " get_" + r.name + "_" + i.property_name + "(" + relation_id_name + " id) const noexcept {\n";
+					output += "\t\tDCON_RELEASE_INLINE " + id_name + " " + r.name + "_get_" + i.property_name + "(" + relation_id_name + " id) const noexcept {\n";
 					output += "\t\t\treturn " + r.name + ".m_" + i.property_name + ".vptr()[id.index()];\n";
 					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept {\n";
 					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
 					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept {\n";
 					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
 					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept {\n";
 					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
 					output += "\t\t}\n";
 
 					// second: setter in the relationship itself
 
-					output += "\t\tDCON_RELEASE_INLINE void set_" + r.name + "_" + i.property_name + "(" + relation_id_name + " id, " + id_name + " value) noexcept {\n";
+					output += "\t\tDCON_RELEASE_INLINE void " + r.name + "_set_" + i.property_name + "(" + relation_id_name + " id, " + id_name + " value) noexcept {\n";
 					output += "\t\t\t" + r.name + ".m_" + i.property_name + ".vptr()[id.index()] = value;\n";
 					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE " "void set_" + r.name + "_" + i.property_name + "(" + relation_con_tags_type + "<" + id_name + "> id, "
+					output += "\t\tDCON_RELEASE_INLINE " "void " + r.name + "_set_" + i.property_name + "(" + relation_con_tags_type + "<" + id_name + "> id, "
 						"ve::tagged_vector<" + id_name + "> values) noexcept {\n";
 					output += "\t\t\tve::store(id, " + r.name + ".m_" + i.property_name + ".vptr(), values);\n";
 					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE " "void set_" + r.name + "_" + i.property_name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
+					output += "\t\tDCON_RELEASE_INLINE " "void " + r.name + "_set_" + i.property_name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
 						"ve::tagged_vector<" + id_name + "> values) noexcept {\n";
 					output += "\t\t\tve::store(id, " + r.name + ".m_" + i.property_name + ".vptr(), values);\n";
 					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE " "void set_" + r.name + "_" + i.property_name + "(ve::tagged_vector<" + id_name + "> id, "
+					output += "\t\tDCON_RELEASE_INLINE " "void " + r.name + "_set_" + i.property_name + "(ve::tagged_vector<" + id_name + "> id, "
 						"ve::tagged_vector<" + id_name + "> values) noexcept {\n";
 					output += "\t\t\tve::store(id, " + r.name + ".m_" + i.property_name + ".vptr(), values);\n";
 					output += "\t\t}\n";
@@ -1836,19 +1996,19 @@ int main(int argc, char *argv[]) {
 							if(cr.as_primary_key) {
 
 							} else if(cr.indexed_as == index_type::at_most_one) {
-								output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_link_back_" + cr.property_name
+								output += "\t\t\tstd::fill_n(" + cr.relation_name + ".m_link_back_" + cr.property_name
 									+ ".vptr(), new_size, " + cr.relation_name + "_id());\n";
 							} else if(cr.indexed_as == index_type::many) {
 								if(cr.listed_as == list_type::list) {
-									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_head_back_" + cr.property_name
+									output += "\t\t\tstd::fill_n(" + cr.relation_name + ".m_head_back_" + cr.property_name
 										+ ".vptr(), new_size, " + cr.relation_name + "_id());\n";
 								} else if(cr.listed_as == list_type::array) {
-									output += "\t\t\t\tstd::for_each(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), "
+									output += "\t\t\tstd::for_each(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), "
 										+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->"
 										+ cr.relation_name + "." + cr.property_name + "_storage.release(i); });\n";
 								} else if(cr.listed_as == list_type::std_vector) {
-									output += "\t\t\t\tstd::destroy_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), new_size);\n";
-									output += "\t\t\t\tstd::uninitialized_default_construct_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), new_size);\n";
+									output += "\t\t\tstd::destroy_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), new_size);\n";
+									output += "\t\t\tstd::uninitialized_default_construct_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), new_size);\n";
 								}
 
 							}
@@ -1856,16 +2016,16 @@ int main(int argc, char *argv[]) {
 
 						for(auto& cr : co.relationships_involved_in) {
 							if(cr.as_primary_key) {
-								output += "\t\t\t\t" + cr.relation_name + "_resize(new_size);\n";
+								output += "\t\t\t" + cr.relation_name + "_resize(new_size);\n";
 							} else if(cr.indexed_as == index_type::at_most_one) {
-								output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".values.resize(1 + new_size);\n";
+								output += "\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".values.resize(1 + new_size);\n";
 							} else if(cr.indexed_as == index_type::many) {
 								if(cr.listed_as == list_type::list) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".values.resize(1 + new_size);\n";
+									output += "\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".values.resize(1 + new_size);\n";
 								} else if(cr.listed_as == list_type::array) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
+									output += "\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 								} else if(cr.listed_as == list_type::std_vector) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.resize(1 + new_size);\n";
+									output += "\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.resize(1 + new_size);\n";
 								}
 
 							}
@@ -1873,11 +2033,11 @@ int main(int argc, char *argv[]) {
 						for(auto& cp : co.properties) {
 							if(cp.is_derived) {
 							} else if(cp.is_special_vector) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
+								output += "\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 							} else if(cp.is_bitfield) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\n";
+								output += "\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\n";
 							} else {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size);\n";
+								output += "\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size);\n";
 							}
 						}
 					} else {
@@ -1885,26 +2045,26 @@ int main(int argc, char *argv[]) {
 							if(cr.as_primary_key) {
 
 							} else if(cr.indexed_as == index_type::at_most_one) {
-								output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_link_back_" + cr.property_name
+								output += "\t\t\tstd::fill_n(" + cr.relation_name + ".m_link_back_" + cr.property_name
 									+ ".vptr(), old_size, " + cr.relation_name + "_id());\n";
 							} else if(cr.indexed_as == index_type::many) {
 								if(cr.listed_as == list_type::list) {
-									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_head_back_" + cr.property_name
+									output += "\t\t\tstd::fill_n(" + cr.relation_name + ".m_head_back_" + cr.property_name
 										+ ".vptr(), old_size, " + cr.relation_name + "_id());\n";
 								} else if(cr.listed_as == list_type::array) {
-									output += "\t\t\t\tstd::for_each(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), "
+									output += "\t\t\tstd::for_each(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), "
 										+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->"
 										+ cr.relation_name + "." + cr.property_name + "_storage.release(i); });\n";
 								} else if(cr.listed_as == list_type::std_vector) {
-									output += "\t\t\t\tstd::destroy_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), old_size);\n";
-									output += "\t\t\t\tstd::uninitialized_default_construct_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), old_size);\n";
+									output += "\t\t\tstd::destroy_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), old_size);\n";
+									output += "\t\t\tstd::uninitialized_default_construct_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), old_size);\n";
 								}
 							}
 						}
 
 						for(auto& cr : co.relationships_involved_in) {
 							if(cr.as_primary_key) {
-								output += "\t\t\t\t" + cr.relation_name + "_resize(new_size);\n";
+								output += "\t\t\t" + cr.relation_name + "_resize(new_size);\n";
 							}
 						}
 					}
@@ -2131,7 +2291,7 @@ int main(int argc, char *argv[]) {
 					output += "\t\t}\n"; // end create
 
 					output += "\t\tbool is_valid_" + co.name + "(" + id_name + " id) const {\n";
-					output += "\t\t\treturn bool(id) && uint32_t(id.value) <= " + co.name + ".size_used;\n";
+					output += "\t\t\treturn bool(id) && uint32_t(id.index()) < " + co.name + ".size_used;\n";
 					output += "\t\t}\n";
 				} else if(co.store_type == storage_type::erasable) {
 
@@ -2356,19 +2516,19 @@ int main(int argc, char *argv[]) {
 							if(cr.as_primary_key) {
 
 							} else if(cr.indexed_as == index_type::at_most_one) {
-								output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_link_back_" + cr.property_name
+								output += "\t\t\tstd::fill_n(" + cr.relation_name + ".m_link_back_" + cr.property_name
 									+ ".vptr(), new_size, " + cr.relation_name + "_id());\n";
 							} else if(cr.indexed_as == index_type::many) {
 								if(cr.listed_as == list_type::list) {
-									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_head_back_" + cr.property_name
+									output += "\t\t\tstd::fill_n(" + cr.relation_name + ".m_head_back_" + cr.property_name
 										+ ".vptr(), new_size, " + cr.relation_name + "_id());\n";
 								} else if(cr.listed_as == list_type::array) {
-									output += "\t\t\t\tstd::for_each(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), "
+									output += "\t\t\tstd::for_each(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), "
 										+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->"
 										+ cr.relation_name + "." + cr.property_name + "_storage.release(i); });\n";
 								} else if(cr.listed_as == list_type::std_vector) {
-									output += "\t\t\t\tstd::destroy_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), new_size);\n";
-									output += "\t\t\t\tstd::uninitialized_default_construct_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), new_size);\n";
+									output += "\t\t\tstd::destroy_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), new_size);\n";
+									output += "\t\t\tstd::uninitialized_default_construct_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), new_size);\n";
 								}
 
 							}
@@ -2376,16 +2536,16 @@ int main(int argc, char *argv[]) {
 
 						for(auto& cr : co.relationships_involved_in) {
 							if(cr.as_primary_key) {
-								output += "\t\t\t\t" + cr.relation_name + "_resize(new_size);\n";
+								output += "\t\t\t" + cr.relation_name + "_resize(new_size);\n";
 							} else if(cr.indexed_as == index_type::at_most_one) {
-								output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".values.resize(1 + new_size);\n";
+								output += "\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".values.resize(1 + new_size);\n";
 							} else if(cr.indexed_as == index_type::many) {
 								if(cr.listed_as == list_type::list) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".values.resize(1 + new_size);\n";
+									output += "\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".values.resize(1 + new_size);\n";
 								} else if(cr.listed_as == list_type::array) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
+									output += "\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 								} else if(cr.listed_as == list_type::std_vector) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.resize(1 + new_size);\n";
+									output += "\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.resize(1 + new_size);\n";
 								}
 
 							}
@@ -2393,11 +2553,11 @@ int main(int argc, char *argv[]) {
 						for(auto& cp : co.properties) {
 							if(cp.is_derived) {
 							} else if(cp.is_special_vector) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
+								output += "\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 							} else if(cp.is_bitfield) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\n";
+								output += "\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\n";
 							} else {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size);\n";
+								output += "\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size);\n";
 							}
 						}
 					} else {
@@ -2405,19 +2565,19 @@ int main(int argc, char *argv[]) {
 							if(cr.as_primary_key) {
 
 							} else if(cr.indexed_as == index_type::at_most_one) {
-								output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_link_back_" + cr.property_name
+								output += "\t\t\tstd::fill_n(" + cr.relation_name + ".m_link_back_" + cr.property_name
 									+ ".vptr(), old_size, " + cr.relation_name + "_id());\n";
 							} else if(cr.indexed_as == index_type::many) {
 								if(cr.listed_as == list_type::list) {
-									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_head_back_" + cr.property_name
+									output += "\t\t\tstd::fill_n(" + cr.relation_name + ".m_head_back_" + cr.property_name
 										+ ".vptr(), old_size, " + cr.relation_name + "_id());\n";
 								} else if(cr.listed_as == list_type::array) {
-									output += "\t\t\t\tstd::for_each(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), "
+									output += "\t\t\tstd::for_each(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), "
 										+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->"
 										+ cr.relation_name + "." + cr.property_name + "_storage.release(i); });\n";
 								} else if(cr.listed_as == list_type::std_vector) {
-									output += "\t\t\t\tstd::destroy_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), old_size);\n";
-									output += "\t\t\t\tstd::uninitialized_default_construct_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), old_size);\n";
+									output += "\t\t\tstd::destroy_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), old_size);\n";
+									output += "\t\t\tstd::uninitialized_default_construct_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), old_size);\n";
 								}
 
 							}
@@ -2433,7 +2593,7 @@ int main(int argc, char *argv[]) {
 					output += "\t\t}\n"; // end resize
 
 					output += "\t\tbool is_valid_" + co.name + "(" + id_name + " id) const {\n";
-					output += "\t\t\treturn bool(id) && uint32_t(id.value) <= " + co.name + ".size_used && "
+					output += "\t\t\treturn bool(id) && uint32_t(id.index()) < " + co.name + ".size_used && "
 						+ co.name + ".m__index.vptr()[id.index()] == id;\n";
 					output += "\t\t}\n";
 				}
@@ -2478,34 +2638,34 @@ int main(int argc, char *argv[]) {
 				//both
 				if(co.is_expandable) {
 					for(auto& io : co.indexed_objects) {
-						output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + io.property_name + ".vptr(), new_size, " + io.type_name + "_id());\n";
+						output += "\t\t\tstd::fill_n(" + co.name + ".m_" + io.property_name + ".vptr(), new_size, " + io.type_name + "_id());\n";
 						if(io.ltype == list_type::list)
-							output += "\t\t\t\tstd::fill_n(" + co.name + ".m_link_" + io.property_name + ".vptr(), new_size, " + io.type_name + "_id_pair());\n";
+							output += "\t\t\tstd::fill_n(" + co.name + ".m_link_" + io.property_name + ".vptr(), new_size, " + io.type_name + "_id_pair());\n";
 
 					}
 
 					for(auto& io : co.indexed_objects) {
-						output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".values.resize(1 + new_size);\n";
+						output += "\t\t\t" + co.name + ".m_" + io.property_name + ".values.resize(1 + new_size);\n";
 						if(io.ltype == list_type::list)
-							output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.resize(1 + new_size);\n";
+							output += "\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.resize(1 + new_size);\n";
 					}
 
 					for(auto& cp : co.properties) {
 						if(cp.is_derived) {
 						} else if(cp.is_special_vector) {
-							output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
+							output += "\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 						} else if(cp.is_bitfield) {
-							output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\n";
+							output += "\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\n";
 						} else {
-							output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size);\n";
+							output += "\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size);\n";
 						}
 					}
 				} else {
 					for(auto& io : co.indexed_objects) {
 						if(io.related_to != co.primary_key) {
-							output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + io.property_name + ".vptr(), old_size, " + io.type_name + "_id());\n";
+							output += "\t\t\tstd::fill_n(" + co.name + ".m_" + io.property_name + ".vptr(), old_size, " + io.type_name + "_id());\n";
 							if(io.ltype == list_type::list)
-								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_link_" + io.property_name + ".vptr(), old_size, " + io.type_name + "_id_pair());\n";
+								output += "\t\t\tstd::fill_n(" + co.name + ".m_link_" + io.property_name + ".vptr(), old_size, " + io.type_name + "_id_pair());\n";
 						}
 
 					}
@@ -2513,20 +2673,19 @@ int main(int argc, char *argv[]) {
 				output += "\t\t\t" + co.name + ".size_used = new_size;\n";
 				output += "\t\t}\n"; // end resize
 
-				output += "\t\tvoid delete_" + co.name + "(" + id_name + " id) {";
-				output += "\t\t\t\t" + id_name + " id_removed(" + co.name + ".size_used - 1);\n";
+				output += "\t\tvoid delete_" + co.name + "(" + id_name + " id_removed) {\n";
 				if(co.hook_delete)
 					output += "\t\t\t\ton_delete_" + co.name + "(id_removed);\n";
 
 				for(auto& io : co.indexed_objects) {
 					if(io.related_to != co.primary_key) {
-						output += "\t\t\t\tset_" + co.name + "_" + io.property_name + "(id_removed, " + io.type_name + "_id());\n";
+						output += "\t\t\t\t" + co.name + "_set_" + io.property_name + "(id_removed, " + io.type_name + "_id());\n";
 					}
 				}
 				output += "\t\t}\n"; // end delete
 
 				output += "\t\tbool is_valid_" + co.name + "(" + id_name + " id) const {\n";
-				output += "\t\t\treturn bool(id) && uint32_t(id.value) <= " + co.name + ".size_used && " + 
+				output += "\t\t\treturn bool(id) && uint32_t(id.index()) < " + co.name + ".size_used && " + 
 					"is_valid_" + co.primary_key->name + "(id) && (";
 				for(auto& io : co.indexed_objects) {
 					if(io.related_to != co.primary_key) {
@@ -2618,7 +2777,7 @@ int main(int argc, char *argv[]) {
 
 				for(auto& io : co.indexed_objects) {
 					if(io.related_to != co.primary_key) {
-						output += "\t\t\t\tset_" + co.name + "_" + io.property_name + "(new_id, " + io.property_name + "_p);\n";
+						output += "\t\t\t\t" + co.name + "_set_" + io.property_name + "(new_id, " + io.property_name + "_p);\n";
 					}
 				}
 
@@ -2638,7 +2797,7 @@ int main(int argc, char *argv[]) {
 
 				for(auto& io : co.indexed_objects) {
 					if(io.related_to != co.primary_key) {
-						output += "\t\t\t\tset_" + co.name + "_" + io.property_name + "(new_id, " + io.property_name + "_p);\n";
+						output += "\t\t\t\t" + co.name + "_set_" + io.property_name + "(new_id, " + io.property_name + "_p);\n";
 					}
 				}
 
@@ -2658,7 +2817,7 @@ int main(int argc, char *argv[]) {
 						output += "\t\t\t\ton_delete_" + co.name + "(id_removed);\n";
 
 					for(auto& io : co.indexed_objects) {
-						output += "\t\t\t\tset_" + co.name + "_" + io.property_name + "(id_removed, " + io.type_name + "_id());\n";
+						output += "\t\t\t\t" + co.name + "_set_" + io.property_name + "(id_removed, " + io.type_name + "_id());\n";
 						if(co.is_expandable) {
 							output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".values.pop_back();\n";
 							if(io.ltype == list_type::list)
@@ -2727,34 +2886,34 @@ int main(int argc, char *argv[]) {
 					//both
 					if(co.is_expandable) {
 						for(auto& io : co.indexed_objects) {
-							output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + io.property_name + ".vptr(), new_size, " + io.type_name + "_id());\n";
+							output += "\t\t\tstd::fill_n(" + co.name + ".m_" + io.property_name + ".vptr(), new_size, " + io.type_name + "_id());\n";
 							if(io.ltype == list_type::list)
-								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_link_" + io.property_name + ".vptr(), new_size, " + io.type_name + "_id_pair());\n";
+								output += "\t\t\tstd::fill_n(" + co.name + ".m_link_" + io.property_name + ".vptr(), new_size, " + io.type_name + "_id_pair());\n";
 
 						}
 
 						for(auto& io : co.indexed_objects) {
-							output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".values.resize(1 + new_size);\n";
+							output += "\t\t\t" + co.name + ".m_" + io.property_name + ".values.resize(1 + new_size);\n";
 							if(io.ltype == list_type::list)
-								output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.resize(1 + new_size);\n";
+								output += "\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.resize(1 + new_size);\n";
 						}
 
 						
 						for(auto& cp : co.properties) {
 							if(cp.is_derived) {
 							} else if(cp.is_special_vector) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
+								output += "\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 							} else if(cp.is_bitfield) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\n";
+								output += "\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\n";
 							} else {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size);\n";
+								output += "\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size);\n";
 							}
 						}
 					} else {
 						for(auto& io : co.indexed_objects) {
-							output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + io.property_name + ".vptr(), old_size, " + io.type_name + "_id());\n";
+							output += "\t\t\tstd::fill_n(" + co.name + ".m_" + io.property_name + ".vptr(), old_size, " + io.type_name + "_id());\n";
 							if(io.ltype == list_type::list)
-								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_link_" + io.property_name + ".vptr(), old_size, " + io.type_name + "_id_pair());\n";
+								output += "\t\t\tstd::fill_n(" + co.name + ".m_link_" + io.property_name + ".vptr(), old_size, " + io.type_name + "_id_pair());\n";
 
 						}
 					}
@@ -2773,7 +2932,7 @@ int main(int argc, char *argv[]) {
 							output += "\t\t\t\ton_delete_" + co.name + "(id_removed);\n";
 
 						for(auto& io : co.indexed_objects) {
-							output += "\t\t\t\tset_" + co.name + "_" + io.property_name + "(id_removed, " + io.type_name + "_id());\n";
+							output += "\t\t\t\t" + co.name + "_set_" + io.property_name + "(id_removed, " + io.type_name + "_id());\n";
 
 							output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".vptr()[id_removed.index()] = "
 								+ co.name + ".m_" + io.property_name + ".vptr()[last_id.index()];\n";
@@ -2884,7 +3043,7 @@ int main(int argc, char *argv[]) {
 					}
 
 					for(auto& io : co.indexed_objects) {
-						output += "\t\t\t\tset_" + co.name + "_" + io.property_name + "(new_id, " + io.property_name + "_p);\n";
+						output += "\t\t\t\t" + co.name + "_set_" + io.property_name + "(new_id, " + io.property_name + "_p);\n";
 					}
 
 					output += "\t\t\t++" + co.name + ".size_used;\n";
@@ -2894,7 +3053,7 @@ int main(int argc, char *argv[]) {
 					output += "\t\t}\n"; // end create
 
 					output += "\t\tbool is_valid_" + co.name + "(" + id_name + " id) const {\n";
-					output += "\t\t\treturn bool(id) && uint32_t(id.value) <= " + co.name + ".size_used;\n";
+					output += "\t\t\treturn bool(id) && uint32_t(id.index()) < " + co.name + ".size_used;\n";
 					output += "\t\t}\n";
 				} else if(co.store_type == storage_type::erasable) {
 					// delete
@@ -2914,7 +3073,7 @@ int main(int argc, char *argv[]) {
 					output += "\t\t\t\t}\n"; // OIF
 
 					for(auto& io : co.indexed_objects) {
-						output += "\t\t\t\tset_" + co.name + "_" + io.property_name + "(id_removed, " + io.type_name + "_id());\n";
+						output += "\t\t\t\t" + co.name + "_set_" + io.property_name + "(id_removed, " + io.type_name + "_id());\n";
 					}
 
 					for(auto& cp : co.properties) {
@@ -3028,7 +3187,7 @@ int main(int argc, char *argv[]) {
 
 					for(auto& io : co.indexed_objects) {
 						output += "\t\t\t\tfor(int32_t j = int32_t(old_size); j >= new_size; --j) {\n";
-						output += "\t\t\t\tset_" + co.name + "_" + io.property_name
+						output += "\t\t\t\t" + co.name + "_set_" + io.property_name
 							+ "(" + co.name + "_id(" + co.name + "::value_base_t(j)), " + io.type_name + "_id());\n";
 					}
 
@@ -3086,20 +3245,20 @@ int main(int argc, char *argv[]) {
 					//both
 					if(co.is_expandable) {
 						for(auto& io : co.indexed_objects) {
-							output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".values.resize(1 + new_size);\n";
+							output += "\t\t\t" + co.name + ".m_" + io.property_name + ".values.resize(1 + new_size);\n";
 							if(io.ltype == list_type::list) {
-								output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.resize(1 + new_size);\n";
+								output += "\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.resize(1 + new_size);\n";
 							}
 						}
 
 						for(auto& cp : co.properties) {
 							if(cp.is_derived) {
 							} else if(cp.is_special_vector) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
+								output += "\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 							} else if(cp.is_bitfield) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\n";
+								output += "\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\n";
 							} else {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size);\n";
+								output += "\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size);\n";
 							}
 						}
 					}
@@ -3107,7 +3266,7 @@ int main(int argc, char *argv[]) {
 					output += "\t\t}\n"; // end resize
 
 					output += "\t\tbool is_valid_" + co.name + "(" + id_name + " id) const {\n";
-					output += "\t\t\treturn bool(id) && uint32_t(id.value) <= " + co.name + ".size_used && "
+					output += "\t\t\treturn bool(id) && uint32_t(id.index()) < " + co.name + ".size_used && "
 						+ co.name + ".m__index.vptr()[id.index()] == id;\n";
 					output += "\t\t}\n";
 				}
@@ -3475,24 +3634,24 @@ int main(int argc, char *argv[]) {
 				output += "\t\t\t\t\tif(header.is_type(\"uint8_t\")) {\n"; //type uint8_t
 				output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {\n";
 				output += "\t\t\t\t\t\t\t" + io.type_name + "_id temp;\n";
-				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));\n";
-				output += "\t\t\t\t\t\t\tset_" + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\n";
+				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(io.related_to->size) + "(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));\n";
+				output += "\t\t\t\t\t\t\t" + o.name + "_set_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\n";
 				output += "\t\t\t\t\t\t}\n";
 				output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + io.property_name + " = true;\n";
 				output += "\t\t\t\t\t}\n";// end type uint8_t
 				output += "\t\t\t\t\telse if(header.is_type(\"uint16_t\")) {\n"; //type uint16_t
 				output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {\n";
 				output += "\t\t\t\t\t\t\t" + io.type_name + "_id temp;\n";
-				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));\n";
-				output += "\t\t\t\t\t\t\tset_" + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size)  + "(i)), temp);\n";
+				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(io.related_to->size) + "(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));\n";
+				output += "\t\t\t\t\t\t\t" + o.name + "_set_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size)  + "(i)), temp);\n";
 				output += "\t\t\t\t\t\t}\n";
 				output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + io.property_name + " = true;\n";
 				output += "\t\t\t\t\t}\n";// end type uint16_t
 				output += "\t\t\t\t\telse if(header.is_type(\"uint32_t\")) {\n"; //type uint16_t
 				output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {\n";
 				output += "\t\t\t\t\t\t\t" + io.type_name + "_id temp;\n";
-				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));\n";
-				output += "\t\t\t\t\t\t\tset_" + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\n";
+				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(io.related_to->size) + "(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));\n";
+				output += "\t\t\t\t\t\t\t" + o.name + "_set_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\n";
 				output += "\t\t\t\t\t\t}\n";
 				output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + io.property_name + " = true;\n";
 				output += "\t\t\t\t\t}\n";// end type uint32_t
@@ -3826,24 +3985,24 @@ int main(int argc, char *argv[]) {
 				output += "\t\t\t\t\tif(header.is_type(\"uint8_t\")) {\n"; //type uint8_t
 				output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {\n";
 				output += "\t\t\t\t\t\t\t" + io.type_name + "_id temp;\n";
-				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));\n";
-				output += "\t\t\t\t\t\t\tset_" + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\n";
+				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(io.related_to->size) + "(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));\n";
+				output += "\t\t\t\t\t\t\t" + o.name + "_set_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\n";
 				output += "\t\t\t\t\t\t}\n";
 				output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + io.property_name + " = true;\n";
 				output += "\t\t\t\t\t}\n";// end type uint8_t
 				output += "\t\t\t\t\telse if(header.is_type(\"uint16_t\")) {\n"; //type uint16_t
 				output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {\n";
 				output += "\t\t\t\t\t\t\t" + io.type_name + "_id temp;\n";
-				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));\n";
-				output += "\t\t\t\t\t\t\tset_" + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\n";
+				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(io.related_to->size) + "(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));\n";
+				output += "\t\t\t\t\t\t\t" + o.name + "_set_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\n";
 				output += "\t\t\t\t\t\t}\n";
 				output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + io.property_name + " = true;\n";
 				output += "\t\t\t\t\t}\n";// end type uint16_t
 				output += "\t\t\t\t\telse if(header.is_type(\"uint32_t\")) {\n"; //type uint16_t
 				output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {\n";
 				output += "\t\t\t\t\t\t\t" + io.type_name + "_id temp;\n";
-				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));\n";
-				output += "\t\t\t\t\t\t\tset_" + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\n";
+				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(io.related_to->size) + "(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));\n";
+				output += "\t\t\t\t\t\t\t" + o.name + "_set_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\n";
 				output += "\t\t\t\t\t\t}\n";
 				output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + io.property_name + " = true;\n";
 				output += "\t\t\t\t\t}\n";// end type uint32_t

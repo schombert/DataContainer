@@ -13,10 +13,10 @@ object: person
 	
 	properties:
 	age: int32_t
-
+	
 relationship: car_ownership
-	person: owner unique std_vector
-	car: owned_car many std_vector
+	person: owner many std_vector
+	car: owned_car unique std_vector
 	
 	size: 1000
 	
