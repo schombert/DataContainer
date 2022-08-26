@@ -1715,4 +1715,174 @@ TEST_CASE("examples", "[ve_tests]") {
 	REQUIRE(sum == sum_vall_values(17, dest));
 }
 
+class dummy_signed_id {
+public:
+	using value_base_t = int16_t;
+	using zero_is_null_t = std::false_type;
+
+	//value member declaration
+	int16_t value;
+
+	//constructors
+	explicit constexpr dummy_signed_id(int16_t v) noexcept : value(v) {}
+	constexpr dummy_signed_id(const dummy_signed_id& v) noexcept = default;
+	constexpr dummy_signed_id(dummy_signed_id&& v) noexcept = default;
+	constexpr dummy_signed_id() noexcept : value(int16_t(-1)) {}
+
+	//operators
+	dummy_signed_id& operator=(dummy_signed_id&& v) noexcept = default;
+	dummy_signed_id& operator=(dummy_signed_id const& v) noexcept = default;
+	bool operator==(dummy_signed_id v) const noexcept { return value == v.value; }
+	bool operator!=(dummy_signed_id v) const noexcept { return value != v.value; }
+	explicit constexpr operator bool() const noexcept { return value != -1i16; }
+
+	//index_function
+	constexpr int32_t index() const noexcept {
+		return int32_t(value);
+	}
+};
+
+template<>
+struct ve::value_to_vector_type_s<dummy_signed_id> {
+	using type = tagged_vector<dummy_signed_id>;
+};
+
+class dummy_signed_id_s {
+public:
+	using value_base_t = int8_t;
+	using zero_is_null_t = std::false_type;
+
+	//value member declaration
+	int8_t value;
+
+	//constructors
+	explicit constexpr dummy_signed_id_s(int8_t v) noexcept : value(v) {}
+	constexpr dummy_signed_id_s(const dummy_signed_id_s& v) noexcept = default;
+	constexpr dummy_signed_id_s(dummy_signed_id_s&& v) noexcept = default;
+	constexpr dummy_signed_id_s() noexcept : value(int8_t(-1)) {}
+
+	//operators
+	dummy_signed_id_s& operator=(dummy_signed_id_s&& v) noexcept = default;
+	dummy_signed_id_s& operator=(dummy_signed_id_s const& v) noexcept = default;
+	bool operator==(dummy_signed_id_s v) const noexcept { return value == v.value; }
+	bool operator!=(dummy_signed_id_s v) const noexcept { return value != v.value; }
+	explicit constexpr operator bool() const noexcept { return value != -1i8; }
+
+	//index_function
+	constexpr int32_t index() const noexcept {
+		return int32_t(value);
+	}
+};
+
+template<>
+struct ve::value_to_vector_type_s<dummy_signed_id_s> {
+	using type = tagged_vector<dummy_signed_id_s>;
+};
+
+class dummy_id_s {
+public:
+	using value_base_t = uint8_t;
+	using zero_is_null_t = std::true_type;
+
+
+	//value member declaration
+	uint16_t value;
+
+	//constructors
+	explicit constexpr dummy_id_s(uint8_t v) noexcept : value(v + 1) {}
+	constexpr dummy_id_s(const dummy_id_s& v) noexcept = default;
+	constexpr dummy_id_s(dummy_id_s&& v) noexcept = default;
+	constexpr dummy_id_s() noexcept : value(uint16_t(0)) {}
+
+	//operators
+	dummy_id_s& operator=(dummy_id_s&& v) noexcept = default;
+	dummy_id_s& operator=(dummy_id_s const& v) noexcept = default;
+	bool operator==(dummy_id_s v) const noexcept { return value == v.value; }
+	bool operator!=(dummy_id_s v) const noexcept { return value != v.value; }
+	explicit constexpr operator bool() const noexcept { return value != uint8_t(0); }
+
+	//index_function
+	constexpr int32_t index() const noexcept {
+		return int32_t(value) - 1;
+	}
+};
+
+template<>
+struct ve::value_to_vector_type_s<dummy_id_s> {
+	using type = tagged_vector<dummy_id_s>;
+};
+
+TEST_CASE("id variations", "[ve_tests]") {
+	dummy_signed_id sgnd[] = { dummy_signed_id(0), dummy_signed_id(), dummy_signed_id(1), dummy_signed_id(2), dummy_signed_id(3),
+		dummy_signed_id(), dummy_signed_id(), dummy_signed_id(1), dummy_signed_id(2), dummy_signed_id(3), dummy_signed_id(19),
+		dummy_signed_id(9), dummy_signed_id(7), dummy_signed_id(1), dummy_signed_id(20), dummy_signed_id(30) };
+	dummy_signed_id_s sgnd_small[] = { dummy_signed_id_s(0), dummy_signed_id_s(), dummy_signed_id_s(1), dummy_signed_id_s(2), dummy_signed_id_s(3),
+		dummy_signed_id_s(), dummy_signed_id_s(), dummy_signed_id_s(1), dummy_signed_id_s(2), dummy_signed_id_s(3), dummy_signed_id_s(19),
+		dummy_signed_id_s(9), dummy_signed_id_s(7), dummy_signed_id_s(1), dummy_signed_id_s(20), dummy_signed_id_s(30) };
+	dummy_id_s usgnd_small[] = { dummy_id_s(0), dummy_id_s(), dummy_id_s(1), dummy_id_s(2), dummy_id_s(3),
+		dummy_id_s(), dummy_id_s(), dummy_id_s(1), dummy_id_s(2), dummy_id_s(3), dummy_id_s(19),
+		dummy_id_s(9), dummy_id_s(7), dummy_id_s(1), dummy_id_s(20), dummy_id_s(30) };
+
+
+#ifdef __AVX2__
+	auto sres = ve::load(ve::contiguous_tags<int32_t>(0), sgnd);
+	REQUIRE(sres.value.m256i_i32[0] == 0);
+	REQUIRE(sres.value.m256i_i32[1] == -1);
+	REQUIRE(sres.value.m256i_i32[2] == 1);
+	REQUIRE(sres.value.m256i_i32[3] == 2);
+
+	auto ssres = ve::load(ve::contiguous_tags<int32_t>(0), sgnd_small);
+	REQUIRE(ssres.value.m256i_i32[0] == 0);
+	REQUIRE(ssres.value.m256i_i32[1] == -1);
+	REQUIRE(ssres.value.m256i_i32[2] == 1);
+	REQUIRE(ssres.value.m256i_i32[3] == 2);
+
+	auto ussres = ve::load(ve::contiguous_tags<int32_t>(0), usgnd_small);
+	REQUIRE(ussres.value.m256i_i32[0] == 0);
+	REQUIRE(ussres.value.m256i_i32[1] == -1);
+	REQUIRE(ussres.value.m256i_i32[2] == 1);
+	REQUIRE(ussres.value.m256i_i32[3] == 2);
+#else
+#ifdef __AVX__
+	auto sres = ve::load(ve::contiguous_tags<int32_t>(0), sgnd);
+	REQUIRE(sres.value.m256i_i32[0] == 0);
+	REQUIRE(sres.value.m256i_i32[1] == -1);
+	REQUIRE(sres.value.m256i_i32[2] == 1);
+	REQUIRE(sres.value.m256i_i32[3] == 2);
+
+	auto ssres = ve::load(ve::contiguous_tags<int32_t>(0), sgnd_small);
+	REQUIRE(ssres.value.m256i_i32[0] == 0);
+	REQUIRE(ssres.value.m256i_i32[1] == -1);
+	REQUIRE(ssres.value.m256i_i32[2] == 1);
+	REQUIRE(ssres.value.m256i_i32[3] == 2);
+
+	auto ussres = ve::load(ve::contiguous_tags<int32_t>(0), usgnd_small);
+	REQUIRE(ussres.value.m256i_i32[0] == 0);
+	REQUIRE(ussres.value.m256i_i32[1] == -1);
+	REQUIRE(ussres.value.m256i_i32[2] == 1);
+	REQUIRE(ussres.value.m256i_i32[3] == 2);
+#else // SSE
+	auto sres = ve::load(ve::contiguous_tags<int32_t>(0), sgnd);
+	REQUIRE(sres.value.m128i_i32[0] == 0);
+	REQUIRE(sres.value.m128i_i32[1] == -1);
+	REQUIRE(sres.value.m128i_i32[2] == 1);
+	REQUIRE(sres.value.m128i_i32[3] == 2);
+
+	auto ssres = ve::load(ve::contiguous_tags<int32_t>(0), sgnd_small);
+	REQUIRE(ssres.value.m128i_i32[0] == 0);
+	REQUIRE(ssres.value.m128i_i32[1] == -1);
+	REQUIRE(ssres.value.m128i_i32[2] == 1);
+	REQUIRE(ssres.value.m128i_i32[3] == 2);
+
+	auto ussres = ve::load(ve::contiguous_tags<int32_t>(0), usgnd_small);
+	REQUIRE(ussres.value.m128i_i32[0] == 0);
+	REQUIRE(ussres.value.m128i_i32[1] == -1);
+	REQUIRE(ussres.value.m128i_i32[2] == 1);
+	REQUIRE(ussres.value.m128i_i32[3] == 2);
+#endif
+#endif
+
+	
+}
+
 #undef RELEASE_INLINE

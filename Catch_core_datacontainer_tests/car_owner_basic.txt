@@ -1,0 +1,24 @@
+namespace: car_owner_basic
+
+object: car
+	type: contiguous
+	size: 1200
+	
+	properties:
+	wheels: int32_t
+	
+object: person
+	type: contiguous
+	size: 100
+	
+	properties:
+	age: int32_t
+
+relationship: car_ownership
+	person: owner unique std_vector
+	car: owned_car many std_vector
+	
+	size: 1000
+	
+	properties:
+	ownership_date: int32_t

@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CommonIncludes", "CommonInc
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Catch_ve_tests", "Catch_ve_tests\Catch_ve_tests.vcxproj", "{140C4108-B659-4A35-BCE6-A9E42D0D4379}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Catch_core_datacontainer_tests", "Catch_core_datacontainer_tests\Catch_core_datacontainer_tests.vcxproj", "{1918DCE8-D6EB-46F6-B6EA-DD3B905E4BD3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -41,6 +43,14 @@ Global
 		{140C4108-B659-4A35-BCE6-A9E42D0D4379}.Release|x64.Build.0 = Release|x64
 		{140C4108-B659-4A35-BCE6-A9E42D0D4379}.Release|x86.ActiveCfg = Release|Win32
 		{140C4108-B659-4A35-BCE6-A9E42D0D4379}.Release|x86.Build.0 = Release|Win32
+		{1918DCE8-D6EB-46F6-B6EA-DD3B905E4BD3}.Debug|x64.ActiveCfg = Debug|x64
+		{1918DCE8-D6EB-46F6-B6EA-DD3B905E4BD3}.Debug|x64.Build.0 = Debug|x64
+		{1918DCE8-D6EB-46F6-B6EA-DD3B905E4BD3}.Debug|x86.ActiveCfg = Debug|Win32
+		{1918DCE8-D6EB-46F6-B6EA-DD3B905E4BD3}.Debug|x86.Build.0 = Debug|Win32
+		{1918DCE8-D6EB-46F6-B6EA-DD3B905E4BD3}.Release|x64.ActiveCfg = Release|x64
+		{1918DCE8-D6EB-46F6-B6EA-DD3B905E4BD3}.Release|x64.Build.0 = Release|x64
+		{1918DCE8-D6EB-46F6-B6EA-DD3B905E4BD3}.Release|x86.ActiveCfg = Release|Win32
+		{1918DCE8-D6EB-46F6-B6EA-DD3B905E4BD3}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

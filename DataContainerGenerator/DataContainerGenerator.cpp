@@ -217,6 +217,8 @@ std::string normalize_type(std::string in) {
 		return "uint64_t";
 	if(in == "long long")
 		return "int64_t";
+	else
+		return in;
 }
 
 bool is_common_type(std::string in) {
@@ -288,6 +290,8 @@ relationship_object_def* better_primary_key(relationship_object_def* oldr, relat
 			break;
 		}
 	}
+
+	return oldr;
 }
 
 int main(int argc, char *argv[]) {
@@ -474,9 +478,9 @@ int main(int argc, char *argv[]) {
 									list_type l = list_type::list;
 
 									while(next_str.length() > 0) {
-										if(next_str == ">=0")
+										if(next_str == "many")
 											i = index_type::many;
-										else if(next_str == "<=1")
+										else if(next_str == "unique")
 											i = index_type::at_most_one;
 										else if(next_str == "list")
 											l = list_type::list;
@@ -645,51 +649,51 @@ int main(int argc, char *argv[]) {
 		std::string output;
 
 		//includes
-		output += "#pragma once\r\n";
-		output += "#include <cstdint>\r\n";
-		output += "#include <cstddef>\r\n";
-		output += "#include <utility>\r\n";
-		output += "#include <vector>\r\n";
-		output += "#include <algorithem>\r\n";
-		output += "#include <cassert>\r\n";
-		output += "#include \"ve.hpp\"\r\n";
+		output += "#pragma once\n";
+		output += "#include <cstdint>\n";
+		output += "#include <cstddef>\n";
+		output += "#include <utility>\n";
+		output += "#include <vector>\n";
+		output += "#include <algorithm>\n";
+		output += "#include <cassert>\n";
+		output += "#include \"ve.hpp\"\n";
 		for(auto& i : parsed_file.includes) {
 			output += "#include ";
 			output += i;
-			output += "\r\n";
+			output += "\n";
 		}
 
 		//open new namespace
-		output += "\r\n";
+		output += "\n";
 
-		output += "#ifdef NDEBUG\r\n";
-		output += "#ifdef _MSC_VER\r\n";
-		output += "#define DCON_RELEASE_INLINE __forceinline\r\n";
-		output += "#else\r\n";
-		output += "#define DCON_RELEASE_INLINE inline __attribute__((always_inline))\r\n";
-		output += "#endif\r\n";
-		output += "#else\r\n";
-		output += "#define DCON_RELEASE_INLINE inline\r\n";
-		output += "#endif\r\n";
+		output += "#ifdef NDEBUG\n";
+		output += "#ifdef _MSC_VER\n";
+		output += "#define DCON_RELEASE_INLINE __forceinline\n";
+		output += "#else\n";
+		output += "#define DCON_RELEASE_INLINE inline __attribute__((always_inline))\n";
+		output += "#endif\n";
+		output += "#else\n";
+		output += "#define DCON_RELEASE_INLINE inline\n";
+		output += "#endif\n";
 
-		output += "\r\n";
-		output += "namespace " + parsed_file.namspace + " {\r\n";
+		output += "\n";
+		output += "namespace " + parsed_file.namspace + " {\n";
 
 		//load record type
-		output += "\tstruct load_record{\r\n";
+		output += "\tstruct load_record{\n";
 		for(auto& o : parsed_file.relationship_objects) {
-			output += "\t\tbool " + o.name + " = false;\r\n";
+			output += "\t\tbool " + o.name + " = false;\n";
 			if(o.store_type == storage_type::erasable) {
-				output += "\t\t\tbool " + o.name + "__index = false;\r\n";
+				output += "\t\t\tbool " + o.name + "__index = false;\n";
 			}
 			for(auto& io : o.indexed_objects) {
-				output += "\t\tbool " + o.name + "_" + io.property_name + " = false;\r\n";
+				output += "\t\tbool " + o.name + "_" + io.property_name + " = false;\n";
 			}
 			for(auto& prop : o.properties) {
-				output += "\t\tbool " + o.name + "_" + prop.name + " = false;\r\n";
+				output += "\t\tbool " + o.name + "_" + prop.name + " = false;\n";
 			}
 		}
-		output += "\t}\r\n\r\n";
+		output += "\t};\n\n";
 
 		
 
@@ -698,99 +702,102 @@ int main(int argc, char *argv[]) {
 			if(!o.primary_key) {
 				const auto underlying_type = o.is_expandable ? std::string("uint32_t") : size_to_tag_type(o.size);
 				//id class begin
-				output += std::string("\tclass ") + o.name + "_id {\r\n";
+				output += std::string("\tclass ") + o.name + "_id {\n";
 
-				output += "\t\tpublic:\r\n";
-				output += "\t\tusing value_base_t = " + underlying_type + ";\r\n";
-				output += "\t\tusing zero_is_null_t = std::true_type;\r\n";
-				output += "\r\n";
+				output += "\t\tpublic:\n";
+				output += "\t\tusing value_base_t = " + underlying_type + ";\n";
+				output += "\t\tusing zero_is_null_t = std::true_type;\n";
+				output += "\n";
 
 				//value member declaration
-				output += std::string("\t\t") + underlying_type + " value;\r\n\r\n";
+				output += std::string("\t\t") + underlying_type + " value;\n\n";
 
 				//constructors
-				output += std::string("\t\texplicit constexpr ") + o.name + "_id(" + underlying_type + " v) noexcept : value(v + 1) {}\r\n";
-				output += std::string("\t\tconstexpr ") + o.name + "_id(const " + o.name + "_id& v) noexcept = default;\r\n";
-				output += std::string("\t\tconstexpr ") + o.name + "_id(" + o.name + "_id&& v) noexcept = default;\r\n";
-				output += std::string("\t\tconstexpr ") + o.name + "_id() noexcept : value(" + underlying_type + "(0)) {}\r\n\r\n";
+				output += std::string("\t\texplicit constexpr ") + o.name + "_id(" + underlying_type + " v) noexcept : value(v + 1) {}\n";
+				output += std::string("\t\tconstexpr ") + o.name + "_id(const " + o.name + "_id& v) noexcept = default;\n";
+				output += std::string("\t\tconstexpr ") + o.name + "_id(" + o.name + "_id&& v) noexcept = default;\n";
+				output += std::string("\t\tconstexpr ") + o.name + "_id() noexcept : value(" + underlying_type + "(0)) {}\n\n";
 
 				//operators
-				output += "\t\t" + o.name + "_id& operator=(" + o.name + "_id&& v) noexcept = default;\r\n";
-				output += "\t\t" + o.name + "_id& operator=(" + o.name + "_id const& v) noexcept = default;\r\n";
-				output += "\t\tconstexpr bool operator==(" + o.name + "_id v) const noexcept { return value == v.value; }\r\n";
-				output += "\t\tconstexpr bool operator!=(" + o.name + "_id v) const noexcept { return value != v.value; }\r\n";
-				output += "\t\tconstexpr bool operator<(" + o.name + "_id v) const noexcept { return value < v.value; }\r\n";
-				output += "\t\tconstexpr bool operator<=(" + o.name + "_id v) const noexcept { return value <= v.value; }\r\n";
-				output += "\t\texplicit constexpr operator bool() const noexcept { return value != " + underlying_type + "(0); }\r\n\r\n";
+				output += "\t\t" + o.name + "_id& operator=(" + o.name + "_id&& v) noexcept = default;\n";
+				output += "\t\t" + o.name + "_id& operator=(" + o.name + "_id const& v) noexcept = default;\n";
+				output += "\t\tconstexpr bool operator==(" + o.name + "_id v) const noexcept { return value == v.value; }\n";
+				output += "\t\tconstexpr bool operator!=(" + o.name + "_id v) const noexcept { return value != v.value; }\n";
+				output += "\t\tconstexpr bool operator<(" + o.name + "_id v) const noexcept { return value < v.value; }\n";
+				output += "\t\tconstexpr bool operator<=(" + o.name + "_id v) const noexcept { return value <= v.value; }\n";
+				output += "\t\texplicit constexpr operator bool() const noexcept { return value != " + underlying_type + "(0); }\n\n";
 
 				//index_function
-				output += "\t\tconstexpr DCON_RELEASE_INLINE int32_t index() const noexcept {\r\n";
-				output += "\t\t\treturn int32_t(value) - 1;\r\n";
-				output += "\t\t}\r\n";
+				output += "\t\tconstexpr DCON_RELEASE_INLINE int32_t index() const noexcept {\n";
+				output += "\t\t\treturn int32_t(value) - 1;\n";
+				output += "\t\t}\n";
 
 				//id class end
-				output += "\t};\r\n\r\n";
+				output += "\t};\n\n";
 
-				output += std::string("\tclass ") + o.name + "_id_pair {\r\n";
-				output += "\t\tpublic:\r\n";
-				output += "\t\t" + o.name + "_id left;\r\n";
-				output += "\t\t" + o.name + "_id right;\r\n";
-				output += "\t};\r\n\r\n";
+				output += std::string("\tclass ") + o.name + "_id_pair {\n";
+				output += "\t\tpublic:\n";
+				output += "\t\t" + o.name + "_id left;\n";
+				output += "\t\t" + o.name + "_id right;\n";
+				output += "\t};\n\n";
+
+				output += "\tconstexpr DCON_RELEASE_INLINE bool is_valid_index(" + o.name + "_id id) { return bool(id); }\n\n";
 			} else {
-				output += "using " + o.name + "_id = " + o.primary_key->name + "_id;\r\n\r\n";
+				output += "\tusing " + o.name + "_id = " + o.primary_key->name + "_id;\n\n";
 			}
-			output += "constexpr DCON_RELEASE_INLINE bool is_valid_index(" + o.name + "_id id) { return bool(id); }\r\n\r\n";
 		}
 
 		// close namespace briefly
-		output += "}\r\n\r\n";
+		output += "}\n\n";
 
 		//mark each id as going into a tagged vector
-		output += "namespace ve {\r\n";
+		output += "namespace ve {\n";
 		for(auto& o : parsed_file.relationship_objects) {
 			if(!o.primary_key) {
-				output += "\t\ttemplate<>\r\n";
-				output += "\t\tstruct value_to_vector_type_s<" + o.name + "_id> {\r\n";
-				output += "\t\t\tusing type = tagged_vector<" + o.name + "_id>;\r\n";
-				output += "\t\t};\r\n";
+				output += "\t\ttemplate<>\n";
+				output += "\t\tstruct value_to_vector_type_s<" + parsed_file.namspace + "::" + o.name + "_id> {\n";
+				output += "\t\t\tusing type = tagged_vector<" + parsed_file.namspace + "::" + o.name + "_id>;\n";
+				output += "\t\t};\n";
 			}
 		}
-		output += "}\r\n\r\n";
+		output += "}\n\n";
 
 
 		//reopen namespace
-		output += "namespace " + parsed_file.namspace + " {\r\n";
+		output += "namespace " + parsed_file.namspace + " {\n";
 
 		//predeclare data_container
-		output += "\tclass data_container;\r\n\r\n";
+		output += "\tclass data_container;\n\n";
 
 		//write internal classes
 
 		//open internal namespace
-		output += "\tnamespace internal {\r\n";
+		output += "\tnamespace internal {\n";
 
 		for(auto& o : parsed_file.relationship_objects) {
 			//object class begin
-			output += "\t\tclass alignas(64) " + o.name + "_class {\r\n";
+			output += "\t\tclass alignas(64) " + o.name + "_class {\n";
 
 			//begin members declaration
-			output += "\t\t\tprivate:\r\n";
-			output += "\t\t\tuint32_t size_used = 0;\r\n";
+			output += "\t\t\tprivate:\n";
+			output += "\t\t\tuint32_t size_used = 0;\n";
 			if(o.store_type == storage_type::erasable) {
 				if(!o.is_expandable) {
-					output += "\t\t\t" + o.name + "_id first_free;\r\n";
-					output += "\t\t\tstruct alignas(64) dtype__index { \r\n"
-						"\t\t\t\t" + o.name + "_id values[" + std::to_string(o.size) + "]; \r\n"
-						"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values; }\r\n"
+					output += "\t\t\t" + o.name + "_id first_free;\n";
+					output += "\t\t\tstruct alignas(64) dtype__index { \n"
+						"\t\t\t\t" + o.name + "_id values[" + std::to_string(o.size) + "]; \n"
+						"\t\t\t\tDCON_RELEASE_INLINE auto vptr() const { return values; }\n"
+						"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values; }\n"
 						"\t\t\t\tdtype__index() { std::uninitialized_value_construct_n(values, " + std::to_string(o.size) + "); } "
-						"\t\t\t} m__index;\r\n";
+						"\t\t\t} m__index;\n";
 				} else {
-					output += "\t\t\t" + o.name + "_id first_free;\r\n";
-					output += "\t\t\tstruct dtype__index { \r\n"
-						"\t\t\t\tstd::vector<" + o.name + "_id> values; \r\n"
-						"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }\r\n"
+					output += "\t\t\t" + o.name + "_id first_free;\n";
+					output += "\t\t\tstruct dtype__index { \n"
+						"\t\t\t\tstd::vector<" + o.name + "_id> values; \n"
+						"\t\t\t\tDCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }\n"
+						"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }\n"
 						"\t\t\t\tdtype__index() { values.emplace_back(); }"
-						"\t\t\t} m__index;\r\n";
+						"\t\t\t} m__index;\n";
 				}
 			}
 
@@ -800,68 +807,75 @@ int main(int argc, char *argv[]) {
 				} else if(p.is_bitfield) {
 					if(!o.is_expandable) {
 						std::string bytes_size = std::string("((uint32_t(") + std::to_string(o.size) + " + 7)) / 8ui32 + 63ui32) & ~63ui32";
-						output += "\t\t\tstruct alignas(64) dtype_" + p.name + " { \r\n"
-							"\t\t\t\tdcon::bitfield_type padding[64]; \r\n"
-							"\t\t\t\tdcon::bitfield_type values[" + bytes_size + "]; \r\n"
-							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values; }\r\n"
-							"\t\t\t\tdtype_" + p.name + "() { std::fill_n(values - 1, 1 + " + bytes_size + ", dcon::bitfield_type{ 0ui8 }); }\r\n"
-							"\t\t\t} m_" + p.name + ";\r\n";
+						output += "\t\t\tstruct alignas(64) dtype_" + p.name + " { \n"
+							"\t\t\t\tdcon::bitfield_type padding[64]; \n"
+							"\t\t\t\tdcon::bitfield_type values[" + bytes_size + "]; \n"
+							"\t\t\t\tDCON_RELEASE_INLINE auto vptr()  const{ return values; }\n"
+							"\t\t\t\tdtype_" + p.name + "() { std::fill_n(values - 1, 1 + " + bytes_size + ", dcon::bitfield_type{ 0ui8 }); }\n"
+							"\t\t\t} m_" + p.name + ";\n";
 					} else {
-						output += "\t\t\tstruct dtype_" + p.name + " { \r\n"
-							"\t\t\t\tstd::vector<dcon::bitfield_type> values; \r\n"
-							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }\r\n"
-							"\t\t\t\tdtype_" + p.name + "() { values.push_back(dcon::bitfield_type{ 0ui8 }); }\r\n"
-							"\t\t\t} m_" + p.name + ";\r\n";
+						output += "\t\t\tstruct dtype_" + p.name + " { \n"
+							"\t\t\t\tstd::vector<dcon::bitfield_type> values; \n"
+							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }\n"
+							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }\n"
+							"\t\t\t\tdtype_" + p.name + "() { values.push_back(dcon::bitfield_type{ 0ui8 }); }\n"
+							"\t\t\t} m_" + p.name + ";\n";
 					}
 				} else if(p.is_object) {
 					if(!o.is_expandable) {
-						output += "\t\t struct dtype_" + p.name + " { \r\n"
-							"\t\t\t " + p.data_type + " values[" + std::to_string(o.size) + "]; \r\n"
-							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values; }\r\n"
-							"\t\t\t dtype_" + p.name + "() {}\r\n"
-							"\t\t } m_" + p.name + ";\r\n";
+						output += "\t\t\tstruct dtype_" + p.name + " { \n"
+							"\t\t\t\t" + p.data_type + " values[" + std::to_string(o.size) + "]; \n"
+							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() const { return values; }\n"
+							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values; }\n"
+							"\t\t\t\tdtype_" + p.name + "() {}\n"
+							"\t\t\t} m_" + p.name + ";\n";
 					} else {
-						output += "\t\t struct dtype_" + p.name + " { \r\n"
-							"\t\t\tstd::vector<" + p.data_type + "> values; \r\n"
-							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }\r\n"
-							"\t\t\t dtype_" + p.name + "() { values.emplace_back(); }\r\n"
-							"\t\t } m_" + p.name + ";\r\n";
+						output += "\t\t\tstruct dtype_" + p.name + " { \n"
+							"\t\t\tstd::vector<" + p.data_type + "> values; \n"
+							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }\n"
+							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }\n"
+							"\t\t\t\tdtype_" + p.name + "() { values.emplace_back(); }\n"
+							"\t\t\t} m_" + p.name + ";\n";
 					}
 				} else if(p.is_special_vector) {
 					//fill in with special vector type and pool object
 					if(!o.is_expandable) {
-						output += "\t\t struct dtype_" + p.name + " { \r\n"
-							"\t\t\tstable_mk_2_tag values[" + std::to_string(o.size) + "]; \r\n"
-							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values; }\r\n"
+						output += "\t\t\tstruct dtype_" + p.name + " { \n"
+							"\t\t\tstable_mk_2_tag values[" + std::to_string(o.size) + "]; \n"
+							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() const { return values; }\n"
+							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values; }\n"
 							"\t\t\tdtype_" + p.name + "() { std::uninitialized_fill_n(values, " + std::to_string(o.size) +
-							", std::numeric_limits<dcon::stable_mk_2_tag>::max()); }\r\n"
-							"\t\t } m_" + p.name + ";\r\n";
-						output += "\t\tdcon::stable_variable_vector_storage_mk_2<" + p.data_type + ", 16, " + std::to_string(p.special_pool_size) + " > " + p.name + "_storage;\r\n";
+							", std::numeric_limits<dcon::stable_mk_2_tag>::max()); }\n"
+							"\t\t\t} m_" + p.name + ";\n";
+						output += "\t\tdcon::stable_variable_vector_storage_mk_2<" + p.data_type + ", 16, " + std::to_string(p.special_pool_size) + " > " + p.name + "_storage;\n";
 					} else {
-						output += "\t\t struct dtype_" + p.name + " { \r\n"
-							"\t\t\tstd::vector<stable_mk_2_tag> values; \r\n"
-							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }\r\n"
-							"\t\t\tdtype_" + p.name + "() { values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max())); }\r\n"
-							"\t\t } m_" + p.name + ";\r\n";
-						output += "\t\tdcon::stable_variable_vector_storage_mk_2<" + p.data_type + ", 16, " + std::to_string(p.special_pool_size) + " > " + p.name + "_storage;\r\n";
+						output += "\t\t\tstruct dtype_" + p.name + " { \n"
+							"\t\t\tstd::vector<stable_mk_2_tag> values; \n"
+							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }\n"
+							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }\n"
+							"\t\t\tdtype_" + p.name + "() { values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max())); }\n"
+							"\t\t\t} m_" + p.name + ";\n";
+						output += "\t\tdcon::stable_variable_vector_storage_mk_2<" + p.data_type + ", 16, " + std::to_string(p.special_pool_size) + " > " + p.name + "_storage;\n";
 					}
 				} else {
 					if(!o.is_expandable) {
 						std::string member_count = std::string("(sizeof(") + p.data_type + ") <= 64 ? ("
 							"uint32_t(" + std::to_string(o.size) + ") + (64ui32 / uint32_t(sizeof(" + p.data_type + "))) - 1ui32) "
 							"& ~(64ui32 / uint32_t(sizeof(" + p.data_type + ")) - 1ui32) : uint32_t(" + std::to_string(o.size) + "))";
-						output += "\t\t\tstruct alignas(64) dtype_" + p.name + " { \r\n"
-							"\t\t\t\tuint8_t padding[(sizeof(" + p.data_type + ") + 63ui32) & ~63ui32]; \r\n"
-							"\t\t\t\t" + p.data_type + " values[" + member_count + "]; \r\n"
-							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values; }\r\n"
-							"\t\t\t\tdtype_" + p.name + "() { std::uninitialized_value_construct_n(values - 1, " + member_count + " + 1); }\r\n"
-							"\t\t\t} m_" + p.name + ";\r\n";
+						output += "\t\t\tstruct alignas(64) dtype_" + p.name + " { \n"
+							"\t\t\t\tuint8_t padding[(sizeof(" + p.data_type + ") + 63ui32) & ~63ui32]; \n"
+							"\t\t\t\t" + p.data_type + " values[" + member_count + "]; \n"
+							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() const { return values; }\n"
+							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values; }\n"
+							"\t\t\t\tdtype_" + p.name + "() { std::uninitialized_value_construct_n(values - 1, " + member_count + " + 1); }\n"
+							"\t\t\t} m_" + p.name + ";\n";
 					} else {
-						output += "\t\t\tstruct dtype_" + p.name + " { \r\n"
-							"\t\t\t\tstd::vector<" + p.data_type + "> values; \r\n"
-							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }\r\n"
-							"\t\t\t\tdtype_" + p.name + "() { values.emplace_back(); }\r\n"
-							"\t\t\t} m_" + p.name + ";\r\n";
+						output += "\t\t\tstruct dtype_" + p.name + " { \n"
+							"\t\t\t\tstd::vector<" + p.data_type + "> values; \n"
+							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }\n"
+							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }\n"
+							"\t\t\t\tdtype_" + p.name + "() { values.emplace_back(); }\n"
+							"\t\t\t} m_" + p.name + ";\n";
 					}
 				}
 			}
@@ -890,18 +904,20 @@ int main(int argc, char *argv[]) {
 						std::string member_count = std::string("(sizeof(") + i.type_name + "_id) <= 64 ? ("
 							"uint32_t(" + std::to_string(o.size) + ") + (64ui32 / uint32_t(sizeof(" + i.type_name + "_id))) - 1ui32) "
 							"& ~(64ui32 / uint32_t(sizeof(" + i.type_name + "_id)) - 1ui32) : uint32_t(" + std::to_string(o.size) + "))";
-						output += "\t\t\tstruct alignas(64) dtype_" + i.property_name + " { \r\n"
-							"\t\t\t\tuint8_t padding[(sizeof(" + i.type_name + "_id) + 63ui32) & ~63ui32]; \r\n"
-							"\t\t\t\t" + i.type_name + "_id values[" + member_count + "]; \r\n"
-							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values; }\r\n"
-							"\t\t\t\tdtype_" + i.property_name + "() { std::uninitialized_value_construct_n(values - 1, " + member_count + " + 1); }\r\n"
-							"\t\t\t} m_" + i.property_name + ";\r\n";
+						output += "\t\t\tstruct alignas(64) dtype_" + i.property_name + " { \n"
+							"\t\t\t\tuint8_t padding[(sizeof(" + i.type_name + "_id) + 63ui32) & ~63ui32]; \n"
+							"\t\t\t\t" + i.type_name + "_id values[" + member_count + "]; \n"
+							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values; }\n"
+							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() const { return values; }\n"
+							"\t\t\t\tdtype_" + i.property_name + "() { std::uninitialized_value_construct_n(values - 1, " + member_count + " + 1); }\n"
+							"\t\t\t} m_" + i.property_name + ";\n";
 					} else {
-						output += "\t\t\tstruct dtype_" + i.property_name + " { \r\n"
-							"\t\t\t\tstd::vector<" + i.type_name + "_id> values; \r\n"
-							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }\r\n"
-							"\t\t\t\tdtype_" + i.property_name + "() { values.emplace_back(); }\r\n"
-							"\t\t\t} m_" + i.property_name + ";\r\n";
+						output += "\t\t\tstruct dtype_" + i.property_name + " { \n"
+							"\t\t\t\tstd::vector<" + i.type_name + "_id> values; \n"
+							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }\n"
+							"\t\t\t\tDCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }\n"
+							"\t\t\t\tdtype_" + i.property_name + "() { values.emplace_back(); }\n"
+							"\t\t\t} m_" + i.property_name + ";\n";
 					}
 				}
 
@@ -909,18 +925,20 @@ int main(int argc, char *argv[]) {
 					if(i.ltype == list_type::list) {
 						if(!o.is_expandable) {
 							// list intrusive links
-							output += "\t\t struct dtype_link_" + i.property_name + " { \r\n"
-								"\t\t\t " + i.type_name + "_id_pair values[" + std::to_string(o.size) + "]; \r\n"
-								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values; }\r\n"
-								"\t\t\t dtype_link_" + i.property_name + "() { std::uninitialized_value_construct_n(values, " + std::to_string(o.size) + "); }\r\n"
-								"\t\t } m_link_" + i.property_name + ";\r\n";
+							output += "\t\t\tstruct dtype_link_" + i.property_name + " { \n"
+								"\t\t\t\t" + i.type_name + "_id_pair values[" + std::to_string(o.size) + "]; \n"
+								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values; }\n"
+								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() const { return values; }\n"
+								"\t\t\t\tdtype_link_" + i.property_name + "() { std::uninitialized_value_construct_n(values, " + std::to_string(o.size) + "); }\n"
+								"\t\t\t} m_link_" + i.property_name + ";\n";
 						} else {
 							// list intrusive links
-							output += "\t\t struct dtype_link_" + i.property_name + " { \r\n"
-								"\t\t\tstd::vector<" + i.type_name + "_id_pair> values; \r\n"
-								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }\r\n"
-								"\t\t\t dtype_link_" + i.property_name + "() { values.emplace_back(); }\r\n"
-								"\t\t } m_link_" + i.property_name + ";\r\n";
+							output += "\t\t\tstruct dtype_link_" + i.property_name + " { \n"
+								"\t\t\tstd::vector<" + i.type_name + "_id_pair> values; \n"
+								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }\n"
+								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }\n"
+								"\t\t\t\tdtype_link_" + i.property_name + "() { values.emplace_back(); }\n"
+								"\t\t\t} m_link_" + i.property_name + ";\n";
 						}
 
 						if(!i.related_to->is_expandable) {
@@ -928,46 +946,51 @@ int main(int argc, char *argv[]) {
 							std::string member_count = std::string("(sizeof(") + o.name + "_id) <= 64 ? ("
 								"uint32_t(" + std::to_string(i.related_to->size) + ") + (64ui32 / uint32_t(sizeof(" + o.name + "_id))) - 1ui32) "
 								"& ~(64ui32 / uint32_t(sizeof(" + i.type_name + "_id)) - 1ui32) : uint32_t(" + std::to_string(i.related_to->size) + "))";
-							output += "\t\t\tstruct alignas(64) dtype_head_back_" + i.property_name + " { \r\n"
-								"\t\t\t\tuint8_t padding[(sizeof(" + i.type_name + "_id) + 63ui32) & ~63ui32]; \r\n"
-								"\t\t\t\t" + o.name + "_id values[" + member_count + "]; \r\n"
-								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values; }\r\n"
-								"\t\t\t\tdtype_head_back_" + i.property_name + "() { std::uninitialized_value_construct_n(values - 1, " + member_count + " + 1); }\r\n"
-								"\t\t\t} m_head_back_" + i.property_name + ";\r\n";
+							output += "\t\t\tstruct alignas(64) dtype_head_back_" + i.property_name + " { \n"
+								"\t\t\t\tuint8_t padding[(sizeof(" + i.type_name + "_id) + 63ui32) & ~63ui32]; \n"
+								"\t\t\t\t" + o.name + "_id values[" + member_count + "]; \n"
+								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values; }\n"
+								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() const { return values; }\n"
+								"\t\t\t\tdtype_head_back_" + i.property_name + "() { std::uninitialized_value_construct_n(values - 1, " + member_count + " + 1); }\n"
+								"\t\t\t} m_head_back_" + i.property_name + ";\n";
 						} else {
 							// reference back to head list entry from object
-							output += "\t\t\tstruct dtype_head_back_" + i.property_name + " { \r\n"
-								"\t\t\t\tstd::vector<" + o.name + "_id> values; \r\n"
-								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }\r\n"
-								"\t\t\t\tdtype_head_back_" + i.property_name + "() { values.emplace_back(); }\r\n"
-								"\t\t\t} m_head_back_" + i.property_name + ";\r\n";
+							output += "\t\t\tstruct dtype_head_back_" + i.property_name + " { \n"
+								"\t\t\t\tstd::vector<" + o.name + "_id> values; \n"
+								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }\n"
+								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }\n"
+								"\t\t\t\tdtype_head_back_" + i.property_name + "() { values.emplace_back(); }\n"
+								"\t\t\t} m_head_back_" + i.property_name + ";\n";
 						}
 					} else if(i.ltype == list_type::std_vector) {
 						//array of relation ids in object
 						if(!i.related_to->is_expandable) {
-							output += "\t\t struct dtype_array_" + i.property_name + " { \r\n"
-								"\t\t\tstd::vector<" + o.name + "_id> values[" + std::to_string(i.related_to->size) + "]; \r\n"
-								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values; }\r\n"
-								"\t\t\t dtype_array_" + i.property_name + "() {  }\r\n"
-								"\t\t } m_array_" + i.property_name + ";\r\n";
+							output += "\t\t\tstruct dtype_array_" + i.property_name + " { \n"
+								"\t\t\t\tstd::vector<" + o.name + "_id> values[" + std::to_string(i.related_to->size) + "]; \n"
+								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values; }\n"
+								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() const { return values; }\n"
+								"\t\t\t\tdtype_array_" + i.property_name + "() {  }\n"
+								"\t\t\t} m_array_" + i.property_name + ";\n";
 						} else {
-							output += "\t\t struct dtype_array_" + i.property_name + " { \r\n"
-								"\t\t\tstd::vector<std::vector<" + o.name + "_id>> values; \r\n"
-								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }\r\n"
-								"\t\t\t dtype_array_" + i.property_name + "() { values.emplace_back(); }\r\n"
-								"\t\t } m_array_" + i.property_name + ";\r\n";
+							output += "\t\t\tstruct dtype_array_" + i.property_name + " { \n"
+								"\t\t\t\tstd::vector<std::vector<" + o.name + "_id>> values; \n"
+								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }\n"
+								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }\n"
+								"\t\t\t\tdtype_array_" + i.property_name + "() { values.emplace_back(); }\n"
+								"\t\t\t} m_array_" + i.property_name + ";\n";
 						}
 					} else if(i.ltype == list_type::array) {
 						//array of relation ids in object
 						if(!i.related_to->is_expandable) {
-							output += "\t\t struct alignas(64) dtype_array_" + i.property_name + " { \r\n"
-								"\t\t\tstable_mk_2_tag values[" + std::to_string(i.related_to->size) + "]; \r\n"
-								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values; }\r\n"
-								"\t\t\tdtype_array_" + i.property_name + "() { std::uninitialized_fill_n(values, " + std::to_string(i.related_to->size) +
-								", std::numeric_limits<dcon::stable_mk_2_tag>::max()); }\r\n"
-								"\t\t } m_array_" + i.property_name + ";\r\n";
+							output += "\t\t\tstruct alignas(64) dtype_array_" + i.property_name + " { \n"
+								"\t\t\t\tstable_mk_2_tag values[" + std::to_string(i.related_to->size) + "]; \n"
+								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values; }\n"
+								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() const { return values; }\n"
+								"\t\t\t\tdtype_array_" + i.property_name + "() { std::uninitialized_fill_n(values, " + std::to_string(i.related_to->size) +
+								", std::numeric_limits<dcon::stable_mk_2_tag>::max()); }\n"
+								"\t\t\t} m_array_" + i.property_name + ";\n";
 							output += "\t\tdcon::stable_variable_vector_storage_mk_2<" + i.type_name + "_id, 16, " + std::to_string(o.size * 2) + " > "
-								+ i.property_name + "_storage;\r\n";
+								+ i.property_name + "_storage;\n";
 						} else {
 							error_to_file(output_file_name, std::string("Unable to estimate an upper bound on storage space for ") +
 								o.name + " " + i.property_name + " arrays because the target is expandable");
@@ -983,18 +1006,20 @@ int main(int argc, char *argv[]) {
 							std::string member_count = std::string("(sizeof(") + o.name + "_id) <= 64 ? ("
 								"uint32_t(" + std::to_string(i.related_to->size) + ") + (64ui32 / uint32_t(sizeof(" + o.name + "_id))) - 1ui32) "
 								"& ~(64ui32 / uint32_t(sizeof(" + i.type_name + "_id)) - 1ui32) : uint32_t(" + std::to_string(i.related_to->size) + "))";
-							output += "\t\t\tstruct alignas(64) dtype_link_back_" + i.property_name + " { \r\n"
-								"\t\t\t\tuint8_t padding[(sizeof(" + i.type_name + "_id) + 63ui32) & ~63ui32]; \r\n"
-								"\t\t\t\t" + o.name + "_id values[" + member_count + "]; \r\n"
-								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values; }\r\n"
-								"\t\t\t\tdtype_link_back_" + i.property_name + "() { std::uninitialized_value_construct_n(values - 1, " + member_count + " + 1); }\r\n"
-								"\t\t\t} m_link_back_" + i.property_name + ";\r\n";
+							output += "\t\t\tstruct alignas(64) dtype_link_back_" + i.property_name + " { \n"
+								"\t\t\t\tuint8_t padding[(sizeof(" + i.type_name + "_id) + 63ui32) & ~63ui32]; \n"
+								"\t\t\t\t" + o.name + "_id values[" + member_count + "]; \n"
+								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values; }\n"
+								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() const { return values; }\n"
+								"\t\t\t\tdtype_link_back_" + i.property_name + "() { std::uninitialized_value_construct_n(values - 1, " + member_count + " + 1); }\n"
+								"\t\t\t} m_link_back_" + i.property_name + ";\n";
 						} else {
-							output += "\t\t\tstruct dtype_link_back_" + i.property_name + " { \r\n"
-								"\t\t\t\tstd::vector<" + o.name + "_id> values; \r\n"
-								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }\r\n"
-								"\t\t\t\tdtype_link_back_" + i.property_name + "() { values.emplace_back(); }\r\n"
-								"\t\t\t} m_link_back_" + i.property_name + ";\r\n";
+							output += "\t\t\tstruct dtype_link_back_" + i.property_name + " { \n"
+								"\t\t\t\tstd::vector<" + o.name + "_id> values; \n"
+								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }\n"
+								"\t\t\t\tDCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }\n"
+								"\t\t\t\tdtype_link_back_" + i.property_name + "() { values.emplace_back(); }\n"
+								"\t\t\t} m_link_back_" + i.property_name + ";\n";
 						}
 					}
 				}
@@ -1002,34 +1027,34 @@ int main(int argc, char *argv[]) {
 
 
 
-			output += "\r\n";
-			output += "\t\t\tpublic:\r\n";
+			output += "\n";
+			output += "\t\t\tpublic:\n";
 
 			// constructor
 			if(o.store_type == storage_type::erasable && !o.is_expandable) {
-				output += "\t\t\t" + o.name + "() {\r\n";
-				output += "\t\t\t\tfor(int32_t i = " + std::to_string(o.size) + " - 1; i >= 0; --i) {\r\n";
-				output += "\t\t\t\t\tm_index.vptr()[i] = first_free;\r\n";
-				output += "\t\t\t\t\tfirst_free = " + o.name + "_id(" + size_to_tag_type(o.size) + "(i));\r\n";
-				output += "\t\t\t\t}\r\n";
-				output += "\t\t\t}\r\n\r\n";
+				output += "\t\t\t" + o.name + "() {\n";
+				output += "\t\t\t\tfor(int32_t i = " + std::to_string(o.size) + " - 1; i >= 0; --i) {\n";
+				output += "\t\t\t\t\tm_index.vptr()[i] = first_free;\n";
+				output += "\t\t\t\t\tfirst_free = " + o.name + "_id(" + size_to_tag_type(o.size) + "(i));\n";
+				output += "\t\t\t\t}\n";
+				output += "\t\t\t}\n\n";
 			}
 
 			//object class end
-			output += "\t\t\tfriend class data_container;\r\n";
-			output += "\t\t};\r\n\r\n";
+			output += "\t\t\tfriend class data_container;\n";
+			output += "\t\t};\n\n";
 		}
 
 		//close internal namespace
-		output += "\t}\r\n\r\n";
+		output += "\t}\n\n";
 
 		//class data_container begin
-		output += "\tclass data_container {\r\n";
-		output += "\t\tpublic:\r\n";
+		output += "\tclass alignas(64) data_container {\n";
+		output += "\t\tpublic:\n";
 		for(auto& o : parsed_file.relationship_objects) {
-			output += "\t\t" + o.name + "_class " + o.name + ";\r\n";
+			output += "\t\tinternal::" + o.name + "_class " + o.name + ";\n";
 		}
-		output += "\r\n";
+		output += "\n";
 
 		for(auto& o : parsed_file.relationship_objects) {
 			const std::string id_name = (o.primary_key ? o.primary_key->name : o.name) + "_id";
@@ -1040,101 +1065,101 @@ int main(int argc, char *argv[]) {
 
 				if(p.hook_get) {
 					if(p.is_bitfield) {
-						output += "\t\tbool get_ " + o.name + "_" + p.name + "(" + id_name + " id) const;\r\n";
+						output += "\t\tbool get_" + o.name + "_" + p.name + "(" + id_name + " id) const;\n";
 
-						output += "\t\tve::vbitfield_type get_ " + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id) const {\r\n";
-						output += "\t\t\tve::vbitfield_type r; r.v = 0;\r\n";
-						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\r\n";
-						output += "\t\t\t\tr.v |= (get_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i))) << i;\r\n";
-						output += "\t\t\treturn r;\r\n";
-						output += "\t\t}\r\n";
+						output += "\t\tve::vbitfield_type get_" + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id) const {\n";
+						output += "\t\t\tve::vbitfield_type r; r.v = 0;\n";
+						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
+						output += "\t\t\t\tr.v |= (get_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i))) << i;\n";
+						output += "\t\t\treturn r;\n";
+						output += "\t\t}\n";
 
-						output += "\t\tve::vbitfield_type get_ " + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id) const {\r\n";
-						output += "\t\t\tve::vbitfield_type r; r.v = 0;\r\n";
-						output += "\t\t\tfor(int32_t i = 0; i < id.subcount; ++i)\r\n";
-						output += "\t\t\t\tr.v |= (get_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i))) << i;\r\n";
-						output += "\t\t\treturn r;\r\n";
-						output += "\t\t}\r\n";
+						output += "\t\tve::vbitfield_type get_" + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id) const {\n";
+						output += "\t\t\tve::vbitfield_type r; r.v = 0;\n";
+						output += "\t\t\tfor(int32_t i = 0; i < id.subcount; ++i)\n";
+						output += "\t\t\t\tr.v |= (get_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i))) << i;\n";
+						output += "\t\t\treturn r;\n";
+						output += "\t\t}\n";
 
-						output += "\t\tve::vbitfield_type get_ " + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id) const {\r\n";
-						output += "\t\t\tve::vbitfield_type r; r.v = 0;\r\n";
-						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\r\n";
-						output += "\t\t\t\tr.v |= (get_" + o.name + "_" + p.name + "(id[i])) << i;\r\n";
-						output += "\t\t\treturn r;\r\n";
-						output += "\t\t}\r\n";
+						output += "\t\tve::vbitfield_type get_" + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id) const {\n";
+						output += "\t\t\tve::vbitfield_type r; r.v = 0;\n";
+						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
+						output += "\t\t\t\tr.v |= (get_" + o.name + "_" + p.name + "(id[i])) << i;\n";
+						output += "\t\t\treturn r;\n";
+						output += "\t\t}\n";
 					} else if(is_vectorizable_type(parsed_file, p.data_type)) {
-						output += "\t\t" + p.data_type + " get_ " + o.name + "_" + p.name + "(" + id_name + " id) const;\r\n";
+						output += "\t\t" + p.data_type + " get_" + o.name + "_" + p.name + "(" + id_name + " id) const;\n";
 
-						output += "\t\tve::value_to_vector_type<" + p.data_type + "> get_ " + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id) const {\r\n";
-						output += "\t\t\tve::value_to_vector_type<" + p.data_type + "> r;\r\n";
-						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\r\n";
-						output += "\t\t\t\tr.set(i, get_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i)));\r\n";
-						output += "\t\t\treturn r;\r\n";
-						output += "\t\t}\r\n";
+						output += "\t\tve::value_to_vector_type<" + p.data_type + "> get_" + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id) const {\n";
+						output += "\t\t\tve::value_to_vector_type<" + p.data_type + "> r;\n";
+						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
+						output += "\t\t\t\tr.set(i, get_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i)));\n";
+						output += "\t\t\treturn r;\n";
+						output += "\t\t}\n";
 
-						output += "\t\tve::value_to_vector_type<" + p.data_type + "> get_ " + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id) const {\r\n";
-						output += "\t\t\tve::value_to_vector_type<" + p.data_type + "> r;\r\n";
-						output += "\t\t\tfor(int32_t i = 0; i < id.subcount; ++i)\r\n";
-						output += "\t\t\t\tr.set(i, get_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i)));\r\n";
-						output += "\t\t\treturn r;\r\n";
-						output += "\t\t}\r\n";
+						output += "\t\tve::value_to_vector_type<" + p.data_type + "> get_" + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id) const {\n";
+						output += "\t\t\tve::value_to_vector_type<" + p.data_type + "> r;\n";
+						output += "\t\t\tfor(int32_t i = 0; i < id.subcount; ++i)\n";
+						output += "\t\t\t\tr.set(i, get_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i)));\n";
+						output += "\t\t\treturn r;\n";
+						output += "\t\t}\n";
 
-						output += "\t\tve::value_to_vector_type<" + p.data_type + "> get_ " + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id) const {\r\n";
-						output += "\t\t\tve::value_to_vector_type<" + p.data_type + "> r;\r\n";
-						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\r\n";
-						output += "\t\t\t\tr.set(i, get_" + o.name + "_" + p.name + "(id[i]));\r\n";
-						output += "\t\t\treturn r;\r\n";
-						output += "\t\t}\r\n";
+						output += "\t\tve::value_to_vector_type<" + p.data_type + "> get_" + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id) const {\n";
+						output += "\t\t\tve::value_to_vector_type<" + p.data_type + "> r;\n";
+						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
+						output += "\t\t\t\tr.set(i, get_" + o.name + "_" + p.name + "(id[i]));\n";
+						output += "\t\t\treturn r;\n";
+						output += "\t\t}\n";
 					} else {
-						output += "\t\t" + p.data_type + " get_ " + o.name + "_" + p.name + "(" + id_name + " id) const;\r\n";
+						output += "\t\t" + p.data_type + " get_" + o.name + "_" + p.name + "(" + id_name + " id) const;\n";
 					}
 				}
 				if(p.hook_set) {
 					if(p.is_bitfield) {
-						output += "\t\t" "void set_ " + o.name + "_" + p.name + "(" + id_name + " id, bool value);\r\n";
+						output += "\t\t" "void set_" + o.name + "_" + p.name + "(" + id_name + " id, bool value);\n";
 
-						output += "\t\t" "void set_ " + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id, "
-							"ve::vbitfield_type value) {\r\n";
-						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\r\n";
-						output += "\t\t\t\tset_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i), (value.v & uint8_t(1 << i)) != 0);\r\n";
-						output += "\t\t}\r\n";
+						output += "\t\t" "void set_" + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id, "
+							"ve::vbitfield_type value) {\n";
+						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
+						output += "\t\t\t\tset_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i), (value.v & uint8_t(1 << i)) != 0);\n";
+						output += "\t\t}\n";
 
-						output += "\t\t" "void set_ " + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
-							"ve::vbitfield_type value) {\r\n";
-						output += "\t\t\tfor(int32_t i = 0; i < id.subcount; ++i)\r\n";
-						output += "\t\t\t\tset_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i), (value.v & uint8_t(1 << i)) != 0);\r\n";
-						output += "\t\t}\r\n";
+						output += "\t\t" "void set_" + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
+							"ve::vbitfield_type value) {\n";
+						output += "\t\t\tfor(int32_t i = 0; i < id.subcount; ++i)\n";
+						output += "\t\t\t\tset_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i), (value.v & uint8_t(1 << i)) != 0);\n";
+						output += "\t\t}\n";
 
-						output += "\t\t" "void set_ " + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id, "
-							"ve::vbitfield_type value) {\r\n";
-						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\r\n";
-						output += "\t\t\t\tset_" + o.name + "_" + p.name + "(id[i], (value.v & uint8_t(1 << i)) != 0);\r\n";
-						output += "\t\t}\r\n";
+						output += "\t\t" "void set_" + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id, "
+							"ve::vbitfield_type value) {\n";
+						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
+						output += "\t\t\t\tset_" + o.name + "_" + p.name + "(id[i], (value.v & uint8_t(1 << i)) != 0);\n";
+						output += "\t\t}\n";
 
 					} else if(is_vectorizable_type(parsed_file, p.data_type)) {
-						output += "\t\t" "void set_ " + o.name + "_" + p.name + "(" + id_name + " id, " + p.data_type + " value);\r\n";
+						output += "\t\t" "void set_" + o.name + "_" + p.name + "(" + id_name + " id, " + p.data_type + " value);\n";
 
-						output += "\t\t" "void set_ " + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id, "
-							"ve::value_to_vector_type<" + p.data_type + "> value) {\r\n";
-						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\r\n";
-						output += "\t\t\t\tset_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i), value[i]);\r\n";
-						output += "\t\t}\r\n";
+						output += "\t\t" "void set_" + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id, "
+							"ve::value_to_vector_type<" + p.data_type + "> value) {\n";
+						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
+						output += "\t\t\t\tset_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i), value[i]);\n";
+						output += "\t\t}\n";
 
 
-						output += "\t\t" "void set_ " + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
-							"ve::value_to_vector_type<" + p.data_type + "> value) {\r\n";
-						output += "\t\t\tfor(int32_t i = 0; i < id.subcount; ++i)\r\n";
-						output += "\t\t\t\tset_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i), value[i]);\r\n";
-						output += "\t\t}\r\n";
+						output += "\t\t" "void set_" + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
+							"ve::value_to_vector_type<" + p.data_type + "> value) {\n";
+						output += "\t\t\tfor(int32_t i = 0; i < id.subcount; ++i)\n";
+						output += "\t\t\t\tset_" + o.name + "_" + p.name + "(" + id_name + "(id.value + i), value[i]);\n";
+						output += "\t\t}\n";
 
-						output += "\t\t" "void set_ " + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id, "
-							"ve::value_to_vector_type<" + p.data_type + "> value) {\r\n";
-						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\r\n";
-						output += "\t\t\t\tset_" + o.name + "_" + p.name + "(id[i], value[i]);\r\n";
-						output += "\t\t}\r\n";
+						output += "\t\t" "void set_" + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id, "
+							"ve::value_to_vector_type<" + p.data_type + "> value) {\n";
+						output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
+						output += "\t\t\t\tset_" + o.name + "_" + p.name + "(id[i], value[i]);\n";
+						output += "\t\t}\n";
 
 					} else {
-						output += "\t\t" "void set_ " + o.name + "_" + p.name + "(" + id_name + " id, " + p.data_type + " const& value);\r\n";
+						output += "\t\t" "void set_" + o.name + "_" + p.name + "(" + id_name + " id, " + p.data_type + " const& value);\n";
 					}
 				}
 
@@ -1142,201 +1167,168 @@ int main(int argc, char *argv[]) {
 
 				} else if(p.is_bitfield) {
 					if(!p.hook_get) {
-						output += "\t\t" "DCON_RELEASE_INLINE bool get_ " + o.name + "_" + p.name + "(" + id_name + " id) const noexcept {\r\n";
-						output += "\t\t\treturn dcon::bit_vector_test(" + o.name + ".m_" + p.name + ".vptr()[id.index()]);\r\n";
-						output += "\t\t)\r\n";
+						output += "\t\t" "DCON_RELEASE_INLINE bool get_" + o.name + "_" + p.name + "(" + id_name + " id) const noexcept {\n";
+						output += "\t\t\treturn dcon::bit_vector_test(" + o.name + ".m_" + p.name + ".vptr()[id.index()]);\n";
+						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE ve::vbitfield_type get_ " + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id) const noexcept (\r\n";
-						output += "\t\t\treturn ve::load(id, " + o.name + ".m_" + p.name + ".vptr());\r\n";
-						output += "\t\t)\r\n";
+						output += "\t\tDCON_RELEASE_INLINE ve::vbitfield_type get_" + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id) const noexcept {\n";
+						output += "\t\t\treturn ve::load(id, " + o.name + ".m_" + p.name + ".vptr());\n";
+						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE ve::vbitfield_type get_ " + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept (\r\n";
-						output += "\t\t\treturn ve::load(id, " + o.name + ".m_" + p.name + ".vptr());\r\n";
-						output += "\t\t)\r\n";
+						output += "\t\tDCON_RELEASE_INLINE ve::vbitfield_type get_" + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept {\n";
+						output += "\t\t\treturn ve::load(id, " + o.name + ".m_" + p.name + ".vptr());\n";
+						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE ve::vbitfield_type get_ " + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id) const noexcept (\r\n";
-						output += "\t\t\treturn ve::load(id.value, " + o.name + ".m_" + p.name + ".vptr());\r\n";
-						output += "\t\t)\r\n";
+						output += "\t\tDCON_RELEASE_INLINE ve::vbitfield_type get_" + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id) const noexcept {\n";
+						output += "\t\t\treturn ve::load(id, " + o.name + ".m_" + p.name + ".vptr());\n";
+						output += "\t\t}\n";
 					}
 					if(!p.hook_set) {
-						output += "\t\t" "DCON_RELEASE_INLINE void set_ " + o.name + "_" + p.name + "(" + id_name + " id, bool value) {\r\n";
-						output += "\t\t\tdcon::bit_vector_set(" + o.name + ".m_" + p.name + ".vptr(), id.index(), value);\r\n";
-						output += "\t\t)\r\n";
+						output += "\t\t" "DCON_RELEASE_INLINE void set_" + o.name + "_" + p.name + "(" + id_name + " id, bool value) {\n";
+						output += "\t\t\tdcon::bit_vector_set(" + o.name + ".m_" + p.name + ".vptr(), id.index(), value);\n";
+						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE " "void set_ " + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id, "
-							"ve::vbitfield_type values) noexcept (\r\n";
-						output += "\t\t\tve::store(id, " + o.name + ".m_" + p.name + ".vptr(), values);\r\n";
-						output += "\t\t)\r\n";
+						output += "\t\tDCON_RELEASE_INLINE " "void set_" + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id, "
+							"ve::vbitfield_type values) noexcept {\n";
+						output += "\t\t\tve::store(id, " + o.name + ".m_" + p.name + ".vptr(), values);\n";
+						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE " "void set_ " + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
-							"ve::vbitfield_type values) noexcept (\r\n";
-						output += "\t\t\tve::store(id, " + o.name + ".m_" + p.name + ".vptr(), values);\r\n";
-						output += "\t\t)\r\n";
+						output += "\t\tDCON_RELEASE_INLINE " "void set_" + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
+							"ve::vbitfield_type values) noexcept {\n";
+						output += "\t\t\tve::store(id, " + o.name + ".m_" + p.name + ".vptr(), values);\n";
+						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE " "void set_ " + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id, "
-							"ve::vbitfield_type values) noexcept (\r\n";
-						output += "\t\t\tve::store(id.value, " + o.name + ".m_" + p.name + ".vptr(), values);\r\n";
-						output += "\t\t)\r\n";
+						output += "\t\tDCON_RELEASE_INLINE " "void set_" + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id, "
+							"ve::vbitfield_type values) noexcept {\n";
+						output += "\t\t\tve::store(id, " + o.name + ".m_" + p.name + ".vptr(), values);\n";
+						output += "\t\t}\n";
 					}
 				} else if(p.is_object) {
 					if(!p.hook_get) {
-						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + "const& get_ " + o.name + "_" + p.name + "(" + id_name + " id) const noexcept {\r\n";
-						output += "\t\t\treturn " + o.name + ".m_" + p.name + ".vptr()[id.index()];\r\n";
-						output += "\t\t)\r\n";
-						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + "& get_ " + o.name + "_" + p.name + "(" + id_name + " id) noexcept {\r\n";
-						output += "\t\t\treturn " + o.name + ".m_" + p.name + ".vptr()[id.index()];\r\n";
-						output += "\t\t)\r\n";
+						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + " const& get_" + o.name + "_" + p.name + "(" + id_name + " id) const noexcept {\n";
+						output += "\t\t\treturn " + o.name + ".m_" + p.name + ".vptr()[id.index()];\n";
+						output += "\t\t}\n";
+						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + "& get_" + o.name + "_" + p.name + "(" + id_name + " id) noexcept {\n";
+						output += "\t\t\treturn " + o.name + ".m_" + p.name + ".vptr()[id.index()];\n";
+						output += "\t\t}\n";
 					}
 					if(!p.hook_set) {
-						output += "\t\tDCON_RELEASE_INLINE void set_ " + o.name + "_" + p.name + "(" + id_name + " id, " + p.data_type + " const& value) noexcept {\r\n";
-						output += "\t\t\t" + o.name + ".m_" + p.name + ".vptr()[id.index()] = value;\r\n";
-						output += "\t\t)\r\n";
+						output += "\t\tDCON_RELEASE_INLINE void set_" + o.name + "_" + p.name + "(" + id_name + " id, " + p.data_type + " const& value) noexcept {\n";
+						output += "\t\t\t" + o.name + ".m_" + p.name + ".vptr()[id.index()] = value;\n";
+						output += "\t\t}\n";
 					}
 				} else if(p.is_special_vector) {
 
 					if(!p.hook_get) {
-						output += "\t\tstd::pair<" + p.data_type + "*, " + p.data_type + "*> get_" + o.name + "_" + p.name + "_range(" + id_name + " id) const noexcept {\r\n";
-						output += "\t\t\treturn dcon::get_range(" + o.name + "." + p.name + "_storage, " + o.name + ".m_" + p.name + ".vptr()[id.index()]);\r\n";
-						output += "\t\t}\r\n";
+						output += "\t\tstd::pair<" + p.data_type + "*, " + p.data_type + "*> get_" + o.name + "_" + p.name + "_range(" + id_name + " id) const noexcept {\n";
+						output += "\t\t\treturn dcon::get_range(" + o.name + "." + p.name + "_storage, " + o.name + ".m_" + p.name + ".vptr()[id.index()]);\n";
+						output += "\t\t}\n";
 
-						output += "\t\t" + p.data_type + "& get_" + o.name + "_" + p.name + "_at(" + id_name + " id, uint32_t inner_index) const noexcept {\r\n";
-						output += "\t\t\treturn dcon::get(" + o.name + "." + p.name + "_storage, " + o.name + ".m_" + p.name + ".vptr()[id.index()], inner_index);\r\n";
-						output += "\t\t}\r\n";
+						output += "\t\t" + p.data_type + "& get_" + o.name + "_" + p.name + "_at(" + id_name + " id, uint32_t inner_index) const noexcept {\n";
+						output += "\t\t\treturn dcon::get(" + o.name + "." + p.name + "_storage, " + o.name + ".m_" + p.name + ".vptr()[id.index()], inner_index);\n";
+						output += "\t\t}\n";
 
-						output += "\t\tuint32_t get_" + o.name + "_" + p.name + "_capacity(" + id_name + " id) const noexcept {\r\n";
-						output += "\t\t\treturn dcon::get_capacity(" + o.name + "." + p.name + "_storage, " + o.name + ".m_" + p.name + ".vptr()[id.index()]);\r\n";
-						output += "\t\t}\r\n";
+						output += "\t\tuint32_t get_" + o.name + "_" + p.name + "_capacity(" + id_name + " id) const noexcept {\n";
+						output += "\t\t\treturn dcon::get_capacity(" + o.name + "." + p.name + "_storage, " + o.name + ".m_" + p.name + ".vptr()[id.index()]);\n";
+						output += "\t\t}\n";
 
-						output += "\t\tuint32_t get_" + o.name + "_" + p.name + "_size(" + id_name + " id) const noexcept {\r\n";
-						output += "\t\t\treturn dcon::get_size(" + o.name + "." + p.name + "_storage, " + o.name + ".m_" + p.name + ".vptr()[id.index()]);\r\n";
-						output += "\t\t}\r\n";
+						output += "\t\tuint32_t get_" + o.name + "_" + p.name + "_size(" + id_name + " id) const noexcept {\n";
+						output += "\t\t\treturn dcon::get_size(" + o.name + "." + p.name + "_storage, " + o.name + ".m_" + p.name + ".vptr()[id.index()]);\n";
+						output += "\t\t}\n";
 
-						output += "\t\tbool " + o.name + "_" + p.name + "_contains(" + id_name + " id, " + p.data_type + " obj) const noexcept {\r\n";
-						output += "\t\t\treturn dcon::contains_item(" + o.name + "." + p.name + "_storage, " + o.name + ".m_" + p.name + ".vptr()[id.index()], obj);\r\n";
-						output += "\t\t}\r\n";
+						output += "\t\tbool " + o.name + "_" + p.name + "_contains(" + id_name + " id, " + p.data_type + " obj) const noexcept {\n";
+						output += "\t\t\treturn dcon::contains_item(" + o.name + "." + p.name + "_storage, " + o.name + ".m_" + p.name + ".vptr()[id.index()], obj);\n";
+						output += "\t\t}\n";
 					}
 					if(!p.hook_set) {
-						output += "\t\tvoid " + o.name + "_" + p.name + "_push_back(" + id_name + " id, " + p.data_type + " obj) noexcept {\r\n";
-						output += "\t\t\treturn dcon::push_back(" + o.name + "." + p.name + "_storage, " + o.name + ".m_" + p.name + ".vptr()[id.index()], obj);\r\n";
-						output += "\t\t}\r\n";
+						output += "\t\tvoid " + o.name + "_" + p.name + "_push_back(" + id_name + " id, " + p.data_type + " obj) noexcept {\n";
+						output += "\t\t\treturn dcon::push_back(" + o.name + "." + p.name + "_storage, " + o.name + ".m_" + p.name + ".vptr()[id.index()], obj);\n";
+						output += "\t\t}\n";
 
-						output += "\t\tvoid " + o.name + "_" + p.name + "_pop_back(" + id_name + " id) noexcept {\r\n";
-						output += "\t\t\treturn dcon::pop_back(" + o.name + "." + p.name + "_storage, " + o.name + ".m_" + p.name + ".vptr()[id.index()]);\r\n";
-						output += "\t\t}\r\n";
+						output += "\t\tvoid " + o.name + "_" + p.name + "_pop_back(" + id_name + " id) noexcept {\n";
+						output += "\t\t\treturn dcon::pop_back(" + o.name + "." + p.name + "_storage, " + o.name + ".m_" + p.name + ".vptr()[id.index()]);\n";
+						output += "\t\t}\n";
 
-						output += "\t\tvoid " + o.name + "_" + p.name + "_add_unique(" + id_name + " id, " + p.data_type + " obj) noexcept {\r\n";
-						output += "\t\t\treturn dcon::add_unique_item(" + o.name + "." + p.name + "_storage, " + o.name + ".m_" + p.name + ".vptr()[id.index()], obj);\r\n";
-						output += "\t\t}\r\n";
+						output += "\t\tvoid " + o.name + "_" + p.name + "_add_unique(" + id_name + " id, " + p.data_type + " obj) noexcept {\n";
+						output += "\t\t\treturn dcon::add_unique_item(" + o.name + "." + p.name + "_storage, " + o.name + ".m_" + p.name + ".vptr()[id.index()], obj);\n";
+						output += "\t\t}\n";
 
-						output += "\t\tvoid " + o.name + "_" + p.name + "_remove_unique(" + id_name + " id, " + p.data_type + " obj) noexcept {\r\n";
-						output += "\t\t\treturn dcon::remove_unique_item(" + o.name + "." + p.name + "_storage, " + o.name + ".m_" + p.name + ".vptr()[id.index()], obj);\r\n";
-						output += "\t\t}\r\n";
+						output += "\t\tvoid " + o.name + "_" + p.name + "_remove_unique(" + id_name + " id, " + p.data_type + " obj) noexcept {\n";
+						output += "\t\t\treturn dcon::remove_unique_item(" + o.name + "." + p.name + "_storage, " + o.name + ".m_" + p.name + ".vptr()[id.index()], obj);\n";
+						output += "\t\t}\n";
 					}
 				} else if(is_vectorizable_type(parsed_file, p.data_type)) {
 					if(!p.hook_get) {
-						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + "const& get_ " + o.name + "_" + p.name + "(" + id_name + " id) const noexcept {\r\n";
-						output += "\t\t\treturn " + o.name + ".m_" + p.name + ".vptr()[id.index()];\r\n";
-						output += "\t\t)\r\n";
-						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + "& get_ " + o.name + "_" + p.name + "(" + id_name + " id) noexcept {\r\n";
-						output += "\t\t\treturn " + o.name + ".m_" + p.name + ".vptr()[id.index()];\r\n";
-						output += "\t\t)\r\n";
+						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + " const& get_" + o.name + "_" + p.name + "(" + id_name + " id) const noexcept {\n";
+						output += "\t\t\treturn " + o.name + ".m_" + p.name + ".vptr()[id.index()];\n";
+						output += "\t\t}\n";
+						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + "& get_" + o.name + "_" + p.name + "(" + id_name + " id) noexcept {\n";
+						output += "\t\t\treturn " + o.name + ".m_" + p.name + ".vptr()[id.index()];\n";
+						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE ve::value_to_vector_type<" + p.data_type + "> get_ " + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id) const noexcept (\r\n";
-						output += "\t\t\treturn ve::load(id, " + o.name + ".m_" + p.name + ".vptr());\r\n";
-						output += "\t\t)\r\n";
+						output += "\t\tDCON_RELEASE_INLINE ve::value_to_vector_type<" + p.data_type + "> get_" + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id) const noexcept {\n";
+						output += "\t\t\treturn ve::load(id, " + o.name + ".m_" + p.name + ".vptr());\n";
+						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE ve::value_to_vector_type<" + p.data_type + "> get_ " + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept (\r\n";
-						output += "\t\t\treturn ve::load(id, " + o.name + ".m_" + p.name + ".vptr());\r\n";
-						output += "\t\t)\r\n";
+						output += "\t\tDCON_RELEASE_INLINE ve::value_to_vector_type<" + p.data_type + "> get_" + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept {\n";
+						output += "\t\t\treturn ve::load(id, " + o.name + ".m_" + p.name + ".vptr());\n";
+						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE ve::value_to_vector_type<" + p.data_type + "> get_ " + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id) const noexcept (\r\n";
-						output += "\t\t\treturn ve::load(id.value, " + o.name + ".m_" + p.name + ".vptr());\r\n";
-						output += "\t\t)\r\n";
+						output += "\t\tDCON_RELEASE_INLINE ve::value_to_vector_type<" + p.data_type + "> get_" + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id) const noexcept {\n";
+						output += "\t\t\treturn ve::load(id, " + o.name + ".m_" + p.name + ".vptr());\n";
+						output += "\t\t}\n";
 					}
 					if(!p.hook_set) {
-						output += "\t\tDCON_RELEASE_INLINE void set_ " + o.name + "_" + p.name + "(" + id_name + " id, " + p.data_type + " value) noexcept {\r\n";
-						output += "\t\t\t" + o.name + ".m_" + p.name + ".vptr()[id.index()] = value;\r\n";
-						output += "\t\t)\r\n";
+						output += "\t\tDCON_RELEASE_INLINE void set_" + o.name + "_" + p.name + "(" + id_name + " id, " + p.data_type + " value) noexcept {\n";
+						output += "\t\t\t" + o.name + ".m_" + p.name + ".vptr()[id.index()] = value;\n";
+						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE " "void set_ " + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id, "
-							"ve::value_to_vector_type<" + p.data_type + "> values) noexcept (\r\n";
-						output += "\t\t\tve::store(id, " + o.name + ".m_" + p.name + ".vptr(), values);\r\n";
-						output += "\t\t)\r\n";
+						output += "\t\tDCON_RELEASE_INLINE " "void set_" + o.name + "_" + p.name + "(" + con_tags_type + "<" + id_name + "> id, "
+							"ve::value_to_vector_type<" + p.data_type + "> values) noexcept {\n";
+						output += "\t\t\tve::store(id, " + o.name + ".m_" + p.name + ".vptr(), values);\n";
+						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE " "void set_ " + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
-							"ve::value_to_vector_type<" + p.data_type + "> values) noexcept (\r\n";
-						output += "\t\t\tve::store(id, " + o.name + ".m_" + p.name + ".vptr(), values);\r\n";
-						output += "\t\t)\r\n";
+						output += "\t\tDCON_RELEASE_INLINE " "void set_" + o.name + "_" + p.name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
+							"ve::value_to_vector_type<" + p.data_type + "> values) noexcept {\n";
+						output += "\t\t\tve::store(id, " + o.name + ".m_" + p.name + ".vptr(), values);\n";
+						output += "\t\t}\n";
 
-						output += "\t\tDCON_RELEASE_INLINE " "void set_ " + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id, "
-							"ve::value_to_vector_type<" + p.data_type + "> values) noexcept (\r\n";
-						output += "\t\t\tve::store(id.value, " + o.name + ".m_" + p.name + ".vptr(), values);\r\n";
-						output += "\t\t)\r\n";
+						output += "\t\tDCON_RELEASE_INLINE " "void set_" + o.name + "_" + p.name + "(ve::tagged_vector<" + id_name + "> id, "
+							"ve::value_to_vector_type<" + p.data_type + "> values) noexcept {\n";
+						output += "\t\t\tve::store(id, " + o.name + ".m_" + p.name + ".vptr(), values);\n";
+						output += "\t\t}\n";
 					}
 				} else { // nonvectorizable data type w/o special handling
 					if(!p.hook_get) {
-						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + "const& get_ " + o.name + "_" + p.name + "(" + id_name + " id) const noexcept {\r\n";
-						output += "\t\t\treturn " + o.name + ".m_" + p.name + ".vptr()[id.index()];\r\n";
-						output += "\t\t)\r\n";
-						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + "& get_ " + o.name + "_" + p.name + "(" + id_name + " id) noexcept {\r\n";
-						output += "\t\t\treturn " + o.name + ".m_" + p.name + ".vptr()[id.index()];\r\n";
-						output += "\t\t)\r\n";
+						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + " const& get_" + o.name + "_" + p.name + "(" + id_name + " id) const noexcept {\n";
+						output += "\t\t\treturn " + o.name + ".m_" + p.name + ".vptr()[id.index()];\n";
+						output += "\t\t}\n";
+						output += "\t\tDCON_RELEASE_INLINE " + p.data_type + "& get_" + o.name + "_" + p.name + "(" + id_name + " id) noexcept {\n";
+						output += "\t\t\treturn " + o.name + ".m_" + p.name + ".vptr()[id.index()];\n";
+						output += "\t\t}\n";
 					}
 					if(!p.hook_set) {
-						output += "\t\tDCON_RELEASE_INLINE void set_ " + o.name + "_" + p.name + "(" + id_name + " id, " + p.data_type + " const& value) noexcept {\r\n";
-						output += "\t\t\t" + o.name + ".m_" + p.name + ".vptr()[id.index()] = value;\r\n";
-						output += "\t\t)\r\n";
+						output += "\t\tDCON_RELEASE_INLINE void set_" + o.name + "_" + p.name + "(" + id_name + " id, " + p.data_type + " const& value) noexcept {\n";
+						output += "\t\t\t" + o.name + ".m_" + p.name + ".vptr()[id.index()] = value;\n";
+						output += "\t\t}\n";
 					}
 				}
 			} // end loop over each property
 
-			output += "\r\n";
+			output += "\n";
 
 			// creation / deletion / move hook routines
 			if(o.hook_create) {
-				output += "\t\tvoid on_create_" + o.name + "(" + id_name + " id);\r\n";
+				output += "\t\tvoid on_create_" + o.name + "(" + id_name + " id);\n";
 			}
 			if(o.hook_delete) {
-				output += "\t\tvoid on_delete_" + o.name + "(" + id_name + " id);\r\n";
+				output += "\t\tvoid on_delete_" + o.name + "(" + id_name + " id);\n";
 			}
 			if(o.hook_move) {
-				output += "\t\tvoid on_move_" + o.name + "(" + id_name + " new_id," + id_name + " old_id);\r\n";
+				output += "\t\tvoid on_move_" + o.name + "(" + id_name + " new_id," + id_name + " old_id);\n";
 			}
 
-			output += "\t\tuint32_t " + o.name + "_size() const noexcept { return " + o.name + ".size_used; }\r\n";
-
-			// creation / deletion stubs
-
-			if(!o.is_relationship) {
-				if(o.store_type == storage_type::contiguous) {
-					output += "\t\tvoid " + o.name + "_pop_back();\r\n";
-					output += "\t\tvoid " + o.name + "_resize(uint32_t new_size);\r\n";
-					output += "\t\t" + id_name + " create_" + o.name + "();\r\n";
-					output += "\t\tbool is_valid_" + o.name + "(" + id_name + " id) const;\r\n";
-				} else if(o.store_type == storage_type::erasable) {
-					output += "\t\tvoid delete_" + o.name + "(" + id_name + " id);\r\n";
-					output += "\t\t" + id_name + " create_" + o.name + "();\r\n";
-					output += "\t\tvoid " + o.name + "_resize(uint32_t new_size);\r\n";
-					output += "\t\tbool is_valid_" + o.name + "(" + id_name + " id) const;\r\n";
-				} else if(o.store_type == storage_type::compactable) {
-					output += "\t\tvoid delete_" + o.name + "(" + id_name + " id);\r\n";
-					output += "\t\t" + id_name + " create_" + o.name + "();\r\n";
-					output += "\t\tvoid " + o.name + "_resize(uint32_t new_size);\r\n";
-					output += "\t\tbool is_valid_" + o.name + "(" + id_name + " id) const;\r\n";
-				}
-			} else {
-				output += "\t\tvoid " + o.name + "_resize(uint32_t sz);\r\n";
-				output += "\t\tvoid delete_" + o.name + "(" + id_name + " id);\r\n";
-				output += "\t\tbool is_valid_" + o.name + "(" + id_name + " id) const;\r\n";
-				output += "\t\tprivate:\r\n";
-				output += "\t\tvoid internal_move_relationship_" + o.name + "(" + id_name + " old_id, " + id_name + " new_id);\r\n";
-				output += "\t\tpublic:\r\n";
-				output += "\t\t" + id_name + " try_create_" + o.name + "(" + make_relationship_parameters(o) + ");\r\n";
-				output += "\t\t" + id_name + " force_create_" + o.name + "(" + make_relationship_parameters(o) + ");\r\n";
-			}
-
-			output += "\r\n";
-
+			output += "\t\tuint32_t " + o.name + "_size() const noexcept { return " + o.name + ".size_used; }\n";
 		} // end getters / setters creation loop over relationships / objects
 
 
@@ -1380,136 +1372,136 @@ int main(int argc, char *argv[]) {
 
 					// getter in relationship
 
-					output += "\t\tDCON_RELEASE_INLINE " + id_name + " get_ " + r.name + "_" + i.property_name + "(" + relation_id_name + " id) const noexcept {\r\n";
-					output += "\t\t\treturn id;\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE " + id_name + " get_" + r.name + "_" + i.property_name + "(" + relation_id_name + " id) const noexcept {\n";
+					output += "\t\t\treturn id;\n";
+					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_ " + r.name + "_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\tve::tagged_vector<" + relation_id_name + "> result;\r\n";
-					output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\r\n";
-					output += "\t\t\t\tresult.set(uint32_t(i), id[i]);\r\n";
-					output += "\t\t\treturn result;\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\t\tve::tagged_vector<" + relation_id_name + "> result;\n";
+					output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
+					output += "\t\t\t\tresult.set(uint32_t(i), id[i]);\n";
+					output += "\t\t\treturn result;\n";
+					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_ " + r.name + "_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\tve::tagged_vector<" + relation_id_name + "> result;\r\n";
-					output += "\t\t\tfor(uint32_t i = 0; i < id.subcount; ++i)\r\n";
-					output += "\t\t\t\tresult.set(i, id[i]);\r\n";
-					output += "\t\t\treturn result;\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\t\tve::tagged_vector<" + relation_id_name + "> result;\n";
+					output += "\t\t\tfor(uint32_t i = 0; i < id.subcount; ++i)\n";
+					output += "\t\t\t\tresult.set(i, id[i]);\n";
+					output += "\t\t\treturn result;\n";
+					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_ " + r.name + "_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\treturn id;\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\t\treturn id;\n";
+					output += "\t\t}\n";
 
 					// setter in relationship
 
-					output += "\t\tvoid set_ " + r.name + "_" + i.property_name + "(" + relation_id_name + " id, " + id_name + " value) noexcept {\r\n";
-					output += "\t\t\tif(value) {\r\n";
-					output += "\t\t\tdelete_" + r.name + "(value);\r\n";
-					output += "\t\t\tinternal_move_relationship_" + r.name + "(id, value);\r\n";
-					output += "\t\t\t} else {\r\n";
-					output += "\t\t\tdelete_" + r.name + "(id);\r\n";
-					output += "\t\t\t}\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tvoid set_" + r.name + "_" + i.property_name + "(" + relation_id_name + " id, " + id_name + " value) noexcept {\n";
+					output += "\t\t\tif(value) {\n";
+					output += "\t\t\tdelete_" + r.name + "(value);\n";
+					output += "\t\t\tinternal_move_relationship_" + r.name + "(id, value);\n";
+					output += "\t\t\t} else {\n";
+					output += "\t\t\tdelete_" + r.name + "(id);\n";
+					output += "\t\t\t}\n";
+					output += "\t\t}\n";
 
 					// getter in related object
 
-					output += "\t\tDCON_RELEASE_INLINE " + relation_id_name + " get_ " + i.type_name + "_" + r.name + "_as_" + i.property_name +
-						"(" + id_name + " id) const noexcept {\r\n";
-					output += "\t\t\treturn id;\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE " + relation_id_name + " get_" + i.type_name + "_" + r.name + "_as_" + i.property_name +
+						"(" + id_name + " id) const noexcept {\n";
+					output += "\t\t\treturn id;\n";
+					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_ " + i.type_name + "_" + r.name + "_as_" + i.property_name +
-						"(" + con_tags_type + "<" + id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\tve::tagged_vector<" + relation_id_name + "> result;\r\n";
-					output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\r\n";
-					output += "\t\t\t\tresult.set(uint32_t(i), id[i]);\r\n";
-					output += "\t\t\treturn result;\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + i.type_name + "_" + r.name + "_as_" + i.property_name +
+						"(" + con_tags_type + "<" + id_name + "> id) const noexcept {\n";
+					output += "\t\t\tve::tagged_vector<" + relation_id_name + "> result;\n";
+					output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
+					output += "\t\t\t\tresult.set(uint32_t(i), id[i]);\n";
+					output += "\t\t\treturn result;\n";
+					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_ " + i.type_name + "_" + r.name + "_as_" + i.property_name +
-						"(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\tve::tagged_vector<" + relation_id_name + "> result;\r\n";
-					output += "\t\t\tfor(uint32_t i = 0; i < id.subcount; ++i)\r\n";
-					output += "\t\t\t\tresult.set(i, id[i]);\r\n";
-					output += "\t\t\treturn result;\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + i.type_name + "_" + r.name + "_as_" + i.property_name +
+						"(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept {\n";
+					output += "\t\t\tve::tagged_vector<" + relation_id_name + "> result;\n";
+					output += "\t\t\tfor(uint32_t i = 0; i < id.subcount; ++i)\n";
+					output += "\t\t\t\tresult.set(i, id[i]);\n";
+					output += "\t\t\treturn result;\n";
+					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_ " + i.type_name + "_" + r.name + "_as_" + i.property_name +
-						"(ve::tagged_vector<" + id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\treturn id;\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + i.type_name + "_" + r.name + "_as_" + i.property_name +
+						"(ve::tagged_vector<" + id_name + "> id) const noexcept {\n";
+					output += "\t\t\treturn id;\n";
+					output += "\t\t}\n";
 
 					// setter in related object
 
-					output += "\t\tDCON_RELEASE_INLINE void " + i.type_name + "_remove_" + r.name + "_as_" + i.property_name + "(" + id_name + " id) noexcept {\r\n";
-					output += "\t\t\tif(auto id = " + r.name + ".m_link_back_" + i.property_name + ".vptr()[value.index()]; bool(id))\r\n";
-					output += "\t\t\t\tdelete_" + r.name + "(id);\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE void " + i.type_name + "_remove_" + r.name + "_as_" + i.property_name + "(" + id_name + " id) noexcept {\n";
+					output += "\t\t\tif(bool(id))\n";
+					output += "\t\t\t\tdelete_" + r.name + "(id);\n";
+					output += "\t\t}\n";
 				} else if(i.index == index_type::at_most_one) {
 					// first: getter in the relationship itself
 
 					const std::string id_name = i.type_name + "_id";
 					const std::string con_tags_type = i.related_to->is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags";
 
-					output += "\t\tDCON_RELEASE_INLINE " + id_name + " get_ " + r.name + "_" + i.property_name + "(" + relation_id_name + " id) const noexcept {\r\n";
-					output += "\t\t\treturn " + r.name + ".m_" + i.property_name + ".vptr()[id.index()];\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE " + id_name + " get_" + r.name + "_" + i.property_name + "(" + relation_id_name + " id) const noexcept {\n";
+					output += "\t\t\treturn " + r.name + ".m_" + i.property_name + ".vptr()[id.index()];\n";
+					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_ " + r.name + "_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
+					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_ " + r.name + "_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
+					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_ " + r.name + "_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\treturn ve::load(id.value, " + r.name + ".m_" + i.property_name + ".vptr());\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
+					output += "\t\t}\n";
 
 					// second: setter in the relationship itself
 
-					output += "\t\tvoid set_ " + r.name + "_" + i.property_name + "(" + relation_id_name + " id, " + id_name + " value) noexcept {\r\n";
-					output += "\t\t\tif(auto old_value = " + r.name + ".m_" + i.property_name + ".vptr()[id.index()]; bool(old_value))\r\n";
-					output += "\t\t\t\t" + r.name + ".m_link_back_" + i.property_name + ".vptr()[old_value].index()] = " + relation_id_name + "();\r\n";
-					output += "\t\t\t" + r.name + ".m_" + i.property_name + ".vptr()[id.index()] = value;\r\n";
-					output += "\t\t\tif(value) {\r\n";
-					output += "\t\t\t\tif(" + r.name + ".m_link_back_" + i.property_name + ".vptr()[value.index()])\r\n";
-					output += "\t\t\t\t\tdelete_" + r.name + "(" + r.name + ".m_link_back_" + i.property_name + ".vptr()[value.index()]);\r\n";
-					output += "\t\t\t\t" + r.name + ".m_link_back_" + i.property_name + ".vptr()[value.index()] = id;\r\n";
-					output += "\t\t\t}\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tvoid set_" + r.name + "_" + i.property_name + "(" + relation_id_name + " id, " + id_name + " value) noexcept {\n";
+					output += "\t\t\tif(auto old_value = " + r.name + ".m_" + i.property_name + ".vptr()[id.index()]; bool(old_value))\n";
+					output += "\t\t\t\t" + r.name + ".m_link_back_" + i.property_name + ".vptr()[old_value].index()] = " + relation_id_name + "();\n";
+					output += "\t\t\t" + r.name + ".m_" + i.property_name + ".vptr()[id.index()] = value;\n";
+					output += "\t\t\tif(value) {\n";
+					output += "\t\t\t\tif(" + r.name + ".m_link_back_" + i.property_name + ".vptr()[value.index()])\n";
+					output += "\t\t\t\t\tdelete_" + r.name + "(" + r.name + ".m_link_back_" + i.property_name + ".vptr()[value.index()]);\n";
+					output += "\t\t\t\t" + r.name + ".m_link_back_" + i.property_name + ".vptr()[value.index()] = id;\n";
+					output += "\t\t\t}\n";
+					output += "\t\t}\n";
 
 					// third: getter in the object related to
 
-					output += "\t\tDCON_RELEASE_INLINE " + relation_id_name + " get_ " + i.type_name + "_" + r.name + "_as_" + i.property_name +
-						"(" + id_name + " id) const noexcept {\r\n";
-					output += "\t\t\treturn " + r.name + ".m_link_back_" + i.property_name + ".vptr()[id.index()];\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE " + relation_id_name + " get_" + i.type_name + "_" + r.name + "_as_" + i.property_name +
+						"(" + id_name + " id) const noexcept {\n";
+					output += "\t\t\treturn " + r.name + ".m_link_back_" + i.property_name + ".vptr()[id.index()];\n";
+					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_ " + i.type_name + "_" + r.name + "_as_" + i.property_name +
-						"(" + con_tags_type + "<" + id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\treturn ve::load(id, " + r.name + ".m_link_back_" + i.property_name + ".vptr());\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + i.type_name + "_" + r.name + "_as_" + i.property_name +
+						"(" + con_tags_type + "<" + id_name + "> id) const noexcept {\n";
+					output += "\t\t\treturn ve::load(id, " + r.name + ".m_link_back_" + i.property_name + ".vptr());\n";
+					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_ " + i.type_name + "_" + r.name + "_as_" + i.property_name +
-						"(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\treturn ve::load(id, " + r.name + ".m_link_back_" + i.property_name + ".vptr());\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + i.type_name + "_" + r.name + "_as_" + i.property_name +
+						"(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept {\n";
+					output += "\t\t\treturn ve::load(id, " + r.name + ".m_link_back_" + i.property_name + ".vptr());\n";
+					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_ " + i.type_name + "_" + r.name + "_as_" + i.property_name +
-						"(ve::tagged_vector<" + id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\treturn ve::load(id.value, " + r.name + ".m_link_back_" + i.property_name + ".vptr());\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + i.type_name + "_" + r.name + "_as_" + i.property_name +
+						"(ve::tagged_vector<" + id_name + "> id) const noexcept {\n";
+					output += "\t\t\treturn ve::load(id, " + r.name + ".m_link_back_" + i.property_name + ".vptr());\n";
+					output += "\t\t}\n";
 
 					// fourth: setter in the object related to
 
-					output += "\t\tDCON_RELEASE_INLINE void " + i.type_name + "_remove_" + r.name + "_as_" + i.property_name + "(" + id_name + " id) noexcept {\r\n";
-					output += "\t\t\tif(auto id = " + r.name + ".m_link_back_" + i.property_name + ".vptr()[value.index()]; bool(id))\r\n";
-					output += "\t\t\t\tdelete_" + r.name + "(id);\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE void " + i.type_name + "_remove_" + r.name + "_as_" + i.property_name + "(" + id_name + " id) noexcept {\n";
+					output += "\t\t\tif(auto id = " + r.name + ".m_link_back_" + i.property_name + ".vptr()[value.index()]; bool(id))\n";
+					output += "\t\t\t\tdelete_" + r.name + "(id);\n";
+					output += "\t\t}\n";
 
 				} else if(i.index == index_type::many) {
 					// first: getter in the relationship itself
@@ -1517,196 +1509,196 @@ int main(int argc, char *argv[]) {
 					const std::string id_name = i.type_name + "_id";
 					const std::string con_tags_type = i.related_to->is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags";
 
-					output += "\t\tDCON_RELEASE_INLINE " + id_name + " get_ " + r.name + "_" + i.property_name + "(" + relation_id_name + " id) const noexcept {\r\n";
-					output += "\t\t\treturn " + r.name + ".m_" + i.property_name + ".vptr()[id.index()];\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE " + id_name + " get_" + r.name + "_" + i.property_name + "(" + relation_id_name + " id) const noexcept {\n";
+					output += "\t\t\treturn " + r.name + ".m_" + i.property_name + ".vptr()[id.index()];\n";
+					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_ " + r.name + "_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
+					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_ " + r.name + "_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
+					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_ " + r.name + "_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\treturn ve::load(id.value, " + r.name + ".m_" + i.property_name + ".vptr());\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
+					output += "\t\t}\n";
 
 					// second: setter in the relationship itself
 
-					output += "\t\tvoid set_ " + r.name + "_" + i.property_name + "(" + relation_id_name + " id, " + id_name + " value) noexcept {\r\n";
+					output += "\t\tvoid set_" + r.name + "_" + i.property_name + "(" + relation_id_name + " id, " + id_name + " value) noexcept {\n";
 
 					if(i.ltype == list_type::list) {
-						output += "\t\t\tif(auto old_value = " + r.name + ".m_" + i.property_name + ".vptr()[id.index()]; bool(old_value)) {\r\n";
-						output += "\t\t\t\tif(auto old_left = " + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].left; bool(old_left)) {\r\n";
-						output += "\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[old_left.index()].right = " + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].right;\r\n";
-						output += "\t\t\t\t} else {\r\n";
-						output += "\t\t\t\t\t" + r.name + ".m_head_back_" + i.property_name + ".vptr()[old_value.index()] = m_link_" + i.property_name + ".vptr()[id.index()].right;\r\n";
-						output += "\t\t\t\t}\r\n";
-						output += "\t\t\t\tif(auto old_right = " + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].right; bool(old_right))\r\n";
-						output += "\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[old_right.index()].left = " + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].left;\r\n";
-						output += "\t\t\t\t}\r\n";
-						output += "\t\t\t}\r\n";
-						output += "\t\t\tif(value) {\r\n";
-						output += "\t\t\t\tif(auto existing_list = " + r.name + ".m_head_back_" + i.property_name + ".vptr()[value.index()]]; bool(existing_list)) {\r\n";
-						output += "\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].left = existing_list;\r\n";
-						output += "\t\t\t\t\tif(auto r = " + r.name + ".m_link_" + i.property_name + ".vptr()[existing_list.index()].right; bool(r)) {\r\n";
-						output += "\t\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].right = r;\r\n";
-						output += "\t\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[r.index()].left = id;\r\n";
-						output += "\t\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[existing_list.index()].right = id;\r\n";
-						output += "\t\t\t\t\t} else {\r\n";
-						output += "\t\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].right = " + relation_id_name + "();\r\n";
-						output += "\t\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[existing_list.index()].right = id;\r\n";
-						output += "\t\t\t\t\t}\r\n";
-						output += "\t\t\t\t} else {\r\n";
-						output += "\t\t\t\t\t" + r.name + ".m_head_back_" + i.property_name + ".vptr()[value.index()]] = id;\r\n";
-						output += "\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].right = " + relation_id_name + "();\r\n";
-						output += "\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].left = " + relation_id_name + "();\r\n";
-						output += "\t\t\t\t}\r\n";
-						output += "\t\t\t} else {\r\n";
-						output += "\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].right = " + relation_id_name + "();\r\n";
-						output += "\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].left = " + relation_id_name + "();\r\n";
-						output += "\t\t\t}\r\n";
-						output += "\t\t\t" + r.name + ".m_" + i.property_name + ".vptr()[id.index()] = value;\r\n";
+						output += "\t\t\tif(auto old_value = " + r.name + ".m_" + i.property_name + ".vptr()[id.index()]; bool(old_value)) {\n";
+						output += "\t\t\t\tif(auto old_left = " + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].left; bool(old_left)) {\n";
+						output += "\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[old_left.index()].right = " + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].right;\n";
+						output += "\t\t\t\t} else {\n";
+						output += "\t\t\t\t\t" + r.name + ".m_head_back_" + i.property_name + ".vptr()[old_value.index()] = m_link_" + i.property_name + ".vptr()[id.index()].right;\n";
+						output += "\t\t\t\t}\n";
+						output += "\t\t\t\tif(auto old_right = " + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].right; bool(old_right))\n";
+						output += "\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[old_right.index()].left = " + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].left;\n";
+						output += "\t\t\t\t}\n";
+						output += "\t\t\t}\n";
+						output += "\t\t\tif(value) {\n";
+						output += "\t\t\t\tif(auto existing_list = " + r.name + ".m_head_back_" + i.property_name + ".vptr()[value.index()]]; bool(existing_list)) {\n";
+						output += "\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].left = existing_list;\n";
+						output += "\t\t\t\t\tif(auto r = " + r.name + ".m_link_" + i.property_name + ".vptr()[existing_list.index()].right; bool(r)) {\n";
+						output += "\t\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].right = r;\n";
+						output += "\t\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[r.index()].left = id;\n";
+						output += "\t\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[existing_list.index()].right = id;\n";
+						output += "\t\t\t\t\t} else {\n";
+						output += "\t\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].right = " + relation_id_name + "();\n";
+						output += "\t\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[existing_list.index()].right = id;\n";
+						output += "\t\t\t\t\t}\n";
+						output += "\t\t\t\t} else {\n";
+						output += "\t\t\t\t\t" + r.name + ".m_head_back_" + i.property_name + ".vptr()[value.index()]] = id;\n";
+						output += "\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].right = " + relation_id_name + "();\n";
+						output += "\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].left = " + relation_id_name + "();\n";
+						output += "\t\t\t\t}\n";
+						output += "\t\t\t} else {\n";
+						output += "\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].right = " + relation_id_name + "();\n";
+						output += "\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].left = " + relation_id_name + "();\n";
+						output += "\t\t\t}\n";
+						output += "\t\t\t" + r.name + ".m_" + i.property_name + ".vptr()[id.index()] = value;\n";
 					} else if(i.ltype == list_type::array) {
-						output += "\t\t\tif(auto old_value = " + r.name + ".m_" + i.property_name + ".vptr()[id.index()]; bool(old_value)) {\r\n";
-						output += "\t\t\t\tauto vref = " + r.name + ".m_array_" + i.property_name + ".vptr()[old_value.index()];\r\n";
-						output += "\t\t\t\tdcon::remove_unique_item(" + r.name + "." + i.property_name + "_storage, vref, id)\r\n";
-						output += "\t\t\t}\r\n";
-						output += "\t\t\tif(value)\r\n";
-						output += "\t\t\t\tdcon::push_back(" + r.name + "." + i.property_name + "_storage, " + r.name + ".m_array_" + i.property_name + ".vptr()[value.index()], id);\r\n";
-						output += "\t\t\t" + r.name + ".m_" + i.property_name + ".vptr()[id.index()] = value;\r\n";
+						output += "\t\t\tif(auto old_value = " + r.name + ".m_" + i.property_name + ".vptr()[id.index()]; bool(old_value)) {\n";
+						output += "\t\t\t\tauto vref = " + r.name + ".m_array_" + i.property_name + ".vptr()[old_value.index()];\n";
+						output += "\t\t\t\tdcon::remove_unique_item(" + r.name + "." + i.property_name + "_storage, vref, id)\n";
+						output += "\t\t\t}\n";
+						output += "\t\t\tif(value)\n";
+						output += "\t\t\t\tdcon::push_back(" + r.name + "." + i.property_name + "_storage, " + r.name + ".m_array_" + i.property_name + ".vptr()[value.index()], id);\n";
+						output += "\t\t\t" + r.name + ".m_" + i.property_name + ".vptr()[id.index()] = value;\n";
 					} else if(i.ltype == list_type::std_vector) {
-						output += "\t\t\tif(auto old_value = " + r.name + ".m_" + i.property_name + ".vptr()[id.index()]; bool(old_value)) {\r\n";
-						output += "\t\t\t\tauto& vref = " + r.name + ".m_array_" + i.property_name + ".vptr()[old_value.index()];\r\n";
-						output += "\t\t\t\tif(auto it = std::find(vref.begin(), vref.end(), id); it != vref.end()) {\r\n";
-						output += "\t\t\t\t\t*it = vref.back();\r\n";
-						output += "\t\t\t\t\tvref.pop_back();\r\n";
-						output += "\t\t\t\t}\r\n";
-						output += "\t\t\t}\r\n";
-						output += "\t\t\tif(value)\r\n";
-						output += "\t\t\t\t" + r.name + ".m_array_" + i.property_name + ".vptr()[value.index()].push_back(id);\r\n";
-						output += "\t\t\t" + r.name + ".m_" + i.property_name + ".vptr()[id.index()] = value;\r\n";
+						output += "\t\t\tif(auto old_value = " + r.name + ".m_" + i.property_name + ".vptr()[id.index()]; bool(old_value)) {\n";
+						output += "\t\t\t\tauto& vref = " + r.name + ".m_array_" + i.property_name + ".vptr()[old_value.index()];\n";
+						output += "\t\t\t\tif(auto it = std::find(vref.begin(), vref.end(), id); it != vref.end()) {\n";
+						output += "\t\t\t\t\t*it = vref.back();\n";
+						output += "\t\t\t\t\tvref.pop_back();\n";
+						output += "\t\t\t\t}\n";
+						output += "\t\t\t}\n";
+						output += "\t\t\tif(value)\n";
+						output += "\t\t\t\t" + r.name + ".m_array_" + i.property_name + ".vptr()[value.index()].push_back(id);\n";
+						output += "\t\t\t" + r.name + ".m_" + i.property_name + ".vptr()[id.index()] = value;\n";
 					}
 
-					output += "\t\t)\r\n";
+					output += "\t\t}\n";
 
 					// third: getter in the object related to
 
-					output += "\t\ttemplate<typename T>\r\n";
+					output += "\t\ttemplate<typename T>\n";
 					output += "\t\tDCON_RELEASE_INLINE void " + i.type_name + "_for_each_" + r.name + "_as_" + i.property_name + "("
-						+ id_name + " id, T func) const {\r\n";
+						+ id_name + " id, T func) const {\n";
 
 					if(i.ltype == list_type::list) {
-						output += "\t\t\tif(bool(id)) {\r\n";
+						output += "\t\t\tif(bool(id)) {\n";
 						output += "\t\t\t\tfor(auto list_pos = " + r.name + ".m_head_back_" + i.property_name + ".vptr()[id.index()]; "
-							+ "bool(list_pos); list_pos = " + r.name + ".m_link_" + i.property_name + ".vptr()[list_pos.index()].right) {\r\n";
+							+ "bool(list_pos); list_pos = " + r.name + ".m_link_" + i.property_name + ".vptr()[list_pos.index()].right) {\n";
 						output += "\t\t\t\t\tfunc(list_pos);";
-						output += "\t\t\t\t}\r\n";
-						output += "\t\t\t}\r\n";
+						output += "\t\t\t\t}\n";
+						output += "\t\t\t}\n";
 
 					} else if(i.ltype == list_type::array) {
-						output += "\t\t\tif(bool(id)) {\r\n";
+						output += "\t\t\tif(bool(id)) {\n";
 						output += "\t\t\t\tauto vrange = dcon::get_range(" + r.name + "." + i.property_name + "_storage, "
-							+ r.name + ".m_array_" + i.property_name + ".vptr()[id.index()]);\r\n";
-						output += "\t\t\t\tstd::for_each(vrange.first, vrange.second, func);\r\n";
-						output += "\t\t\t}\r\n";
+							+ r.name + ".m_array_" + i.property_name + ".vptr()[id.index()]);\n";
+						output += "\t\t\t\tstd::for_each(vrange.first, vrange.second, func);\n";
+						output += "\t\t\t}\n";
 					} else if(i.ltype == list_type::std_vector) {
-						output += "\t\t\tif(bool(id)) {\r\n";
-						output += "\t\t\t\tauto& vref = " + r.name + ".m_array_" + i.property_name + ".vptr()[id.index()];\r\n";
-						output += "\t\t\t\tstd::for_each(vref.begin(), vref.end(), func);\r\n";
-						output += "\t\t\t}\r\n";
+						output += "\t\t\tif(bool(id)) {\n";
+						output += "\t\t\t\tauto& vref = " + r.name + ".m_array_" + i.property_name + ".vptr()[id.index()];\n";
+						output += "\t\t\t\tstd::for_each(vref.begin(), vref.end(), func);\n";
+						output += "\t\t\t}\n";
 					}
-					output += "\t\t}\r\n";
+					output += "\t\t}\n";
 
 
 					if(i.ltype == list_type::array) {
 						output += "\t\tDCON_RELEASE_INLINE std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*> "
-							+ i.type_name + "_range_of_" + r.name + "_as_" + i.property_name + "(" + id_name + " id) const {\r\n";
-						output += "\t\t\tif(bool(id)) {\r\n";
+							+ i.type_name + "_range_of_" + r.name + "_as_" + i.property_name + "(" + id_name + " id) const {\n";
+						output += "\t\t\tif(bool(id)) {\n";
 						output += "\t\t\t\tauto vrange = dcon::get_range(" + r.name + "." + i.property_name + "_storage, "
-							+ r.name + ".m_array_" + i.property_name + ".vptr()[id.index()]);\r\n";
-						output += "\t\t\t\treturn std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*>(vrange.first, vrange.second);\r\n";
-						output += "\t\t\t} else {\r\n";
-						output += "\t\t\t\treturn std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*>(nullptr, nullptr);\r\n";
-						output += "\t\t\t}\r\n";
-						output += "\t\t}\r\n";
+							+ r.name + ".m_array_" + i.property_name + ".vptr()[id.index()]);\n";
+						output += "\t\t\t\treturn std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*>(vrange.first, vrange.second);\n";
+						output += "\t\t\t} else {\n";
+						output += "\t\t\t\treturn std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*>(nullptr, nullptr);\n";
+						output += "\t\t\t}\n";
+						output += "\t\t}\n";
 					} else if(i.ltype == list_type::std_vector) {
 						output += "\t\tDCON_RELEASE_INLINE std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*> "
-							+ i.type_name + "_range_of_" + r.name + "_as_" + i.property_name + "(" + id_name + " id) const {\r\n";
-						output += "\t\t\tif(bool(id)) {\r\n";
-						output += "\t\t\t\tauto& vref = " + r.name + ".m_array_" + i.property_name + ".vptr()[id.index()];\r\n";
+							+ i.type_name + "_range_of_" + r.name + "_as_" + i.property_name + "(" + id_name + " id) const {\n";
+						output += "\t\t\tif(bool(id)) {\n";
+						output += "\t\t\t\tauto& vref = " + r.name + ".m_array_" + i.property_name + ".vptr()[id.index()];\n";
 						output += "\t\t\t\treturn std::pair<" + relation_id_name + " const*, " + relation_id_name
-							+ " const*>(&(*vrange.begin()), &(*vrange.end()));\r\n";
-						output += "\t\t\t} else {\r\n";
-						output += "\t\t\t\treturn std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*>(nullptr, nullptr);\r\n";
-						output += "\t\t\t}\r\n";
-						output += "\t\t}\r\n";
+							+ " const*>(&(*vref.begin()), &(*vref.end()));\n";
+						output += "\t\t\t} else {\n";
+						output += "\t\t\t\treturn std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*>(nullptr, nullptr);\n";
+						output += "\t\t\t}\n";
+						output += "\t\t}\n";
 					}
 
 					// fourth: setter in the object related to
 
-					output += "\t\tvoid " + i.type_name + "_remove_all_" + r.name + "_as_" + i.property_name + "(" + id_name + " id) noexcept {\r\n";
+					output += "\t\tvoid " + i.type_name + "_remove_all_" + r.name + "_as_" + i.property_name + "(" + id_name + " id) noexcept {\n";
 					if(i.ltype == list_type::array || i.ltype == list_type::std_vector) {
-						output += "\t\t\tauto rng = " + i.type_name + "_range_of_" + r.name + "_as_" + i.property_name + "(id);\r\n";
-						output += "\t\t\tstd::vector<" + relation_id_name + "> temp(rng.first, rng.second);\r\n";
-						output += "\t\t\tstd::for_each(temp.begin(), temp.end(), [t = this](" + relation_id_name + " i) { t->delete_" + r.name + "(i); });\r\n";
+						output += "\t\t\tauto rng = " + i.type_name + "_range_of_" + r.name + "_as_" + i.property_name + "(id);\n";
+						output += "\t\t\tstd::vector<" + relation_id_name + "> temp(rng.first, rng.second);\n";
+						output += "\t\t\tstd::for_each(temp.begin(), temp.end(), [t = this](" + relation_id_name + " i) { t->delete_" + r.name + "(i); });\n";
 					} else {
-						output += "\t\t\tstd::vector<" + relation_id_name + "> temp;\r\n";
+						output += "\t\t\tstd::vector<" + relation_id_name + "> temp;\n";
 						output += "\t\t\t" + i.type_name + "_for_each_" + r.name + "_as_" + i.property_name +
-							"(id, [&](" + relation_id_name + " j) { temp.push_back(j); });\r\n";
-						output += "\t\t\tstd::for_each(temp.begin(), temp.end(), [t = this](" + relation_id_name + " i) { t->delete_" + r.name + "(i); });\r\n";
+							"(id, [&](" + relation_id_name + " j) { temp.push_back(j); });\n";
+						output += "\t\t\tstd::for_each(temp.begin(), temp.end(), [t = this](" + relation_id_name + " i) { t->delete_" + r.name + "(i); });\n";
 					}
-					output += "\t\t)\r\n";
+					output += "\t\t}\n";
 
 				} else if(i.index == index_type::none) {
 					// first: getter in the relationship itself
 
 					const std::string id_name = i.type_name + "_id";
 
-					output += "\t\tDCON_RELEASE_INLINE " + id_name + " get_ " + r.name + "_" + i.property_name + "(" + relation_id_name + " id) const noexcept {\r\n";
-					output += "\t\t\treturn " + r.name + ".m_" + i.property_name + ".vptr()[id.index()];\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE " + id_name + " get_" + r.name + "_" + i.property_name + "(" + relation_id_name + " id) const noexcept {\n";
+					output += "\t\t\treturn " + r.name + ".m_" + i.property_name + ".vptr()[id.index()];\n";
+					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_ " + r.name + "_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
+					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_ " + r.name + "_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
+					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_ " + r.name + "_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept (\r\n";
-					output += "\t\t\treturn ve::load(id.value, " + r.name + ".m_" + i.property_name + ".vptr());\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> get_" + r.name + "_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept {\n";
+					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
+					output += "\t\t}\n";
 
 					// second: setter in the relationship itself
 
-					output += "\t\tDCON_RELEASE_INLINE void set_ " + r.name + "_" + i.property_name + "(" + relation_id_name + " id, " + id_name + " value) noexcept {\r\n";
-					output += "\t\t\t" + r.name + ".m_" + i.property_name + ".vptr()[id.index()] = value;\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE void set_" + r.name + "_" + i.property_name + "(" + relation_id_name + " id, " + id_name + " value) noexcept {\n";
+					output += "\t\t\t" + r.name + ".m_" + i.property_name + ".vptr()[id.index()] = value;\n";
+					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE " "void set_ " + r.name + "_" + i.property_name + "(" + relation_con_tags_type + "<" + id_name + "> id, "
-						"ve::tagged_vector<" + id_name + "> values) noexcept (\r\n";
-					output += "\t\t\tve::store(id, " + r.name + ".m_" + i.property_name + ".vptr(), values);\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE " "void set_" + r.name + "_" + i.property_name + "(" + relation_con_tags_type + "<" + id_name + "> id, "
+						"ve::tagged_vector<" + id_name + "> values) noexcept {\n";
+					output += "\t\t\tve::store(id, " + r.name + ".m_" + i.property_name + ".vptr(), values);\n";
+					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE " "void set_ " + r.name + "_" + i.property_name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
-						"ve::tagged_vector<" + id_name + "> values) noexcept (\r\n";
-					output += "\t\t\tve::store(id, " + r.name + ".m_" + i.property_name + ".vptr(), values);\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE " "void set_" + r.name + "_" + i.property_name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
+						"ve::tagged_vector<" + id_name + "> values) noexcept {\n";
+					output += "\t\t\tve::store(id, " + r.name + ".m_" + i.property_name + ".vptr(), values);\n";
+					output += "\t\t}\n";
 
-					output += "\t\tDCON_RELEASE_INLINE " "void set_ " + r.name + "_" + i.property_name + "(ve::tagged_vector<" + id_name + "> id, "
-						"ve::tagged_vector<" + id_name + "> values) noexcept (\r\n";
-					output += "\t\t\tve::store(id.value, " + r.name + ".m_" + i.property_name + ".vptr(), values);\r\n";
-					output += "\t\t)\r\n";
+					output += "\t\tDCON_RELEASE_INLINE " "void set_" + r.name + "_" + i.property_name + "(ve::tagged_vector<" + id_name + "> id, "
+						"ve::tagged_vector<" + id_name + "> values) noexcept {\n";
+					output += "\t\t\tve::store(id, " + r.name + ".m_" + i.property_name + ".vptr(), values);\n";
+					output += "\t\t}\n";
 				}// end -- creation of property references getters / setters
 
 			} //end of loop creating individual property getters / setters
 		} // end creating relationship getters / setters
 
-		output += "\r\n";
+		output += "\n";
 
 		// creation / deletion reoutines
 		for(auto& co : parsed_file.relationship_objects) {
@@ -1716,66 +1708,66 @@ int main(int argc, char *argv[]) {
 				if(co.store_type == storage_type::contiguous || co.store_type == storage_type::compactable) {
 
 					// pop_back
-					output += "\t\tvoid " + co.name + "_pop_back() {\r\n";
-					output += "\t\t\tif(" + co.name + ".size_used > 0) {\r\n";
+					output += "\t\tvoid " + co.name + "_pop_back() {\n";
+					output += "\t\t\tif(" + co.name + ".size_used > 0) {\n";
 
-					output += "\t\t\t\t" + id_name + " id_removed(" + co.name + ".size_used - 1);\r\n";
+					output += "\t\t\t\t" + id_name + " id_removed(" + co.name + ".size_used - 1);\n";
 					if(co.hook_delete)
-						output += "\t\t\t\ton_delete_" + co.name + "(id_removed);\r\n";
+						output += "\t\t\t\ton_delete_" + co.name + "(id_removed);\n";
 
 					for(auto& cr : co.relationships_involved_in) {
 						if(cr.as_primary_key) {
-							output += "\t\t\t\tdelete_" + cr.relation_name + "(id_removed);\r\n";
-							output += "\t\t\t\t" + cr.relation_name + ".size_used = " + co.name + ".size_used - 1;\r\n";
+							output += "\t\t\t\tdelete_" + cr.relation_name + "(id_removed);\n";
+							output += "\t\t\t\t" + cr.relation_name + ".size_used = " + co.name + ".size_used - 1;\n";
 							if(co.is_expandable) {
 								for(auto& rp : cr.rel_ptr->properties) {
 									if(rp.is_special_vector) {
-										output += "\t\t\t\t" + cr.relation_name + "." + rp.name + "_storage.release(" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()]);\r\n";
+										output += "\t\t\t\t" + cr.relation_name + "." + rp.name + "_storage.release(" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()]);\n";
 									} else if(rp.is_bitfield) {
-										output += "\t\t\t\tdcon::bit_vector_set(" + cr.relation_name + ".m_" + rp.name + "." + "vptr()" + ", id_removed.index(), false);\r\n";
-										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.resize(1 + (" + co.name + ".size_used + 6) / 8);\r\n";
+										output += "\t\t\t\tdcon::bit_vector_set(" + cr.relation_name + ".m_" + rp.name + "." + "vptr()" + ", id_removed.index(), false);\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.resize(1 + (" + co.name + ".size_used + 6) / 8);\n";
 									}
 									if(!rp.is_bitfield && !rp.is_derived) {
-										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.pop_back();\r\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.pop_back();\n";
 									}
 								}
 								for(auto& ri : cr.rel_ptr->indexed_objects) {
 									if(ri.related_to == cr.rel_ptr->primary_key) {
 									} else {
-										output += "\t\t\t\t" + cr.relation_name + ".m_" + ri.property_name + ".values.pop_back();\r\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_" + ri.property_name + ".values.pop_back();\n";
 									}
 									if(ri.ltype == list_type::list && ri.index == index_type::many) {
-										output += "\t\t\t\t" + cr.relation_name + ".m_link_" + ri.property_name + ".values.pop_back();\r\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_link_" + ri.property_name + ".values.pop_back();\n";
 									}
 								}
 							} else {
 								for(auto& rp : cr.rel_ptr->properties) {
 									if(rp.is_derived) {
 									} else if(rp.is_special_vector) {
-										output += "\t\t\t\t" + cr.relation_name + "." + rp.name + "_storage.release(" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()]);\r\n";
+										output += "\t\t\t\t" + cr.relation_name + "." + rp.name + "_storage.release(" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()]);\n";
 									} else if(rp.is_bitfield) {
-										output += "\t\t\t\tdcon::bit_vector_set(" + cr.relation_name + ".m_" + rp.name + ".vptr(), id_removed.index(), false);\r\n";
+										output += "\t\t\t\tdcon::bit_vector_set(" + cr.relation_name + ".m_" + rp.name + ".vptr(), id_removed.index(), false);\n";
 									} else {
-										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()] = " + rp.data_type + "{};\r\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()] = " + rp.data_type + "{};\n";
 									}
 								}
 							}
 						} else if(cr.indexed_as == index_type::at_most_one) {
-							output += "\t\t\t\t" + co.name + "_remove_" + cr.relation_name + "_as_" + cr.property_name + "(id_removed));\r\n";
+							output += "\t\t\t\t" + co.name + "_remove_" + cr.relation_name + "_as_" + cr.property_name + "(id_removed));\n";
 							if(co.is_expandable) {
-								output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".values.pop_back();\r\n";
+								output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".values.pop_back();\n";
 							}
 						} else if(cr.indexed_as == index_type::many) {
-							output += "\t\t\t\t" + co.name + "_remove_all_" + cr.relation_name + "_as_" + cr.property_name + "(id_removed);\r\n";
+							output += "\t\t\t\t" + co.name + "_remove_all_" + cr.relation_name + "_as_" + cr.property_name + "(id_removed);\n";
 							if(co.is_expandable) {
 								if(cr.listed_as == list_type::list) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".values.pop_back();\r\n";
+									output += "\t\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".values.pop_back();\n";
 								} else if(cr.listed_as == list_type::array) {
 									output += "\t\t\t\t" + cr.relation_name + "." + cr.property_name + "_storage.release("
-										+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[id_removed.index()]);\r\n";
-									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.pop_back();\r\n";
+										+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[id_removed.index()]);\n";
+									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.pop_back();\n";
 								} else if(cr.listed_as == list_type::std_vector) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.pop_back();\r\n";
+									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.pop_back();\n";
 								}
 							}
 						}
@@ -1783,54 +1775,60 @@ int main(int argc, char *argv[]) {
 					for(auto& cp : co.properties) {
 						if(cp.is_derived) {
 						} else if(cp.is_special_vector) {
-							output += "\t\t\t\t" + co.name + "." + cp.name + "_storage.release(" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\r\n";
+							output += "\t\t\t\t" + co.name + "." + cp.name + "_storage.release(" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\n";
 						} else if(cp.is_bitfield) {
-							output += "\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), id_removed.index(), false);\r\n";
+							output += "\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), id_removed.index(), false);\n";
 							if(co.is_expandable)
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (" + co.name + ".size_used + 6) / 8);\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (" + co.name + ".size_used + 6) / 8);\n";
 						} else {
 							if(!co.is_expandable)
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()] = " + cp.data_type + "{};\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()] = " + cp.data_type + "{};\n";
 						}
 
 						if(co.is_expandable && !cp.is_bitfield && !cp.is_derived) {
-							output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.pop_back();\r\n";
+							output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.pop_back();\n";
 						}
 					}
-					output += "\t\t\t\t--" + co.name + ".size_used;\r\n";
-					output += "\t\t\t}\r\n";
-					output += "\t\t}\r\n";
+					output += "\t\t\t\t--" + co.name + ".size_used;\n";
+					output += "\t\t\t}\n";
+					output += "\t\t}\n";
 
 
 					//resize
-					output += "\t\tvoid " + co.name + "_resize(uint32_t new_size) {\r\n";
+					output += "\t\tvoid " + co.name + "_resize(uint32_t new_size) {\n";
 					if(!co.is_expandable)
-						output += "\t\t\tif(new_size > " + std::to_string(co.size) + ") std::abort();\r\n";
-					output += "\t\t\tconst uint32_t old_size = " + co.name + ".size_used;\r\n";
-					output += "\t\t\tif(new_size < old_size) {\r\n"; // contracting
+						output += "\t\t\tif(new_size > " + std::to_string(co.size) + ") std::abort();\n";
+					output += "\t\t\tconst uint32_t old_size = " + co.name + ".size_used;\n";
+					output += "\t\t\tif(new_size < old_size) {\n"; // contracting
 
 					
 					for(auto& cp : co.properties) {
 						if(cp.is_derived) {
 						} else if(cp.is_special_vector) {
 							output += "\t\t\t\tstd::for_each(" + co.name + ".m_" + cp.name + ".vptr() + new_size, "
-								+ co.name + ".m_" + cp.name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->" + co.name + "."
-								+ cp.name + "_storage.release(i); });\r\n";
+								+ co.name + ".m" + cp.name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->" + co.name + "."
+								+ cp.name + "_storage.release(i); });\n";
 
-							output += "\t\t\t\t" + co.name + "." + cp.name + "_storage.release(" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\r\n";
+							output += "\t\t\t\t" + co.name + "." + cp.name + "_storage.release(" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\n";
 						} else if(cp.is_bitfield) {
-							output += "\t\t\t\tfor(uint32_t i = new_size; i < 8*(((new_size + 7)/8)); ++i)\r\n";
-							output += "\t\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), i, false);\r\n";
+							output += "\t\t\t\tfor(uint32_t i = new_size; i < 8*(((new_size + 7)/8)); ++i)\n";
+							output += "\t\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), i, false);\n";
 							if(!co.is_expandable)
-								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + cp.name + ".vptr() + (new_size + 7) / 8, (old_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});\r\n";
+								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + cp.name + ".vptr() + (new_size + 7) / 8, (old_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});\n";
 						} else {
-							if(!co.is_expandable)
-								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size, " + cp.data_type + "{});\r\n";
+							if(!co.is_expandable) {
+								if(cp.is_object) {
+									output += "\t\t\t\tstd::std::destroy_n(" + co.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size);\n";
+									output += "\t\t\t\tstd::uninitialized_default_construct_n(" + co.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size);\n";
+								} else {
+									output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size, " + cp.data_type + "{});\n";
+								}
+							}
 						}
 					}
 
-					output += "\t\t\t} else {\r\n"; //expanding
-					output += "\t\t\t}\r\n";
+					output += "\t\t\t} else {\n"; //expanding
+					output += "\t\t\t}\n";
 
 					//both
 					if(co.is_expandable) {
@@ -1839,17 +1837,18 @@ int main(int argc, char *argv[]) {
 
 							} else if(cr.indexed_as == index_type::at_most_one) {
 								output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_link_back_" + cr.property_name
-									+ ".vptr(), new_size, " + cr.relation_name + "_id());\r\n";
+									+ ".vptr(), new_size, " + cr.relation_name + "_id());\n";
 							} else if(cr.indexed_as == index_type::many) {
 								if(cr.listed_as == list_type::list) {
 									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_head_back_" + cr.property_name
-										+ ".vptr(), new_size, " + cr.relation_name + "_id());\r\n";
+										+ ".vptr(), new_size, " + cr.relation_name + "_id());\n";
 								} else if(cr.listed_as == list_type::array) {
-									output += "\t\t\t\tstd::for_each(" + cr.relation_name + ".m_" + cr.property_name + ".vptr(), "
-										+ cr.relation_name + ".m_" + cr.property_name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->"
-										+ cr.relation_name + "." + cr.property_name + "_storage.release(i); });\r\n";
+									output += "\t\t\t\tstd::for_each(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), "
+										+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->"
+										+ cr.relation_name + "." + cr.property_name + "_storage.release(i); });\n";
 								} else if(cr.listed_as == list_type::std_vector) {
-									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_" + cr.property_name + ".vptr(), new_size, std::vector<" + cr.relation_name + "_id>());\r\n";
+									output += "\t\t\t\tstd::destroy_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), new_size);\n";
+									output += "\t\t\t\tstd::uninitialized_default_construct_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), new_size);\n";
 								}
 
 							}
@@ -1857,16 +1856,16 @@ int main(int argc, char *argv[]) {
 
 						for(auto& cr : co.relationships_involved_in) {
 							if(cr.as_primary_key) {
-								output += "\t\t\t\t" + cr.relation_name + ".resize(new_size);\r\n";
+								output += "\t\t\t\t" + cr.relation_name + "_resize(new_size);\n";
 							} else if(cr.indexed_as == index_type::at_most_one) {
-								output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".values.resize(1 + new_size);\r\n";
+								output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".values.resize(1 + new_size);\n";
 							} else if(cr.indexed_as == index_type::many) {
 								if(cr.listed_as == list_type::list) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".values.resize(1 + new_size);\r\n";
+									output += "\t\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".values.resize(1 + new_size);\n";
 								} else if(cr.listed_as == list_type::array) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\r\n";
+									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 								} else if(cr.listed_as == list_type::std_vector) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.resize(1 + new_size);\r\n";
+									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.resize(1 + new_size);\n";
 								}
 
 							}
@@ -1874,11 +1873,11 @@ int main(int argc, char *argv[]) {
 						for(auto& cp : co.properties) {
 							if(cp.is_derived) {
 							} else if(cp.is_special_vector) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 							} else if(cp.is_bitfield) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\n";
 							} else {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size);\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size);\n";
 							}
 						}
 					} else {
@@ -1887,142 +1886,143 @@ int main(int argc, char *argv[]) {
 
 							} else if(cr.indexed_as == index_type::at_most_one) {
 								output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_link_back_" + cr.property_name
-									+ ".vptr(), old_size, " + cr.relation_name + "_id());\r\n";
+									+ ".vptr(), old_size, " + cr.relation_name + "_id());\n";
 							} else if(cr.indexed_as == index_type::many) {
 								if(cr.listed_as == list_type::list) {
 									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_head_back_" + cr.property_name
-										+ ".vptr(), old_size, " + cr.relation_name + "_id());\r\n";
+										+ ".vptr(), old_size, " + cr.relation_name + "_id());\n";
 								} else if(cr.listed_as == list_type::array) {
-									output += "\t\t\t\tstd::for_each(" + cr.relation_name + ".m_" + cr.property_name + ".vptr(), "
-										+ cr.relation_name + ".m_" + cr.property_name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->"
-										+ cr.relation_name + "." + cr.property_name + "_storage.release(i); });\r\n";
+									output += "\t\t\t\tstd::for_each(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), "
+										+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->"
+										+ cr.relation_name + "." + cr.property_name + "_storage.release(i); });\n";
 								} else if(cr.listed_as == list_type::std_vector) {
-									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_" + cr.property_name + ".vptr(), old_size, std::vector<" + cr.relation_name + "_id>());\r\n";
+									output += "\t\t\t\tstd::destroy_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), old_size);\n";
+									output += "\t\t\t\tstd::uninitialized_default_construct_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), old_size);\n";
 								}
 							}
 						}
 
 						for(auto& cr : co.relationships_involved_in) {
 							if(cr.as_primary_key) {
-								output += "\t\t\t\t" + cr.relation_name + ".resize(new_size);\r\n";
+								output += "\t\t\t\t" + cr.relation_name + "_resize(new_size);\n";
 							}
 						}
 					}
-					output += "\t\t\t" + co.name + ".size_used = new_size;\r\n";
-					output += "\t\t}\r\n"; // end resize
+					output += "\t\t\t" + co.name + ".size_used = new_size;\n";
+					output += "\t\t}\n"; // end resize
 
 					if(co.store_type == storage_type::compactable) {
 						//delete
-						output += "\t\tvoid delete_" + co.name + "(" + id_name + " id) {\r\n";
-						output += "\t\t\t\t" + id_name + " id_removed = id;\r\n";
-						output += "\t\t\t\t" + id_name + " last_id(" + co.name + ".size_used - 1);\r\n";
+						output += "\t\tvoid delete_" + co.name + "(" + id_name + " id) {\n";
+						output += "\t\t\t\t" + id_name + " id_removed = id;\n";
+						output += "\t\t\t\t" + id_name + " last_id(" + co.name + ".size_used - 1);\n";
 
-						output += "\t\t\t\tif(id_removed == last_id) { " + co.name + ".pop_back(); return; }\r\n";
+						output += "\t\t\t\tif(id_removed == last_id) { " + co.name + ".pop_back(); return; }\n";
 
 						if(co.hook_delete)
-							output += "\t\t\t\ton_delete_" + co.name + "(id_removed);\r\n";
+							output += "\t\t\t\ton_delete_" + co.name + "(id_removed);\n";
 
 						for(auto& cr : co.relationships_involved_in) {
 							if(cr.as_primary_key) {
-								output += "\t\t\t\tdelete_" + cr.relation_name + "(id_removed);\r\n";
-								output += "\t\t\t\t" + cr.relation_name + ".size_used = " + co.name + ".size_used - 1;\r\n";
+								output += "\t\t\t\tdelete_" + cr.relation_name + "(id_removed);\n";
+								output += "\t\t\t\t" + cr.relation_name + ".size_used = " + co.name + ".size_used - 1;\n";
 
 								for(auto& rp : cr.rel_ptr->properties) {
 									if(rp.is_derived) {
 									} else if(rp.is_special_vector) {
-										output += "\t\t\t\t" + cr.relation_name + "." + rp.name + "_storage.release(" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()]);\r\n";
-										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()] = " + cr.relation_name + ".m_" + rp.name + ".vptr()[last_id.index()];\r\n";
+										output += "\t\t\t\t" + cr.relation_name + "." + rp.name + "_storage.release(" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()]);\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()] = " + cr.relation_name + ".m_" + rp.name + ".vptr()[last_id.index()];\n";
 										if(co.is_expandable)
-											output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.pop_back();\r\n";
+											output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.pop_back();\n";
 										else
-											output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".vptr()[last_id.index()] = std::numeric_limits<dcon::stable_mk_2_tag>::max();\r\n";
+											output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".vptr()[last_id.index()] = std::numeric_limits<dcon::stable_mk_2_tag>::max();\n";
 									} else if(rp.is_bitfield) {
 										output += "\t\t\t\tdcon::bit_vector_set(" + cr.relation_name + ".m_" + rp.name + "." + "vptr()" + ", id_removed.index(), "
-											+ "dcon::bit_vector_get(" + cr.relation_name + ".m_" + rp.name + "." + "vptr()" + ", last_id.index()));\r\n";
-										output += "\t\t\t\tdcon::bit_vector_set(" + cr.relation_name + ".m_" + rp.name + "." + "vptr()" + ", last_id.index(), false);\r\n";
+											+ "dcon::bit_vector_get(" + cr.relation_name + ".m_" + rp.name + "." + "vptr()" + ", last_id.index()));\n";
+										output += "\t\t\t\tdcon::bit_vector_set(" + cr.relation_name + ".m_" + rp.name + "." + "vptr()" + ", last_id.index(), false);\n";
 										if(co.is_expandable)
-											output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.resize(1 + (" + co.name + ".size_used + 6) / 8);\r\n";
+											output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.resize(1 + (" + co.name + ".size_used + 6) / 8);\n";
 									} else {
 										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()] = std::move("
-											+ cr.relation_name + ".m_" + rp.name + ".vptr()[last_id.index()]);\r\n";
+											+ cr.relation_name + ".m_" + rp.name + ".vptr()[last_id.index()]);\n";
 										if(co.is_expandable)
-											output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.pop_back();\r\n";
+											output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.pop_back();\n";
 										else
-											output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".vptr()[last_id.index()] = " + rp.data_type + "{};\r\n";
+											output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".vptr()[last_id.index()] = " + rp.data_type + "{};\n";
 									}
 								}
 								for(auto& ri : cr.rel_ptr->indexed_objects) {
 									if(ri.related_to == cr.rel_ptr->primary_key) {
 									} else {
-										output += "\t\t\t\t" + cr.relation_name + ".m_" + ri.property_name + ".vptr()[id_removed.index()] = " + cr.relation_name + ".m_" + ri.property_name + ".vptr()[last_id.index()];\r\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_" + ri.property_name + ".vptr()[id_removed.index()] = " + cr.relation_name + ".m_" + ri.property_name + ".vptr()[last_id.index()];\n";
 										if(co.is_expandable)
-											output += "\t\t\t\t" + cr.relation_name + ".m_" + ri.property_name + ".values.pop_back();\r\n";
+											output += "\t\t\t\t" + cr.relation_name + ".m_" + ri.property_name + ".values.pop_back();\n";
 										else
-											output += "\t\t\t\t" + cr.relation_name + ".m_" + ri.property_name + ".vptr()[last_id.index()] = " + ri.property_name + "_id();\r\n";
+											output += "\t\t\t\t" + cr.relation_name + ".m_" + ri.property_name + ".vptr()[last_id.index()] = " + ri.property_name + "_id();\n";
 									}
 									if(ri.ltype == list_type::list && ri.index == index_type::many) {
-										output += "\t\t\t\t" + cr.relation_name + ".m_link_" + ri.property_name + ".vptr()[id_removed.index()] = " + cr.relation_name + ".m_link_" + ri.property_name + ".vptr()[last_id.index()];\r\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_link_" + ri.property_name + ".vptr()[id_removed.index()] = " + cr.relation_name + ".m_link_" + ri.property_name + ".vptr()[last_id.index()];\n";
 										if(co.is_expandable)
-											output += "\t\t\t\t" + cr.relation_name + ".m_link_" + ri.property_name + ".values.pop_back();\r\n";
+											output += "\t\t\t\t" + cr.relation_name + ".m_link_" + ri.property_name + ".values.pop_back();\n";
 										else
-											output += "\t\t\t\t" + cr.relation_name + ".m_link_" + ri.property_name + ".vptr()[last_id.index()] = " + ri.property_name + "_id_pair();\r\n";
+											output += "\t\t\t\t" + cr.relation_name + ".m_link_" + ri.property_name + ".vptr()[last_id.index()] = " + ri.property_name + "_id_pair();\n";
 									}
 								}
 							} else if(cr.indexed_as == index_type::at_most_one) {
-								output += "\t\t\t\t" + co.name + "_remove_" + cr.relation_name + "_as_" + cr.property_name + "(id_removed));\r\n";
+								output += "\t\t\t\t" + co.name + "_remove_" + cr.relation_name + "_as_" + cr.property_name + "(id_removed));\n";
 
 								// renumber last_item id
-								output += "\t\t\t\tif(auto bk = " + cr.relation_name + ".m_link_back_" + cr.property_name + ".vptr()[last_id.index()]; bool(bk)) {\r\n";
-								output += "\t\t\t\t\t" + cr.relation_name + ".m_" + cr.property_name + ".vptr()[bk.index()] = id_removed;\r\n";
-								output += "\t\t\t\t}\r\n";
+								output += "\t\t\t\tif(auto bk = " + cr.relation_name + ".m_link_back_" + cr.property_name + ".vptr()[last_id.index()]; bool(bk)) {\n";
+								output += "\t\t\t\t\t" + cr.relation_name + ".m_" + cr.property_name + ".vptr()[bk.index()] = id_removed;\n";
+								output += "\t\t\t\t}\n";
 
 								output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".vptr()[id_removed.index()] = "
-									+ cr.relation_name + ".m_link_back_" + cr.property_name + ".vptr()[last_id.index()];\r\n";
+									+ cr.relation_name + ".m_link_back_" + cr.property_name + ".vptr()[last_id.index()];\n";
 								if(co.is_expandable) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".values.pop_back();\r\n";
+									output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".values.pop_back();\n";
 								} else {
-									output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".vptr()[last_id.index()] = " + cr.relation_name + "_id();\r\n";
+									output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".vptr()[last_id.index()] = " + cr.relation_name + "_id();\n";
 								}
 							} else if(cr.indexed_as == index_type::many) {
-								output += "\t\t\t\t" + co.name + "_remove_all_" + cr.relation_name + "_as_" + cr.property_name + "(id_removed);\r\n";
+								output += "\t\t\t\t" + co.name + "_remove_all_" + cr.relation_name + "_as_" + cr.property_name + "(id_removed);\n";
 
 								// renumber last_item id
 								output += "\t\t\t\t" + co.name + "_for_each_" + cr.relation_name + "_as_" + cr.property_name
 									+ "(last_id, [t = this](" + cr.relation_name + "_id i){ t->"
-									+ cr.relation_name + "." + cr.property_name + ".vptr()[i.index()] = id_removed; });\r\n";
+									+ cr.relation_name + "." + cr.property_name + ".vptr()[i.index()] = id_removed; });\n";
 
 								if(co.is_expandable) {
 									if(cr.listed_as == list_type::list) {
 										output += "\t\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".vptr()[id_removed.index()] = "
-											+ cr.relation_name + ".m_head_back_" + cr.property_name + ".vptr()[last_id.index()];\r\n";
-										output += "\t\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".values.pop_back();\r\n";
+											+ cr.relation_name + ".m_head_back_" + cr.property_name + ".vptr()[last_id.index()];\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".values.pop_back();\n";
 									} else if(cr.listed_as == list_type::array) {
 										output += "\t\t\t\t" + cr.relation_name + "." + cr.property_name + "_storage.release("
-											+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[id_removed.index()]);\r\n";
+											+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[id_removed.index()]);\n";
 										output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[id_removed.index()] = "
-											+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[last_id.index()];\r\n";
-										output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.pop_back();\r\n";
+											+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[last_id.index()];\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.pop_back();\n";
 									} else if(cr.listed_as == list_type::std_vector) {
 										output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[id_removed.index()] = std::move("
-											+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[last_id.index()]);\r\n";
-										output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.pop_back();\r\n";
+											+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[last_id.index()]);\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.pop_back();\n";
 									}
 								} else {
 									if(cr.listed_as == list_type::list) {
 										output += "\t\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".vptr()[id_removed.index()] = "
-											+ cr.relation_name + ".m_head_back_" + cr.property_name + ".vptr()[last_id.index()];\r\n";
+											+ cr.relation_name + ".m_head_back_" + cr.property_name + ".vptr()[last_id.index()];\n";
 										output += "\t\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".vptr()[last_id.index()] = "
-											+ cr.relation_name + "_id_pair();\r\n";
+											+ cr.relation_name + "_id_pair();\n";
 									} else if(cr.listed_as == list_type::array) {
 										output += "\t\t\t\t" + cr.relation_name + "." + cr.property_name + "_storage.release("
-											+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[id_removed.index()]);\r\n";
+											+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[id_removed.index()]);\n";
 										output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[id_removed.index()] = "
-											+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[last_id.index()];\r\n";
-										output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[last_id.index()] = std::numeric_limits<dcon::stable_mk_2_tag>::max();\r\n";
+											+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[last_id.index()];\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[last_id.index()] = std::numeric_limits<dcon::stable_mk_2_tag>::max();\n";
 									} else if(cr.listed_as == list_type::std_vector) {
 										output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[id_removed.index()] = std::move("
-											+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[last_id.index()]);\r\n";
-										output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[last_id.index()].empty();\r\n";
+											+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[last_id.index()]);\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[last_id.index()].empty();\n";
 									}
 								}
 							}
@@ -2030,83 +2030,83 @@ int main(int argc, char *argv[]) {
 						for(auto& cp : co.properties) {
 							if(cp.is_derived) {
 							} else if(cp.is_special_vector) {
-								output += "\t\t\t\t" + co.name + "." + cp.name + "_storage.release(" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\r\n";
+								output += "\t\t\t\t" + co.name + "." + cp.name + "_storage.release(" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\n";
 								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()] = "
-									+ co.name + ".m_" + cp.name + ".vptr()[last_id.index()];\r\n";
+									+ co.name + ".m_" + cp.name + ".vptr()[last_id.index()];\n";
 								if(co.is_expandable)
-									output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.pop_back();\r\n";
+									output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.pop_back();\n";
 								else
 									output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[last_id.index()] = "
-									+ "std::numeric_limits<dcon::stable_mk_2_tag>::max();\r\n";
+									+ "std::numeric_limits<dcon::stable_mk_2_tag>::max();\n";
 							} else if(cp.is_bitfield) {
 								output += "\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), id_removed.index(), "
-									+ "dcon::bit_vector_get(" + co.name + ".m_" + cp.name + ".vptr(), last_id.index()));\r\n";
-								output += "\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), last_id.index(), false);\r\n";
+									+ "dcon::bit_vector_get(" + co.name + ".m_" + cp.name + ".vptr(), last_id.index()));\n";
+								output += "\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), last_id.index(), false);\n";
 								if(co.is_expandable)
-									output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (" + co.name + ".size_used + 6) / 8);\r\n";
+									output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (" + co.name + ".size_used + 6) / 8);\n";
 
 							} else {
 								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()] = std::move("
-									+ co.name + ".m_" + cp.name + ".vptr()[last_id.index()]);\r\n";
+									+ co.name + ".m_" + cp.name + ".vptr()[last_id.index()]);\n";
 								if(co.is_expandable)
-									output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.pop_back();\r\n";
+									output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.pop_back();\n";
 								else
-									output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[last_id.index()] = " + cp.data_type + "{};\r\n";
+									output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[last_id.index()] = " + cp.data_type + "{};\n";
 							}
 						}
-						output += "\t\t\t\t--" + co.name + ".size_used;\r\n";
+						output += "\t\t\t\t--" + co.name + ".size_used;\n";
 						if(co.hook_move)
-							output += "\t\t\t\ton_move_" + co.name + "(id_removed, last_id);\r\n";
+							output += "\t\t\t\ton_move_" + co.name + "(id_removed, last_id);\n";
 
-						output += "\t\t\t}\r\n";
+						output += "\t\t\t}\n";
 
-						output += "\t\t}\r\n";
+						output += "\t\t}\n";
 					} // end compactible delete
 
 					//create
-					output += "\t\t" + id_name + " create_" + co.name + "() {\r\n";
+					output += "\t\t" + id_name + " create_" + co.name + "() {\n";
 
 					if(!co.is_expandable)
-						output += "\t\t\tif(" + co.name + ".size_used >= " + std::to_string(co.size) + ") std::abort();\r\n";
+						output += "\t\t\tif(" + co.name + ".size_used >= " + std::to_string(co.size) + ") std::abort();\n";
 
-					output += "\t\t\t" + id_name + " new_id(" + co.name + ".size_used);\r\n";
+					output += "\t\t\t" + id_name + " new_id(" + co.name + ".size_used);\n";
 
 					for(auto& cr : co.relationships_involved_in) {
 						if(cr.as_primary_key) {
-							output += "\t\t\t\t" + cr.relation_name + ".size_used = " + co.name + ".size_used + 1;\r\n";
+							output += "\t\t\t\t" + cr.relation_name + ".size_used = " + co.name + ".size_used + 1;\n";
 							if(co.is_expandable) {
 								for(auto& rp : cr.rel_ptr->properties) {
 									if(rp.is_derived) {
 									} if(rp.is_bitfield) {
-										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.resize(1 + (" + co.name + ".size_used + 8) / 8);\r\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.resize(1 + (" + co.name + ".size_used + 8) / 8);\n";
 									} else if(rp.is_special_vector) {
-										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());\r\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 									} else {
-										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.emplace_back();\r\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.emplace_back();\n";
 									}
 								}
 								for(auto& ri : cr.rel_ptr->indexed_objects) {
 									if(ri.related_to == cr.rel_ptr->primary_key) {
 									} else {
-										output += "\t\t\t\t" + cr.relation_name + ".m_" + ri.property_name + ".values.emplace_back();\r\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_" + ri.property_name + ".values.emplace_back();\n";
 									}
 									if(ri.ltype == list_type::list && ri.index == index_type::many) {
-										output += "\t\t\t\t" + cr.relation_name + ".m_link_" + ri.property_name + ".values.emplace_back();\r\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_link_" + ri.property_name + ".values.emplace_back();\n";
 									}
 								}
 							}
 						} else if(cr.indexed_as == index_type::at_most_one) {
 							if(co.is_expandable) {
-								output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".values.emplace_back();\r\n";
+								output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".values.emplace_back();\n";
 							}
 						} else if(cr.indexed_as == index_type::many) {
 							if(co.is_expandable) {
 								if(cr.listed_as == list_type::list) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".values.emplace_back();\r\n";
+									output += "\t\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".values.emplace_back();\n";
 								} else if(cr.listed_as == list_type::array) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());\r\n";
+									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 								} else if(cr.listed_as == list_type::std_vector) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.emplace_back();\r\n";
+									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.emplace_back();\n";
 								}
 							}
 						}
@@ -2115,138 +2115,138 @@ int main(int argc, char *argv[]) {
 						for(auto& cp : co.properties) {
 							if(cp.is_derived) {
 							} else if(cp.is_bitfield) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (" + co.name + ".size_used + 8) / 8);\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (" + co.name + ".size_used + 8) / 8);\n";
 							} else if(cp.is_special_vector) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 							} else {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.emplace_back();\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.emplace_back();\n";
 							}
 						}
 					}
 
-					output += "\t\t\t++" + co.name + ".size_used;\r\n";
+					output += "\t\t\t++" + co.name + ".size_used;\n";
 					if(co.hook_create)
-						output += "\t\t\t\ton_create_" + co.name + "(new_id);\r\n";
-					output += "\t\t\treturn new_id;\r\n";
-					output += "\t\t}\r\n"; // end create
+						output += "\t\t\t\ton_create_" + co.name + "(new_id);\n";
+					output += "\t\t\treturn new_id;\n";
+					output += "\t\t}\n"; // end create
 
-					output += "\t\tbool is_valid_" + co.name + "(" + id_name + " id) const {\r\n";
-					output += "\t\t\treturn bool(id) && uint32_t(i.value) <= " + co.name + ".size_used;\r\n";
-					output += "\t\t}\r\n";
+					output += "\t\tbool is_valid_" + co.name + "(" + id_name + " id) const {\n";
+					output += "\t\t\treturn bool(id) && uint32_t(id.value) <= " + co.name + ".size_used;\n";
+					output += "\t\t}\n";
 				} else if(co.store_type == storage_type::erasable) {
 
 					// delete
-					output += "\t\tvoid delete_" + co.name + "(" + id_name + " id_removed) {\r\n";
+					output += "\t\tvoid delete_" + co.name + "(" + id_name + " id_removed) {\n";
 
-					output += "\t\t\tif(is_valid_" + co.name + "(id_removed)) {\r\n";
+					output += "\t\t\tif(is_valid_" + co.name + "(id_removed)) {\n";
 					if(co.hook_delete)
-						output += "\t\t\t\ton_delete_" + co.name + "(id_removed);\r\n";
+						output += "\t\t\t\ton_delete_" + co.name + "(id_removed);\n";
 
-					output += "\t\t\t\t" + co.name + ".m__index.vptr()[id_removed.index()] = " + co.name + ".first_free;\r\n"; // FN
-					output += "\t\t\t\t" + co.name + ".first_free = id_removed;\r\n";
-					output += "\t\t\t\tif(" + co.name + ".size_used - 1 == id_removed.index()) {\r\n"; // OIF
+					output += "\t\t\t\t" + co.name + ".m__index.vptr()[id_removed.index()] = " + co.name + ".first_free;\n"; // FN
+					output += "\t\t\t\t" + co.name + ".first_free = id_removed;\n";
+					output += "\t\t\t\tif(" + co.name + ".size_used - 1 == id_removed.index()) {\n"; // OIF
 					output += "\t\t\t\t\tfor( ; " + co.name + ".size_used > 0 && "
 						+ co.name + ".m__index.vptr()[" + co.name + ".size_used - 1] != "
 						+ co.name + "_id(" + co.name + "_id::value_base_t(" + co.name + ".size_used - 1)) ;"
-						+ " --" + co.name + ".size_used) ; \\ intentionally empty loop\r\n";
-					output += "\t\t\t\t}\r\n"; // OIF
+						+ " --" + co.name + ".size_used) ; \\ intentionally empty loop\n";
+					output += "\t\t\t\t}\n"; // OIF
 
 					for(auto& cr : co.relationships_involved_in) {
 						if(cr.as_primary_key) {
-							output += "\t\t\t\tdelete_" + cr.relation_name + "(id_removed);\r\n";
-							output += "\t\t\t\t" + cr.relation_name + ".size_used = " + co.name + ".size_used;\r\n";
+							output += "\t\t\t\tdelete_" + cr.relation_name + "(id_removed);\n";
+							output += "\t\t\t\t" + cr.relation_name + ".size_used = " + co.name + ".size_used;\n";
 
 							for(auto& rp : cr.rel_ptr->properties) {
 								if(rp.is_derived) {
 								} else if(rp.is_special_vector) {
-									output += "\t\t\t\t" + cr.relation_name + "." + rp.name + "_storage.release(" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()]);\r\n";
+									output += "\t\t\t\t" + cr.relation_name + "." + rp.name + "_storage.release(" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()]);\n";
 								} else if(rp.is_bitfield) {
-									output += "\t\t\t\tdcon::bit_vector_set(" + cr.relation_name + ".m_" + rp.name + ".vptr(), id_removed.index(), false);\r\n";
+									output += "\t\t\t\tdcon::bit_vector_set(" + cr.relation_name + ".m_" + rp.name + ".vptr(), id_removed.index(), false);\n";
 								} else {
-									output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()] = " + rp.data_type + "{};\r\n";
+									output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()] = " + rp.data_type + "{};\n";
 								}
 							}
 
 						} else if(cr.indexed_as == index_type::at_most_one) {
-							output += "\t\t\t\t" + co.name + "_remove_" + cr.relation_name + "_as_" + cr.property_name + "(id_removed));\r\n";
+							output += "\t\t\t\t" + co.name + "_remove_" + cr.relation_name + "_as_" + cr.property_name + "(id_removed));\n";
 
 						} else if(cr.indexed_as == index_type::many) {
-							output += "\t\t\t\t" + co.name + "_remove_all_" + cr.relation_name + "_as_" + cr.property_name + "(id_removed);\r\n";
+							output += "\t\t\t\t" + co.name + "_remove_all_" + cr.relation_name + "_as_" + cr.property_name + "(id_removed);\n";
 						}
 					}
 					for(auto& cp : co.properties) {
 						if(cp.is_derived) {
 						} else if(cp.is_special_vector) {
-							output += "\t\t\t\t" + co.name + "." + cp.name + "_storage.release(" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\r\n";
+							output += "\t\t\t\t" + co.name + "." + cp.name + "_storage.release(" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\n";
 						} else if(cp.is_bitfield) {
-							output += "\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), id_removed.index(), false);\r\n";
+							output += "\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), id_removed.index(), false);\n";
 						} else {
-							output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()] = " + cp.data_type + "{};\r\n";
+							output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()] = " + cp.data_type + "{};\n";
 						}
 					}
-					output += "\t\t\t}\r\n";
-					output += "\t\t}\r\n"; // end delete
+					output += "\t\t\t}\n";
+					output += "\t\t}\n"; // end delete
 
 					//create
-					output += "\t\t" + id_name + " create_" + co.name + "() {\r\n";
+					output += "\t\t" + id_name + " create_" + co.name + "() {\n";
 					if(!co.is_expandable) {
-						output += "\t\t\tif(!bool(" + co.name + ".first_free )) std::abort();\r\n";
-						output += "\t\t\t" + id_name + " new_id =" + co.name + ".first_free;\r\n";
-						output += "\t\t\tfirst_free = " + co.name + ".m__index.vptr()[first_free.index()];\r\n";
-						output += "\t\t\t" + co.name + ".m__index.vptr()[new_id.index()] = new_id;\r\n";
+						output += "\t\t\tif(!bool(" + co.name + ".first_free )) std::abort();\n";
+						output += "\t\t\t" + id_name + " new_id =" + co.name + ".first_free;\n";
+						output += "\t\t\tfirst_free = " + co.name + ".m__index.vptr()[first_free.index()];\n";
+						output += "\t\t\t" + co.name + ".m__index.vptr()[new_id.index()] = new_id;\n";
 					} else {
-						output += "\t\t\t" + id_name + " new_id;\r\n";
-						output += "\t\t\tconst bool expanded = !bool(" + co.name + ".first_free );\r\n";
-						output += "\t\t\tif(expanded) {\r\n";
-						output += "\t\t\t\tnew_id = " + id_name + "(" + id_name + "::value_base_t(" + co.name + ".size_used));\r\n";
-						output += "\t\t\t\t" + co.name + ".m__index.values.push_back(new_id);\r\n";
-						output += "\t\t\t} else {\r\n";
-						output += "\t\t\t\tnew_id = " + co.name + ".first_free;\r\n";
-						output += "\t\t\t\tfirst_free = " + co.name + ".m__index.vptr()[first_free.index()];\r\n";
-						output += "\t\t\t\t" + co.name + ".m__index.vptr()[new_id.index()] = new_id;\r\n";
-						output += "\t\t\t}\r\n";
+						output += "\t\t\t" + id_name + " new_id;\n";
+						output += "\t\t\tconst bool expanded = !bool(" + co.name + ".first_free );\n";
+						output += "\t\t\tif(expanded) {\n";
+						output += "\t\t\t\tnew_id = " + id_name + "(" + id_name + "::value_base_t(" + co.name + ".size_used));\n";
+						output += "\t\t\t\t" + co.name + ".m__index.values.push_back(new_id);\n";
+						output += "\t\t\t} else {\n";
+						output += "\t\t\t\tnew_id = " + co.name + ".first_free;\n";
+						output += "\t\t\t\tfirst_free = " + co.name + ".m__index.vptr()[first_free.index()];\n";
+						output += "\t\t\t\t" + co.name + ".m__index.vptr()[new_id.index()] = new_id;\n";
+						output += "\t\t\t}\n";
 
 					}
-					output += "\t\t\t" + co.name + ".size_used = std::max(" + co.name + ".size_used, uint32_t(new_id.index() + 1));\r\n";
+					output += "\t\t\t" + co.name + ".size_used = std::max(" + co.name + ".size_used, uint32_t(new_id.index() + 1));\n";
 
 					for(auto& cr : co.relationships_involved_in) {
 						if(cr.as_primary_key) {
-							output += "\t\t\t" + cr.relation_name + ".size_used = " + co.name + ".size_used;\r\n";
+							output += "\t\t\t" + cr.relation_name + ".size_used = " + co.name + ".size_used;\n";
 						}
 					}
 
 					if(co.is_expandable) {
-						output += "\t\t\tif(expanded) {\r\n;";
+						output += "\t\t\tif(expanded) {\n;";
 						for(auto& cr : co.relationships_involved_in) {
 							if(cr.as_primary_key) {
 								for(auto& rp : cr.rel_ptr->properties) {
 									if(rp.is_derived) {
 									} if(rp.is_bitfield) {
-										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.resize(1 + (" + co.name + ".size_used + 7) / 8);\r\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.resize(1 + (" + co.name + ".size_used + 7) / 8);\n";
 									} else if(rp.is_special_vector) {
-										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());\r\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 									} else {
-										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.emplace_back();\r\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.emplace_back();\n";
 									}
 								}
 								for(auto& ri : cr.rel_ptr->indexed_objects) {
 									if(ri.related_to == cr.rel_ptr->primary_key) {
 									} else {
-										output += "\t\t\t\t" + cr.relation_name + ".m_" + ri.property_name + ".values.emplace_back();\r\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_" + ri.property_name + ".values.emplace_back();\n";
 									}
 									if(ri.ltype == list_type::list && ri.index == index_type::many) {
-										output += "\t\t\t\t" + cr.relation_name + ".m_link_" + ri.property_name + ".values.emplace_back();\r\n";
+										output += "\t\t\t\t" + cr.relation_name + ".m_link_" + ri.property_name + ".values.emplace_back();\n";
 									}
 								}
 							} else if(cr.indexed_as == index_type::at_most_one) {
-								output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".values.emplace_back();\r\n";
+								output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".values.emplace_back();\n";
 							} else if(cr.indexed_as == index_type::many) {
 								if(cr.listed_as == list_type::list) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".values.emplace_back();\r\n";
+									output += "\t\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".values.emplace_back();\n";
 								} else if(cr.listed_as == list_type::array) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());\r\n";
+									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 								} else if(cr.listed_as == list_type::std_vector) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.emplace_back();\r\n";
+									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.emplace_back();\n";
 								}
 							}
 						}
@@ -2254,49 +2254,49 @@ int main(int argc, char *argv[]) {
 						for(auto& cp : co.properties) {
 							if(cp.is_derived) {
 							} else if(cp.is_bitfield) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (" + co.name + ".size_used + 7) / 8);\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (" + co.name + ".size_used + 7) / 8);\n";
 							} else if(cp.is_special_vector) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 							} else {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.emplace_back();\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.emplace_back();\n";
 							}
 						}
-						output += "\t\t\t}\r\n;"; // end expanded if
+						output += "\t\t\t}\n;"; // end expanded if
 					}
 
 					if(co.hook_create)
-						output += "\t\t\ton_create_" + co.name + "(new_id);\r\n";
-					output += "\t\t\treturn new_id;\r\n";
-					output += "\t\t}\r\n"; // end create
+						output += "\t\t\ton_create_" + co.name + "(new_id);\n";
+					output += "\t\t\treturn new_id;\n";
+					output += "\t\t}\n"; // end create
 
 					//resize
-					output += "\t\tvoid " + co.name + "_resize(uint32_t new_size) {\r\n";
+					output += "\t\tvoid " + co.name + "_resize(uint32_t new_size) {\n";
 
 					if(!co.is_expandable)
-						output += "\t\t\tif(new_size > " + std::to_string(co.size) + ") std::abort();\r\n";
+						output += "\t\t\tif(new_size > " + std::to_string(co.size) + ") std::abort();\n";
 
-					output += "\t\t\tconst uint32_t old_size = " + co.name + ".size_used;\r\n";
-					output += "\t\t\tif(new_size < old_size) {\r\n"; // contracting
+					output += "\t\t\tconst uint32_t old_size = " + co.name + ".size_used;\n";
+					output += "\t\t\tif(new_size < old_size) {\n"; // contracting
 
 
-					output += "\t\t\t\t" + co.name + ".first_free = " + co.name + "_id();\r\n";
+					output += "\t\t\t\t" + co.name + ".first_free = " + co.name + "_id();\n";
 					if(co.is_expandable) {
-						output += "\t\t\t\t" + co.name + ".m__index.values.resize(new_size + 1);\r\n";
-						output += "\t\t\t\tint32_t i = int32_t(new_size);\r\n";
+						output += "\t\t\t\t" + co.name + ".m__index.values.resize(new_size + 1);\n";
+						output += "\t\t\t\tint32_t i = int32_t(new_size);\n";
 					} else {
-						output += "\t\t\t\tint32_t i = int32_t(" + std::to_string(co.size) + ");\r\n";
-						output += "\t\t\t\tfor(; i >= new_size; --i) {\r\n";
-						output += "\t\t\t\t\t" + co.name + ".m__index.vptr()[i] = " + co.name + ".first_free;\r\n";
-						output += "\t\t\t\t\t" + co.name + ".first_free = " + co.name + "_id(" + size_to_tag_type(co.size) + "(i));\r\n";
-						output += "\t\t\t\t}\r\n\r\n";
+						output += "\t\t\t\tint32_t i = int32_t(" + std::to_string(co.size) + ");\n";
+						output += "\t\t\t\tfor(; i >= new_size; --i) {\n";
+						output += "\t\t\t\t\t" + co.name + ".m__index.vptr()[i] = " + co.name + ".first_free;\n";
+						output += "\t\t\t\t\t" + co.name + ".first_free = " + co.name + "_id(" + size_to_tag_type(co.size) + "(i));\n";
+						output += "\t\t\t\t}\n\n";
 					}
 
-					output += "\t\t\t\tfor(; i >= 0; --i) {\r\n";
-					output += "\t\t\t\t\tif(" + co.name + ".m__index.vptr()[i] != " + co.name + "_id(" + size_to_tag_type(co.size) + "(i))) {\r\n";
-					output += "\t\t\t\t\t\t" + co.name + ".m__index.vptr()[i] = " + co.name + ".first_free;\r\n";
-					output += "\t\t\t\t\t\t" + co.name + ".first_free = " + co.name + "_id(" + size_to_tag_type(co.size) + "(i));\r\n";
-					output += "\t\t\t\t\t}\r\n";
-					output += "\t\t\t\t}\r\n\r\n";
+					output += "\t\t\t\tfor(; i >= 0; --i) {\n";
+					output += "\t\t\t\t\tif(" + co.name + ".m__index.vptr()[i] != " + co.name + "_id(" + size_to_tag_type(co.size) + "(i))) {\n";
+					output += "\t\t\t\t\t\t" + co.name + ".m__index.vptr()[i] = " + co.name + ".first_free;\n";
+					output += "\t\t\t\t\t\t" + co.name + ".first_free = " + co.name + "_id(" + size_to_tag_type(co.size) + "(i));\n";
+					output += "\t\t\t\t\t}\n";
+					output += "\t\t\t\t}\n\n";
 
 
 					
@@ -2305,44 +2305,50 @@ int main(int argc, char *argv[]) {
 						} else if(cp.is_special_vector) {
 							output += "\t\t\t\tstd::for_each(" + co.name + ".m_" + cp.name + ".vptr() + new_size, "
 								+ co.name + ".m_" + cp.name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->" + co.name + "."
-								+ cp.name + "_storage.release(i); });\r\n";
+								+ cp.name + "_storage.release(i); });\n";
 
-							output += "\t\t\t\t" + co.name + "." + cp.name + "_storage.release(" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\r\n";
+							output += "\t\t\t\t" + co.name + "." + cp.name + "_storage.release(" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\n";
 						} else if(cp.is_bitfield) {
-							output += "\t\t\t\tfor(uint32_t i = new_size; i < 8*(((new_size + 7)/8)); ++i)\r\n";
-							output += "\t\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), i, false);\r\n";
+							output += "\t\t\t\tfor(uint32_t i = new_size; i < 8*(((new_size + 7)/8)); ++i)\n";
+							output += "\t\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), i, false);\n";
 							if(!co.is_expandable)
-								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + cp.name + ".vptr() + (new_size + 7) / 8, (old_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});\r\n";
+								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + cp.name + ".vptr() + (new_size + 7) / 8, (old_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});\n";
 						} else {
-							if(!co.is_expandable)
-								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size, " + cp.data_type + "{});\r\n";
+							if(!co.is_expandable) {
+								if(cp.is_object) {
+									output += "\t\t\t\tstd::std::destroy_n(" + co.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size);\n";
+									output += "\t\t\t\tstd::uninitialized_default_construct_n(" + co.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size);\n";
+								} else {
+									output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size, " + cp.data_type + "{});\n";
+								}
+							}
 						}
 					}
 
-					output += "\t\t\t} else {\r\n"; //expanding
+					output += "\t\t\t} else {\n"; //expanding
 
-					output += "\t\t\t\t" + co.name + ".first_free = " + co.name + "_id();\r\n";
+					output += "\t\t\t\t" + co.name + ".first_free = " + co.name + "_id();\n";
 					if(co.is_expandable) {
-						output += "\t\t\t\t" + co.name + ".m__index.values.resize(new_size + 1);\r\n";
-						output += "\t\t\t\tint32_t i = int32_t(new_size);\r\n";
+						output += "\t\t\t\t" + co.name + ".m__index.values.resize(new_size + 1);\n";
+						output += "\t\t\t\tint32_t i = int32_t(new_size);\n";
 					} else {
-						output += "\t\t\t\tint32_t i = int32_t(" + std::to_string(co.size) + ");\r\n";
+						output += "\t\t\t\tint32_t i = int32_t(" + std::to_string(co.size) + ");\n";
 					}
 
-					output += "\t\t\t\tfor(; i >= old_size; --i) {\r\n";
-					output += "\t\t\t\t\t" + co.name + ".m__index.vptr()[i] = " + co.name + ".first_free;\r\n";
-					output += "\t\t\t\t\t" + co.name + ".first_free = " + co.name + "_id(" + size_to_tag_type(co.size) + "(i));\r\n";
-					output += "\t\t\t\t}\r\n\r\n";
+					output += "\t\t\t\tfor(; i >= old_size; --i) {\n";
+					output += "\t\t\t\t\t" + co.name + ".m__index.vptr()[i] = " + co.name + ".first_free;\n";
+					output += "\t\t\t\t\t" + co.name + ".first_free = " + co.name + "_id(" + size_to_tag_type(co.size) + "(i));\n";
+					output += "\t\t\t\t}\n\n";
 
 
-					output += "\t\t\t\tfor(; i >= 0; --i) {\r\n";
-					output += "\t\t\t\t\tif(" + co.name + ".m__index.vptr()[i] != " + co.name + "_id(" + size_to_tag_type(co.size) + "(i))) {\r\n";
-					output += "\t\t\t\t\t\t" + co.name + ".m__index.vptr()[i] = " + co.name + ".first_free;\r\n";
-					output += "\t\t\t\t\t\t" + co.name + ".first_free = " + co.name + "_id(" + size_to_tag_type(co.size) + "(i));\r\n";
-					output += "\t\t\t\t\t}\r\n";
-					output += "\t\t\t\t}\r\n\r\n";
+					output += "\t\t\t\tfor(; i >= 0; --i) {\n";
+					output += "\t\t\t\t\tif(" + co.name + ".m__index.vptr()[i] != " + co.name + "_id(" + size_to_tag_type(co.size) + "(i))) {\n";
+					output += "\t\t\t\t\t\t" + co.name + ".m__index.vptr()[i] = " + co.name + ".first_free;\n";
+					output += "\t\t\t\t\t\t" + co.name + ".first_free = " + co.name + "_id(" + size_to_tag_type(co.size) + "(i));\n";
+					output += "\t\t\t\t\t}\n";
+					output += "\t\t\t\t}\n\n";
 
-					output += "\t\t\t}\r\n";
+					output += "\t\t\t}\n";
 
 					//both
 					if(co.is_expandable) {
@@ -2351,17 +2357,18 @@ int main(int argc, char *argv[]) {
 
 							} else if(cr.indexed_as == index_type::at_most_one) {
 								output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_link_back_" + cr.property_name
-									+ ".vptr(), new_size, " + cr.relation_name + "_id());\r\n";
+									+ ".vptr(), new_size, " + cr.relation_name + "_id());\n";
 							} else if(cr.indexed_as == index_type::many) {
 								if(cr.listed_as == list_type::list) {
 									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_head_back_" + cr.property_name
-										+ ".vptr(), new_size, " + cr.relation_name + "_id());\r\n";
+										+ ".vptr(), new_size, " + cr.relation_name + "_id());\n";
 								} else if(cr.listed_as == list_type::array) {
-									output += "\t\t\t\tstd::for_each(" + cr.relation_name + ".m_" + cr.property_name + ".vptr(), "
-										+ cr.relation_name + ".m_" + cr.property_name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->"
-										+ cr.relation_name + "." + cr.property_name + "_storage.release(i); });\r\n";
+									output += "\t\t\t\tstd::for_each(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), "
+										+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->"
+										+ cr.relation_name + "." + cr.property_name + "_storage.release(i); });\n";
 								} else if(cr.listed_as == list_type::std_vector) {
-									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_" + cr.property_name + ".vptr(), new_size, std::vector<" + cr.relation_name + "_id>());\r\n";
+									output += "\t\t\t\tstd::destroy_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), new_size);\n";
+									output += "\t\t\t\tstd::uninitialized_default_construct_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), new_size);\n";
 								}
 
 							}
@@ -2369,16 +2376,16 @@ int main(int argc, char *argv[]) {
 
 						for(auto& cr : co.relationships_involved_in) {
 							if(cr.as_primary_key) {
-								output += "\t\t\t\t" + cr.relation_name + ".resize(new_size);\r\n";
+								output += "\t\t\t\t" + cr.relation_name + "_resize(new_size);\n";
 							} else if(cr.indexed_as == index_type::at_most_one) {
-								output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".values.resize(1 + new_size);\r\n";
+								output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".values.resize(1 + new_size);\n";
 							} else if(cr.indexed_as == index_type::many) {
 								if(cr.listed_as == list_type::list) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".values.resize(1 + new_size);\r\n";
+									output += "\t\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".values.resize(1 + new_size);\n";
 								} else if(cr.listed_as == list_type::array) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\r\n";
+									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 								} else if(cr.listed_as == list_type::std_vector) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.resize(1 + new_size);\r\n";
+									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.resize(1 + new_size);\n";
 								}
 
 							}
@@ -2386,11 +2393,11 @@ int main(int argc, char *argv[]) {
 						for(auto& cp : co.properties) {
 							if(cp.is_derived) {
 							} else if(cp.is_special_vector) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 							} else if(cp.is_bitfield) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\n";
 							} else {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size);\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size);\n";
 							}
 						}
 					} else {
@@ -2399,17 +2406,18 @@ int main(int argc, char *argv[]) {
 
 							} else if(cr.indexed_as == index_type::at_most_one) {
 								output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_link_back_" + cr.property_name
-									+ ".vptr(), old_size, " + cr.relation_name + "_id());\r\n";
+									+ ".vptr(), old_size, " + cr.relation_name + "_id());\n";
 							} else if(cr.indexed_as == index_type::many) {
 								if(cr.listed_as == list_type::list) {
 									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_head_back_" + cr.property_name
-										+ ".vptr(), old_size, " + cr.relation_name + "_id());\r\n";
+										+ ".vptr(), old_size, " + cr.relation_name + "_id());\n";
 								} else if(cr.listed_as == list_type::array) {
-									output += "\t\t\t\tstd::for_each(" + cr.relation_name + ".m_" + cr.property_name + ".vptr(), "
-										+ cr.relation_name + ".m_" + cr.property_name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->"
-										+ cr.relation_name + "." + cr.property_name + "_storage.release(i); });\r\n";
+									output += "\t\t\t\tstd::for_each(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), "
+										+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->"
+										+ cr.relation_name + "." + cr.property_name + "_storage.release(i); });\n";
 								} else if(cr.listed_as == list_type::std_vector) {
-									output += "\t\t\t\tstd::fill_n(" + cr.relation_name + ".m_" + cr.property_name + ".vptr(), old_size, std::vector<" + cr.relation_name + "_id>());\r\n";
+									output += "\t\t\t\tstd::destroy_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), old_size);\n";
+									output += "\t\t\t\tstd::uninitialized_default_construct_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), old_size);\n";
 								}
 
 							}
@@ -2417,25 +2425,25 @@ int main(int argc, char *argv[]) {
 
 						for(auto& cr : co.relationships_involved_in) {
 							if(cr.as_primary_key) {
-								output += "\t\t\t\t" + cr.relation_name + ".resize(new_size);\r\n";
+								output += "\t\t\t" + cr.relation_name + "_resize(new_size);\n";
 							}
 						}
 					}
-					output += "\t\t\t" + co.name + ".size_used = new_size;\r\n";
-					output += "\t\t}\r\n"; // end resize
+					output += "\t\t\t" + co.name + ".size_used = new_size;\n";
+					output += "\t\t}\n"; // end resize
 
-					output += "\t\tbool is_valid_" + co.name + "(" + id_name + " id) const {\r\n";
-					output += "\t\t\treturn bool(id) && uint32_t(i.value) <= " + co.name + ".size_used && "
-						+ co.name + ".m__index.vptr()[id.index()] == id;\r\n";
-					output += "\t\t}\r\n";
+					output += "\t\tbool is_valid_" + co.name + "(" + id_name + " id) const {\n";
+					output += "\t\t\treturn bool(id) && uint32_t(id.value) <= " + co.name + ".size_used && "
+						+ co.name + ".m__index.vptr()[id.index()] == id;\n";
+					output += "\t\t}\n";
 				}
 			} else if(co.primary_key) { // primary key relationship
 				//resize
-				output += "\t\tvoid " + co.name + "_resize(uint32_t sz) {\r\n";
+				output += "\t\tvoid " + co.name + "_resize(uint32_t new_size) {\n";
 				if(!co.is_expandable)
-					output += "\t\t\tif(new_size > " + std::to_string(co.size) + ") std::abort();\r\n";
-				output += "\t\t\tconst uint32_t old_size = " + co.name + ".size_used;\r\n";
-				output += "\t\t\tif(new_size < old_size) {\r\n"; // contracting
+					output += "\t\t\tif(new_size > " + std::to_string(co.size) + ") std::abort();\n";
+				output += "\t\t\tconst uint32_t old_size = " + co.name + ".size_used;\n";
+				output += "\t\t\tif(new_size < old_size) {\n"; // contracting
 
 				
 
@@ -2444,113 +2452,122 @@ int main(int argc, char *argv[]) {
 					} else if(cp.is_special_vector) {
 						output += "\t\t\t\tstd::for_each(" + co.name + ".m_" + cp.name + ".vptr() + new_size, "
 							+ co.name + ".m_" + cp.name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->" + co.name + "."
-							+ cp.name + "_storage.release(i); });\r\n";
+							+ cp.name + "_storage.release(i); });\n";
 
-						output += "\t\t\t\t" + co.name + "." + cp.name + "_storage.release(" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\r\n";
+						output += "\t\t\t\t" + co.name + "." + cp.name + "_storage.release(" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\n";
 					} else if(cp.is_bitfield) {
-						output += "\t\t\t\tfor(uint32_t i = new_size; i < 8*(((new_size + 7)/8)); ++i)\r\n";
-						output += "\t\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), i, false);\r\n";
+						output += "\t\t\t\tfor(uint32_t i = new_size; i < 8*(((new_size + 7)/8)); ++i)\n";
+						output += "\t\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), i, false);\n";
 						if(!co.is_expandable)
-							output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + cp.name + ".vptr() + (new_size + 7) / 8, (old_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});\r\n";
+							output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + cp.name + ".vptr() + (new_size + 7) / 8, (old_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});\n";
 					} else {
-						if(!co.is_expandable)
-							output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size, " + cp.data_type + "{});\r\n";
+						if(!co.is_expandable) {
+							if(cp.is_object) {
+								output += "\t\t\t\tstd::std::destroy_n(" + co.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size);\n";
+								output += "\t\t\t\tstd::uninitialized_default_construct_n(" + co.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size);\n";
+							} else {
+								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size, " + cp.data_type + "{});\n";
+							}
+						}
 					}
 				}
 
-				output += "\t\t\t} else {\r\n"; //expanding
-				output += "\t\t\t}\r\n";
+				output += "\t\t\t} else {\n"; //expanding
+				output += "\t\t\t}\n";
 
 				//both
 				if(co.is_expandable) {
 					for(auto& io : co.indexed_objects) {
-						output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + io.property_name + ".vptr(), new_size, " + io.type_name + "_id());\r\n";
+						output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + io.property_name + ".vptr(), new_size, " + io.type_name + "_id());\n";
 						if(io.ltype == list_type::list)
-							output += "\t\t\t\tstd::fill_n(" + co.name + ".m_link_" + io.property_name + ".vptr(), new_size, " + io.type_name + "_id_pair());\r\n";
+							output += "\t\t\t\tstd::fill_n(" + co.name + ".m_link_" + io.property_name + ".vptr(), new_size, " + io.type_name + "_id_pair());\n";
 
 					}
 
 					for(auto& io : co.indexed_objects) {
-						output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".values.resize(1 + new_size);\r\n";
+						output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".values.resize(1 + new_size);\n";
 						if(io.ltype == list_type::list)
-							output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.resize(1 + new_size);\r\n";
+							output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.resize(1 + new_size);\n";
 					}
 
 					for(auto& cp : co.properties) {
 						if(cp.is_derived) {
 						} else if(cp.is_special_vector) {
-							output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\r\n";
+							output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 						} else if(cp.is_bitfield) {
-							output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\r\n";
+							output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\n";
 						} else {
-							output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size);\r\n";
+							output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size);\n";
 						}
 					}
 				} else {
 					for(auto& io : co.indexed_objects) {
-						output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + io.property_name + ".vptr(), old_size, " + io.type_name + "_id());\r\n";
-						if(io.ltype == list_type::list)
-							output += "\t\t\t\tstd::fill_n(" + co.name + ".m_link_" + io.property_name + ".vptr(), old_size, " + io.type_name + "_id_pair());\r\n";
+						if(io.related_to != co.primary_key) {
+							output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + io.property_name + ".vptr(), old_size, " + io.type_name + "_id());\n";
+							if(io.ltype == list_type::list)
+								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_link_" + io.property_name + ".vptr(), old_size, " + io.type_name + "_id_pair());\n";
+						}
 
 					}
 				}
-				output += "\t\t\t" + co.name + ".size_used = new_size;\r\n";
-				output += "\t\t}\r\n"; // end resize
+				output += "\t\t\t" + co.name + ".size_used = new_size;\n";
+				output += "\t\t}\n"; // end resize
 
 				output += "\t\tvoid delete_" + co.name + "(" + id_name + " id) {";
-				output += "\t\t\t\t" + id_name + " id_removed(" + co.name + ".size_used - 1);\r\n";
+				output += "\t\t\t\t" + id_name + " id_removed(" + co.name + ".size_used - 1);\n";
 				if(co.hook_delete)
-					output += "\t\t\t\ton_delete_" + co.name + "(id_removed);\r\n";
+					output += "\t\t\t\ton_delete_" + co.name + "(id_removed);\n";
 
 				for(auto& io : co.indexed_objects) {
 					if(io.related_to != co.primary_key) {
-						output += "\t\t\t\tset_ " + co.name + "_" + io.property_name + "(id_removed, " + io.type_name + "_id());\r\n";
+						output += "\t\t\t\tset_" + co.name + "_" + io.property_name + "(id_removed, " + io.type_name + "_id());\n";
 					}
 				}
-				output += "\t\t}\r\n"; // end delete
+				output += "\t\t}\n"; // end delete
 
-				output += "\t\tbool is_valid_" + co.name + "(" + id_name + " id) const {\r\n";
-				output += "\t\t\treturn bool(id) && uint32_t(i.value) <= " + co.name + ".size_used && " + 
+				output += "\t\tbool is_valid_" + co.name + "(" + id_name + " id) const {\n";
+				output += "\t\t\treturn bool(id) && uint32_t(id.value) <= " + co.name + ".size_used && " + 
 					"is_valid_" + co.primary_key->name + "(id) && (";
 				for(auto& io : co.indexed_objects) {
 					if(io.related_to != co.primary_key) {
 						output += "bool(" + co.name + ".m_" + io.property_name + ".vptr()[id.index()]) || ";
 					}
 				}
-				output += "false);\r\n";
-				output += "\t\t}\r\n"; // end is_valid
+				output += "false);\n";
+				output += "\t\t}\n"; // end is_valid
 
-				output += "\t\tprivate:\r\n";
-				output += "\t\tvoid internal_move_relationship_" + co.name + "(" + id_name + " old_id, " + id_name + " new_id) {\r\n";
+				output += "\t\tprivate:\n";
+				output += "\t\tvoid internal_move_relationship_" + co.name + "(" + id_name + " old_id, " + id_name + " new_id) {\n";
 
 				for(auto& io : co.indexed_objects) {
 					if(io.related_to != co.primary_key) {
 						output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".vptr()[new_id.index()] = "
-							+ co.name + ".m_" + io.property_name + ".vptr()[old_id.index()];\r\n";
-						output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".vptr()[old_id.index()] = " + io.type_name + "_id();\r\n";
-						output += "\t\t\t\tif(auto tmp = " + co.name + ".m_" + io.property_name + ".vptr()[new_id.index()]; bool(tmp))\r\n";
-						output += "\t\t\t\t\t" + co.name + ".m_link_back_" + io.property_name + ".vptr()[tmp.index()] = new_id;\r\n";
-
-						if(io.ltype == list_type::list) {
+							+ co.name + ".m_" + io.property_name + ".vptr()[old_id.index()];\n";
+						output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".vptr()[old_id.index()] = " + io.type_name + "_id();\n";
+						
+						if(io.index == index_type::at_most_one) {
+							output += "\t\t\t\tif(auto tmp = " + co.name + ".m_" + io.property_name + ".vptr()[new_id.index()]; bool(tmp))\n";
+							output += "\t\t\t\t\t" + co.name + ".m_link_back_" + io.property_name + ".vptr()[tmp.index()] = new_id;\n";
+						} else if(io.index == index_type::many && io.ltype == list_type::list) {
 							output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".vptr()[new_id.index()] = "
-								+ co.name + ".m_link_" + io.property_name + ".vptr()[old_id.index()];\r\n";
-							output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".vptr()[old_id.index()] = " + io.type_name + "_id_pair();\r\n";
+								+ co.name + ".m_link_" + io.property_name + ".vptr()[old_id.index()];\n";
+							output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".vptr()[old_id.index()] = " + io.type_name + "_id_pair();\n";
 
-							output += "\t\t\t\t{auto tmp = " + co.name + ".m_link_" + io.property_name + ".vptr()[new_id.index()];\r\n";
-							output += "\t\t\t\t\tif(bool(tmp.left)) {\r\n";
-							output += "\t\t\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".vptr()[tmp.left.index()].right = new_id;\r\n";
-							output += "\t\t\t\t\t} else {\r\n";
-							output += "\t\t\t\t\t\rfor(auto lpos = tmp; bool(lpos); lpos = " + co.name + ".m_link_" + io.property_name + ".vptr()[lpos.index()].right)\r\n";
+							output += "\t\t\t\t{auto tmp = " + co.name + ".m_link_" + io.property_name + ".vptr()[new_id.index()];\n";
+							output += "\t\t\t\t\tif(bool(tmp.left)) {\n";
+							output += "\t\t\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".vptr()[tmp.left.index()].right = new_id;\n";
+							output += "\t\t\t\t\t} else {\n";
+							output += "\t\t\t\t\t\rfor(auto lpos = tmp; bool(lpos); lpos = " + co.name + ".m_link_" + io.property_name + ".vptr()[lpos.index()].right)\n";
 							output += "\t\t\t\t\t\t" + co.name + ".m_head_back_" + io.property_name + ".vptr()["
-								+ co.name + ".m_" + io.property_name + ".vptr()[lpos.index()].index()] = new_id;\r\n";
-							output += "\t\t\t\t\t}\r\n";
-							output += "\t\t\t\t\tif(bool(tmp.right)) " + co.name + ".m_link_" + io.property_name + ".vptr()[tmp.right.index()].left = new_id;\r\n";
-							output += "\t\t\t\t}\r\n";
+								+ co.name + ".m_" + io.property_name + ".vptr()[lpos.index()].index()] = new_id;\n";
+							output += "\t\t\t\t\t}\n";
+							output += "\t\t\t\t\tif(bool(tmp.right)) " + co.name + ".m_link_" + io.property_name + ".vptr()[tmp.right.index()].left = new_id;\n";
+							output += "\t\t\t\t}\n";
 
 							if(co.is_expandable)
-								output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.pop_back();\r\n";
+								output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.pop_back();\n";
 							else
-								output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".vptr()[last_id.index()] = " + io.type_name + "_id_pair();\r\n";
+								output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".vptr()[last_id.index()] = " + io.type_name + "_id_pair();\n";
 						}
 					}
 				}
@@ -2559,35 +2576,35 @@ int main(int argc, char *argv[]) {
 					if(cp.is_derived) {
 					} else if(cp.is_special_vector) {
 						output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[new_id.index()] = "
-							+ co.name + ".m_" + cp.name + ".vptr()[old_id.index()];\r\n";
+							+ co.name + ".m_" + cp.name + ".vptr()[old_id.index()];\n";
 						output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[old_id.index()] = "
-							+ "std::numeric_limits<dcon::stable_mk_2_tag>::max();\r\n";
+							+ "std::numeric_limits<dcon::stable_mk_2_tag>::max();\n";
 					} else if(cp.is_bitfield) {
 						output += "\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), new_id.index(), "
-							+ "dcon::bit_vector_get(" + co.name + ".m_" + cp.name + ".vptr(), old_id.index()));\r\n";
-						output += "\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), old_id.index(), false);\r\n";
+							+ "dcon::bit_vector_get(" + co.name + ".m_" + cp.name + ".vptr(), old_id.index()));\n";
+						output += "\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), old_id.index(), false);\n";
 					} else {
 						output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[new_id.index()] = std::move("
-							+ co.name + ".m_" + cp.name + ".vptr()[old_id.index()]);\r\n";
-						output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[old_id.index()] = " + cp.data_type + "{};\r\n";
+							+ co.name + ".m_" + cp.name + ".vptr()[old_id.index()]);\n";
+						output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[old_id.index()] = " + cp.data_type + "{};\n";
 					}
 				}
 				if(co.hook_move)
-					output += "\t\t\t\ton_move_" + co.name + "(new_id, old_id);\r\n";
+					output += "\t\t\t\ton_move_" + co.name + "(new_id, old_id);\n";
 
-				output += "\t\t}\r\n"; // end internal_move_relationship
+				output += "\t\t}\n"; // end internal_move_relationship
 
-				output += "\t\tpublic:\r\n";
-				output += "\t\t" + id_name + " try_create_" + co.name + "(" + make_relationship_parameters(co) + ") {\r\n";
+				output += "\t\tpublic:\n";
+				output += "\t\t" + id_name + " try_create_" + co.name + "(" + make_relationship_parameters(co) + ") {\n";
 
 				for(auto& io : co.indexed_objects) {
 					if(io.related_to != co.primary_key) {
 						if(io.index == index_type::at_most_one) {
 							output += "\t\t\tif(bool(" + io.property_name + "_p) && bool("
-								+ co.name + ".m_link_" + io.property_name + ".vptr()[" + io.property_name + "_p.index()])) return " + id_name + "();\r\n";
+								+ co.name + ".m_link_" + io.property_name + ".vptr()[" + io.property_name + "_p.index()])) return " + id_name + "();\n";
 						}
 					} else {
-						output += "\t\t\tif(is_valid_" + co.name + "(" + io.property_name + "_p)) return " + id_name + "();\r\n";
+						output += "\t\t\tif(is_valid_" + co.name + "(" + io.property_name + "_p)) return " + id_name + "();\n";
 					}
 				}
 
@@ -2597,186 +2614,192 @@ int main(int argc, char *argv[]) {
 						output += io.property_name;
 					}
 				}
-				output += "_p;\r\n";
+				output += "_p;\n";
 
 				for(auto& io : co.indexed_objects) {
 					if(io.related_to != co.primary_key) {
-						output += "\t\t\t\tset_ " + co.name + "_" + io.property_name + "(new_id, " + io.property_name + "_p);\r\n";
+						output += "\t\t\t\tset_" + co.name + "_" + io.property_name + "(new_id, " + io.property_name + "_p);\n";
 					}
 				}
 
 				if(co.hook_create)
-					output += "\t\t\t\ton_create_" + co.name + "(new_id);\r\n";
-				output += "\t\t\treturn new_id;\r\n";
-				output += "\t\t}\r\n"; // end try_create
+					output += "\t\t\t\ton_create_" + co.name + "(new_id);\n";
+				output += "\t\t\treturn new_id;\n";
+				output += "\t\t}\n"; // end try_create
 
-				output += "\t\t" + id_name + " force_create_" + co.name + "(" + make_relationship_parameters(co) + ") {\r\n";
+				output += "\t\t" + id_name + " force_create_" + co.name + "(" + make_relationship_parameters(co) + ") {\n";
 				output += "\t\t\t" + id_name + " new_id = ";
 				for(auto& io : co.indexed_objects) {
 					if(io.related_to == co.primary_key) {
 						output += io.property_name;
 					}
 				}
-				output += "_p;\r\n";
+				output += "_p;\n";
 
 				for(auto& io : co.indexed_objects) {
 					if(io.related_to != co.primary_key) {
-						output += "\t\t\t\tset_ " + co.name + "_" + io.property_name + "(new_id, " + io.property_name + "_p);\r\n";
+						output += "\t\t\t\tset_" + co.name + "_" + io.property_name + "(new_id, " + io.property_name + "_p);\n";
 					}
 				}
 
 				if(co.hook_create)
-					output += "\t\t\t\ton_create_" + co.name + "(new_id);\r\n";
-				output += "\t\t\treturn new_id;\r\n";
-				output += "\t\t}\r\n"; // end force_create
+					output += "\t\t\t\ton_create_" + co.name + "(new_id);\n";
+				output += "\t\t\treturn new_id;\n";
+				output += "\t\t}\n"; // end force_create
 			} else { // non pk relationship
 				if(co.store_type == storage_type::contiguous || co.store_type == storage_type::compactable) {
 
 					// pop_back
-					output += "\t\tvoid " + co.name + "_pop_back() {\r\n";
-					output += "\t\t\tif(" + co.name + ".size_used > 0) {\r\n";
+					output += "\t\tvoid " + co.name + "_pop_back() {\n";
+					output += "\t\t\tif(" + co.name + ".size_used > 0) {\n";
 
-					output += "\t\t\t\t" + id_name + " id_removed(" + co.name + ".size_used - 1);\r\n";
+					output += "\t\t\t\t" + id_name + " id_removed(" + co.name + ".size_used - 1);\n";
 					if(co.hook_delete)
-						output += "\t\t\t\ton_delete_" + co.name + "(id_removed);\r\n";
+						output += "\t\t\t\ton_delete_" + co.name + "(id_removed);\n";
 
 					for(auto& io : co.indexed_objects) {
-						output += "\t\t\t\tset_ " + co.name + "_" + io.property_name + "(id_removed, " + io.type_name + "_id());\r\n";
+						output += "\t\t\t\tset_" + co.name + "_" + io.property_name + "(id_removed, " + io.type_name + "_id());\n";
 						if(co.is_expandable) {
-							output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".values.pop_back();\r\n";
+							output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".values.pop_back();\n";
 							if(io.ltype == list_type::list)
-								output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.pop_back();\r\n";
+								output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.pop_back();\n";
 						}
 					}
 
 					for(auto& cp : co.properties) {
 						if(cp.is_derived) {
 						} else if(cp.is_special_vector) {
-							output += "\t\t\t\t" + co.name + "." + cp.name + "_storage.release(" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\r\n";
+							output += "\t\t\t\t" + co.name + "." + cp.name + "_storage.release(" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\n";
 						} else if(cp.is_bitfield) {
-							output += "\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), id_removed.index(), false);\r\n";
+							output += "\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), id_removed.index(), false);\n";
 							if(co.is_expandable)
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (" + co.name + ".size_used + 6) / 8);\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (" + co.name + ".size_used + 6) / 8);\n";
 						} else {
 							if(!co.is_expandable)
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()] = " + cp.data_type + "{};\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()] = " + cp.data_type + "{};\n";
 						}
 
 						if(co.is_expandable && !cp.is_bitfield && !cp.is_derived) {
-							output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.pop_back();\r\n";
+							output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.pop_back();\n";
 						}
 					}
 
-					output += "\t\t\t\t--" + co.name + ".size_used;\r\n";
-					output += "\t\t\t}\r\n";
-					output += "\t\t}\r\n";
+					output += "\t\t\t\t--" + co.name + ".size_used;\n";
+					output += "\t\t\t}\n";
+					output += "\t\t}\n";
 
 
 					//resize
-					output += "\t\tvoid " + co.name + "_resize(uint32_t new_size) {\r\n";
+					output += "\t\tvoid " + co.name + "_resize(uint32_t new_size) {\n";
 					if(!co.is_expandable)
-						output += "\t\t\tif(new_size > " + std::to_string(co.size) + ") std::abort();\r\n";
-					output += "\t\t\tconst uint32_t old_size = " + co.name + ".size_used;\r\n";
-					output += "\t\t\tif(new_size < old_size) {\r\n"; // contracting
+						output += "\t\t\tif(new_size > " + std::to_string(co.size) + ") std::abort();\n";
+					output += "\t\t\tconst uint32_t old_size = " + co.name + ".size_used;\n";
+					output += "\t\t\tif(new_size < old_size) {\n"; // contracting
 
 					for(auto& cp : co.properties) {
 						if(cp.is_derived) {
 						} else if(cp.is_special_vector) {
 							output += "\t\t\t\tstd::for_each(" + co.name + ".m_" + cp.name + ".vptr() + new_size, "
 								+ co.name + ".m_" + cp.name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->" + co.name + "."
-								+ cp.name + "_storage.release(i); });\r\n";
+								+ cp.name + "_storage.release(i); });\n";
 
-							output += "\t\t\t\t" + co.name + "." + cp.name + "_storage.release(" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\r\n";
+							output += "\t\t\t\t" + co.name + "." + cp.name + "_storage.release(" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\n";
 						} else if(cp.is_bitfield) {
-							output += "\t\t\t\tfor(uint32_t i = new_size; i < 8*(((new_size + 7)/8)); ++i)\r\n";
-							output += "\t\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), i, false);\r\n";
+							output += "\t\t\t\tfor(uint32_t i = new_size; i < 8*(((new_size + 7)/8)); ++i)\n";
+							output += "\t\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), i, false);\n";
 							if(!co.is_expandable)
-								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + cp.name + ".vptr() + (new_size + 7) / 8, (old_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});\r\n";
+								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + cp.name + ".vptr() + (new_size + 7) / 8, (old_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});\n";
 						} else {
-							if(!co.is_expandable)
-								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size, " + cp.data_type + "{});\r\n";
+							if(!co.is_expandable) {
+								if(cp.is_object) {
+									output += "\t\t\t\tstd::std::destroy_n(" + co.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size);\n";
+									output += "\t\t\t\tstd::uninitialized_default_construct_n(" + co.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size);\n";
+								} else {
+									output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size, " + cp.data_type + "{});\n";
+								}
+							}
 						}
 					}
 
-					output += "\t\t\t} else {\r\n"; //expanding
-					output += "\t\t\t}\r\n";
+					output += "\t\t\t} else {\n"; //expanding
+					output += "\t\t\t}\n";
 
 					//both
 					if(co.is_expandable) {
 						for(auto& io : co.indexed_objects) {
-							output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + io.property_name + ".vptr(), new_size, " + io.type_name + "_id());\r\n";
+							output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + io.property_name + ".vptr(), new_size, " + io.type_name + "_id());\n";
 							if(io.ltype == list_type::list)
-								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_link_" + io.property_name + ".vptr(), new_size, " + io.type_name + "_id_pair());\r\n";
+								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_link_" + io.property_name + ".vptr(), new_size, " + io.type_name + "_id_pair());\n";
 
 						}
 
 						for(auto& io : co.indexed_objects) {
-							output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".values.resize(1 + new_size);\r\n";
+							output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".values.resize(1 + new_size);\n";
 							if(io.ltype == list_type::list)
-								output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.resize(1 + new_size);\r\n";
+								output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.resize(1 + new_size);\n";
 						}
 
 						
 						for(auto& cp : co.properties) {
 							if(cp.is_derived) {
 							} else if(cp.is_special_vector) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 							} else if(cp.is_bitfield) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\n";
 							} else {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size);\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size);\n";
 							}
 						}
 					} else {
 						for(auto& io : co.indexed_objects) {
-							output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + io.property_name + ".vptr(), old_size, " + io.type_name + "_id());\r\n";
+							output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + io.property_name + ".vptr(), old_size, " + io.type_name + "_id());\n";
 							if(io.ltype == list_type::list)
-								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_link_" + io.property_name + ".vptr(), old_size, " + io.type_name + "_id_pair());\r\n";
+								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_link_" + io.property_name + ".vptr(), old_size, " + io.type_name + "_id_pair());\n";
 
 						}
 					}
-					output += "\t\t\t" + co.name + ".size_used = new_size;\r\n";
-					output += "\t\t}\r\n"; // end resize
+					output += "\t\t\t" + co.name + ".size_used = new_size;\n";
+					output += "\t\t}\n"; // end resize
 
 					if(co.store_type == storage_type::compactable) {
 						//delete
-						output += "\t\tvoid delete_" + co.name + "(" + id_name + " id) {\r\n";
-						output += "\t\t\t\t" + id_name + " id_removed = id;\r\n";
-						output += "\t\t\t\t" + id_name + " last_id(" + co.name + ".size_used - 1);\r\n";
+						output += "\t\tvoid delete_" + co.name + "(" + id_name + " id) {\n";
+						output += "\t\t\t\t" + id_name + " id_removed = id;\n";
+						output += "\t\t\t\t" + id_name + " last_id(" + co.name + ".size_used - 1);\n";
 
-						output += "\t\t\t\tif(id_removed == last_id) { " + co.name + ".pop_back(); return; }\r\n";
+						output += "\t\t\t\tif(id_removed == last_id) { " + co.name + ".pop_back(); return; }\n";
 
 						if(co.hook_delete)
-							output += "\t\t\t\ton_delete_" + co.name + "(id_removed);\r\n";
+							output += "\t\t\t\ton_delete_" + co.name + "(id_removed);\n";
 
 						for(auto& io : co.indexed_objects) {
-							output += "\t\t\t\tset_ " + co.name + "_" + io.property_name + "(id_removed, " + io.type_name + "_id());\r\n";
+							output += "\t\t\t\tset_" + co.name + "_" + io.property_name + "(id_removed, " + io.type_name + "_id());\n";
 
 							output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".vptr()[id_removed.index()] = "
-								+ co.name + ".m_" + io.property_name + ".vptr()[last_id.index()];\r\n";
+								+ co.name + ".m_" + io.property_name + ".vptr()[last_id.index()];\n";
 							if(co.is_expandable)
-								output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".values.pop_back();\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".values.pop_back();\n";
 							else
-								output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".vptr()[last_id.index()] = " + io.type_name + "_id();\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".vptr()[last_id.index()] = " + io.type_name + "_id();\n";
 
 							if(io.ltype == list_type::list) {
 								output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".vptr()[id_removed.index()] = "
-									+ co.name + ".m_link_" + io.property_name + ".vptr()[last_id.index()];\r\n";
-								output += "\t\t\t\t{ auto tmp = " + co.name + ".m_link_" + io.property_name + ".vptr()[id_removed.index()];\r\n";
-								output += "\t\t\t\t\tif(bool(tmp.left)) {\r\n";
-								output += "\t\t\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".vptr()[tmp.left.index()].right = id_removed;\r\n";
-								output += "\t\t\t\t\t} else {\r\n";
-								output += "\t\t\t\t\t\rfor(auto lpos = tmp; bool(lpos); lpos = " + co.name + ".m_link_" + io.property_name + ".vptr()[lpos.index()].right)\r\n";
+									+ co.name + ".m_link_" + io.property_name + ".vptr()[last_id.index()];\n";
+								output += "\t\t\t\t{ auto tmp = " + co.name + ".m_link_" + io.property_name + ".vptr()[id_removed.index()];\n";
+								output += "\t\t\t\t\tif(bool(tmp.left)) {\n";
+								output += "\t\t\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".vptr()[tmp.left.index()].right = id_removed;\n";
+								output += "\t\t\t\t\t} else {\n";
+								output += "\t\t\t\t\t\rfor(auto lpos = tmp; bool(lpos); lpos = " + co.name + ".m_link_" + io.property_name + ".vptr()[lpos.index()].right)\n";
 								output += "\t\t\t\t\t\t" + co.name + ".m_head_back_" + io.property_name + ".vptr()["
-									+ co.name + ".m_" + io.property_name + ".vptr()[lpos.index()].index()] = id_removed;\r\n";
-								output += "\t\t\t\t\t}\r\n";
-								output += "\t\t\t\t\tif(bool(tmp.right)) " + co.name + ".m_link_" + io.property_name + ".vptr()[tmp.right.index()].left = id_removed;\r\n";
-								output += "\t\t\t\t}\r\n";
+									+ co.name + ".m_" + io.property_name + ".vptr()[lpos.index()].index()] = id_removed;\n";
+								output += "\t\t\t\t\t}\n";
+								output += "\t\t\t\t\tif(bool(tmp.right)) " + co.name + ".m_link_" + io.property_name + ".vptr()[tmp.right.index()].left = id_removed;\n";
+								output += "\t\t\t\t}\n";
 
 								if(co.is_expandable)
-									output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.pop_back();\r\n";
+									output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.pop_back();\n";
 								else
-									output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".vptr()[last_id.index()] = " + io.type_name + "_id_pair();\r\n";
+									output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".vptr()[last_id.index()] = " + io.type_name + "_id_pair();\n";
 							}
 						}
 
@@ -2784,42 +2807,42 @@ int main(int argc, char *argv[]) {
 						for(auto& cp : co.properties) {
 							if(cp.is_derived) {
 							} else if(cp.is_special_vector) {
-								output += "\t\t\t\t" + co.name + "." + cp.name + "_storage.release(" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\r\n";
+								output += "\t\t\t\t" + co.name + "." + cp.name + "_storage.release(" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\n";
 								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()] = "
-									+ co.name + ".m_" + cp.name + ".vptr()[last_id.index()];\r\n";
+									+ co.name + ".m_" + cp.name + ".vptr()[last_id.index()];\n";
 								if(co.is_expandable)
-									output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.pop_back();\r\n";
+									output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.pop_back();\n";
 								else
 									output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[last_id.index()] = "
-									+ "std::numeric_limits<dcon::stable_mk_2_tag>::max();\r\n";
+									+ "std::numeric_limits<dcon::stable_mk_2_tag>::max();\n";
 							} else if(cp.is_bitfield) {
 								output += "\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), id_removed.index(), "
-									+ "dcon::bit_vector_get(" + co.name + ".m_" + cp.name + ".vptr(), last_id.index()));\r\n";
-								output += "\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), last_id.index(), false);\r\n";
+									+ "dcon::bit_vector_get(" + co.name + ".m_" + cp.name + ".vptr(), last_id.index()));\n";
+								output += "\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), last_id.index(), false);\n";
 								if(co.is_expandable)
-									output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (" + co.name + ".size_used + 6) / 8);\r\n";
+									output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (" + co.name + ".size_used + 6) / 8);\n";
 
 							} else {
 								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()] = std::move("
-									+ co.name + ".m_" + cp.name + ".vptr()[last_id.index()]);\r\n";
+									+ co.name + ".m_" + cp.name + ".vptr()[last_id.index()]);\n";
 								if(co.is_expandable)
-									output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.pop_back();\r\n";
+									output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.pop_back();\n";
 								else
-									output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[last_id.index()] = " + cp.data_type + "{};\r\n";
+									output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[last_id.index()] = " + cp.data_type + "{};\n";
 							}
 						}
-						output += "\t\t\t\t--" + co.name + ".size_used;\r\n";
+						output += "\t\t\t\t--" + co.name + ".size_used;\n";
 						if(co.hook_move)
-							output += "\t\t\t\ton_move_" + co.name + "(id_removed, last_id);\r\n";
+							output += "\t\t\t\ton_move_" + co.name + "(id_removed, last_id);\n";
 
-						output += "\t\t\t}\r\n";
+						output += "\t\t\t}\n";
 
-						output += "\t\t}\r\n";
+						output += "\t\t}\n";
 					} // end compactible delete
 
 
 					//try create
-					output += "\t\t" + id_name + " try_create_" + co.name + "(" + make_relationship_parameters(co) + ") {\r\n";
+					output += "\t\t" + id_name + " try_create_" + co.name + "(" + make_relationship_parameters(co) + ") {\n";
 					// we can skip trying because this is not a relationship with a primary key: thus all are >= type
 					output += "\t\t\treturn " + id_name + " force_create_" + co.name + "(" +
 						([&]() {
@@ -2831,84 +2854,84 @@ int main(int argc, char *argv[]) {
 						}
 						return result;
 					}())
-						+ ");\r\n";
-					output += "\t\t}\r\n";
+						+ ");\n";
+					output += "\t\t}\n";
 
 					//force create
-					output += "\t\t" + id_name + " force_create_" + co.name + "(" + make_relationship_parameters(co) + ") {\r\n";
+					output += "\t\t" + id_name + " force_create_" + co.name + "(" + make_relationship_parameters(co) + ") {\n";
 					if(!co.is_expandable)
-						output += "\t\t\tif(" + co.name + ".size_used >= " + std::to_string(co.size) + ") std::abort();\r\n";
+						output += "\t\t\tif(" + co.name + ".size_used >= " + std::to_string(co.size) + ") std::abort();\n";
 
-					output += "\t\t\t" + id_name + " new_id(" + co.name + ".size_used);\r\n";
+					output += "\t\t\t" + id_name + " new_id(" + co.name + ".size_used);\n";
 
 					if(co.is_expandable) {
 						for(auto& io : co.indexed_objects) {
-							output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".values.emplace_back();\r\n";
+							output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".values.emplace_back();\n";
 							if(io.ltype == list_type::list) {
-								output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.emplace_back();\r\n";
+								output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.emplace_back();\n";
 							}
 						}
 						for(auto& cp : co.properties) {
 							if(cp.is_derived) {
 							} else if(cp.is_bitfield) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (" + co.name + ".size_used + 8) / 8);\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (" + co.name + ".size_used + 8) / 8);\n";
 							} else if(cp.is_special_vector) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 							} else {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.emplace_back();\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.emplace_back();\n";
 							}
 						}
 					}
 
 					for(auto& io : co.indexed_objects) {
-						output += "\t\t\t\tset_ " + co.name + "_" + io.property_name + "(new_id, " + io.property_name + "_p);\r\n";
+						output += "\t\t\t\tset_" + co.name + "_" + io.property_name + "(new_id, " + io.property_name + "_p);\n";
 					}
 
-					output += "\t\t\t++" + co.name + ".size_used;\r\n";
+					output += "\t\t\t++" + co.name + ".size_used;\n";
 					if(co.hook_create)
-						output += "\t\t\t\ton_create_" + co.name + "(new_id);\r\n";
-					output += "\t\t\treturn new_id;\r\n";
-					output += "\t\t}\r\n"; // end create
+						output += "\t\t\t\ton_create_" + co.name + "(new_id);\n";
+					output += "\t\t\treturn new_id;\n";
+					output += "\t\t}\n"; // end create
 
-					output += "\t\tbool is_valid_" + co.name + "(" + id_name + " id) const {\r\n";
-					output += "\t\t\treturn bool(id) && uint32_t(i.value) <= " + co.name + ".size_used;\r\n";
-					output += "\t\t}\r\n";
+					output += "\t\tbool is_valid_" + co.name + "(" + id_name + " id) const {\n";
+					output += "\t\t\treturn bool(id) && uint32_t(id.value) <= " + co.name + ".size_used;\n";
+					output += "\t\t}\n";
 				} else if(co.store_type == storage_type::erasable) {
 					// delete
-					output += "\t\tvoid delete_" + co.name + "(" + id_name + " id_removed) {\r\n";
+					output += "\t\tvoid delete_" + co.name + "(" + id_name + " id_removed) {\n";
 
-					output += "\t\t\tif(is_valid_" + co.name + "(id_removed)) {\r\n";
+					output += "\t\t\tif(is_valid_" + co.name + "(id_removed)) {\n";
 					if(co.hook_delete)
-						output += "\t\t\t\ton_delete_" + co.name + "(id_removed);\r\n";
+						output += "\t\t\t\ton_delete_" + co.name + "(id_removed);\n";
 
-					output += "\t\t\t\t" + co.name + ".m__index.vptr()[id_removed.index()] = " + co.name + ".first_free;\r\n"; // FN
-					output += "\t\t\t\t" + co.name + ".first_free = id_removed;\r\n";
-					output += "\t\t\t\tif(" + co.name + ".size_used - 1 == id_removed.index()) {\r\n"; // OIF
+					output += "\t\t\t\t" + co.name + ".m__index.vptr()[id_removed.index()] = " + co.name + ".first_free;\n"; // FN
+					output += "\t\t\t\t" + co.name + ".first_free = id_removed;\n";
+					output += "\t\t\t\tif(" + co.name + ".size_used - 1 == id_removed.index()) {\n"; // OIF
 					output += "\t\t\t\t\tfor( ; " + co.name + ".size_used > 0 && "
 						+ co.name + ".m__index.vptr()[" + co.name + ".size_used - 1] != "
 						+ co.name + "_id(" + co.name + "_id::value_base_t(" + co.name + ".size_used - 1)) ;"
-						+ " --" + co.name + ".size_used) ; \\ intentionally empty loop\r\n";
-					output += "\t\t\t\t}\r\n"; // OIF
+						+ " --" + co.name + ".size_used) ; \\ intentionally empty loop\n";
+					output += "\t\t\t\t}\n"; // OIF
 
 					for(auto& io : co.indexed_objects) {
-						output += "\t\t\t\tset_ " + co.name + "_" + io.property_name + "(id_removed, " + io.type_name + "_id());\r\n";
+						output += "\t\t\t\tset_" + co.name + "_" + io.property_name + "(id_removed, " + io.type_name + "_id());\n";
 					}
 
 					for(auto& cp : co.properties) {
 						if(cp.is_derived) {
 						} else if(cp.is_special_vector) {
-							output += "\t\t\t\t" + co.name + "." + cp.name + "_storage.release(" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\r\n";
+							output += "\t\t\t\t" + co.name + "." + cp.name + "_storage.release(" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\n";
 						} else if(cp.is_bitfield) {
-							output += "\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), id_removed.index(), false);\r\n";
+							output += "\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), id_removed.index(), false);\n";
 						} else {
-							output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()] = " + cp.data_type + "{};\r\n";
+							output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()] = " + cp.data_type + "{};\n";
 						}
 					}
-					output += "\t\t\t}\r\n";
-					output += "\t\t}\r\n"; // end delete
+					output += "\t\t\t}\n";
+					output += "\t\t}\n"; // end delete
 
 					//try create
-					output += "\t\t" + id_name + " try_create_" + co.name + "(" + make_relationship_parameters(co) + ") {\r\n";
+					output += "\t\t" + id_name + " try_create_" + co.name + "(" + make_relationship_parameters(co) + ") {\n";
 					// we can skip trying because this is not a relationship with a primary key: thus all are >= type
 					output += "\t\t\treturn " + id_name + " force_create_" + co.name + "(" +
 						([&]() {
@@ -2919,94 +2942,94 @@ int main(int argc, char *argv[]) {
 							result += i.property_name + "_p";
 						}
 						return result;
-					}()) + ");\r\n";
-					output += "\t\t}\r\n";
+					}()) + ");\n";
+					output += "\t\t}\n";
 
 					//force create
-					output += "\t\t" + id_name + " force_create_" + co.name + "(" + make_relationship_parameters(co) + ") {\r\n";
+					output += "\t\t" + id_name + " force_create_" + co.name + "(" + make_relationship_parameters(co) + ") {\n";
 
 					if(!co.is_expandable) {
-						output += "\t\t\tif(!bool(" + co.name + ".first_free )) std::abort();\r\n";
-						output += "\t\t\t" + id_name + " new_id =" + co.name + ".first_free;\r\n";
-						output += "\t\t\tfirst_free = " + co.name + ".m__index.vptr()[first_free.index()];\r\n";
-						output += "\t\t\t" + co.name + ".m__index.vptr()[new_id.index()] = new_id;\r\n";
+						output += "\t\t\tif(!bool(" + co.name + ".first_free )) std::abort();\n";
+						output += "\t\t\t" + id_name + " new_id =" + co.name + ".first_free;\n";
+						output += "\t\t\tfirst_free = " + co.name + ".m__index.vptr()[first_free.index()];\n";
+						output += "\t\t\t" + co.name + ".m__index.vptr()[new_id.index()] = new_id;\n";
 					} else {
-						output += "\t\t\t" + id_name + " new_id;\r\n";
-						output += "\t\t\tconst bool expanded = !bool(" + co.name + ".first_free );\r\n";
-						output += "\t\t\tif(expanded) {\r\n";
-						output += "\t\t\t\tnew_id = " + id_name + "(" + id_name + "::value_base_t(" + co.name + ".size_used));\r\n";
-						output += "\t\t\t\t" + co.name + ".m__index.values.push_back(new_id);\r\n";
-						output += "\t\t\t} else {\r\n";
-						output += "\t\t\t\tnew_id = " + co.name + ".first_free;\r\n";
-						output += "\t\t\t\tfirst_free = " + co.name + ".m__index.vptr()[first_free.index()];\r\n";
-						output += "\t\t\t\t" + co.name + ".m__index.vptr()[new_id.index()] = new_id;\r\n";
-						output += "\t\t\t}\r\n";
+						output += "\t\t\t" + id_name + " new_id;\n";
+						output += "\t\t\tconst bool expanded = !bool(" + co.name + ".first_free );\n";
+						output += "\t\t\tif(expanded) {\n";
+						output += "\t\t\t\tnew_id = " + id_name + "(" + id_name + "::value_base_t(" + co.name + ".size_used));\n";
+						output += "\t\t\t\t" + co.name + ".m__index.values.push_back(new_id);\n";
+						output += "\t\t\t} else {\n";
+						output += "\t\t\t\tnew_id = " + co.name + ".first_free;\n";
+						output += "\t\t\t\tfirst_free = " + co.name + ".m__index.vptr()[first_free.index()];\n";
+						output += "\t\t\t\t" + co.name + ".m__index.vptr()[new_id.index()] = new_id;\n";
+						output += "\t\t\t}\n";
 
 					}
-					output += "\t\t\t" + co.name + ".size_used = std::max(" + co.name + ".size_used, uint32_t(new_id.index() + 1));\r\n";
+					output += "\t\t\t" + co.name + ".size_used = std::max(" + co.name + ".size_used, uint32_t(new_id.index() + 1));\n";
 
 
 					if(co.is_expandable) {
-						output += "\t\t\tif(expanded) {\r\n;";
+						output += "\t\t\tif(expanded) {\n;";
 
 						for(auto& io : co.indexed_objects) {
-							output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".values.emplace_back();\r\n";
+							output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".values.emplace_back();\n";
 							if(io.ltype == list_type::list) {
-								output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.emplace_back();\r\n";
+								output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.emplace_back();\n";
 							}
 						}
 
 						for(auto& cp : co.properties) {
 							if(cp.is_derived) {
 							} else if(cp.is_bitfield) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (" + co.name + ".size_used + 7) / 8);\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (" + co.name + ".size_used + 7) / 8);\n";
 							} else if(cp.is_special_vector) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 							} else {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.emplace_back();\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.emplace_back();\n";
 							}
 						}
-						output += "\t\t\t}\r\n;";
+						output += "\t\t\t}\n;";
 					}
 
 					if(co.hook_create)
-						output += "\t\t\ton_create_" + co.name + "(new_id);\r\n";
-					output += "\t\t\treturn new_id;\r\n";
-					output += "\t\t}\r\n"; // end create
+						output += "\t\t\ton_create_" + co.name + "(new_id);\n";
+					output += "\t\t\treturn new_id;\n";
+					output += "\t\t}\n"; // end create
 
 					// resize
-					output += "\t\tvoid " + co.name + "_resize(uint32_t new_size) {\r\n";
+					output += "\t\tvoid " + co.name + "_resize(uint32_t new_size) {\n";
 
 					if(!co.is_expandable)
-						output += "\t\t\tif(new_size > " + std::to_string(co.size) + ") std::abort();\r\n";
+						output += "\t\t\tif(new_size > " + std::to_string(co.size) + ") std::abort();\n";
 
-					output += "\t\t\tconst uint32_t old_size = " + co.name + ".size_used;\r\n";
-					output += "\t\t\tif(new_size < old_size) {\r\n"; // contracting
+					output += "\t\t\tconst uint32_t old_size = " + co.name + ".size_used;\n";
+					output += "\t\t\tif(new_size < old_size) {\n"; // contracting
 
 
-					output += "\t\t\t\t" + co.name + ".first_free = " + co.name + "_id();\r\n";
+					output += "\t\t\t\t" + co.name + ".first_free = " + co.name + "_id();\n";
 					if(co.is_expandable) {
-						output += "\t\t\t\t" + co.name + ".m__index.values.resize(new_size + 1);\r\n";
-						output += "\t\t\t\tint32_t i = int32_t(new_size);\r\n";
+						output += "\t\t\t\t" + co.name + ".m__index.values.resize(new_size + 1);\n";
+						output += "\t\t\t\tint32_t i = int32_t(new_size);\n";
 					} else {
-						output += "\t\t\t\tint32_t i = int32_t(" + std::to_string(co.size) + ");\r\n";
-						output += "\t\t\t\tfor(; i >= new_size; --i) {\r\n";
-						output += "\t\t\t\t\t" + co.name + ".m__index.vptr()[i] = " + co.name + ".first_free;\r\n";
-						output += "\t\t\t\t\t" + co.name + ".first_free = " + co.name + "_id(" + size_to_tag_type(co.size) + "(i));\r\n";
-						output += "\t\t\t\t}\r\n\r\n";
+						output += "\t\t\t\tint32_t i = int32_t(" + std::to_string(co.size) + ");\n";
+						output += "\t\t\t\tfor(; i >= new_size; --i) {\n";
+						output += "\t\t\t\t\t" + co.name + ".m__index.vptr()[i] = " + co.name + ".first_free;\n";
+						output += "\t\t\t\t\t" + co.name + ".first_free = " + co.name + "_id(" + size_to_tag_type(co.size) + "(i));\n";
+						output += "\t\t\t\t}\n\n";
 					}
 
-					output += "\t\t\t\tfor(; i >= 0; --i) {\r\n";
-					output += "\t\t\t\t\tif(" + co.name + ".m__index.vptr()[i] != " + co.name + "_id(" + size_to_tag_type(co.size) + "(i))) {\r\n";
-					output += "\t\t\t\t\t\t" + co.name + ".m__index.vptr()[i] = " + co.name + ".first_free;\r\n";
-					output += "\t\t\t\t\t\t" + co.name + ".first_free = " + co.name + "_id(" + size_to_tag_type(co.size) + "(i));\r\n";
-					output += "\t\t\t\t\t}\r\n";
-					output += "\t\t\t\t}\r\n\r\n";
+					output += "\t\t\t\tfor(; i >= 0; --i) {\n";
+					output += "\t\t\t\t\tif(" + co.name + ".m__index.vptr()[i] != " + co.name + "_id(" + size_to_tag_type(co.size) + "(i))) {\n";
+					output += "\t\t\t\t\t\t" + co.name + ".m__index.vptr()[i] = " + co.name + ".first_free;\n";
+					output += "\t\t\t\t\t\t" + co.name + ".first_free = " + co.name + "_id(" + size_to_tag_type(co.size) + "(i));\n";
+					output += "\t\t\t\t\t}\n";
+					output += "\t\t\t\t}\n\n";
 
 					for(auto& io : co.indexed_objects) {
-						output += "\t\t\t\tfor(int32_t j = int32_t(old_size); j >= new_size; --j) {\r\n";
-						output += "\t\t\t\tset_ " + co.name + "_" + io.property_name
-							+ "(" + co.name + "_id(" + co.name + "::value_base_t(j)), " + io.type_name + "_id());\r\n";
+						output += "\t\t\t\tfor(int32_t j = int32_t(old_size); j >= new_size; --j) {\n";
+						output += "\t\t\t\tset_" + co.name + "_" + io.property_name
+							+ "(" + co.name + "_id(" + co.name + "::value_base_t(j)), " + io.type_name + "_id());\n";
 					}
 
 
@@ -3015,136 +3038,145 @@ int main(int argc, char *argv[]) {
 						} else if(cp.is_special_vector) {
 							output += "\t\t\t\tstd::for_each(" + co.name + ".m_" + cp.name + ".vptr() + new_size, "
 								+ co.name + ".m_" + cp.name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->" + co.name + "."
-								+ cp.name + "_storage.release(i); });\r\n";
+								+ cp.name + "_storage.release(i); });\n";
 
-							output += "\t\t\t\t" + co.name + "." + cp.name + "_storage.release(" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\r\n";
+							output += "\t\t\t\t" + co.name + "." + cp.name + "_storage.release(" + co.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\n";
 						} else if(cp.is_bitfield) {
-							output += "\t\t\t\tfor(uint32_t i = new_size; i < 8*(((new_size + 7)/8)); ++i)\r\n";
-							output += "\t\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), i, false);\r\n";
+							output += "\t\t\t\tfor(uint32_t i = new_size; i < 8*(((new_size + 7)/8)); ++i)\n";
+							output += "\t\t\t\t\tdcon::bit_vector_set(" + co.name + ".m_" + cp.name + ".vptr(), i, false);\n";
 							if(!co.is_expandable)
-								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + cp.name + ".vptr() + (new_size + 7) / 8, (old_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});\r\n";
+								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + cp.name + ".vptr() + (new_size + 7) / 8, (old_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});\n";
 						} else {
-							if(!co.is_expandable)
-								output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size, " + cp.data_type + "{});\r\n";
+							if(!co.is_expandable) {
+								if(cp.is_object) {
+									output += "\t\t\t\tstd::std::destroy_n(" + co.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size);\n";
+									output += "\t\t\t\tstd::uninitialized_default_construct_n(" + co.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size);\n";
+								} else {
+									output += "\t\t\t\tstd::fill_n(" + co.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size, " + cp.data_type + "{});\n";
+								}
+							}
 						}
 					}
 
-					output += "\t\t\t} else {\r\n"; //expanding
+					output += "\t\t\t} else {\n"; //expanding
 
-					output += "\t\t\t\t" + co.name + ".first_free = " + co.name + "_id();\r\n";
+					output += "\t\t\t\t" + co.name + ".first_free = " + co.name + "_id();\n";
 					if(co.is_expandable) {
-						output += "\t\t\t\t" + co.name + ".m__index.values.resize(new_size + 1);\r\n";
-						output += "\t\t\t\tint32_t i = int32_t(new_size);\r\n";
+						output += "\t\t\t\t" + co.name + ".m__index.values.resize(new_size + 1);\n";
+						output += "\t\t\t\tint32_t i = int32_t(new_size);\n";
 					} else {
-						output += "\t\t\t\tint32_t i = int32_t(" + std::to_string(co.size) + ");\r\n";
+						output += "\t\t\t\tint32_t i = int32_t(" + std::to_string(co.size) + ");\n";
 					}
 
-					output += "\t\t\t\tfor(; i >= old_size; --i) {\r\n";
-					output += "\t\t\t\t\t" + co.name + ".m__index.vptr()[i] = " + co.name + ".first_free;\r\n";
-					output += "\t\t\t\t\t" + co.name + ".first_free = " + co.name + "_id(" + size_to_tag_type(co.size) + "(i));\r\n";
-					output += "\t\t\t\t}\r\n\r\n";
+					output += "\t\t\t\tfor(; i >= old_size; --i) {\n";
+					output += "\t\t\t\t\t" + co.name + ".m__index.vptr()[i] = " + co.name + ".first_free;\n";
+					output += "\t\t\t\t\t" + co.name + ".first_free = " + co.name + "_id(" + size_to_tag_type(co.size) + "(i));\n";
+					output += "\t\t\t\t}\n\n";
 
 
-					output += "\t\t\t\tfor(; i >= 0; --i) {\r\n";
-					output += "\t\t\t\t\tif(" + co.name + ".m__index.vptr()[i] != " + co.name + "_id(" + size_to_tag_type(co.size) + "(i))) {\r\n";
-					output += "\t\t\t\t\t\t" + co.name + ".m__index.vptr()[i] = " + co.name + ".first_free;\r\n";
-					output += "\t\t\t\t\t\t" + co.name + ".first_free = " + co.name + "_id(" + size_to_tag_type(co.size) + "(i));\r\n";
-					output += "\t\t\t\t\t}\r\n";
-					output += "\t\t\t\t}\r\n\r\n";
+					output += "\t\t\t\tfor(; i >= 0; --i) {\n";
+					output += "\t\t\t\t\tif(" + co.name + ".m__index.vptr()[i] != " + co.name + "_id(" + size_to_tag_type(co.size) + "(i))) {\n";
+					output += "\t\t\t\t\t\t" + co.name + ".m__index.vptr()[i] = " + co.name + ".first_free;\n";
+					output += "\t\t\t\t\t\t" + co.name + ".first_free = " + co.name + "_id(" + size_to_tag_type(co.size) + "(i));\n";
+					output += "\t\t\t\t\t}\n";
+					output += "\t\t\t\t}\n\n";
 
-					output += "\t\t\t}\r\n";
+					output += "\t\t\t}\n";
 
 					//both
 					if(co.is_expandable) {
 						for(auto& io : co.indexed_objects) {
-							output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".values.resize(1 + new_size);\r\n";
+							output += "\t\t\t\t" + co.name + ".m_" + io.property_name + ".values.resize(1 + new_size);\n";
 							if(io.ltype == list_type::list) {
-								output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.resize(1 + new_size);\r\n";
+								output += "\t\t\t\t" + co.name + ".m_link_" + io.property_name + ".values.resize(1 + new_size);\n";
 							}
 						}
 
 						for(auto& cp : co.properties) {
 							if(cp.is_derived) {
 							} else if(cp.is_special_vector) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 							} else if(cp.is_bitfield) {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\n";
 							} else {
-								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size);\r\n";
+								output += "\t\t\t\t" + co.name + ".m_" + cp.name + ".values.resize(1 + new_size);\n";
 							}
 						}
 					}
-					output += "\t\t\t" + co.name + ".size_used = new_size;\r\n";
-					output += "\t\t}\r\n"; // end resize
+					output += "\t\t\t" + co.name + ".size_used = new_size;\n";
+					output += "\t\t}\n"; // end resize
 
-					output += "\t\tbool is_valid_" + co.name + "(" + id_name + " id) const {\r\n";
-					output += "\t\t\treturn bool(id) && uint32_t(i.value) <= " + co.name + ".size_used && "
-						+ co.name + ".m__index.vptr()[id.index()] == id;\r\n";
-					output += "\t\t}\r\n";
+					output += "\t\tbool is_valid_" + co.name + "(" + id_name + " id) const {\n";
+					output += "\t\t\treturn bool(id) && uint32_t(id.value) <= " + co.name + ".size_used && "
+						+ co.name + ".m__index.vptr()[id.index()] == id;\n";
+					output += "\t\t}\n";
 				}
 			} // end case relationship no primary key
 		} // end creation / deletion reoutines creation loop
 
 		//write save and load object stubs
-		output += "\r\n";
+		output += "\n";
 		for(auto& ostr : needs_serialize) {
-			output += "\t\tuint64_t serialize_size(" + ostr + " const& obj) const;\r\n";
-			output += "\t\tvoid serialize(std::byte*& output_buffer, " + ostr + " const& obj) const;\r\n";
-			output += "\t\tvoid deserialize(std::byte const*& input_buffer, " + ostr + " & obj, std::byte const* end) const;\r\n";
+			output += "\t\tuint64_t serialize_size(" + ostr + " const& obj) const;\n";
+			output += "\t\tvoid serialize(std::byte*& output_buffer, " + ostr + " const& obj) const;\n";
+			output += "\t\tvoid deserialize(std::byte const*& input_buffer, " + ostr + " & obj, std::byte const* end) const;\n";
 		}
 		for(auto& ostr : needs_load_only) {
-			output += "\t\tvoid deserialize(std::byte const*& input_buffer, " + ostr + "& obj, std::byte const* end) const;\r\n";
+			output += "\t\tvoid deserialize(std::byte const*& input_buffer, " + ostr + "& obj, std::byte const* end) const;\n";
 		}
 
 		// type conversion stubs
 		for(auto& con : parsed_file.conversion_list) {
 			if(std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.to) != parsed_file.object_types.end() ||
 				std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.from) != parsed_file.object_types.end()) {
-				output += "\t\t" + con.to + " convert_type(" + con.from + " const* source, " + con.to + "* overload_selector) const;\r\n";
+				output += "\t\t" + con.to + " convert_type(" + con.from + " const* source, " + con.to + "* overload_selector) const;\n";
 			}
 		}
 
-		output += "\r\n";
+		output += "\n";
 
 		//make ve interface
 
 		for(auto& o : parsed_file.relationship_objects) {
-			output += "\t\tve::vectorizable_buffer<float, " + o.name + "_id> " + o.name + "_make_vectorizable_float_buffer() const noexcept {\r\n";
-			output += "\t\t\treturn ve::vectorizable_buffer<float, " + o.name + "_id>(" + o.name + ".size_used);\r\n";
-			output += "\t\t}\r\n";
-			output += "\t\tve::vectorizable_buffer<int32_t, " + o.name + "_id> " + o.name + "_make_vectorizable_int_buffer() const noexcept {\r\n";
-			output += "\t\t\treturn ve::vectorizable_buffer<int32_t, " + o.name + "_id>(" + o.name + ".size_used);\r\n";
-			output += "\t\t}\r\n";
-			output += "\t\ttemplate<typename F>\r\n";
+			output += "\t\tve::vectorizable_buffer<float, " + o.name + "_id> " + o.name + "_make_vectorizable_float_buffer() const noexcept {\n";
+			output += "\t\t\treturn ve::vectorizable_buffer<float, " + o.name + "_id>(" + o.name + ".size_used);\n";
+			output += "\t\t}\n";
+			output += "\t\tve::vectorizable_buffer<int32_t, " + o.name + "_id> " + o.name + "_make_vectorizable_int_buffer() const noexcept {\n";
+			output += "\t\t\treturn ve::vectorizable_buffer<int32_t, " + o.name + "_id>(" + o.name + ".size_used);\n";
+			output += "\t\t}\n";
 			if(!o.is_expandable) {
-				output += "\t\tDCON_RELEASE_INLINE void execute_serial_over_" + o.name + "(F&& functor) {\r\n";
-				output += "\t\t\tve::execute_serial(" + o.name + ".size_used, functor);\r\n";
-				output += "\t\t}\r\n";
-				output += "#ifndef VE_NO_TBB\r\n";
-				output += "\t\tDCON_RELEASE_INLINE void execute_parallel_over_" + o.name + "(F&& functor) {\r\n";
-				output += "\t\t\tve::execute_parallel_exact(" + o.name + ".size_used, functor);\r\n";
-				output += "\t\t}\r\n";
-				output += "#endif\r\n";
+				output += "\t\ttemplate<typename F>\n";
+				output += "\t\tDCON_RELEASE_INLINE void execute_serial_over_" + o.name + "(F&& functor) {\n";
+				output += "\t\t\tve::execute_serial(" + o.name + ".size_used, functor);\n";
+				output += "\t\t}\n";
+				output += "#ifndef VE_NO_TBB\n";
+				output += "\t\ttemplate<typename F>\n";
+				output += "\t\tDCON_RELEASE_INLINE void execute_parallel_over_" + o.name + "(F&& functor) {\n";
+				output += "\t\t\tve::execute_parallel_exact(" + o.name + ".size_used, functor);\n";
+				output += "\t\t}\n";
+				output += "#endif\n";
 			} else {
-				output += "\t\tDCON_RELEASE_INLINE void execute_serial_over_" + o.name + "(F&& functor) {\r\n";
-				output += "\t\t\tve::execute_serial_unaligned(" + o.name + ".size_used, functor);\r\n";
-				output += "\t\t}\r\n";
-				output += "#ifndef VE_NO_TBB\r\n";
-				output += "\t\tDCON_RELEASE_INLINE void execute_parallel_over_" + o.name + "(F&& functor) {\r\n";
-				output += "\t\t\tve::execute_parallel_unaligned(" + o.name + ".size_used, functor);\r\n";
-				output += "\t\t}\r\n";
-				output += "#endif\r\n";
+				output += "\t\ttemplate<typename F>\n";
+				output += "\t\tDCON_RELEASE_INLINE void execute_serial_over_" + o.name + "(F&& functor) {\n";
+				output += "\t\t\tve::execute_serial_unaligned(" + o.name + ".size_used, functor);\n";
+				output += "\t\t}\n";
+				output += "#ifndef VE_NO_TBB\n";
+				output += "\t\ttemplate<typename F>\n";
+				output += "\t\tDCON_RELEASE_INLINE void execute_parallel_over_" + o.name + "(F&& functor) {\n";
+				output += "\t\t\tve::execute_parallel_unaligned(" + o.name + ".size_used, functor);\n";
+				output += "\t\t}\n";
+				output += "#endif\n";
 			}
 		}
 
 		
 
-		output += "\r\n";
+		output += "\n";
 		
 		//make serialize records
 		for(auto& rt : parsed_file.load_save_routines) {
-			output += "\t\tload_record make_serialize_record_" + rt.name + "() const noexcept {\r\n";
-			output += "\t\t\tload_record result;\r\n";
+			output += "\t\tload_record make_serialize_record_" + rt.name + "() const noexcept {\n";
+			output += "\t\t\tload_record result;\n";
 
 			for(auto& o : parsed_file.relationship_objects) {
 				bool passed_filter = false;
@@ -3161,13 +3193,13 @@ int main(int argc, char *argv[]) {
 						passed_filter = false;
 				}
 				if(passed_filter) {
-					output += "\t\t\tresult." + o.name + " = true;\r\n";
+					output += "\t\t\tresult." + o.name + " = true;\n";
 					for(auto& io : o.indexed_objects) {
-						output += "\t\t\tresult." + o.name + "_" + io.property_name + " = true;\r\n";
+						output += "\t\t\tresult." + o.name + "_" + io.property_name + " = true;\n";
 
 					}
 					if(o.store_type == storage_type::erasable) {
-						output += "\t\t\tresult." + o.name + "__index = true;\r\n";
+						output += "\t\t\tresult." + o.name + "__index = true;\n";
 					}
 					for(auto& prop : o.properties) {
 						bool passed_sub_filter = false;
@@ -3185,44 +3217,44 @@ int main(int argc, char *argv[]) {
 						}
 
 						if(passed_sub_filter) {
-							output += "\t\t\tresult." + o.name + "_" + prop.name + " = true;\r\n";
+							output += "\t\t\tresult." + o.name + "_" + prop.name + " = true;\n";
 						}
 					}
 				}
 			}
-			output += "\t\t\treturn result;\r\n";
-			output += "\t\t}\r\n";
+			output += "\t\t\treturn result;\n";
+			output += "\t\t}\n";
 		}
 		// make serialize records
 
-		output += "\r\n";
+		output += "\n";
 
 		//serialize_size
-		output += "\t\tuint64_t serialize_size(load_record const& serialize_selection) const {\r\n";
-		output += "\t\t\tuint64_t total_size = 0;\r\n";
+		output += "\t\tuint64_t serialize_size(load_record const& serialize_selection) const {\n";
+		output += "\t\t\tuint64_t total_size = 0;\n";
 		for(auto& o : parsed_file.relationship_objects) {
-			output += "\t\t\tif(serialize_selection." + o.name + ") {\r\n";
-			output += "\t\t\t\tdcon::record_header header(sizeof(uint32_t), \"uint32_t\", \"" + o.name + "\", \"@size\");\r\n";
-			output += "\t\t\t\ttotal_size += header.serialize_size();\r\n";
-			output += "\t\t\t\ttotal_size += sizeof(uint32_t);\r\n";
-			output += "\t\t\t}\r\n";
+			output += "\t\t\tif(serialize_selection." + o.name + ") {\n";
+			output += "\t\t\t\tdcon::record_header header(sizeof(uint32_t), \"uint32_t\", \"" + o.name + "\", \"@size\");\n";
+			output += "\t\t\t\ttotal_size += header.serialize_size();\n";
+			output += "\t\t\t\ttotal_size += sizeof(uint32_t);\n";
+			output += "\t\t\t}\n";
 
 			if(o.store_type == storage_type::erasable) {
-				output += "\t\t\tif(serialize_selection." + o.name + "__index) {\r\n";
-				output += "\t\t\t\tdcon::record_header header(sizeof(" + o.name + "_id) * " + o.name + ".size_used, \"" + size_to_tag_type(o.size) + "\", \"" + o.name + "\", \"_index\");\r\n";
-				output += "\t\t\t\ttotal_size += header.serialize_size();\r\n";
-				output += "\t\t\t\ttotal_size += sizeof(" + o.name + "_id) * " + o.name + ".size_used;\r\n";
-				output += "\t\t\t}\r\n";
+				output += "\t\t\tif(serialize_selection." + o.name + "__index) {\n";
+				output += "\t\t\t\tdcon::record_header header(sizeof(" + o.name + "_id) * " + o.name + ".size_used, \"" + size_to_tag_type(o.size) + "\", \"" + o.name + "\", \"_index\");\n";
+				output += "\t\t\t\ttotal_size += header.serialize_size();\n";
+				output += "\t\t\t\ttotal_size += sizeof(" + o.name + "_id) * " + o.name + ".size_used;\n";
+				output += "\t\t\t}\n";
 			}
 
 			for(auto& io : o.indexed_objects) {
 				if(io.related_to != o.primary_key) {
-					output += "\t\t\tif(serialize_selection." + o.name + "_" + io.property_name + ") {\r\n";
+					output += "\t\t\tif(serialize_selection." + o.name + "_" + io.property_name + ") {\n";
 					output += "\t\t\t\tdcon::record_header header(sizeof(" + io.type_name + "_id) * " + o.name + ".size_used, \""
-						+ size_to_tag_type(io.related_to->size) + "\", \"" + o.name + "\", \"" + io.property_name + "\");\r\n";
-					output += "\t\t\t\ttotal_size += header.serialize_size();\r\n";
-					output += "\t\t\t\ttotal_size += sizeof(" + io.type_name + "_id) * " + o.name + ".size_used;\r\n";
-					output += "\t\t\t}\r\n";
+						+ size_to_tag_type(io.related_to->size) + "\", \"" + o.name + "\", \"" + io.property_name + "\");\n";
+					output += "\t\t\t\ttotal_size += header.serialize_size();\n";
+					output += "\t\t\t\ttotal_size += sizeof(" + io.type_name + "_id) * " + o.name + ".size_used;\n";
+					output += "\t\t\t}\n";
 				}
 			}
 
@@ -3230,76 +3262,76 @@ int main(int argc, char *argv[]) {
 				if(prop.is_derived) {
 
 				} else if(prop.is_bitfield) {
-					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\r\n";
+					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\n";
 					output += "\t\t\t\tdcon::record_header header((" + o.name + ".size_used + 7) / 8, \""
-						+ "bitfield" + "\", \"" + o.name + "\", \"" + prop.name + "\");\r\n";
-					output += "\t\t\t\ttotal_size += header.serialize_size();\r\n";
-					output += "\t\t\t\ttotal_size += (" + o.name + ".size_used + 7) / 8;\r\n";
-					output += "\t\t\t}\r\n";
+						+ "bitfield" + "\", \"" + o.name + "\", \"" + prop.name + "\");\n";
+					output += "\t\t\t\ttotal_size += header.serialize_size();\n";
+					output += "\t\t\t\ttotal_size += (" + o.name + ".size_used + 7) / 8;\n";
+					output += "\t\t\t}\n";
 				} else if(prop.is_special_vector) {
-					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\r\n";
+					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\n";
 					output += "\t\t\t\tstd::for_each(" + o.name + ".m_" + prop.name + ".vptr(), "
-						+ o.name + ".m_" + prop.name + ".vptr() " + o.name + ".size_used, [t = this, &total_size](stable_mk_2_tag obj){\r\n";
-					output += "\t\t\t\t\tauto rng = dcon::get_range(t->" + o.name + "." + prop.name + "_storage, obj);\r\n";
-					output += "\t\t\t\t\ttotal_size += sizeof(uint16_t); total_size += sizeof(" + prop.data_type + ") * (rng.second - rng.first); });\r\n";
-					output += "\t\t\t\ttotal_size += " + std::to_string(prop.data_type.length() + 1) + ";\r\n";
-					output += "\t\t\t\tdcon::record_header header(total_size, \"stable_mk_2_tag\", \"" + o.name + "\", \"" + prop.name + "\");\r\n";
-					output += "\t\t\t\ttotal_size += header.serialize_size();\r\n";
+						+ o.name + ".m_" + prop.name + ".vptr() " + o.name + ".size_used, [t = this, &total_size](stable_mk_2_tag obj){\n";
+					output += "\t\t\t\t\tauto rng = dcon::get_range(t->" + o.name + "." + prop.name + "_storage, obj);\n";
+					output += "\t\t\t\t\ttotal_size += sizeof(uint16_t); total_size += sizeof(" + prop.data_type + ") * (rng.second - rng.first); });\n";
+					output += "\t\t\t\ttotal_size += " + std::to_string(prop.data_type.length() + 1) + ";\n";
+					output += "\t\t\t\tdcon::record_header header(total_size, \"stable_mk_2_tag\", \"" + o.name + "\", \"" + prop.name + "\");\n";
+					output += "\t\t\t\ttotal_size += header.serialize_size();\n";
 
-					output += "\t\t\t}\r\n";
+					output += "\t\t\t}\n";
 				} else if(prop.is_object) {
-					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\r\n";
+					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\n";
 					output += "\t\t\t\tstd::for_each(" + o.name + ".m_" + prop.name + ".vptr(), "
 						+ o.name + ".m_" + prop.name + ".vptr() " + o.name + ".size_used, [t = this, &total_size]("
-						+ prop.data_type + " const& obj){ total_size += t->serialize_size(obj); });\r\n";
+						+ prop.data_type + " const& obj){ total_size += t->serialize_size(obj); });\n";
 					output += "\t\t\t\tdcon::record_header header(total_size, \""
-						+ prop.data_type + "\", \"" + o.name + "\", \"" + prop.name + "\");\r\n";
-					output += "\t\t\t\ttotal_size += header.serialize_size();\r\n";
-					output += "\t\t\t}\r\n";
+						+ prop.data_type + "\", \"" + o.name + "\", \"" + prop.name + "\");\n";
+					output += "\t\t\t\ttotal_size += header.serialize_size();\n";
+					output += "\t\t\t}\n";
 				} else {
-					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\r\n";
+					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\n";
 					output += "\t\t\t\tdcon::record_header header(sizeof(" + prop.data_type + ") * " + o.name + ".size_used, \""
-						+ prop.data_type + "\", \"" + o.name + "\", \"" + prop.name + "\");\r\n";
-					output += "\t\t\t\ttotal_size += header.serialize_size();\r\n";
-					output += "\t\t\t\ttotal_size += sizeof(" + prop.data_type + ") * " + o.name + ".size_used;\r\n";
-					output += "\t\t\t}\r\n";
+						+ prop.data_type + "\", \"" + o.name + "\", \"" + prop.name + "\");\n";
+					output += "\t\t\t\ttotal_size += header.serialize_size();\n";
+					output += "\t\t\t\ttotal_size += sizeof(" + prop.data_type + ") * " + o.name + ".size_used;\n";
+					output += "\t\t\t}\n";
 				}
 			}
 		}
-		output += "\t\t\treturn total_size;\r\n";
-		output += "\t\t}\r\n";
+		output += "\t\t\treturn total_size;\n";
+		output += "\t\t}\n";
 
 		//serialize
-		output += "\t\tvoid serialize(std::byte*& output_buffer, load_record const& serialize_selection) const {\r\n";
+		output += "\t\tvoid serialize(std::byte*& output_buffer, load_record const& serialize_selection) const {\n";
 
 		for(auto& o : parsed_file.relationship_objects) {
-			output += "\t\t\tif(serialize_selection." + o.name + ") {\r\n";
-			output += "\t\t\t\tdcon::record_header header(sizeof(uint32_t), \"uint32_t\", \"" + o.name + "\", \"@size\");\r\n";
-			output += "\t\t\t\theader.serialize(output_buffer);\r\n";
-			output += "\t\t\t\t*(reinterpret_cast<uint32_t*>(output_buffer)) = " + o.name + ".size_used;\r\n";
-			output += "\t\t\t\toutput_buffer += sizeof(uint32_t);\r\n";
-			output += "\t\t\t}\r\n";
+			output += "\t\t\tif(serialize_selection." + o.name + ") {\n";
+			output += "\t\t\t\tdcon::record_header header(sizeof(uint32_t), \"uint32_t\", \"" + o.name + "\", \"@size\");\n";
+			output += "\t\t\t\theader.serialize(output_buffer);\n";
+			output += "\t\t\t\t*(reinterpret_cast<uint32_t*>(output_buffer)) = " + o.name + ".size_used;\n";
+			output += "\t\t\t\toutput_buffer += sizeof(uint32_t);\n";
+			output += "\t\t\t}\n";
 
 			if(o.store_type == storage_type::erasable) {
-				output += "\t\t\tif(serialize_selection." + o.name + "__index) {\r\n";
-				output += "\t\t\t\tdcon::record_header header(sizeof(" + o.name + "_id) * " + o.name + ".size_used, \"" + size_to_tag_type(o.size) + "\", \"" + o.name + "\", \"_index\");\r\n";
-				output += "\t\t\t\theader.serialize(output_buffer);\r\n";
+				output += "\t\t\tif(serialize_selection." + o.name + "__index) {\n";
+				output += "\t\t\t\tdcon::record_header header(sizeof(" + o.name + "_id) * " + o.name + ".size_used, \"" + size_to_tag_type(o.size) + "\", \"" + o.name + "\", \"_index\");\n";
+				output += "\t\t\t\theader.serialize(output_buffer);\n";
 				output += "\t\t\t\tmemcpy(reinterpret_cast<" + o.name + "_id*>(output_buffer), "
-					+ o.name + ".m__index.vptr(), sizeof(" + o.name + "_id) * " + o.name + ".size_used);\r\n";
-				output += "\t\t\t\toutput_buffer += sizeof(" + o.name + "_id) * " + o.name + ".size_used;\r\n";
-				output += "\t\t\t}\r\n";
+					+ o.name + ".m__index.vptr(), sizeof(" + o.name + "_id) * " + o.name + ".size_used);\n";
+				output += "\t\t\t\toutput_buffer += sizeof(" + o.name + "_id) * " + o.name + ".size_used;\n";
+				output += "\t\t\t}\n";
 			}
 
 			for(auto& io : o.indexed_objects) {
 				if(io.related_to != o.primary_key) {
-					output += "\t\t\tif(serialize_selection." + o.name + "_" + io.property_name + ") {\r\n";
+					output += "\t\t\tif(serialize_selection." + o.name + "_" + io.property_name + ") {\n";
 					output += "\t\t\t\tdcon::record_header header(sizeof(" + io.type_name + "_id) * " + o.name + ".size_used, \""
-						+ size_to_tag_type(io.related_to->size) + "\", \"" + o.name + "\", \"" + io.property_name + "\");\r\n";
-					output += "\t\t\t\theader.serialize(output_buffer);\r\n";
+						+ size_to_tag_type(io.related_to->size) + "\", \"" + o.name + "\", \"" + io.property_name + "\");\n";
+					output += "\t\t\t\theader.serialize(output_buffer);\n";
 					output += "\t\t\t\tmemcpy(reinterpret_cast<" + io.type_name + "_id*>(output_buffer), "
-						+ o.name + ".m_" + io.property_name + ".vptr(), sizeof(" + io.type_name + "_id) * " + o.name + ".size_used);\r\n";
-					output += "\t\t\t\toutput_buffer += sizeof(" + io.type_name + "_id) * " + o.name + ".size_used;\r\n";
-					output += "\t\t\t}\r\n";
+						+ o.name + ".m_" + io.property_name + ".vptr(), sizeof(" + io.type_name + "_id) * " + o.name + ".size_used);\n";
+					output += "\t\t\t\toutput_buffer += sizeof(" + io.type_name + "_id) * " + o.name + ".size_used;\n";
+					output += "\t\t\t}\n";
 				}
 			}
 
@@ -3307,284 +3339,287 @@ int main(int argc, char *argv[]) {
 				if(prop.is_derived) {
 
 				} else if(prop.is_bitfield) {
-					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\r\n";
+					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\n";
 					output += "\t\t\t\tdcon::record_header header((" + o.name + ".size_used + 7) / 8, \""
-						+ "bitfield" + "\", \"" + o.name + "\", \"" + prop.name + "\");\r\n";
-					output += "\t\t\t\theader.serialize(output_buffer);\r\n";
+						+ "bitfield" + "\", \"" + o.name + "\", \"" + prop.name + "\");\n";
+					output += "\t\t\t\theader.serialize(output_buffer);\n";
 					output += "\t\t\t\tmemcpy(reinterpret_cast<bitfield_type*>(output_buffer), "
-						+ o.name + ".m_" + prop.name  + ".vptr(), (" + o.name + ".size_used + 7) / 8);\r\n";
-					output += "\t\t\t\toutput_buffer += (" + o.name + ".size_used + 7) / 8;\r\n";
-					output += "\t\t\t}\r\n";
+						+ o.name + ".m_" + prop.name  + ".vptr(), (" + o.name + ".size_used + 7) / 8);\n";
+					output += "\t\t\t\toutput_buffer += (" + o.name + ".size_used + 7) / 8;\n";
+					output += "\t\t\t}\n";
 				} else if(prop.is_special_vector) {
-					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\r\n";
+					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\n";
 
-					output += "\t\t\t\tsize_t total_size = 0;\r\n";
+					output += "\t\t\t\tsize_t total_size = 0;\n";
 					output += "\t\t\t\tstd::for_each(" + o.name + ".m_" + prop.name + ".vptr(), "
-						+ o.name + ".m_" + prop.name + ".vptr() " + o.name + ".size_used, [t = this, &total_size](stable_mk_2_tag obj){\r\n";
-					output += "\t\t\t\t\tauto rng = dcon::get_range(t->" + o.name + "." + prop.name + "_storage, obj);\r\n";
-					output += "\t\t\t\t\ttotal_size += sizeof(uint16_t); total_size += sizeof(" + prop.data_type + ") * (rng.second - rng.first); });\r\n";
-					output += "\t\t\t\ttotal_size += " + std::to_string(prop.data_type.length() + 1) + ";\r\n";
+						+ o.name + ".m_" + prop.name + ".vptr() " + o.name + ".size_used, [t = this, &total_size](stable_mk_2_tag obj){\n";
+					output += "\t\t\t\t\tauto rng = dcon::get_range(t->" + o.name + "." + prop.name + "_storage, obj);\n";
+					output += "\t\t\t\t\ttotal_size += sizeof(uint16_t); total_size += sizeof(" + prop.data_type + ") * (rng.second - rng.first); });\n";
+					output += "\t\t\t\ttotal_size += " + std::to_string(prop.data_type.length() + 1) + ";\n";
 
-					output += "\t\t\t\tdcon::record_header header(total_size, \"stable_mk_2_tag\", \"" + o.name + "\", \"" + prop.name + "\");\r\n";
-					output += "\t\t\t\theader.serialize(output_buffer);\r\n";
+					output += "\t\t\t\tdcon::record_header header(total_size, \"stable_mk_2_tag\", \"" + o.name + "\", \"" + prop.name + "\");\n";
+					output += "\t\t\t\theader.serialize(output_buffer);\n";
 
-					output += "\t\t\t\tmemcpy(reinterpret_cast<char*>(output_buffer), \"" + prop.data_type + "\", " + std::to_string(prop.data_type.length() + 1) + ");\r\n";
-					output += "\t\t\t\toutput_buffer += " + std::to_string(prop.data_type.length() + 1) + ";\r\n";
+					output += "\t\t\t\tmemcpy(reinterpret_cast<char*>(output_buffer), \"" + prop.data_type + "\", " + std::to_string(prop.data_type.length() + 1) + ");\n";
+					output += "\t\t\t\toutput_buffer += " + std::to_string(prop.data_type.length() + 1) + ";\n";
 
 					output += "\t\t\t\tstd::for_each(" + o.name + ".m_" + prop.name + ".vptr(), "
-						+ o.name + ".m_" + prop.name + ".vptr() " + o.name + ".size_used, [t = this, output_buffer](stable_mk_2_tag obj){\r\n";
-					output += "\t\t\t\t\tauto rng = dcon::get_range(t->" + o.name + "." + prop.name + "_storage, obj);\r\n";
-					output += "\t\t\t\t\t*(reinterpret_cast<uint16_t*>(output_buffer)) = uint16_t(rng.second - rng.first);\r\n";
-					output += "\t\t\t\t\toutput_buffer += sizeof(uint16_t);\r\n";
-					output += "\t\t\t\t\tmemcpy(reinterpret_cast<" + prop.data_type + "*>(output_buffer), rng.first, sizeof(" + prop.data_type + ") * (rng.second - rng.first));\r\n"
-						+ o.name + ".m_" + prop.name + ".vptr(), sizeof(" + prop.data_type + ") * " + o.name + ".size_used);\r\n";
-					output += "\t\t\t\t\toutput_buffer += sizeof(" + prop.data_type + ") * (rng.second - rng.first);\r\n";
-					output += "\t\t\t\t\t});\r\n";
+						+ o.name + ".m_" + prop.name + ".vptr() " + o.name + ".size_used, [t = this, output_buffer](stable_mk_2_tag obj){\n";
+					output += "\t\t\t\t\tauto rng = dcon::get_range(t->" + o.name + "." + prop.name + "_storage, obj);\n";
+					output += "\t\t\t\t\t*(reinterpret_cast<uint16_t*>(output_buffer)) = uint16_t(rng.second - rng.first);\n";
+					output += "\t\t\t\t\toutput_buffer += sizeof(uint16_t);\n";
+					output += "\t\t\t\t\tmemcpy(reinterpret_cast<" + prop.data_type + "*>(output_buffer), rng.first, sizeof(" + prop.data_type + ") * (rng.second - rng.first));\n"
+						+ o.name + ".m_" + prop.name + ".vptr(), sizeof(" + prop.data_type + ") * " + o.name + ".size_used);\n";
+					output += "\t\t\t\t\toutput_buffer += sizeof(" + prop.data_type + ") * (rng.second - rng.first);\n";
+					output += "\t\t\t\t\t});\n";
 
-					output += "\t\t\t}\r\n";
+					output += "\t\t\t}\n";
 				} else if(prop.is_object) {
-					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\r\n";
-					output += "\t\t\t\tsize_t total_size = 0;\r\n";
+					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\n";
+					output += "\t\t\t\tsize_t total_size = 0;\n";
 					output += "\t\t\t\tstd::for_each(" + o.name + ".m_" + prop.name + ".vptr(), "
 						+ o.name + ".m_" + prop.name + ".vptr() " + o.name + ".size_used, [t = this, &total_size](" 
-						+ prop.data_type + " const& obj){ total_size += t->serialize_size(obj); });\r\n";
+						+ prop.data_type + " const& obj){ total_size += t->serialize_size(obj); });\n";
 					output += "\t\t\t\tdcon::record_header header(total_size, \""
-						+ prop.data_type + "\", \"" + o.name + "\", \"" + prop.name + "\");\r\n";
-					output += "\t\t\t\theader.serialize(output_buffer);\r\n";
+						+ prop.data_type + "\", \"" + o.name + "\", \"" + prop.name + "\");\n";
+					output += "\t\t\t\theader.serialize(output_buffer);\n";
 					output += "\t\t\t\tstd::for_each(" + o.name + ".m_" + prop.name + ".vptr(), "
 						+ o.name + ".m_" + prop.name + ".vptr() " + o.name + ".size_used, [t = this, &output_buffer]("
-						+ prop.data_type + " const& obj){ t->serialize(output_buffer, obj); });\r\n";
-					output += "\t\t\t}\r\n";
+						+ prop.data_type + " const& obj){ t->serialize(output_buffer, obj); });\n";
+					output += "\t\t\t}\n";
 				} else {
-					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\r\n";
+					output += "\t\t\tif(serialize_selection." + o.name + "_" + prop.name + ") {\n";
 					output += "\t\t\t\tdcon::record_header header(sizeof(" + prop.data_type + ") * " + o.name + ".size_used, \""
-						+ prop.data_type + "\", \"" + o.name + "\", \"" + prop.name + "\");\r\n";
-					output += "\t\t\t\theader.serialize(output_buffer);\r\n";
+						+ prop.data_type + "\", \"" + o.name + "\", \"" + prop.name + "\");\n";
+					output += "\t\t\t\theader.serialize(output_buffer);\n";
 					output += "\t\t\t\tmemcpy(reinterpret_cast<" + prop.data_type + "*>(output_buffer), "
-						+ o.name + ".m_" + prop.name + ".vptr(), sizeof(" + prop.data_type + ") * " + o.name + ".size_used);\r\n";
-					output += "\t\t\t\toutput_buffer += sizeof(" + prop.data_type + ") * " + o.name + ".size_used;\r\n";
-					output += "\t\t\t}\r\n";
+						+ o.name + ".m_" + prop.name + ".vptr(), sizeof(" + prop.data_type + ") * " + o.name + ".size_used);\n";
+					output += "\t\t\t\toutput_buffer += sizeof(" + prop.data_type + ") * " + o.name + ".size_used;\n";
+					output += "\t\t\t}\n";
 				}
 			}
 		}
-		output += "\t\t}\r\n";
+		output += "\t\t}\n";
 
 		//deserialize (no mask)
-		output += "\t\tvoid deserialize(std::byte const*& input_buffer, std::byte const* end, load_record& serialize_selection) {\r\n";
-		output += "\t\t\twhile(input_buffer < end) {\r\n"; // loop over input buffer
-		output += "\t\t\t\tdcon::record_header header;\r\n";
-		output += "\t\t\t\theader.deserialize(input_buffer, end);\r\n";
+		output += "\t\tvoid deserialize(std::byte const*& input_buffer, std::byte const* end, load_record& serialize_selection) {\n";
+		output += "\t\t\twhile(input_buffer < end) {\n"; // loop over input buffer
+		output += "\t\t\t\tdcon::record_header header;\n";
+		output += "\t\t\t\theader.deserialize(input_buffer, end);\n";
 
-		output += "\t\t\t\tif(input_buffer + header.record_size <= end) {\r\n"; // wrap: gaurantee enough space to read entire buffer
+		output += "\t\t\t\tif(input_buffer + header.record_size <= end) {\n"; // wrap: gaurantee enough space to read entire buffer
 
 		bool first = true;
 		for(auto& o : parsed_file.relationship_objects) {
 			if(first) {
-				output += "\t\t\t\tif(header.is_object(\"" + o.name + "\")) {\r\n"; //has matched object
+				output += "\t\t\t\tif(header.is_object(\"" + o.name + "\")) {\n"; //has matched object
 				first = false;
 			} else {
-				output += "\t\t\t\telse if(header.is_object(\"" + o.name + "\")) {\r\n"; //has matched object
+				output += "\t\t\t\telse if(header.is_object(\"" + o.name + "\")) {\n"; //has matched object
 			}
-			output += "\t\t\t\t\tif(header.is_property(\"@size\") && header.record_size == sizeof(uint32_t)) {\r\n"; // is size
-			output += "\t\t\t\t\t\t" + o.name + ".resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));\r\n";
-			output += "\t\t\t\t\t\tserialize_selection" + o.name + " = true;\r\n";
-			output += "\t\t\t\t\t}\r\n"; // end is size
+			output += "\t\t\t\t\tif(header.is_property(\"@size\") && header.record_size == sizeof(uint32_t)) {\n"; // is size
+			output += "\t\t\t\t\t\t" + o.name + "_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));\n";
+			output += "\t\t\t\t\t\tserialize_selection." + o.name + " = true;\n";
+			output += "\t\t\t\t\t}\n"; // end is size
 
 			if(o.store_type == storage_type::erasable) {
-				output += "\t\t\t\t\telse if(header.is_property(\"__index\")) {\r\n"; // matches
-				output += "\t\t\t\t\tif(header.is_type(\"" + size_to_tag_type(o.size)  + "\")) {\r\n"; //correct type
-				output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m__index.vptr(), reinterpret_cast<" + size_to_tag_type(o.size) + " const*>(input_buffer), "
+				output += "\t\t\t\t\telse if(header.is_property(\"__index\")) {\n"; // matches
+				output += "\t\t\t\t\tif(header.is_type(\"" + size_to_tag_type(o.size)  + "\")) {\n"; //correct type
+				output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m__index.vptr(), reinterpret_cast<" + size_to_tag_type(o.size) + " const*>(input_buffer)"
 					", std::min(size_t(" + o.name + ".size_used) * sizeof(" + size_to_tag_type(o.size) + "), "
-					"header.record_size));\r\n";
-				output += "\t\t\t\t\t\tserialize_selection" + o.name + "__index = true;\r\n";
-				output += "\t\t\t\t\t}\r\n";// end correct type
+					"header.record_size));\n";
+				output += "\t\t\t\t\t\tserialize_selection." + o.name + "__index = true;\n";
+				output += "\t\t\t\t\t}\n";// end correct type
 				if(size_to_tag_type(o.size) != "uint8_t") {
-					output += "\t\t\t\t\telse if(header.is_type(\"uint8_t\")) {\r\n"; //wrong type uint8_t
-					output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i)\r\n";
+					output += "\t\t\t\t\telse if(header.is_type(\"uint8_t\")) {\n"; //wrong type uint8_t
+					output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i)\n";
 					output += "\t\t\t\t\t\t\t" + o.name + ".m__index.vptr()[i].value = "
-						+ size_to_tag_type(o.size) + "(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));\r\n";
-					output += "\t\t\t\t\t\tserialize_selection" + o.name + "__index = true;\r\n";
-					output += "\t\t\t\t\t}\r\n";// end wrong type uint8_t
+						+ size_to_tag_type(o.size) + "(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));\n";
+					output += "\t\t\t\t\t\tserialize_selection." + o.name + "__index = true;\n";
+					output += "\t\t\t\t\t}\n";// end wrong type uint8_t
 				}
 				if(size_to_tag_type(o.size) != "uint16_t") {
-					output += "\t\t\t\t\telse if(header.is_type(\"uint16_t\")) {\r\n"; //wrong type uint16_t
-					output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i)\r\n";
+					output += "\t\t\t\t\telse if(header.is_type(\"uint16_t\")) {\n"; //wrong type uint16_t
+					output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i)\n";
 					output += "\t\t\t\t\t\t\t" + o.name + ".m__index.vptr()[i].value = "
-						+ size_to_tag_type(o.size) + "(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));\r\n";
-					output += "\t\t\t\t\t\tserialize_selection" + o.name + "__index = true;\r\n";
-					output += "\t\t\t\t\t}\r\n";// end wrong type uint16_t
+						+ size_to_tag_type(o.size) + "(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));\n";
+					output += "\t\t\t\t\t\tserialize_selection." + o.name + "__index = true;\n";
+					output += "\t\t\t\t\t}\n";// end wrong type uint16_t
 				}
 				if(size_to_tag_type(o.size) != "uint32_t") {
-					output += "\t\t\t\t\telse if(header.is_type(\"uint32_t\")) {\r\n"; //wrong type uint32_t
-					output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i)\r\n";
+					output += "\t\t\t\t\telse if(header.is_type(\"uint32_t\")) {\n"; //wrong type uint32_t
+					output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i)\n";
 					output += "\t\t\t\t\t\t\t" + o.name + ".m__index.vptr()[i].value = "
-						+ size_to_tag_type(o.size) + "(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));\r\n";
-					output += "\t\t\t\t\t\tserialize_selection" + o.name + "__index = true;\r\n";
-					output += "\t\t\t\t\t}\r\n";// end wrong type uint32_t
+						+ size_to_tag_type(o.size) + "(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));\n";
+					output += "\t\t\t\t\t\tserialize_selection." + o.name + "__index = true;\n";
+					output += "\t\t\t\t\t}\n";// end wrong type uint32_t
 				}
 
 				//redo free list
-				output += "\t\t\t\t\t\tif(serialize_selection" + o.name + "__index == true){\r\n";
-				output += "\t\t\t\t\t" + o.name + ".first_free = " + o.name + "_id();\r\n";
-				output += "\t\t\t\t\tfor(int32_t j = int32_t(" + std::to_string(o.size) + "); j >= 0; --j) {\r\n";
-				output += "\t\t\t\t\t\tif(" + o.name + ".m__index.vptr()[j] != " + o.name + "_id(" + size_to_tag_type(o.size) + "(j))) {\r\n";
-				output += "\t\t\t\t\t\t\t" + o.name + ".m__index.vptr()[j] = " + o.name + ".first_free;\r\n";
-				output += "\t\t\t\t\t\t\t" + o.name + ".first_free = " + o.name + "_id(" + size_to_tag_type(o.size) + "(j));\r\n";
-				output += "\t\t\t\t\t\t}\r\n";
-				output += "\t\t\t\t\t}\r\n\r\n";
-				output += "\t\t\t\t\t}\r\n\r\n";
+				output += "\t\t\t\t\t\tif(serialize_selection." + o.name + "__index == true){\n";
+				output += "\t\t\t\t\t" + o.name + ".first_free = " + o.name + "_id();\n";
+				output += "\t\t\t\t\tfor(int32_t j = int32_t(" + std::to_string(o.size) + "); j >= 0; --j) {\n";
+				output += "\t\t\t\t\t\tif(" + o.name + ".m__index.vptr()[j] != " + o.name + "_id(" + size_to_tag_type(o.size) + "(j))) {\n";
+				output += "\t\t\t\t\t\t\t" + o.name + ".m__index.vptr()[j] = " + o.name + ".first_free;\n";
+				output += "\t\t\t\t\t\t\t" + o.name + ".first_free = " + o.name + "_id(" + size_to_tag_type(o.size) + "(j));\n";
+				output += "\t\t\t\t\t\t}\n";
+				output += "\t\t\t\t\t}\n\n";
+				output += "\t\t\t\t\t}\n\n";
 
-				output += "\t\t\t\t\t}\r\n"; //end index match
+				output += "\t\t\t\t\t}\n"; //end index match
 			} // end: load index handling for erasable
 
 			for(auto& io : o.indexed_objects) {
-				output += "\t\t\t\t\telse if(header.is_property(\"" + io.property_name + "\")) {\r\n"; // matches
+				output += "\t\t\t\t\telse if(header.is_property(\"" + io.property_name + "\")) {\n"; // matches
 				
-				output += "\t\t\t\t\tif(header.is_type(\"uint8_t\")) {\r\n"; //type uint8_t
-				output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i)\r\n";
-				output += "\t\t\t\t\t\t\t" + o.name + "_id temp;\r\n";
-				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));\r\n";
-				output += "\t\t\t\t\t\t\tset_ " + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\r\n";
-				output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + io.property_name + " = true;\r\n";
-				output += "\t\t\t\t\t}\r\n";// end type uint8_t
-				output += "\t\t\t\t\telse if(header.is_type(\"uint16_t\")) {\r\n"; //type uint16_t
-				output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i)\r\n";
-				output += "\t\t\t\t\t\t\t" + o.name + "_id temp;\r\n";
-				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));\r\n";
-				output += "\t\t\t\t\t\t\tset_ " + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size)  + "(i)), temp);\r\n";
-				output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + io.property_name + " = true;\r\n";
-				output += "\t\t\t\t\t}\r\n";// end type uint16_t
-				output += "\t\t\t\t\telse if(header.is_type(\"uint32_t\")) {\r\n"; //type uint16_t
-				output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i)\r\n";
-				output += "\t\t\t\t\t\t\t" + o.name + "_id temp;\r\n";
-				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));\r\n";
-				output += "\t\t\t\t\t\t\tset_ " + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\r\n";
-				output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + io.property_name + " = true;\r\n";
-				output += "\t\t\t\t\t}\r\n";// end type uint32_t
+				output += "\t\t\t\t\tif(header.is_type(\"uint8_t\")) {\n"; //type uint8_t
+				output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {\n";
+				output += "\t\t\t\t\t\t\t" + io.type_name + "_id temp;\n";
+				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));\n";
+				output += "\t\t\t\t\t\t\tset_" + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\n";
+				output += "\t\t\t\t\t\t}\n";
+				output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + io.property_name + " = true;\n";
+				output += "\t\t\t\t\t}\n";// end type uint8_t
+				output += "\t\t\t\t\telse if(header.is_type(\"uint16_t\")) {\n"; //type uint16_t
+				output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {\n";
+				output += "\t\t\t\t\t\t\t" + io.type_name + "_id temp;\n";
+				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));\n";
+				output += "\t\t\t\t\t\t\tset_" + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size)  + "(i)), temp);\n";
+				output += "\t\t\t\t\t\t}\n";
+				output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + io.property_name + " = true;\n";
+				output += "\t\t\t\t\t}\n";// end type uint16_t
+				output += "\t\t\t\t\telse if(header.is_type(\"uint32_t\")) {\n"; //type uint16_t
+				output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {\n";
+				output += "\t\t\t\t\t\t\t" + io.type_name + "_id temp;\n";
+				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));\n";
+				output += "\t\t\t\t\t\t\tset_" + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\n";
+				output += "\t\t\t\t\t\t}\n";
+				output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + io.property_name + " = true;\n";
+				output += "\t\t\t\t\t}\n";// end type uint32_t
 
-				output += "\t\t\t\t\t}\r\n"; //end property match
+				output += "\t\t\t\t\t}\n"; //end property match
 			} // end index properties
 
 			for(auto& prop : o.properties) {
-				output += "\t\t\t\t\telse if(header.is_property(\"" + prop.name + "\")) {\r\n"; // matches
+				output += "\t\t\t\t\telse if(header.is_property(\"" + prop.name + "\")) {\n"; // matches
 				if(prop.is_derived) {
 
 				} else if(prop.is_bitfield) {
-					output += "\t\t\t\t\tif(header.is_type(\"bitfield\")) {\r\n"; //correct type
-					output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m_" + prop.name + ".vptr(), reinterpret_cast<bitfield_type const*>(input_buffer), "
-						", std::min(size_t(" + o.name + ".size_used + 7) / 8, header.record_size));\r\n";
-					output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-					output += "\t\t\t\t\t}\r\n";// end correct type
+					output += "\t\t\t\t\tif(header.is_type(\"bitfield\")) {\n"; //correct type
+					output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m_" + prop.name + ".vptr(), reinterpret_cast<bitfield_type const*>(input_buffer)"
+						", std::min(size_t(" + o.name + ".size_used + 7) / 8, header.record_size));\n";
+					output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+					output += "\t\t\t\t\t}\n";// end correct type
 
 					for(auto& con : parsed_file.conversion_list) {
 						if(con.to == "bool") {
 							if(std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.from) != parsed_file.object_types.end()) {
 								// from is an object
-								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
-								output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\r\n";
-								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i) {\r\n";
-								output += "\t\t\t\t\t\t\t" + con.from + " temp;\r\n";
-								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\r\n";
-								output += "\t\t\t\t\t\t\tdcon::bit_vector_set(" + o.name + ".m_" + prop.name + ".vptr(), i, convert_type(&temp, (" + con.to + "*)nullptr));\r\n";
-								output += "\t\t\t\t\t\t}\r\n";
-								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-								output += "\t\t\t\t\t}\r\n";
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\n";
+								output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i) {\n";
+								output += "\t\t\t\t\t\t\t" + con.from + " temp;\n";
+								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\n";
+								output += "\t\t\t\t\t\t\tdcon::bit_vector_set(" + o.name + ".m_" + prop.name + ".vptr(), i, convert_type(&temp, (" + con.to + "*)nullptr));\n";
+								output += "\t\t\t\t\t\t}\n";
+								output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+								output += "\t\t\t\t\t}\n";
 							} else {
 								// from not an object
-								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
-								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i)\r\n";
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i)\n";
 								output += "\t\t\t\t\t\t\tdcon::bit_vector_set(" + o.name + ".m_" + prop.name + ".vptr(), i, "
-									"convert_type(reinterpret_cast<" + con.from + " const*>(input_buffer) + i, (" + con.to + "*)nullptr));\r\n";
-								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-								output += "\t\t\t\t\t}\r\n";
+									"convert_type(reinterpret_cast<" + con.from + " const*>(input_buffer) + i, (" + con.to + "*)nullptr));\n";
+								output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+								output += "\t\t\t\t\t}\n";
 							}
 						}
 					}
 				} else if(prop.is_special_vector) {
-					output += "\t\t\t\t\tif(header.is_type(\"stable_mk_2_tag\")) {\r\n"; //correct type
-					output += "\t\t\t\t\t\t\tuint32_t ix = 0;\r\n";
+					output += "\t\t\t\t\tif(header.is_type(\"stable_mk_2_tag\")) {\n"; //correct type
+					output += "\t\t\t\t\t\t\tuint32_t ix = 0;\n";
 
 					//read internal data type
-					output += "\t\t\t\tstd::byte const* zero_pos = std::find(input_buffer, input_buffer + header.record_size, 0);\r\n";
+					output += "\t\t\t\tstd::byte const* zero_pos = std::find(input_buffer, input_buffer + header.record_size, 0);\n";
 					
 					output += "\t\t\t\t\tif(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), "
-						"reinterpret_cast<char const*>(zero_pos), \"" + prop.data_type + "\")) {\r\n"; //correct type
+						"reinterpret_cast<char const*>(zero_pos), \"" + prop.data_type + "\")) {\n"; //correct type
 
-					output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ){\r\n";
-					output += "\t\t\t\t\t\t\tuint16_t sz = 0;\r\n";
+					output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ){\n";
+					output += "\t\t\t\t\t\t\tuint16_t sz = 0;\n";
 					
-					output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\r\n";
+					output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\n";
 					output += "\t\t\t\t\t\t\t\tsz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), "
-						"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + prop.data_type + ") ));\r\n";
-					output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\r\n";
-					output += "\t\t\t\t\t\t\t}\r\n"; // endif
+						"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + prop.data_type + ") ));\n";
+					output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\n";
+					output += "\t\t\t\t\t\t\t}\n"; // endif
 
 					output += "\t\t\t\t\t\t\tdcon::load_range(" + o.name + "." + prop.name + "_storage, " 
 						+ o.name + ".m_" + prop.name + ".vptr()[ix], reinterpret_cast<" + prop.data_type + " const*>(icpy), "
-						"reinterpret_cast<" + prop.data_type + " const*>(icpy) + sz)\r\n";
-					output += "\t\t\t\t\t\t\ticpy += sz * sizeof(" + prop.data_type + ");\r\n";
-					output += "\t\t\t\t\t\t\t++ix;\r\n";
-					output += "\t\t\t\t\t\t}\r\n"; //end for
+						"reinterpret_cast<" + prop.data_type + " const*>(icpy) + sz)\n";
+					output += "\t\t\t\t\t\t\ticpy += sz * sizeof(" + prop.data_type + ");\n";
+					output += "\t\t\t\t\t\t\t++ix;\n";
+					output += "\t\t\t\t\t\t}\n"; //end for
 
-					output += "\t\t\t\t\t}\r\n"; // end correct type
+					output += "\t\t\t\t\t}\n"; // end correct type
 
 					for(auto& con : parsed_file.conversion_list) {
 						if(con.to == prop.data_type) {
 							if(std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.from) != parsed_file.object_types.end()) {
 								// from is an object
 								output += "\t\t\t\t\telse if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), "
-									"reinterpret_cast<char const*>(zero_pos), \"" + con.from + "\")) {\r\n"; // if = from
+									"reinterpret_cast<char const*>(zero_pos), \"" + con.from + "\")) {\n"; // if = from
 								
-								output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ) {\r\n";
-								output += "\t\t\t\t\t\t\tuint16_t sz = 0;\r\n"; // 2
+								output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ) {\n";
+								output += "\t\t\t\t\t\t\tuint16_t sz = 0;\n"; // 2
 
-								output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\r\n"; // if read sz
+								output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\n"; // if read sz
 								output += "\t\t\t\t\t\t\t\tsz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), "
-									"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + con.from + ") ));\r\n";
-								output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\r\n";
-								output += "\t\t\t\t\t\t\t}\r\n"; // endif read sz
+									"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + con.from + ") ));\n";
+								output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\n";
+								output += "\t\t\t\t\t\t\t}\n"; // endif read sz
 
-								output += "\t\t\t\t\t\t\tdcon::resize(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], sz);\r\n";
+								output += "\t\t\t\t\t\t\tdcon::resize(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], sz);\n";
 								
-								output += "\t\t\t\t\t\t\tfor(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {\r\n"; // ii for
-								output += "\t\t\t\t\t\t\t" + con.from + " temp;\r\n";
-								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\r\n";
+								output += "\t\t\t\t\t\t\tfor(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {\n"; // ii for
+								output += "\t\t\t\t\t\t\t" + con.from + " temp;\n";
+								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\n";
 								output += "\t\t\t\t\t\t\tdcon::get(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], ii) = "
-									"convert_type(&temp, (" + con.to + "*)nullptr);\r\n";
-								output += "\t\t\t\t\t\t\t}\r\n"; //end ii for
+									"convert_type(&temp, (" + con.to + "*)nullptr);\n";
+								output += "\t\t\t\t\t\t\t}\n"; //end ii for
 
-								output += "\t\t\t\t\t\t\t++ix;\r\n";
-								output += "\t\t\t\t\t\t}\r\n"; //end for
+								output += "\t\t\t\t\t\t\t++ix;\n";
+								output += "\t\t\t\t\t\t}\n"; //end for
 
-								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-								output += "\t\t\t\t\t}\r\n"; // end if = from
+								output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+								output += "\t\t\t\t\t}\n"; // end if = from
 							} else {
 								// from not an object
 								output += "\t\t\t\t\telse if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), "
-									"reinterpret_cast<char const*>(zero_pos), \"" + con.from + "\")) {\r\n"; // if = from
+									"reinterpret_cast<char const*>(zero_pos), \"" + con.from + "\")) {\n"; // if = from
 
-								output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ) {\r\n";
-								output += "\t\t\t\t\t\t\tuint16_t sz = 0;\r\n"; // 2
+								output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ) {\n";
+								output += "\t\t\t\t\t\t\tuint16_t sz = 0;\n"; // 2
 
-								output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\r\n"; // if read sz
+								output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\n"; // if read sz
 								output += "\t\t\t\t\t\t\t\tsz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), "
-									"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + con.from + ") ));\r\n";
-								output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\r\n";
-								output += "\t\t\t\t\t\t\t}\r\n"; // endif read sz
+									"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + con.from + ") ));\n";
+								output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\n";
+								output += "\t\t\t\t\t\t\t}\n"; // endif read sz
 
-								output += "\t\t\t\t\t\t\tdcon::resize(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], sz);\r\n";
+								output += "\t\t\t\t\t\t\tdcon::resize(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], sz);\n";
 
-								output += "\t\t\t\t\t\t\tfor(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {\r\n"; // ii for
+								output += "\t\t\t\t\t\t\tfor(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {\n"; // ii for
 								output += "\t\t\t\t\t\t\tdcon::get(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], ii) = "
-									"convert_type(reinterpret_cast<" + con.from + " const*>(icpy), (" + con.to + "*)nullptr);\r\n";
-								output += "\t\t\t\t\t\t\ticpy += sizeof(" + con.from + ");\r\n";
-								output += "\t\t\t\t\t\t\t}\r\n"; //end ii for
+									"convert_type(reinterpret_cast<" + con.from + " const*>(icpy), (" + con.to + "*)nullptr);\n";
+								output += "\t\t\t\t\t\t\ticpy += sizeof(" + con.from + ");\n";
+								output += "\t\t\t\t\t\t\t}\n"; //end ii for
 
-								output += "\t\t\t\t\t\t\t++ix;\r\n";
-								output += "\t\t\t\t\t\t}\r\n"; //end for
+								output += "\t\t\t\t\t\t\t++ix;\n";
+								output += "\t\t\t\t\t\t}\n"; //end for
 
-								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-								output += "\t\t\t\t\t}\r\n"; // end if = from
+								output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+								output += "\t\t\t\t\t}\n"; // end if = from
 
 							}
 						}
@@ -3594,99 +3629,99 @@ int main(int argc, char *argv[]) {
 						for(auto& basic_type : common_types) {
 							if(basic_type != normed_type) {
 								output += "\t\t\t\t\telse if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), "
-									"reinterpret_cast<char const*>(zero_pos), \"" + basic_type + "\")) {\r\n"; // if = from
+									"reinterpret_cast<char const*>(zero_pos), \"" + basic_type + "\")) {\n"; // if = from
 
-								output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ) {\r\n";
-								output += "\t\t\t\t\t\t\tuint16_t sz = 0;\r\n"; // 2
+								output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ) {\n";
+								output += "\t\t\t\t\t\t\tuint16_t sz = 0;\n"; // 2
 
-								output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\r\n"; // if read sz
+								output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\n"; // if read sz
 								output += "\t\t\t\t\t\t\t\tsz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), "
-									"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + basic_type + ") ));\r\n";
-								output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\r\n";
-								output += "\t\t\t\t\t\t\t}\r\n"; // endif read sz
+									"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + basic_type + ") ));\n";
+								output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\n";
+								output += "\t\t\t\t\t\t\t}\n"; // endif read sz
 
-								output += "\t\t\t\t\t\t\tdcon::resize(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], sz);\r\n";
+								output += "\t\t\t\t\t\t\tdcon::resize(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], sz);\n";
 
-								output += "\t\t\t\t\t\t\tfor(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {\r\n"; // ii for
+								output += "\t\t\t\t\t\t\tfor(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {\n"; // ii for
 								output += "\t\t\t\t\t\t\tdcon::get(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], ii) = "
-									+ prop.data_type + "(*(reinterpret_cast<" + basic_type + " const*>(icpy) + i));\r\n";
-								output += "\t\t\t\t\t\t\ticpy += sizeof(" + basic_type + ");\r\n";
-								output += "\t\t\t\t\t\t\t}\r\n"; //end ii for
+									+ prop.data_type + "(*(reinterpret_cast<" + basic_type + " const*>(icpy) + i));\n";
+								output += "\t\t\t\t\t\t\ticpy += sizeof(" + basic_type + ");\n";
+								output += "\t\t\t\t\t\t\t}\n"; //end ii for
 
-								output += "\t\t\t\t\t\t\t++ix;\r\n";
-								output += "\t\t\t\t\t\t}\r\n"; //end for
+								output += "\t\t\t\t\t\t\t++ix;\n";
+								output += "\t\t\t\t\t\t}\n"; //end for
 
-								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-								output += "\t\t\t\t\t}\r\n"; // end if = from
+								output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+								output += "\t\t\t\t\t}\n"; // end if = from
 							}
 						}
 					}
 					// end if prop is special array
 				} else if(prop.is_object) {
-					output += "\t\t\t\t\tif(header.is_type(\"" + prop.data_type + "\")) {\r\n"; //correct type
+					output += "\t\t\t\t\tif(header.is_type(\"" + prop.data_type + "\")) {\n"; //correct type
 
-					output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\r\n";
-					output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + prop.data_type + "))); ++i) {\r\n";
-					output += "\t\t\t\t\t\t\tdeserialize(icpy, " + o.name + ".m_" + prop.name + ".vptr()[i], input_buffer + header.record_size);\r\n";
-					output += "\t\t\t\t\t\t}\r\n";
-					output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+					output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\n";
+					output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + prop.data_type + "))); ++i) {\n";
+					output += "\t\t\t\t\t\t\tdeserialize(icpy, " + o.name + ".m_" + prop.name + ".vptr()[i], input_buffer + header.record_size);\n";
+					output += "\t\t\t\t\t\t}\n";
+					output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
 
-					output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m_" + prop.name + ".vptr(), reinterpret_cast<" + prop.data_type + " const*>(input_buffer), "
-						", std::min(size_t(" + o.name + ".size_used) * sizeof(" + prop.data_type + "), header.record_size));\r\n";
-					output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-					output += "\t\t\t\t\t}\r\n";// end correct type
+					output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m_" + prop.name + ".vptr(), reinterpret_cast<" + prop.data_type + " const*>(input_buffer)"
+						", std::min(size_t(" + o.name + ".size_used) * sizeof(" + prop.data_type + "), header.record_size));\n";
+					output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+					output += "\t\t\t\t\t}\n";// end correct type
 					for(auto& con : parsed_file.conversion_list) {
 						if(con.to == prop.data_type) {
 							if(std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.from) != parsed_file.object_types.end()) {
 								// from is an object
-								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
-								output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\r\n";
-								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i) {\r\n";
-								output += "\t\t\t\t\t\t\t" + con.from + " temp;\r\n";
-								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\r\n";
-								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = convert_type(&temp, (" + con.to + "*)nullptr);\r\n";
-								output += "\t\t\t\t\t\t}\r\n";
-								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-								output += "\t\t\t\t\t}\r\n";
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\n";
+								output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i) {\n";
+								output += "\t\t\t\t\t\t\t" + con.from + " temp;\n";
+								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\n";
+								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = convert_type(&temp, (" + con.to + "*)nullptr);\n";
+								output += "\t\t\t\t\t\t}\n";
+								output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+								output += "\t\t\t\t\t}\n";
 							} else {
 								// from not an object
-								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
-								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i)\r\n";
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i)\n";
 								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = "
-									+ "convert_type(reinterpret_cast<" + con.from + " const*>(input_buffer, (" + con.to + "*)nullptr) + i);\r\n";
-								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-								output += "\t\t\t\t\t}\r\n";
+									+ "convert_type(reinterpret_cast<" + con.from + " const*>(input_buffer, (" + con.to + "*)nullptr) + i);\n";
+								output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+								output += "\t\t\t\t\t}\n";
 
 							}
 						}
 					}
 				} else {
-					output += "\t\t\t\t\tif(header.is_type(\"" + prop.data_type + "\")) {\r\n"; //correct type
-					output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m_" + prop.name + ".vptr(), reinterpret_cast<" + prop.data_type + " const*>(input_buffer), "
-						", std::min(size_t(" + o.name + ".size_used) * sizeof(" + prop.data_type + "), header.record_size));\r\n";
-					output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-					output += "\t\t\t\t\t}\r\n";// end correct type
+					output += "\t\t\t\t\tif(header.is_type(\"" + prop.data_type + "\")) {\n"; //correct type
+					output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m_" + prop.name + ".vptr(), reinterpret_cast<" + prop.data_type + " const*>(input_buffer)"
+						", std::min(size_t(" + o.name + ".size_used) * sizeof(" + prop.data_type + "), header.record_size));\n";
+					output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+					output += "\t\t\t\t\t}\n";// end correct type
 					for(auto& con : parsed_file.conversion_list) {
 						if(con.to == prop.data_type) {
 							if(std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.from) != parsed_file.object_types.end()) {
 								// from is an object
-								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
-								output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\r\n";
-								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i) {\r\n";
-								output += "\t\t\t\t\t\t\t" + con.from + " temp;\r\n";
-								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\r\n";
-								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = convert_type(&temp, (" + con.to + "*)nullptr);\r\n";
-								output += "\t\t\t\t\t\t}\r\n";
-								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-								output += "\t\t\t\t\t}\r\n";
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\n";
+								output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i) {\n";
+								output += "\t\t\t\t\t\t\t" + con.from + " temp;\n";
+								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\n";
+								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = convert_type(&temp, (" + con.to + "*)nullptr);\n";
+								output += "\t\t\t\t\t\t}\n";
+								output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+								output += "\t\t\t\t\t}\n";
 							} else {
 								// from not an object
-								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
-								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i)\r\n";
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i)\n";
 								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = "
-									+ "convert_type(reinterpret_cast<" + con.from + " const*>(input_buffer) + i, (" + con.to + "*)nullptr);\r\n";
-								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-								output += "\t\t\t\t\t}\r\n";
+									+ "convert_type(reinterpret_cast<" + con.from + " const*>(input_buffer) + i, (" + con.to + "*)nullptr);\n";
+								output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+								output += "\t\t\t\t\t}\n";
 
 							}
 						}
@@ -3695,244 +3730,247 @@ int main(int argc, char *argv[]) {
 						const auto normed_type = normalize_type(prop.data_type);
 						for(auto& basic_type : common_types) {
 							if(basic_type != normed_type) {
-								output += "\t\t\t\t\telse if(header.is_type(\"" + basic_type + "\")) {\r\n";
-								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + basic_type + "))); ++i)\r\n";
+								output += "\t\t\t\t\telse if(header.is_type(\"" + basic_type + "\")) {\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + basic_type + "))); ++i)\n";
 								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = "
-									+ prop.data_type + "(*(reinterpret_cast<" + basic_type + " const*>(input_buffer) + i));\r\n";
-								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-								output += "\t\t\t\t\t}\r\n";
+									+ prop.data_type + "(*(reinterpret_cast<" + basic_type + " const*>(input_buffer) + i));\n";
+								output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+								output += "\t\t\t\t\t}\n";
 							}
 						}
 					}
 				}
-				output += "\t\t\t\t\t}\r\n"; //end property match
+				output += "\t\t\t\t\t}\n"; //end property match
 			} // end properties
 
-			output += "\t\t\t\t}\r\n"; // end has matched object
+			output += "\t\t\t\t}\n"; // end has matched object
 		}
-		output += "\t\t\t\t}\r\n"; // end wrap: gaurantee enough space to read entire buffer
-		output += "\t\t\t\tinput_buffer += header.record_size;\r\n";
+		output += "\t\t\t\t}\n"; // end wrap: gaurantee enough space to read entire buffer
+		output += "\t\t\t\tinput_buffer += header.record_size;\n";
 
-		output += "\t\t\t}\r\n"; // end loop -- input buffer exhausted
-		output += "\t\t}\r\n"; // end deserialize (no mask)
+		output += "\t\t\t}\n"; // end loop -- input buffer exhausted
+		output += "\t\t}\n"; // end deserialize (no mask)
 
 
 		//deserialize (with mask)
-		output += "\t\tvoid deserialize(std::byte const*& input_buffer, std::byte const* end, load_record& serialize_selection, load_record const& mask) {\r\n";
-		output += "\t\t\twhile(input_buffer < end) {\r\n"; // loop over input buffer
-		output += "\t\t\t\tdcon::record_header header;\r\n";
-		output += "\t\t\t\theader.deserialize(input_buffer, end);\r\n";
+		output += "\t\tvoid deserialize(std::byte const*& input_buffer, std::byte const* end, load_record& serialize_selection, load_record const& mask) {\n";
+		output += "\t\t\twhile(input_buffer < end) {\n"; // loop over input buffer
+		output += "\t\t\t\tdcon::record_header header;\n";
+		output += "\t\t\t\theader.deserialize(input_buffer, end);\n";
 
-		output += "\t\t\t\tif(input_buffer + header.record_size <= end) {\r\n"; // wrap: gaurantee enough space to read entire buffer
+		output += "\t\t\t\tif(input_buffer + header.record_size <= end) {\n"; // wrap: gaurantee enough space to read entire buffer
 
-		bool first = true;
+		bool first_header_if = true;
 		for(auto& o : parsed_file.relationship_objects) {
-			if(first) {
-				output += "\t\t\t\tif(header.is_object(\"" + o.name + "\") && mask." + o.name + ") {\r\n"; //has matched object
-				first = false;
+			if(first_header_if) {
+				output += "\t\t\t\tif(header.is_object(\"" + o.name + "\") && mask." + o.name + ") {\n"; //has matched object
+				first_header_if = false;
 			} else {
-				output += "\t\t\t\telse if(header.is_object(\"" + o.name + "\")) {\r\n"; //has matched object
+				output += "\t\t\t\telse if(header.is_object(\"" + o.name + "\")) {\n"; //has matched object
 			}
-			output += "\t\t\t\t\tif(header.is_property(\"@size\") && header.record_size == sizeof(uint32_t)) {\r\n"; // is size
-			output += "\t\t\t\t\t\t" + o.name + ".resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));\r\n";
-			output += "\t\t\t\t\t\tserialize_selection" + o.name + " = true;\r\n";
-			output += "\t\t\t\t\t}\r\n"; // end is size
+			output += "\t\t\t\t\tif(header.is_property(\"@size\") && header.record_size == sizeof(uint32_t)) {\n"; // is size
+			output += "\t\t\t\t\t\t" + o.name + "_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));\n";
+			output += "\t\t\t\t\t\tserialize_selection." + o.name + " = true;\n";
+			output += "\t\t\t\t\t}\n"; // end is size
 
 			if(o.store_type == storage_type::erasable) {
-				output += "\t\t\t\t\telse if(header.is_property(\"__index\") && mask." + o.name + "__index) {\r\n"; // matches
-				output += "\t\t\t\t\tif(header.is_type(\"" + size_to_tag_type(o.size) + "\")) {\r\n"; //correct type
-				output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m__index.vptr(), reinterpret_cast<" + size_to_tag_type(o.size) + " const*>(input_buffer), "
+				output += "\t\t\t\t\telse if(header.is_property(\"__index\") && mask." + o.name + "__index) {\n"; // matches
+				output += "\t\t\t\t\tif(header.is_type(\"" + size_to_tag_type(o.size) + "\")) {\n"; //correct type
+				output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m__index.vptr(), reinterpret_cast<" + size_to_tag_type(o.size) + " const*>(input_buffer)"
 					", std::min(size_t(" + o.name + ".size_used) * sizeof(" + size_to_tag_type(o.size) + "), "
-					"header.record_size));\r\n";
-				output += "\t\t\t\t\t\tserialize_selection" + o.name + "__index = true;\r\n";
-				output += "\t\t\t\t\t}\r\n";// end correct type
+					"header.record_size));\n";
+				output += "\t\t\t\t\t\tserialize_selection." + o.name + "__index = true;\n";
+				output += "\t\t\t\t\t}\n";// end correct type
 				if(size_to_tag_type(o.size) != "uint8_t") {
-					output += "\t\t\t\t\telse if(header.is_type(\"uint8_t\")) {\r\n"; //wrong type uint8_t
-					output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i)\r\n";
+					output += "\t\t\t\t\telse if(header.is_type(\"uint8_t\")) {\n"; //wrong type uint8_t
+					output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i)\n";
 					output += "\t\t\t\t\t\t\t" + o.name + ".m__index.vptr()[i].value = "
-						+ size_to_tag_type(o.size) + "(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));\r\n";
-					output += "\t\t\t\t\t\tserialize_selection" + o.name + "__index = true;\r\n";
-					output += "\t\t\t\t\t}\r\n";// end wrong type uint8_t
+						+ size_to_tag_type(o.size) + "(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));\n";
+					output += "\t\t\t\t\t\tserialize_selection." + o.name + "__index = true;\n";
+					output += "\t\t\t\t\t}\n";// end wrong type uint8_t
 				}
 				if(size_to_tag_type(o.size) != "uint16_t") {
-					output += "\t\t\t\t\telse if(header.is_type(\"uint16_t\")) {\r\n"; //wrong type uint16_t
-					output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i)\r\n";
+					output += "\t\t\t\t\telse if(header.is_type(\"uint16_t\")) {\n"; //wrong type uint16_t
+					output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i)\n";
 					output += "\t\t\t\t\t\t\t" + o.name + ".m__index.vptr()[i].value = "
-						+ size_to_tag_type(o.size) + "(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));\r\n";
-					output += "\t\t\t\t\t\tserialize_selection" + o.name + "__index = true;\r\n";
-					output += "\t\t\t\t\t}\r\n";// end wrong type uint16_t
+						+ size_to_tag_type(o.size) + "(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));\n";
+					output += "\t\t\t\t\t\tserialize_selection." + o.name + "__index = true;\n";
+					output += "\t\t\t\t\t}\n";// end wrong type uint16_t
 				}
 				if(size_to_tag_type(o.size) != "uint32_t") {
-					output += "\t\t\t\t\telse if(header.is_type(\"uint32_t\")) {\r\n"; //wrong type uint32_t
-					output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i)\r\n";
+					output += "\t\t\t\t\telse if(header.is_type(\"uint32_t\")) {\n"; //wrong type uint32_t
+					output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i)\n";
 					output += "\t\t\t\t\t\t\t" + o.name + ".m__index.vptr()[i].value = "
-						+ size_to_tag_type(o.size) + "(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));\r\n";
-					output += "\t\t\t\t\t\tserialize_selection" + o.name + "__index = true;\r\n";
-					output += "\t\t\t\t\t}\r\n";// end wrong type uint32_t
+						+ size_to_tag_type(o.size) + "(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));\n";
+					output += "\t\t\t\t\t\tserialize_selection." + o.name + "__index = true;\n";
+					output += "\t\t\t\t\t}\n";// end wrong type uint32_t
 				}
 
 				//redo free list
-				output += "\t\t\t\t\t\tif(serialize_selection" + o.name + "__index == true){\r\n";
-				output += "\t\t\t\t\t" + o.name + ".first_free = " + o.name + "_id();\r\n";
-				output += "\t\t\t\t\tfor(int32_t j = int32_t(" + std::to_string(o.size) + "); j >= 0; --j) {\r\n";
-				output += "\t\t\t\t\t\tif(" + o.name + ".m__index.vptr()[j] != " + o.name + "_id(" + size_to_tag_type(o.size) + "(j))) {\r\n";
-				output += "\t\t\t\t\t\t\t" + o.name + ".m__index.vptr()[j] = " + o.name + ".first_free;\r\n";
-				output += "\t\t\t\t\t\t\t" + o.name + ".first_free = " + o.name + "_id(" + size_to_tag_type(o.size) + "(j));\r\n";
-				output += "\t\t\t\t\t\t}\r\n";
-				output += "\t\t\t\t\t}\r\n\r\n";
-				output += "\t\t\t\t\t}\r\n\r\n";
+				output += "\t\t\t\t\t\tif(serialize_selection." + o.name + "__index == true){\n";
+				output += "\t\t\t\t\t" + o.name + ".first_free = " + o.name + "_id();\n";
+				output += "\t\t\t\t\tfor(int32_t j = int32_t(" + std::to_string(o.size) + "); j >= 0; --j) {\n";
+				output += "\t\t\t\t\t\tif(" + o.name + ".m__index.vptr()[j] != " + o.name + "_id(" + size_to_tag_type(o.size) + "(j))) {\n";
+				output += "\t\t\t\t\t\t\t" + o.name + ".m__index.vptr()[j] = " + o.name + ".first_free;\n";
+				output += "\t\t\t\t\t\t\t" + o.name + ".first_free = " + o.name + "_id(" + size_to_tag_type(o.size) + "(j));\n";
+				output += "\t\t\t\t\t\t}\n";
+				output += "\t\t\t\t\t}\n\n";
+				output += "\t\t\t\t\t}\n\n";
 
-				output += "\t\t\t\t\t}\r\n"; //end index match
+				output += "\t\t\t\t\t}\n"; //end index match
 			} // end: load index handling for erasable
 
 			for(auto& io : o.indexed_objects) {
-				output += "\t\t\t\t\telse if(header.is_property(\"" + io.property_name + "\") && mask." + o.name + "_" + io.property_name + ") {\r\n"; // matches
+				output += "\t\t\t\t\telse if(header.is_property(\"" + io.property_name + "\") && mask." + o.name + "_" + io.property_name + ") {\n"; // matches
 
-				output += "\t\t\t\t\tif(header.is_type(\"uint8_t\")) {\r\n"; //type uint8_t
-				output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i)\r\n";
-				output += "\t\t\t\t\t\t\t" + o.name + "_id temp;\r\n";
-				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));\r\n";
-				output += "\t\t\t\t\t\t\tset_ " + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\r\n";
-				output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + io.property_name + " = true;\r\n";
-				output += "\t\t\t\t\t}\r\n";// end type uint8_t
-				output += "\t\t\t\t\telse if(header.is_type(\"uint16_t\")) {\r\n"; //type uint16_t
-				output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i)\r\n";
-				output += "\t\t\t\t\t\t\t" + o.name + "_id temp;\r\n";
-				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));\r\n";
-				output += "\t\t\t\t\t\t\tset_ " + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\r\n";
-				output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + io.property_name + " = true;\r\n";
-				output += "\t\t\t\t\t}\r\n";// end type uint16_t
-				output += "\t\t\t\t\telse if(header.is_type(\"uint32_t\")) {\r\n"; //type uint16_t
-				output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i)\r\n";
-				output += "\t\t\t\t\t\t\t" + o.name + "_id temp;\r\n";
-				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));\r\n";
-				output += "\t\t\t\t\t\t\tset_ " + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\r\n";
-				output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + io.property_name + " = true;\r\n";
-				output += "\t\t\t\t\t}\r\n";// end type uint32_t
+				output += "\t\t\t\t\tif(header.is_type(\"uint8_t\")) {\n"; //type uint8_t
+				output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {\n";
+				output += "\t\t\t\t\t\t\t" + io.type_name + "_id temp;\n";
+				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));\n";
+				output += "\t\t\t\t\t\t\tset_" + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\n";
+				output += "\t\t\t\t\t\t}\n";
+				output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + io.property_name + " = true;\n";
+				output += "\t\t\t\t\t}\n";// end type uint8_t
+				output += "\t\t\t\t\telse if(header.is_type(\"uint16_t\")) {\n"; //type uint16_t
+				output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {\n";
+				output += "\t\t\t\t\t\t\t" + io.type_name + "_id temp;\n";
+				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));\n";
+				output += "\t\t\t\t\t\t\tset_" + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\n";
+				output += "\t\t\t\t\t\t}\n";
+				output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + io.property_name + " = true;\n";
+				output += "\t\t\t\t\t}\n";// end type uint16_t
+				output += "\t\t\t\t\telse if(header.is_type(\"uint32_t\")) {\n"; //type uint16_t
+				output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {\n";
+				output += "\t\t\t\t\t\t\t" + io.type_name + "_id temp;\n";
+				output += "\t\t\t\t\t\t\ttemp.value = " + size_to_tag_type(o.size) + "(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));\n";
+				output += "\t\t\t\t\t\t\tset_" + o.name + "_" + io.property_name + "(" + o.name + "_id(" + size_to_tag_type(o.size) + "(i)), temp);\n";
+				output += "\t\t\t\t\t\t}\n";
+				output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + io.property_name + " = true;\n";
+				output += "\t\t\t\t\t}\n";// end type uint32_t
 
-				output += "\t\t\t\t\t}\r\n"; //end property match
+				output += "\t\t\t\t\t}\n"; //end property match
 			} // end index properties
 
 			for(auto& prop : o.properties) {
-				output += "\t\t\t\t\telse if(header.is_property(\"" + prop.name + "\") && mask." + o.name + "_" + prop.name + ") {\r\n"; // matches
+				output += "\t\t\t\t\telse if(header.is_property(\"" + prop.name + "\") && mask." + o.name + "_" + prop.name + ") {\n"; // matches
 				if(prop.is_derived) {
 
 				} else if(prop.is_bitfield) {
-					output += "\t\t\t\t\tif(header.is_type(\"bitfield\")) {\r\n"; //correct type
-					output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m_" + prop.name + ".vptr(), reinterpret_cast<bitfield_type const*>(input_buffer), "
-						", std::min(size_t(" + o.name + ".size_used + 7) / 8, header.record_size));\r\n";
-					output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-					output += "\t\t\t\t\t}\r\n";// end correct type
+					output += "\t\t\t\t\tif(header.is_type(\"bitfield\")) {\n"; //correct type
+					output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m_" + prop.name + ".vptr(), reinterpret_cast<bitfield_type const*>(input_buffer)"
+						", std::min(size_t(" + o.name + ".size_used + 7) / 8, header.record_size));\n";
+					output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+					output += "\t\t\t\t\t}\n";// end correct type
 
 					for(auto& con : parsed_file.conversion_list) {
 						if(con.to == "bool") {
 							if(std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.from) != parsed_file.object_types.end()) {
 								// from is an object
-								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
-								output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\r\n";
-								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i) {\r\n";
-								output += "\t\t\t\t\t\t\t" + con.from + " temp;\r\n";
-								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\r\n";
-								output += "\t\t\t\t\t\t\tdcon::bit_vector_set(" + o.name + ".m_" + prop.name + ".vptr(), i, convert_type(&temp, (" + con.to + "*)nullptr));\r\n";
-								output += "\t\t\t\t\t\t}\r\n";
-								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-								output += "\t\t\t\t\t}\r\n";
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\n";
+								output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i) {\n";
+								output += "\t\t\t\t\t\t\t" + con.from + " temp;\n";
+								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\n";
+								output += "\t\t\t\t\t\t\tdcon::bit_vector_set(" + o.name + ".m_" + prop.name + ".vptr(), i, convert_type(&temp, (" + con.to + "*)nullptr));\n";
+								output += "\t\t\t\t\t\t}\n";
+								output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+								output += "\t\t\t\t\t}\n";
 							} else {
 								// from not an object
-								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
-								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i)\r\n";
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i)\n";
 								output += "\t\t\t\t\t\t\tdcon::bit_vector_set(" + o.name + ".m_" + prop.name + ".vptr(), i, "
-									"convert_type(reinterpret_cast<" + con.from + " const*>(input_buffer) + i, (" + con.to + "*)nullptr));\r\n";
-								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-								output += "\t\t\t\t\t}\r\n";
+									"convert_type(reinterpret_cast<" + con.from + " const*>(input_buffer) + i, (" + con.to + "*)nullptr));\n";
+								output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+								output += "\t\t\t\t\t}\n";
 							}
 						}
 					}
 				} else if(prop.is_special_vector) {
-					output += "\t\t\t\t\tif(header.is_type(\"stable_mk_2_tag\")) {\r\n"; //correct type
-					output += "\t\t\t\t\t\t\tuint32_t ix = 0;\r\n";
+					output += "\t\t\t\t\tif(header.is_type(\"stable_mk_2_tag\")) {\n"; //correct type
+					output += "\t\t\t\t\t\t\tuint32_t ix = 0;\n";
 
 					//read internal data type
-					output += "\t\t\t\tstd::byte const* zero_pos = std::find(input_buffer, input_buffer + header.record_size, 0);\r\n";
+					output += "\t\t\t\tstd::byte const* zero_pos = std::find(input_buffer, input_buffer + header.record_size, 0);\n";
 
 					output += "\t\t\t\t\tif(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), "
-						"reinterpret_cast<char const*>(zero_pos), \"" + prop.data_type + "\")) {\r\n"; //correct type
+						"reinterpret_cast<char const*>(zero_pos), \"" + prop.data_type + "\")) {\n"; //correct type
 
-					output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ){\r\n";
-					output += "\t\t\t\t\t\t\tuint16_t sz = 0;\r\n";
+					output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ){\n";
+					output += "\t\t\t\t\t\t\tuint16_t sz = 0;\n";
 
-					output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\r\n";
+					output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\n";
 					output += "\t\t\t\t\t\t\t\tsz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), "
-						"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + prop.data_type + ") ));\r\n";
-					output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\r\n";
-					output += "\t\t\t\t\t\t\t}\r\n"; // endif
+						"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + prop.data_type + ") ));\n";
+					output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\n";
+					output += "\t\t\t\t\t\t\t}\n"; // endif
 
 					output += "\t\t\t\t\t\t\tdcon::load_range(" + o.name + "." + prop.name + "_storage, "
 						+ o.name + ".m_" + prop.name + ".vptr()[ix], reinterpret_cast<" + prop.data_type + " const*>(icpy), "
-						"reinterpret_cast<" + prop.data_type + " const*>(icpy) + sz)\r\n";
-					output += "\t\t\t\t\t\t\ticpy += sz * sizeof(" + prop.data_type + ");\r\n";
-					output += "\t\t\t\t\t\t\t++ix;\r\n";
-					output += "\t\t\t\t\t\t}\r\n"; //end for
+						"reinterpret_cast<" + prop.data_type + " const*>(icpy) + sz)\n";
+					output += "\t\t\t\t\t\t\ticpy += sz * sizeof(" + prop.data_type + ");\n";
+					output += "\t\t\t\t\t\t\t++ix;\n";
+					output += "\t\t\t\t\t\t}\n"; //end for
 
-					output += "\t\t\t\t\t}\r\n"; // end correct type
+					output += "\t\t\t\t\t}\n"; // end correct type
 
 					for(auto& con : parsed_file.conversion_list) {
 						if(con.to == prop.data_type) {
 							if(std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.from) != parsed_file.object_types.end()) {
 								// from is an object
 								output += "\t\t\t\t\telse if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), "
-									"reinterpret_cast<char const*>(zero_pos), \"" + con.from + "\")) {\r\n"; // if = from
+									"reinterpret_cast<char const*>(zero_pos), \"" + con.from + "\")) {\n"; // if = from
 
-								output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ) {\r\n";
-								output += "\t\t\t\t\t\t\tuint16_t sz = 0;\r\n"; // 2
+								output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ) {\n";
+								output += "\t\t\t\t\t\t\tuint16_t sz = 0;\n"; // 2
 
-								output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\r\n"; // if read sz
+								output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\n"; // if read sz
 								output += "\t\t\t\t\t\t\t\tsz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), "
-									"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + con.from + ") ));\r\n";
-								output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\r\n";
-								output += "\t\t\t\t\t\t\t}\r\n"; // endif read sz
+									"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + con.from + ") ));\n";
+								output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\n";
+								output += "\t\t\t\t\t\t\t}\n"; // endif read sz
 
-								output += "\t\t\t\t\t\t\tdcon::resize(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], sz);\r\n";
+								output += "\t\t\t\t\t\t\tdcon::resize(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], sz);\n";
 
-								output += "\t\t\t\t\t\t\tfor(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {\r\n"; // ii for
-								output += "\t\t\t\t\t\t\t" + con.from + " temp;\r\n";
-								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\r\n";
+								output += "\t\t\t\t\t\t\tfor(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {\n"; // ii for
+								output += "\t\t\t\t\t\t\t" + con.from + " temp;\n";
+								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\n";
 								output += "\t\t\t\t\t\t\tdcon::get(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], ii) = "
-									"convert_type(&temp, (" + con.to + "*)nullptr);\r\n";
-								output += "\t\t\t\t\t\t\t}\r\n"; //end ii for
+									"convert_type(&temp, (" + con.to + "*)nullptr);\n";
+								output += "\t\t\t\t\t\t\t}\n"; //end ii for
 
-								output += "\t\t\t\t\t\t\t++ix;\r\n";
-								output += "\t\t\t\t\t\t}\r\n"; //end for
+								output += "\t\t\t\t\t\t\t++ix;\n";
+								output += "\t\t\t\t\t\t}\n"; //end for
 
-								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-								output += "\t\t\t\t\t}\r\n"; // end if = from
+								output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+								output += "\t\t\t\t\t}\n"; // end if = from
 							} else {
 								// from not an object
 								output += "\t\t\t\t\telse if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), "
-									"reinterpret_cast<char const*>(zero_pos), \"" + con.from + "\")) {\r\n"; // if = from
+									"reinterpret_cast<char const*>(zero_pos), \"" + con.from + "\")) {\n"; // if = from
 
-								output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ) {\r\n";
-								output += "\t\t\t\t\t\t\tuint16_t sz = 0;\r\n"; // 2
+								output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ) {\n";
+								output += "\t\t\t\t\t\t\tuint16_t sz = 0;\n"; // 2
 
-								output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\r\n"; // if read sz
+								output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\n"; // if read sz
 								output += "\t\t\t\t\t\t\t\tsz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), "
-									"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + con.from + ") ));\r\n";
-								output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\r\n";
-								output += "\t\t\t\t\t\t\t}\r\n"; // endif read sz
+									"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + con.from + ") ));\n";
+								output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\n";
+								output += "\t\t\t\t\t\t\t}\n"; // endif read sz
 
-								output += "\t\t\t\t\t\t\tdcon::resize(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], sz);\r\n";
+								output += "\t\t\t\t\t\t\tdcon::resize(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], sz);\n";
 
-								output += "\t\t\t\t\t\t\tfor(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {\r\n"; // ii for
+								output += "\t\t\t\t\t\t\tfor(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {\n"; // ii for
 								output += "\t\t\t\t\t\t\tdcon::get(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], ii) = "
-									"convert_type(reinterpret_cast<" + con.from + " const*>(icpy), (" + con.to + "*)nullptr);\r\n";
-								output += "\t\t\t\t\t\t\ticpy += sizeof(" + con.from + ");\r\n";
-								output += "\t\t\t\t\t\t\t}\r\n"; //end ii for
+									"convert_type(reinterpret_cast<" + con.from + " const*>(icpy), (" + con.to + "*)nullptr);\n";
+								output += "\t\t\t\t\t\t\ticpy += sizeof(" + con.from + ");\n";
+								output += "\t\t\t\t\t\t\t}\n"; //end ii for
 
-								output += "\t\t\t\t\t\t\t++ix;\r\n";
-								output += "\t\t\t\t\t\t}\r\n"; //end for
+								output += "\t\t\t\t\t\t\t++ix;\n";
+								output += "\t\t\t\t\t\t}\n"; //end for
 
-								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-								output += "\t\t\t\t\t}\r\n"; // end if = from
+								output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+								output += "\t\t\t\t\t}\n"; // end if = from
 
 							}
 						}
@@ -3942,99 +3980,99 @@ int main(int argc, char *argv[]) {
 						for(auto& basic_type : common_types) {
 							if(basic_type != normed_type) {
 								output += "\t\t\t\t\telse if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), "
-									"reinterpret_cast<char const*>(zero_pos), \"" + basic_type + "\")) {\r\n"; // if = from
+									"reinterpret_cast<char const*>(zero_pos), \"" + basic_type + "\")) {\n"; // if = from
 
-								output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ) {\r\n";
-								output += "\t\t\t\t\t\t\tuint16_t sz = 0;\r\n"; // 2
+								output += "\t\t\t\t\t\tfor(std::byte const* icpy = zero_pos + 1; ix < " + o.name + ".size_used && icpy < input_buffer + header.record_size; ) {\n";
+								output += "\t\t\t\t\t\t\tuint16_t sz = 0;\n"; // 2
 
-								output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\r\n"; // if read sz
+								output += "\t\t\t\t\t\t\tif(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {\n"; // if read sz
 								output += "\t\t\t\t\t\t\t\tsz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), "
-									"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + basic_type + ") ));\r\n";
-								output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\r\n";
-								output += "\t\t\t\t\t\t\t}\r\n"; // endif read sz
+									"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(" + basic_type + ") ));\n";
+								output += "\t\t\t\t\t\t\t\ticpy += sizeof(uint16_t);\n";
+								output += "\t\t\t\t\t\t\t}\n"; // endif read sz
 
-								output += "\t\t\t\t\t\t\tdcon::resize(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], sz);\r\n";
+								output += "\t\t\t\t\t\t\tdcon::resize(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], sz);\n";
 
-								output += "\t\t\t\t\t\t\tfor(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {\r\n"; // ii for
+								output += "\t\t\t\t\t\t\tfor(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {\n"; // ii for
 								output += "\t\t\t\t\t\t\tdcon::get(" + o.name + "." + prop.name + "_storage, " + o.name + ".m_" + prop.name + ".vptr()[ix], ii) = "
-									+ prop.data_type + "(*(reinterpret_cast<" + basic_type + " const*>(icpy) + i));\r\n";
-								output += "\t\t\t\t\t\t\ticpy += sizeof(" + basic_type + ");\r\n";
-								output += "\t\t\t\t\t\t\t}\r\n"; //end ii for
+									+ prop.data_type + "(*(reinterpret_cast<" + basic_type + " const*>(icpy) + i));\n";
+								output += "\t\t\t\t\t\t\ticpy += sizeof(" + basic_type + ");\n";
+								output += "\t\t\t\t\t\t\t}\n"; //end ii for
 
-								output += "\t\t\t\t\t\t\t++ix;\r\n";
-								output += "\t\t\t\t\t\t}\r\n"; //end for
+								output += "\t\t\t\t\t\t\t++ix;\n";
+								output += "\t\t\t\t\t\t}\n"; //end for
 
-								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-								output += "\t\t\t\t\t}\r\n"; // end if = from
+								output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+								output += "\t\t\t\t\t}\n"; // end if = from
 							}
 						}
 					}
 					// end if prop is special array
 				} else if(prop.is_object) {
-					output += "\t\t\t\t\tif(header.is_type(\"" + prop.data_type + "\")) {\r\n"; //correct type
+					output += "\t\t\t\t\tif(header.is_type(\"" + prop.data_type + "\")) {\n"; //correct type
 
-					output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\r\n";
-					output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + prop.data_type + "))); ++i) {\r\n";
-					output += "\t\t\t\t\t\t\tdeserialize(icpy, " + o.name + ".m_" + prop.name + ".vptr()[i], input_buffer + header.record_size);\r\n";
-					output += "\t\t\t\t\t\t}\r\n";
-					output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
+					output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\n";
+					output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + prop.data_type + "))); ++i) {\n";
+					output += "\t\t\t\t\t\t\tdeserialize(icpy, " + o.name + ".m_" + prop.name + ".vptr()[i], input_buffer + header.record_size);\n";
+					output += "\t\t\t\t\t\t}\n";
+					output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
 
-					output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m_" + prop.name + ".vptr(), reinterpret_cast<" + prop.data_type + " const*>(input_buffer), "
-						", std::min(size_t(" + o.name + ".size_used) * sizeof(" + prop.data_type + "), header.record_size));\r\n";
-					output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-					output += "\t\t\t\t\t}\r\n";// end correct type
+					output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m_" + prop.name + ".vptr(), reinterpret_cast<" + prop.data_type + " const*>(input_buffer)"
+						", std::min(size_t(" + o.name + ".size_used) * sizeof(" + prop.data_type + "), header.record_size));\n";
+					output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+					output += "\t\t\t\t\t}\n";// end correct type
 					for(auto& con : parsed_file.conversion_list) {
 						if(con.to == prop.data_type) {
 							if(std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.from) != parsed_file.object_types.end()) {
 								// from is an object
-								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
-								output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\r\n";
-								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i) {\r\n";
-								output += "\t\t\t\t\t\t\t" + con.from + " temp;\r\n";
-								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\r\n";
-								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = convert_type(&temp, (" + con.to + "*)nullptr);\r\n";
-								output += "\t\t\t\t\t\t}\r\n";
-								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-								output += "\t\t\t\t\t}\r\n";
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\n";
+								output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i) {\n";
+								output += "\t\t\t\t\t\t\t" + con.from + " temp;\n";
+								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\n";
+								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = convert_type(&temp, (" + con.to + "*)nullptr);\n";
+								output += "\t\t\t\t\t\t}\n";
+								output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+								output += "\t\t\t\t\t}\n";
 							} else {
 								// from not an object
-								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
-								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i)\r\n";
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i)\n";
 								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = "
-									+ "convert_type(reinterpret_cast<" + con.from + " const*>(input_buffer, (" + con.to + "*)nullptr) + i);\r\n";
-								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-								output += "\t\t\t\t\t}\r\n";
+									+ "convert_type(reinterpret_cast<" + con.from + " const*>(input_buffer, (" + con.to + "*)nullptr) + i);\n";
+								output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+								output += "\t\t\t\t\t}\n";
 
 							}
 						}
 					}
 				} else {
-					output += "\t\t\t\t\tif(header.is_type(\"" + prop.data_type + "\")) {\r\n"; //correct type
-					output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m_" + prop.name + ".vptr(), reinterpret_cast<" + prop.data_type + " const*>(input_buffer), "
-						", std::min(size_t(" + o.name + ".size_used) * sizeof(" + prop.data_type + "), header.record_size));\r\n";
-					output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-					output += "\t\t\t\t\t}\r\n";// end correct type
+					output += "\t\t\t\t\tif(header.is_type(\"" + prop.data_type + "\")) {\n"; //correct type
+					output += "\t\t\t\t\t\tmemcpy(" + o.name + ".m_" + prop.name + ".vptr(), reinterpret_cast<" + prop.data_type + " const*>(input_buffer)"
+						", std::min(size_t(" + o.name + ".size_used) * sizeof(" + prop.data_type + "), header.record_size));\n";
+					output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+					output += "\t\t\t\t\t}\n";// end correct type
 					for(auto& con : parsed_file.conversion_list) {
 						if(con.to == prop.data_type) {
 							if(std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.from) != parsed_file.object_types.end()) {
 								// from is an object
-								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
-								output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\r\n";
-								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i) {\r\n";
-								output += "\t\t\t\t\t\t\t" + con.from + " temp;\r\n";
-								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\r\n";
-								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = convert_type(&temp, (" + con.to + "*)nullptr);\r\n";
-								output += "\t\t\t\t\t\t}\r\n";
-								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-								output += "\t\t\t\t\t}\r\n";
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\n";
+								output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i) {\n";
+								output += "\t\t\t\t\t\t\t" + con.from + " temp;\n";
+								output += "\t\t\t\t\t\t\tdeserialize(icpy, temp, input_buffer + header.record_size);\n";
+								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = convert_type(&temp, (" + con.to + "*)nullptr);\n";
+								output += "\t\t\t\t\t\t}\n";
+								output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+								output += "\t\t\t\t\t}\n";
 							} else {
 								// from not an object
-								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\r\n";
-								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i)\r\n";
+								output += "\t\t\t\t\telse if(header.is_type(\"" + con.from + "\")) {\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + con.from + "))); ++i)\n";
 								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = "
-									+ "convert_type(reinterpret_cast<" + con.from + " const*>(input_buffer) + i, (" + con.to + "*)nullptr);\r\n";
-								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-								output += "\t\t\t\t\t}\r\n";
+									+ "convert_type(reinterpret_cast<" + con.from + " const*>(input_buffer) + i, (" + con.to + "*)nullptr);\n";
+								output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+								output += "\t\t\t\t\t}\n";
 
 							}
 						}
@@ -4043,46 +4081,55 @@ int main(int argc, char *argv[]) {
 						const auto normed_type = normalize_type(prop.data_type);
 						for(auto& basic_type : common_types) {
 							if(basic_type != normed_type) {
-								output += "\t\t\t\t\telse if(header.is_type(\"" + basic_type + "\")) {\r\n";
-								output += "\t\t\t\t\t\tfor(uint32_t i = 0, i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + basic_type + "))); ++i)\r\n";
+								output += "\t\t\t\t\telse if(header.is_type(\"" + basic_type + "\")) {\n";
+								output += "\t\t\t\t\t\tfor(uint32_t i = 0; i < std::min(" + o.name + ".size_used, uint32_t(header.record_size / sizeof(" + basic_type + "))); ++i)\n";
 								output += "\t\t\t\t\t\t\t" + o.name + ".m_" + prop.name + ".vptr()[i] = "
-									+ prop.data_type + "(*(reinterpret_cast<" + basic_type + " const*>(input_buffer) + i));\r\n";
-								output += "\t\t\t\t\t\tserialize_selection" + o.name + "_" + prop.name + " = true;\r\n";
-								output += "\t\t\t\t\t}\r\n";
+									+ prop.data_type + "(*(reinterpret_cast<" + basic_type + " const*>(input_buffer) + i));\n";
+								output += "\t\t\t\t\t\tserialize_selection." + o.name + "_" + prop.name + " = true;\n";
+								output += "\t\t\t\t\t}\n";
 							}
 						}
 					}
 				}
-				output += "\t\t\t\t\t}\r\n"; //end property match
+				output += "\t\t\t\t\t}\n"; //end property match
 			} // end properties
 
-			output += "\t\t\t\t}\r\n"; // end has matched object
+			output += "\t\t\t\t}\n"; // end has matched object
 		}
-		output += "\t\t\t\t}\r\n"; // end wrap: gaurantee enough space to read entire buffer
-		output += "\t\t\t\tinput_buffer += header.record_size;\r\n";
+		output += "\t\t\t\t}\n"; // end wrap: gaurantee enough space to read entire buffer
+		output += "\t\t\t\tinput_buffer += header.record_size;\n";
 
-		output += "\t\t\t}\r\n"; // end loop -- input buffer exhausted
-		output += "\t\t}\r\n"; // end deserialize (with mask)
+		output += "\t\t\t}\n"; // end loop -- input buffer exhausted
+		output += "\t\t}\n"; // end deserialize (with mask)
 
-		output += "\r\n";
+		output += "\n";
 		//write globals
-		output += "\r\n";
+		output += "\n";
 		for(auto& gstr : parsed_file.globals) {
-			output += "\t\t" + gstr + "\r\n";
+			output += "\t\t" + gstr + "\n";
 		}
 
 		//class data_container end
-		output += "\t};\r\n\r\n";
+		output += "\t};\n\n";
 
 		//close new namespace
-		output += "}\r\n";
+		output += "}\n";
 
-		output += "\r\n";
+		output += "\n";
 
 
-		output += "#undef DCON_RELEASE_INLINE\r\n";
+		output += "#undef DCON_RELEASE_INLINE\n";
 
 		//newline at end of file
-		output += "\r\n";
+		output += "\n";
+
+		std::fstream fileout;
+		fileout.open(output_file_name, std::ios::out);
+		if(fileout.is_open()) {
+			fileout << output;
+			fileout.close();
+		} else {
+			std::abort();
+		}
 	}
 }
