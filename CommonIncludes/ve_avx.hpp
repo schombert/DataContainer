@@ -937,6 +937,13 @@ namespace ve {
 		return _mm256_loadu_si256((const __m256i *)(source + e.value));
 	}
 
+	namespace detail {
+		template<typename T>
+		constexpr auto zero_is_null_wrapper(int) -> std::enable_if_t<T::zero_is_null_t, bool> { return true; }
+		template<typename T>
+		constexpr auto zero_is_null_wrapper(...) { return false; }
+	}
+
 	template<typename T>
 	RELEASE_INLINE fp_vector load(partial_contiguous_tags<T> e, float const* source) {
 		auto mask = _mm256_loadu_ps((float const*)(load_masks)+8ui32 - e.subcount);
@@ -988,7 +995,7 @@ namespace ve {
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 2, tagged_vector<U>> {
-		if constexpr(!U::zero_is_null_t{}) {
+		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
 			auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
 			auto const vh = _mm_loadl_epi64((const __m128i *)(source + e.value + 4));
 
@@ -1028,7 +1035,7 @@ namespace ve {
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(unaligned_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 2, tagged_vector<U>> {
-		if constexpr(!U::zero_is_null_t{}) {
+		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
 			auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
 			auto const vh = _mm_loadl_epi64((const __m128i *)(source + e.value + 4));
 
@@ -1076,7 +1083,7 @@ namespace ve {
 	
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(partial_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 2, tagged_vector<U>> {
-		if constexpr(!U::zero_is_null_t{}) {
+		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
 			auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
 			auto const vh = _mm_loadl_epi64((const __m128i *)(source + e.value + 4));
 
@@ -1120,7 +1127,7 @@ namespace ve {
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 1 && !std::is_same_v<U, dcon::bitfield_type>, tagged_vector<U>> {
-		if constexpr(!U::zero_is_null_t{}) {
+		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
 			auto const vl = _mm_loadu_si32(source + e.value);
 			auto const vh = _mm_loadu_si32(source + e.value + 4);
 
@@ -1160,7 +1167,7 @@ namespace ve {
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(unaligned_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 1 && !std::is_same_v<U, dcon::bitfield_type>, tagged_vector<U>> {
-		if constexpr(!U::zero_is_null_t{}) {
+		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
 			auto const vl = _mm_loadu_si32(source + e.value);
 			auto const vh = _mm_loadu_si32(source + e.value + 4);
 
@@ -1208,7 +1215,7 @@ namespace ve {
 
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(partial_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 1 && !std::is_same_v<U, dcon::bitfield_type>, tagged_vector<U>> {
-		if constexpr(!U::zero_is_null_t{}) {
+		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
 			auto const vl = _mm_loadu_si32(source + e.value);
 			auto const vh = _mm_loadu_si32(source + e.value + 4);
 

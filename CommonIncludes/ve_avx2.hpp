@@ -935,6 +935,13 @@ namespace ve {
 #pragma warning( push )
 #pragma warning( disable : 4245)
 
+	namespace detail {
+		template<typename T>
+		constexpr auto zero_is_null_wrapper(int) -> std::enable_if_t<T::zero_is_null_t, bool> { return true; }
+		template<typename T>
+		constexpr auto zero_is_null_wrapper(...) { return false; }
+	}
+
 	template<typename T>
 	RELEASE_INLINE int_vector load(contiguous_tags<T> e, int16_t const* source) {
 		auto v = _mm_loadu_si128((const __m128i *)(source + e.value));
@@ -947,7 +954,7 @@ namespace ve {
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 2, tagged_vector<U>> {
-		if constexpr(!U::zero_is_null_t{}) {
+		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
 			auto v = _mm_loadu_si128((const __m128i *)(source + e.value));
 			return _mm256_cvtepi16_epi32(v);
 		} else {
@@ -968,7 +975,7 @@ namespace ve {
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(unaligned_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 2, tagged_vector<U>> {
-		if constexpr(!U::zero_is_null_t{}) {
+		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
 			auto v = _mm_loadu_si128((const __m128i *)(source + e.value));
 			return _mm256_cvtepi16_epi32(v);
 		} else {
@@ -991,7 +998,7 @@ namespace ve {
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(partial_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 2, tagged_vector<U>> {
-		if constexpr(!U::zero_is_null_t{}) {
+		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
 			auto mask = _mm256_loadu_si256((__m256i const*)(load_masks + 8ui32 - e.subcount));
 			auto v = _mm_loadu_si128((const __m128i *)(source + e.value));
 			return _mm256_blendv_epi8(_mm256_setzero_si256(), _mm256_cvtepi16_epi32(v), mask);
@@ -1017,7 +1024,7 @@ namespace ve {
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 1 && !std::is_same_v<U, dcon::bitfield_type>, tagged_vector<U>> {
-		if constexpr(!U::zero_is_null_t{}) {
+		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
 			auto v = _mm_loadl_epi64((const __m128i *)(source + e.value));
 			return _mm256_cvtepi8_epi32(v);
 		} else {
@@ -1037,7 +1044,7 @@ namespace ve {
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(unaligned_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 1 && !std::is_same_v<U, dcon::bitfield_type>, tagged_vector<U>> {
-		if constexpr(!U::zero_is_null_t{}) {
+		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
 			auto v = _mm_loadl_epi64((const __m128i *)(source + e.value));
 			return _mm256_cvtepi8_epi32(v);
 		} else {
@@ -1060,7 +1067,7 @@ namespace ve {
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(partial_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 1 && !std::is_same_v<U, dcon::bitfield_type>, tagged_vector<U>> {
-		if constexpr(!U::zero_is_null_t{}) {
+		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
 			auto mask = _mm256_loadu_si256((__m256i const*)(load_masks + 8ui32 - e.subcount));
 			auto v = _mm_loadl_epi64((const __m128i *)(source + e.value));
 			return _mm256_blendv_epi8(_mm256_setzero_si256(), _mm256_cvtepi8_epi32(v), mask);
@@ -1116,7 +1123,7 @@ namespace ve {
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(tagged_vector<T> indices, U const* source)  -> std::enable_if_t<!std::numeric_limits<U>::is_integer && sizeof(U) == 2, tagged_vector<U>> {
-		if constexpr(!U::zero_is_null_t{}) {
+		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
 			auto v = _mm256_i32gather_epi32((int32_t const*)source, _mm256_sub_epi32(indices.value, _mm256_set1_epi32(1)), 2);
 			return _mm256_srai_epi32(v, 16);
 		} else {
@@ -1126,7 +1133,7 @@ namespace ve {
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(tagged_vector<T> indices, U const* source) -> std::enable_if_t<!std::numeric_limits<U>::is_integer && sizeof(U) == 1, tagged_vector<U>> {
-		if constexpr(!U::zero_is_null_t{}) {
+		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
 			auto v = _mm256_i32gather_epi32((int32_t const*)source, _mm256_sub_epi32(indices.value, _mm256_set1_epi32(3)), 1);
 			return _mm256_srai_epi32(v, 24);
 		} else {
@@ -1180,7 +1187,7 @@ namespace ve {
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(tagged_vector<T> indices, mask_vector mask, U const* source)  -> std::enable_if_t<!std::numeric_limits<U>::is_integer && sizeof(U) == 2, tagged_vector<U>> {
-		if constexpr(!U::zero_is_null_t{}) {
+		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
 			auto v = _mm256_mask_i32gather_epi32(_mm256_setzero_si256(), (int32_t const*)source, _mm256_sub_epi32(indices.value, _mm256_set1_epi32(1)), _mm256_castps_si256(mask.value), 2);
 			return _mm256_srai_epi32(v, 16);
 		} else {
@@ -1190,7 +1197,7 @@ namespace ve {
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(tagged_vector<T> indices, mask_vector mask, U const* source)  -> std::enable_if_t<!std::numeric_limits<U>::is_integer && sizeof(U) == 1, tagged_vector<U>> {
-		if constexpr(!U::zero_is_null_t{}) {
+		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
 			auto v = _mm256_mask_i32gather_epi32(_mm256_setzero_si256(), (int32_t const*)source, _mm256_sub_epi32(indices.value, _mm256_set1_epi32(3)), _mm256_castps_si256(mask.value), 1);
 			return _mm256_srai_epi32(v, 24);
 		} else {

@@ -204,11 +204,11 @@ int_vector * int_vector
 
 ### Conversions
 
-`ve::to_float(int_vector)` yields a `ve::fp_vector` containing the values stored in the `ve::int_vector` (for sufficiently large integer values some of the low bits may be lost by this conversion)
-`ve::to_int(fp_vector)` yields a `ve::int_vector` containing the values stored in the `ve::fp_vector` converted to integers
-`ve::floor(fp_vector)` yields a `ve::fp_vector` containing the values stored in the `ve::fp_vector` rounded down to the nearest integer
-`ve::ceil(fp_vector)` yields a `ve::fp_vector` containing the values stored in the `ve::fp_vector` rounded up to the nearest integer
-`ve::compress_mask(mask_vector)` converts a `ve::mask_vector` into a `ve::vbitfield_type` with bits set corresponding to the set mask positions
+- `ve::to_float(int_vector)` yields a `ve::fp_vector` containing the values stored in the `ve::int_vector` (for sufficiently large integer values some of the low bits may be lost by this conversion)
+- `ve::to_int(fp_vector)` yields a `ve::int_vector` containing the values stored in the `ve::fp_vector` converted to integers
+- `ve::floor(fp_vector)` yields a `ve::fp_vector` containing the values stored in the `ve::fp_vector` rounded down to the nearest integer
+- `ve::ceil(fp_vector)` yields a `ve::fp_vector` containing the values stored in the `ve::fp_vector` rounded up to the nearest integer
+- `ve::compress_mask(mask_vector)` converts a `ve::mask_vector` into a `ve::vbitfield_type` with bits set corresponding to the set mask positions
 
 ### Bitwise operations
 
@@ -273,18 +273,18 @@ vbitfield_type != vbitfield_type
 
 Note that the `ve::vbitfield_type` equality and inequality operators produce a packed sequence of bits stored in a `ve::vbitfield_type` as a result, not a boolean value.
 
-`ve::is_valid_index(tagged_vector<tag_type> a)` a convenience function equivalent to `a != tagged_vector<tag_type>()`
-`ve::is_invalid(tagged_vector<tag_type> a)` a convenience function equivalent to `a == tagged_vector<tag_type>()`
+- `ve::is_valid_index(tagged_vector<tag_type> a)` a convenience function equivalent to `a != tagged_vector<tag_type>()`
+- `ve::is_invalid(tagged_vector<tag_type> a)` a convenience function equivalent to `a == tagged_vector<tag_type>()`
 
 ### Selection
 
 Selection operations provide the ability to selectively combine values from two vectors into a single vector result. Often this is used to implement what amounts to `condition ? a : b`. However, unlike a C++ conditional, both results of the selection operation must be evaluated.
 
-`ve::min(fp_vector a, fp_vector b)` yields a `ve::fp_vector` containing in each slot the lesser of the values stored in `a` and `b` in that slot
-`ve::max(fp_vector a, fp_vector b)` yields a `ve::fp_vector` containing in each slot the greater of the values stored in `a` and `b` in that slot
-`ve::select(mask_vector, fp_vector a, fp_vector b)` yields a `ve::fp_vector` containing in each slot the value stored in `a` in that slot if that slot in the mask vector is set, and the value stored in `b` in that slot otherwise. (i.e. you get values from `a` if the condition that generated the `ve::mask_vector` is true and values form `b` if it is false)
-`ve::select(mask_vector, int_vector a, int_vector b)` as above for `ve::int_vector`s
-`ve::select(mask_vector, tagged_vector<tag_type>, tagged_vector<tag_type>)`as above for `ve::tagged_vector<tag_type>`s
+- `ve::min(fp_vector a, fp_vector b)` yields a `ve::fp_vector` containing in each slot the lesser of the values stored in `a` and `b` in that slot
+- `ve::max(fp_vector a, fp_vector b)` yields a `ve::fp_vector` containing in each slot the greater of the values stored in `a` and `b` in that slot
+- `ve::select(mask_vector, fp_vector a, fp_vector b)` yields a `ve::fp_vector` containing in each slot the value stored in `a` in that slot if that slot in the mask vector is set, and the value stored in `b` in that slot otherwise. (i.e. you get values from `a` if the condition that generated the `ve::mask_vector` is true and values form `b` if it is false)
+- `ve::select(mask_vector, int_vector a, int_vector b)` as above for `ve::int_vector`s
+- `ve::select(mask_vector, tagged_vector<tag_type>, tagged_vector<tag_type>)`as above for `ve::tagged_vector<tag_type>`s
 
 ## Load and store functions
 
