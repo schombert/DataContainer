@@ -1603,3 +1603,116 @@ TEST_CASE("loads and stores", "[ve_tests]") {
 
 }
 
+TEST_CASE("utility", "[ve_tests]") {
+	REQUIRE(ve::vector_size * 2 == ve::to_vector_size(ve::vector_size + 1));
+	REQUIRE(ve::vector_size * 2 == ve::to_vector_size(ve::vector_size * 2));
+	REQUIRE(ve::vector_size * 2 == ve::to_vector_size(ve::vector_size * 2 - 1));
+
+#ifdef __AVX2__
+	ve::fp_vector vec(1.0f, 3.0f, 4.0f, 7.0f, 10.0f, 14.5f, 16.0f, 18.0f);
+	ve::int_vector ivec(4, 5, 9, 10, 15, 11, 29, 1);
+	ve::tagged_vector<dummy_id> tvec(dummy_id(8), dummy_id(), dummy_id(5), dummy_id(1), dummy_id(10), dummy_id(11), dummy_id(19), dummy_id());
+	ve::tagged_vector<int32_t> tivec(4, 5, 9, 10, 15, 11, 29, 1);
+	ve::mask_vector mvec(true, true, false, true, false, true, false, false);
+#else
+#ifdef __AVX__
+	ve::fp_vector vec(1.0f, 3.0f, 4.0f, 7.0f, 10.0f, 14.5f, 16.0f, 18.0f);
+	ve::int_vector ivec(4, 5, 9, 10, 15, 11, 29, 1);
+	ve::tagged_vector<dummy_id> tvec(dummy_id(8), dummy_id(), dummy_id(5), dummy_id(1), dummy_id(10), dummy_id(11), dummy_id(19), dummy_id());
+	ve::tagged_vector<int32_t> tivec(4, 5, 9, 10, 15, 11, 29, 1);
+	ve::mask_vector mvec(true, true, false, true, false, true, false, false);
+#else // SSE
+	ve::fp_vector vec(1.0f, 3.0f, 4.0f, 7.0f);
+	ve::int_vector ivec(4, 5, 9, 10);
+	ve::tagged_vector<dummy_id> tvec(dummy_id(8), dummy_id(), dummy_id(5), dummy_id(1));
+	ve::tagged_vector<int32_t> tivec(4, 5, 9, 10);
+	ve::mask_vector mvec(true, true, false, true);
+#endif
+#endif
+
+	auto fres = ve::apply([](float v) { return std::sin(v); }, vec);
+	for(int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(fres[i] == std::sin(vec[i]));
+	}
+	int32_t count = 0;
+	ve::apply_with_indices([&count](uint32_t slot, dummy_id) { count += slot; }, ve::contiguous_tags<dummy_id>(0));
+	REQUIRE(count == (ve::vector_size / 2) * (ve::vector_size - 1));
+
+	count = 0;
+	ve::apply_with_indices([&count](uint32_t slot, dummy_id) { count += slot; }, ve::partial_contiguous_tags<dummy_id>(0, 3));
+	REQUIRE(count == 3);
+}
+
+#ifdef NDEBUG 
+#ifdef _MSC_VER 
+#define RELEASE_INLINE __forceinline
+#else
+#define RELEASE_INLINE inline __attribute__((always_inline))
+#endif
+#else
+#define RELEASE_INLINE inline
+#endif
+
+struct accumulate_product_operator {
+	float* const dest;
+	float const* const a;
+	float const* const b;
+
+	accumulate_product_operator(float* d, float const* va, float const* vb) : dest(d), a(va), b(vb) {};
+
+	template<typename T>
+	RELEASE_INLINE void operator()(T position) {
+		ve::store(position, dest,
+			ve::multiply_and_add(
+				ve::load(position, a),
+				ve::load(position, b),
+				ve::load(position, dest))
+		);
+	}
+};
+
+void accumulate_product(uint32_t size, float* destination, float const* a, float const* b) {
+	ve::serial_unaligned::template execute<int32_t>(
+		size, accumulate_product_operator(destination, a, b));
+}
+
+struct sum_all_operator {
+	float const* const a;
+	ve::fp_vector accumulators[4];
+
+	sum_all_operator(float const* va) : a(va) {};
+
+	template<typename T>
+	RELEASE_INLINE void operator()(T position) {
+		auto i = 0x03 & (position.value >> dcon::ct_log2(ve::vector_size));
+		accumulators[i] = accumulators[i] + ve::load(position, a);
+	}
+};
+
+float sum_vall_values(uint32_t size, float const* a) {
+	sum_all_operator op(a);
+	ve::serial_unaligned::template execute<int32_t>(size, op);
+	auto intermediate_result = (op.accumulators[0] + op.accumulators[1])
+		+ (op.accumulators[2] + op.accumulators[3]);
+	return intermediate_result.reduce();
+}
+
+TEST_CASE("examples", "[ve_tests]") {
+	float arraya[17] = { 4.0f, 1.0f, 3.0f, 5.0f, 8.0f, 2.0f, 6.0f, 14.0f, 11.0f, 13.0f, 15.0f, 18.0f, 12.0f, 16.0f, 24.0f, 21.0f, 23.0f };
+	float arrayb[17] = { 7.0f, 4.0f, 24.0f, 5.0f, 3.0f, 1.0f, -2.0f, 4.0f, 1.0f, 0.0f, 5.0f, 182.0f, 2.0f, 2.0f, 4.0f, 1.0f, 3.0f };
+	float dest[17] = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f };
+	float dest_orig[17] = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f };
+
+	accumulate_product(17, dest, arraya, arrayb);
+
+	for(int32_t i = 0; i < 17; ++i)
+		REQUIRE(dest[i] == (arraya[i] * arrayb[i] + dest_orig[i]));
+
+	float sum = 0.0f;
+	for(int32_t i = 0; i < 17; ++i)
+		sum += dest[i];
+
+	REQUIRE(sum == sum_vall_values(17, dest));
+}
+
+#undef RELEASE_INLINE

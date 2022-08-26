@@ -108,7 +108,7 @@ namespace ve {
 	constexpr int32_t block_repitition = 4;
 
 	template<typename tag_type, typename F>
-	RELEASE_INLINE void execute_serial_fast(uint32_t count, F functor) {
+	RELEASE_INLINE void execute_serial_fast(uint32_t count, F&& functor) {
 		const uint32_t full_units = (count + uint32_t(vector_size - 1)) & ~uint32_t(vector_size - 1);
 		const uint32_t reps = full_units / vector_size;
 		const uint32_t quad_reps = reps / uint32_t(block_repitition);
@@ -133,7 +133,7 @@ namespace ve {
 	}
 
 	template<typename tag_type, typename F>
-	RELEASE_INLINE void execute_serial(uint32_t count, F functor) {
+	RELEASE_INLINE void execute_serial(uint32_t count, F&& functor) {
 		const uint32_t full_units = count & ~uint32_t(vector_size - 1);
 		const uint32_t remainder = count & uint32_t(vector_size - 1);
 
@@ -145,7 +145,7 @@ namespace ve {
 	}
 
 	template<typename tag_type, typename F>
-	RELEASE_INLINE void execute_serial_unaligned(uint32_t count, F functor) {
+	RELEASE_INLINE void execute_serial_unaligned(uint32_t count, F&& functor) {
 		const uint32_t full_units = count & ~uint32_t(vector_size - 1);
 		const uint32_t remainder = count & uint32_t(vector_size - 1);
 
@@ -175,13 +175,8 @@ namespace ve {
 		}
 	}
 
-	template<typename index_type, typename F>
-	RELEASE_INLINE void execute_single(index_type offset, F functor) {
-		functor(offset);
-	}
-
 	template<typename tag_type, typename F>
-	RELEASE_INLINE void execute_subsequence(uint32_t start, uint32_t end, F functor) {
+	RELEASE_INLINE void execute_subsequence(uint32_t start, uint32_t end, F&& functor) {
 		const auto count = start - end;
 		const uint32_t full_units = count & ~uint32_t(vector_size - 1);
 		const uint32_t remainder = count - full_units;
@@ -196,7 +191,7 @@ namespace ve {
 
 #ifndef VE_NO_TBB
 	template<typename tag_type, typename F>
-	RELEASE_INLINE void execute_parallel(uint32_t start, uint32_t count, F functor) {
+	RELEASE_INLINE void execute_parallel(uint32_t start, uint32_t count, F&& functor) {
 		const uint32_t full_units = (count + 15ui32) & ~15ui32;
 		concurrency::parallel_for(start, full_units, 16ui32, [&functor](uint32_t offset) {
 			if constexpr(vector_size == 16) {
@@ -221,7 +216,7 @@ namespace ve {
 	}
 
 	template<typename tag_type, typename F>
-	RELEASE_INLINE void execute_parallel_exact(uint32_t start, uint32_t count, F functor) {
+	RELEASE_INLINE void execute_parallel_exact(uint32_t start, uint32_t count, F&& functor) {
 		const uint32_t full_units = count & ~15ui32;
 		const uint32_t remainder = count - full_units;
 		concurrency::parallel_for(start, full_units, 16ui32, [&functor](uint32_t offset) {
@@ -281,7 +276,7 @@ namespace ve {
 	}
 
 	template<typename tag_type, typename F>
-	RELEASE_INLINE void execute_parallel_unaligned(uint32_t start, uint32_t count, F functor) {
+	RELEASE_INLINE void execute_parallel_unaligned(uint32_t start, uint32_t count, F&& functor) {
 		const uint32_t full_units = count & ~15ui32;
 		const uint32_t remainder = count - full_units;
 		concurrency::parallel_for(start, full_units, 16ui32, [&functor](uint32_t offset) {
@@ -341,26 +336,26 @@ namespace ve {
 	}
 
 	template<typename tag_type, typename F>
-	RELEASE_INLINE void execute_parallel_exact(uint32_t count, F functor) {
+	RELEASE_INLINE void execute_parallel_exact(uint32_t count, F&& functor) {
 		execute_parallel_exact<tag_type>(0, count, functor);
 	}
 #endif
 
 	struct serial_exact {
 		template<typename tag_type, typename F>
-		RELEASE_INLINE static void execute(uint32_t count, F functor) {
+		RELEASE_INLINE static void execute(uint32_t count, F&& functor) {
 			execute_serial<tag_type>(count, functor);
 		}
 	};
 	struct serial_unaligned {
 		template<typename tag_type, typename F>
-		RELEASE_INLINE static void execute(uint32_t count, F functor) {
+		RELEASE_INLINE static void execute(uint32_t count, F&& functor) {
 			execute_serial_unaligned<tag_type>(count, functor);
 		}
 	};
 	struct serial {
 		template<typename tag_type, typename F>
-		RELEASE_INLINE static void execute(uint32_t count, F functor) {
+		RELEASE_INLINE static void execute(uint32_t count, F&& functor) {
 			assert(count % ve::vector_size == 0);
 			execute_serial_fast<tag_type>(count, functor);
 		}
@@ -369,20 +364,20 @@ namespace ve {
 #ifndef VE_NO_TBB
 	struct par {
 		template<typename tag_type, typename F>
-		RELEASE_INLINE static void execute(uint32_t count, F functor) {
+		RELEASE_INLINE static void execute(uint32_t count, F&& functor) {
 			assert(count % ve::vector_size == 0);
 			execute_parallel<tag_type>(count, functor);
 		}
 	};
 	struct par_exact {
 		template<typename tag_type, typename F>
-		RELEASE_INLINE static void execute(uint32_t count, F functor) {
+		RELEASE_INLINE static void execute(uint32_t count, F&& functor) {
 			execute_parallel_exact<tag_type>(count, functor);
 		}
 	};
 	struct par_unaligned {
 		template<typename tag_type, typename F>
-		RELEASE_INLINE static void execute(uint32_t count, F functor) {
+		RELEASE_INLINE static void execute(uint32_t count, F&& functor) {
 			execute_parallel_unaligned<tag_type>(count, functor);
 		}
 	};
@@ -392,159 +387,6 @@ namespace ve {
 		return (i + (ve::vector_size - 1ui32)) & ~(ve::vector_size - 1ui32);
 	}
 
-
-	namespace ve_impl {
-		struct rescale_operator {
-			float* const vector;
-			float const scale;
-
-			rescale_operator(float* v, float s) : vector(v), scale(s) {};
-
-			template<typename T>
-			RELEASE_INLINE void operator()(T executor) {
-				store(executor, vector, scale * load(executor, vector));
-			}
-		};
-	}
-
-	template<typename policy = serial>
-	RELEASE_INLINE void rescale(uint32_t size, float* vector, float scale_factor, policy p = serial()) {
-		policy::template execute<int32_t>(size, ve_impl::rescale_operator(vector, scale_factor));
-	}
-
-	namespace ve_impl {
-		struct vector_accumulate_operator {
-			float* const dest;
-			float const* const accumulated;
-
-			vector_accumulate_operator(float* d, float const* a) : dest(d), accumulated(a) {};
-
-			template<typename T>
-			RELEASE_INLINE void operator()(T executor) {
-				store(executor, dest, load(executor, accumulated) + load(executor, dest));
-			}
-		};
-	}
-
-	template<typename policy = serial>
-	RELEASE_INLINE void accumulate(uint32_t size, float* destination, float const* accumulated, policy p = serial()) {
-		policy::template execute<int32_t>(size, ve_impl::vector_accumulate_operator(destination, accumulated));
-	}
-
-	namespace ve_impl {
-		struct vector_subtract_operator {
-			float* const dest;
-			float const* const subtracted;
-
-			vector_subtract_operator(float* d, float const* a) : dest(d), subtracted(a) {};
-
-			template<typename T>
-			RELEASE_INLINE void operator()(T executor) {
-				store(executor, dest, load(executor, dest) - load(executor, subtracted));
-			}
-		};
-	}
-
-	template<typename policy = serial>
-	RELEASE_INLINE void subtract(uint32_t size, float* destination, float const* subtracted, policy p = serial()) {
-		policy::template execute<int32_t>(size, ve_impl::vector_subtract_operator(destination, subtracted));
-	}
-
-	namespace ve_impl {
-	   struct vector_copy_operator {
-		   float* const dest;
-		   float const* const a;
-
-		   vector_copy_operator(float* d, float const* a) : dest(d), a(a) {};
-
-		   template<typename T>
-		   RELEASE_INLINE void operator()(T executor) {
-			   store(executor, dest, load(executor, a));
-		   }
-	   };
-	}
-
-	template<typename policy = serial>
-	RELEASE_INLINE void copy(uint32_t size, float* destination, float const* source, policy p = serial()) {
-		policy::template execute<int32_t>(size, ve_impl::vector_copy_operator(destination, source));
-	}
-
-	namespace ve_impl {
-		struct vector_accumulate_scaled_operator {
-			float* const dest;
-			float const* const accumulated;
-			float const scale;
-
-			vector_accumulate_scaled_operator(float* d, float const* a, float s) : dest(d), accumulated(a), scale(s) {};
-
-			template<typename T>
-			RELEASE_INLINE void operator()(T executor) {
-				store(executor, dest, ve::multiply_and_add(scale, load(executor, accumulated), load(executor, dest)));
-			}
-		};
-	}
-
-	template<typename policy = serial>
-	RELEASE_INLINE void accumulate_scaled(uint32_t size, float* destination, float const* accumulated, float scale, policy p = serial()) {
-		policy::template execute<int32_t>(size, ve_impl::vector_accumulate_scaled_operator(destination, accumulated, scale));
-	}
-
-	namespace ve_impl {
-		struct vector_accumulate_ui8_scaled_operator {
-			float* const dest;
-			uint8_t const* const accumulated;
-			float const scale;
-
-			vector_accumulate_ui8_scaled_operator(float* d, uint8_t const* a, float s) : dest(d), accumulated(a), scale(s) {};
-
-			template<typename T>
-			RELEASE_INLINE void operator()(T executor) {
-				store(executor, dest, ve::multiply_and_add(scale, to_float(load(executor, accumulated)), load(executor, dest)));
-			}
-		};
-	}
-
-	template<typename policy = serial>
-	RELEASE_INLINE void accumulate_ui8_scaled(uint32_t size, float* destination, uint8_t const* accumulated, float scale, policy p = serial()) {
-		policy::template execute<int32_t>(size, ve_impl::vector_accumulate_ui8_scaled_operator(destination, accumulated, scale));
-	}
-
-	namespace ve_impl {
-		struct vector_accumulate_product_operator {
-			float* const dest;
-			float const* const a;
-			float const* const b;
-
-			vector_accumulate_product_operator(float* d, float const* va, float const* vb) : dest(d), a(va), b(vb) {};
-
-			template<typename T>
-			RELEASE_INLINE void operator()(T executor) {
-				store(executor, dest, ve::multiply_and_add(load(executor, a), load(executor, b), load(executor, dest)));
-			}
-		};
-	}
-
-	template<typename policy = serial>
-	RELEASE_INLINE void accumulate_product(uint32_t size, float* destination, float const* a, float const* b, policy p = serial()) {
-		policy::template execute<int32_t>(size, ve_impl::vector_accumulate_product_operator(destination, a, b));
-	}
-
-	namespace ve_impl {
-		struct vector_zero_operator {
-			float* const dest;
-			vector_zero_operator(float* d) : dest(d) {};
-
-			template<typename T>
-			RELEASE_INLINE void operator()(T executor) {
-				store(executor, dest, 0.0f);
-			}
-		};
-	}
-
-	template<typename policy = serial>
-	RELEASE_INLINE void set_zero(uint32_t size, float* destination, policy p = serial()) {
-		policy::template execute<int32_t>(size, ve_impl::vector_zero_operator(destination));
-	}
 }
 
 #undef RELEASE_INLINE

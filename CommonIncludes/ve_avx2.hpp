@@ -299,6 +299,10 @@ namespace ve {
 			subcount = v.subcount;
 			return *this;
 		}
+
+		RELEASE_INLINE tag_type operator[](uint32_t i) const noexcept {
+			return tag_type(typename tag_type::value_base_t(value + i));
+		}
 	};
 
 	template<typename T>
@@ -521,7 +525,7 @@ namespace ve {
 		}
 	}
 
-	template<typename ... PARAMS, typename FUNC>
+	template<typename FUNC, typename ... PARAMS>
 	RELEASE_INLINE auto apply_with_indices(FUNC&& f, PARAMS ... params)
 		->  value_to_vector_type<decltype(f(0ui32, nth_item<0ui32>(params) ...))> {
 		if constexpr(any_is_partial<PARAMS ...>) {

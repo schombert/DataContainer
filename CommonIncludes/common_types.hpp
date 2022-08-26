@@ -174,6 +174,10 @@ namespace dcon {
 	template<typename object_type, uint32_t minimum_size, size_t memory_size>
 	class stable_variable_vector_storage_mk_2;
 
+	constexpr uint32_t ct_log2(uint32_t n) {
+		return ((n < 2) ? 0 : 1 + ct_log2(n / 2));
+	}
+
 	namespace detail {
 		struct alignas(8) mk_2_header {
 			stable_mk_2_tag next_free;

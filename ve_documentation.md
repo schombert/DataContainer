@@ -115,7 +115,7 @@ This specialization is for when you need to deal with indexes that are not conta
 
 #### `dcon::bitfield_type`
 
-This type is defined in `common_types.hpp`. An array of `dcon::bitfield_type` values represents a sequence of boolean values packed into bits. Helper functions `dcon::bit_vector_set` and `dcon::bit_vector_test` are provided to help test and set the nth bit of arbitrarily long packed-bit arrays. When packed bits are loaded from such an array with a load function (see [loading and storing](#load-and-store-functions) below) they will loaded as either 4 or 8 bits into a `ve::vbitfield_type`.
+This type is defined in `common_types.hpp`. An array of `dcon::bitfield_type` values represents a sequence of boolean values packed into bits. Helper functions `dcon::bit_vector_set` and `dcon::bit_vector_test` (see [Utility functions](#utility-functions) below) are provided to help test and set the nth bit of arbitrarily long packed-bit arrays. When packed bits are loaded from such an array with a load function (see [loading and storing](#load-and-store-functions) below) they will loaded as either 4 or 8 bits into a `ve::vbitfield_type`.
 
 #### `ve::vbitfield_type`
 
@@ -155,7 +155,7 @@ Identical to a `ve::contiguous_tags`, except that it is generated when loads and
 - `value_to_vector_type<T> get(partial_contiguous_tags<index_type> i) const noexcept` as above, except only part of the vector is loaded
 - `value_to_vector_type<T> get(tagged_vector<index_type> i) const noexcept` a vector filled with indexes is passed as an argument and a vector filled with the values found at those indexes (in the same order) is returned.
 
-(`value_to_vector_type` is described in [helper functions](#helper-functions) below)
+(`value_to_vector_type` is described in [Meta-programming utilities](#meta-programming-utilities) below)
 
 There are two items worth nothing about this interface. First, it is an example of how strongly typed indexes can be used to guard against certain errors, as trying to access its contents with an index of the wrong type is simply not possible. Secondly, even though the values contained are appropriately aligned, access via `unaligned_contiguous_tags` is still provided. Accessing properly aligned values with the generic instructions is fine, if perhaps slightly suboptimal. However, if the values contained were not guaranteed to be properly aligned (for example, if they were stored in a `std::vector`) then providing access via `contiguous_tags` would be an error, as it could allow instructions that require aligned values to be called on unaligned values.
 		
@@ -469,14 +469,145 @@ ve::store(tagged_vector<tag_type>, vbitfield_type, dcon::bitfield_type*, masked_
 ve::store(tagged_vector<tag_type>, vbitfield_type, dcon::bitfield_type*, vbitfield_type)
 ```
 
-## Helper functions
+## Utilities
 
-vector size constant
-meta-programming functions
+### Utility functions
+
+- `dcon::bit_vector_test(dcon::bitfield_type const*, int32_t i)` returns a boolean indicating whether the `i`th bit in the array of packed bits is set. (index 8, for example, is the first bit in the second byte in the array)
+- `dcon::bit_vector_set(dcon::bitfield_type*, int32_t i, bool)` sets the `i`th bit in the array of packed bits to the passed boolean value
+
+### Vector size utilities
+
+- `ve::vector_size` an `int32_t` constant equal to the number of 4 byte slots in a SIMD vector (4 for SSE4.2, 8 for AVX and AVX2)
+- `ve::to_vector_size(uint32_t)` returns the least multiple of the `vector_size` constant greater than or equal to the passed value. This is useful for rounding up the number of items to be operated on when you wish to avoid creating `partial_contiguous_tags`s (see [Executing an operation](#executing-an-operation) below).
+
+### Apply
+
+- `ve::apply(function, ...)` Ideally, each of the functions called inside a SIMD operation could be written to take SIMD vectors as parameters. Sometimes, however, this is not possible, and in those situations you can use `apply`. The first parameter to `apply` must be either a function or an object that defines `operator()(...)` (including anonymous lambdas), which can be followed by one or more parameters of arbitrary type. When `apply` is called, it will call the passed function repeatedly to populate a SIMD vector (of a type derived from the passed function's return type) with the same parameters that were passed to the `apply` function. Additionally, if any of the parameters passed to `apply` are themselves a SIMD vector type (more precisely, a type that `ve::is_vector_type` maps to `true`), then they will be split up by `apply`, and each slot contained in the parameter will be passed to the function call that generates the corresponding slot in the return value. If the function passed to `apply` returns `void`, then `apply` will itself return `void`, but the function being applied will still be called once per slot and any SIMD vector parameters will still be divided accordingly. Finally, if any parameter is an instance of `partial_contiguous_tags`, apply will only call the passed function enough times to fill the first `subcount` slots in the returned vector.
+- `ve::apply_with_indices(function, ...)` functions as `apply` except that the passed function is called with the slot index being filled as an additional first parameter
+
+### Meta-programming utilities
+
+- `template<typename T> ve::value_to_vector_type` this type alias allows you to convert a value type into the SIMD vector type that naturally holds it. `int`s, for example, are thus mapped to `ve::int_vector`s.
+- `template<typename T> ve::value_to_vector_type_s` this structure is how the `ve::value_to_vector_type` alias is implemented. To extend it to custom types you must specialize it with the type in question and define a member type alias named `type` that resolves to the desired SIMD vector type.
+- `template<typename T> ve::is_vector_type` this constant value is equal to true if the type in question is either a SIMD vector type, such as `ve::fp_vector`, or is a contiguous index type such as `unaligned_contiguous_tags`
 
 ## Executing an operation
 
+### Core functions
+
+The core of a SIMD operation is a function with signature `<typename T> void(T position)`, function-like object that defines `template <typename T> void operator()(T position)`, or an anonymous lambda such as `[](auto position){ ... }`. This function will be called repeatedly with `contiguous_tags<T>`, `unaligned_contiguous_tags<T>`, and `partial_contiguous_tags<T>` parameters (depending on the particularities of the way the operation is invoked, described below). The typical scenario is that, each time it is called, the operation will execute one or more `ve::load(position, data_source)` commands to populate SIMD vectors, operate upon those vectors, and then finally save the results with `ve::store(position, data_destination, values)` commands.
+
+The uniform way to invoke a SIMD operation is with one of the six functions below:
+
+```
+template<typename tag_type, typename F> ve::serial_exact::execute<tag_type>(uint32_t count, F operation)
+template<typename tag_type, typename F> ve::serial_unaligned::execute<tag_type>(uint32_t count, F operation)
+template<typename tag_type, typename F> ve::serial::execute<tag_type>(uint32_t count, F operation)
+template<typename tag_type, typename F> ve::par_exact::execute<tag_type>(uint32_t count, F operation)
+template<typename tag_type, typename F> ve::par_unaligned::execute<tag_type>(uint32_t count, F operation)
+template<typename tag_type, typename F> ve::par::execute<tag_type>(uint32_t count, F operation)
+```
+
+The `ve::serial_exact::execute` function is for operating on arrays that begin at an appropriately aligned address (on a 16 byte boundary for SSE4.2, and on a 32 byte boundary for AVX and AVX2) and contain an arbitrary amount of items. An operation launched by `serial_exact` will be called repeatedly with `contiguous_tags<tag_type>` starting at position 0 and increasing by a `ve::vector_size` stride. When there are fewer than `ve::vector_size` items left (as calculated based on the `count` parameter), the operation will be called one final time with a `partial_contiguous_tags<tag_type>` argument containing the position and number of any remaining items.
+
+`ve::serial_unaligned::execute` works in the same was as `serial_exact::execute`, except that it is designed for working on arrays of values that are not necessarily properly aligned. The operation function is thus called with `unaligned_contiguous_tags<tag_type>`s instead of `contiguous_tags<tag_type>`s. 
+
+`ve::serial::execute` assumes both that the arrays are appropriately aligned, and thus calls the operation function with `contiguous_tags<tag_type>`, and that the number of items in the arrays operated on are a multiple of `ve::vector_size` in number. Thus it does not make a final call to the operation function with `partial_contiguous_tags<tag_type>`; any remaining items are simply ignored.
+
+Finally `ve::par_exact::execute`, `ve::par_unaligned::execute`, and `ve::par::execute<tag_type>` function as the serial versions described above, except that they also divide the work to be done using a thread pool. Note that unless there is a significant amount of work to be done (a very large number of items to process or a computationally expensive operations function), the overhead of starting the thread pool and then joining the worker threads may make the parallel version slower than the serial version. *If you care about performance, measure instead of making assumptions.* These functions are only available if `VE_NO_TBB` is not defined.
+
+### Examples
+
+The example below illustrates a simple operation that takes a value from array `a` and a value from array `b`, multiplies them together, and then adds them into the `destination` array. This example uses the `RELEASE_INLINE` macro (which you must define your own version of) to force the `operator()` to be inlined. Note also that `int32_t` is used here as the index type; strongly typed indexes are not required.
+
+```
+struct accumulate_product_operator {
+	float* const dest;
+	float const* const a;
+	float const* const b;
+
+	accumulate_product_operator(float* d, float const* va, float const* vb) : dest(d), a(va), b(vb) {};
+
+	template<typename T>
+	RELEASE_INLINE void operator()(T position) {
+		ve::store(position, dest,
+			ve::multiply_and_add(
+				ve::load(position, a),
+				ve::load(position, b),
+				ve::load(position, dest))
+		);
+	}
+};
+	
+void accumulate_product(uint32_t size, float* destination, float const* a, float const* b) {
+	ve::serial_unaligned::template execute<int32_t>(
+		size, accumulate_product_operator(destination, a, b));
+}
+```
+
+The example below illustrates a slightly more complicated task. Here we are trying to sum up all the values in an array. And as an experiment we are also trying to avoid a problematic data dependency. If you add each vector of values loaded into a single accumulator you create a data dependency, as the result of adding new values into the accumulator must complete before the next set of values can be added. This example illustrates how you might mitigate that problem. (But whether this theoretical performance improvement is an actual performance improvement would require a measurement.) `dcon::ct_log2` is a `constexpr` function computing the base 2 logarithm of an integer. 
+
+```
+struct sum_all_operator {
+	float const* const a;
+	ve::fp_vector accumulators[4];
+	
+	sum_all_operator(float const* va) : a(va) {};
+
+	template<typename T>
+	RELEASE_INLINE void operator()(T position) {
+		auto i = 0x03 & (position.value >> dcon::ct_log2(ve::vector_size));
+		accumulators[i] = accumulators[i] + ve::load(position, a);
+	}
+};
+	
+float sum_vall_values(uint32_t size, float const* a) {
+	sum_all_operator op(a);
+	ve::serial_unaligned::template execute<int32_t>(size, op);
+	auto intermediate_result = (op.accumulators[0] + op.accumulators[1])
+		+ (op.accumulators[2] + op.accumulators[3]);
+	return intermediate_result.reduce();
+}
+```
+
 ## Supporting strongly typed indexes
 
-### Alignment considerations
+For reference, below is what the declaration of a strongly typed index could look like. Note that it is followed by a specialization of the `ve::value_to_vector_type_s` structure, which is necessary for the ve library to understand how it is supposed to work. For an example of how you can wrap arrays so that only indexes of the correct type can be used to access them, see [Vectorizable buffer](#vectorizable-buffer) above, as well as its implementation in `ve.hpp`.
+
+```
+class dummy_id {
+public:
+	using value_base_t = uint16_t;
+	using zero_is_null_t = std::true_type;
+
+	//value member declaration
+	uint16_t value;
+
+	//constructors
+	explicit constexpr dummy_id(int16_t v) noexcept : value(v + 1) {}
+	constexpr dummy_id(const dummy_id& v) noexcept = default;
+	constexpr dummy_id(dummy_id&& v) noexcept = default;
+	constexpr dummy_id() noexcept : value(uint16_t(0)) {}
+
+	//operators
+	dummy_id& operator=(dummy_id&& v) noexcept = default;
+	dummy_id& operator=(dummy_id const& v) noexcept = default;
+	bool operator==(dummy_id v) const noexcept { return value == v.value; }
+	bool operator!=(dummy_id v) const noexcept { return value != v.value; }
+	bool operator<(dummy_id v) const noexcept { return value < v.value; }
+	bool operator<=(dummy_id v) const noexcept { return value <= v.value; }
+	explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
+
+	//index_function
+	constexpr int32_t index() const noexcept {
+		return int32_t(value) - 1;
+	}
+};
+
+template<>
+struct ve::value_to_vector_type_s<dummy_id> {
+	using type = tagged_vector<dummy_id>;
+};
+```
 
