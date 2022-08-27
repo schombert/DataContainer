@@ -18,7 +18,7 @@
 #endif
 
 namespace car_owner_basic {
-	struct load_record{
+	struct load_record {
 		bool car = false;
 		bool car_wheels = false;
 		bool person = false;
@@ -28,7 +28,6 @@ namespace car_owner_basic {
 		bool car_ownership_owned_car = false;
 		bool car_ownership_ownership_date = false;
 	};
-
 	class car_id {
 		public:
 		using value_base_t = uint16_t;

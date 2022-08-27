@@ -153,7 +153,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="code_fragments.cpp" />
     <ClCompile Include="DataContainerGenerator.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="code_fragments.hpp" />
+    <ClInclude Include="parsing.hpp" />
+    <ClInclude Include="source_builder.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
