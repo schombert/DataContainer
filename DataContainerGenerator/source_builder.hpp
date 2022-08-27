@@ -25,30 +25,25 @@ public:
 	}
 };
 
-class append {
-public:
-	std::string app_text;
+struct append {
+	char const* value;
 };
 
-template<typename T>
-class block_lambda {
-public:
-	T func;
-	block_lambda(T&& f) : func(f) {}
+struct trailing_semicolon {};
+
+struct line_break {};
+
+struct heading {
+	char const* str;
 };
 
-template<typename T>
-class class_block_lambda {
-public:
-	T func;
-	class_block_lambda(T&& f) : func(f) {}
-};
+class basic_builder;
 
-template<typename T>
-class inline_block_lambda {
-public:
-	T func;
-	inline_block_lambda(T&& f) : func(f) {}
+struct trailing_semicolon_state {
+	basic_builder& ref;
+
+	template<typename T>
+	auto operator+(T&& func)->std::enable_if_t<std::is_invocable_v<T, basic_builder&>, basic_builder&>;
 };
 
 class basic_builder {
@@ -68,108 +63,40 @@ public:
 		substitutes.push_back(sub);
 		return *this;
 	}
-	basic_builder&& operator+(substitute const& sub) && {
-		for(auto& s : substitutes) {
-			if(s.sub_key == sub.sub_key) {
-				s.sub_text = sub.sub_text;
-				return std::move(*this);
-			}
-		}
-		substitutes.push_back(sub);
-		return std::move(*this);
-	}
 	basic_builder& operator+(char const* line) & {
 		add_line(line);
 		return *this;
 	}
-	basic_builder&& operator+(char const* line) && {
-		add_line(line);
-		return std::move(*this);
-	}
 	basic_builder& operator+(append const& a) & {
 		if(lines.size() > 0)
-			lines.back() += a.app_text;
+			lines.back() += a.value;
 		return *this;
-	}
-	basic_builder&& operator+(append const& a) && {
-		if(lines.size() > 0)
-			lines.back() += a.app_text;
-		return std::move(*this);
 	}
 	basic_builder& operator+(std::string const& line) & {
 		add_line(line);
 		return *this;
 	}
-	basic_builder&& operator+(std::string const& line) && {
-		add_line(line);
-		return std::move(*this);
+	trailing_semicolon_state operator+(trailing_semicolon const&) {
+		return trailing_semicolon_state{ *this };
 	}
-	template<typename T>
-	basic_builder& operator+(class_block_lambda<T> const& func) & {
-		if(lines.size() > 0)
-			lines.back() += " {";
-		
-		++extra_tabs;
-		func.func(*this);
-		--extra_tabs;
-		add_line("};");
-
+	basic_builder&  operator+(line_break const&) {
+		lines.push_back("");
+		return *this;
+	}
+	
+	basic_builder&  operator+(heading const& h) {
+		lines.push_back(std::string(extra_tabs, '\t') + "//");
+		add_line(std::string(extra_tabs, '\t') + "// " + h.str);
+		lines.push_back(std::string(extra_tabs, '\t') + "//");
 		return *this;
 	}
 	template<typename T>
-	basic_builder&& operator+(class_block_lambda<T> const& func) && {
-		if(lines.size() > 0)
-			lines.back() += " {";
+	auto operator+(T&& func) ->std::enable_if_t<std::is_invocable_v<T, basic_builder&>, basic_builder&> {
 		++extra_tabs;
-		func.func(*this);
-		--extra_tabs;
-		add_line("};");
-
-		return std::move(*this);
-	}
-	template<typename T>
-	basic_builder& operator+(block_lambda<T> const& func) & {
-		if(lines.size() > 0)
-			lines.back() += " {";
-
-		++extra_tabs;
-		func.func(*this);
+		func(*this);
 		--extra_tabs;
 		add_line("}");
-
 		return *this;
-	}
-	template<typename T>
-	basic_builder&& operator+(block_lambda<T> const& func) && {
-		if(lines.size() > 0)
-			lines.back() += " {";
-
-		++extra_tabs;
-		func.func(*this);
-		--extra_tabs;
-		add_line("}");
-
-		return std::move(*this);
-	}
-	template<typename T>
-	basic_builder& operator+(inline_block_lambda<T> const& func) & {
-		add_line("{");
-		++extra_tabs;
-		func.func(*this);
-		--extra_tabs;
-		add_line("}");
-
-		return *this;
-	}
-	template<typename T>
-	basic_builder&& operator+(inline_block_lambda<T> const& func) && {
-		add_line("{");
-		++extra_tabs;
-		func.func(*this);
-		--extra_tabs;
-		add_line("}");
-
-		return std::move(*this);
 	}
 	void add_line(std::string const& line) {
 		std::string built_string;
@@ -202,7 +129,7 @@ public:
 
 		lines.push_back(std::string(extra_tabs, '\t') + built_string);
 	}
-	std::string to_string(int tab_level) {
+	[[nodiscard]] std::string to_string(int tab_level) {
 		std::string output;
 		std::string tabs = std::string(tab_level, '\t');
 
@@ -210,12 +137,25 @@ public:
 			output += (tabs + l + "\n");
 		}
 
+		extra_tabs = 0;
+		lines.clear();
+		substitutes.clear();
+
 		return output;
 	}
 };
 
-#define block(...) block_lambda{ [&](basic_builder& o) { __VA_ARGS__ } }
-#define class_block(...) class_block_lambda{ [&](basic_builder& o) { __VA_ARGS__ } }
-#define inline_block(...) inline_block_lambda{ [&](basic_builder& o) { __VA_ARGS__ } }
+template<typename T>
+auto trailing_semicolon_state::operator+(T&& func)->std::enable_if_t<std::is_invocable_v<T, basic_builder&>, basic_builder&> {
+	++ref.extra_tabs;
+	func(ref);
+	--ref.extra_tabs;
+	ref.add_line("};");
+	return ref;
+}
+
+#define block append{" {"} + [&](basic_builder& o)
+#define class_block append{" {"} + trailing_semicolon{} +  [&](basic_builder& o) 
+#define inline_block "{" + [&](basic_builder& o)
 
 
