@@ -51,3 +51,7 @@ basic_builder& make_relation_many_getters_setters(basic_builder& o, std::string 
 	std::string const& property_name, std::string const& property_type, bool is_expandable);
 basic_builder& make_relation_many_reverse_getters_setters(basic_builder& o, std::string const& relation_name, list_type ltype,
 	std::string const& property_name, std::string const& property_type, bool is_expandable, bool skip_as);
+basic_builder& make_pop_back(basic_builder& o, relationship_object_def const& obj);
+basic_builder& make_object_resize(basic_builder& o, relationship_object_def const& obj);
+basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def const& obj);
+

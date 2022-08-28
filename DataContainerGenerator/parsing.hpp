@@ -34,13 +34,13 @@ inline std::string extract_string(char const* & input, char const* end) {
 enum class parsing_state { outer, in_object_relation, in_property, in_load_save };
 enum class storage_type { contiguous, erasable, compactable };
 
+enum class property_type { vectorizable, other, object, special_vector, bitfield };
+
 struct property_def {
 	std::string name;
 
-	bool is_object = false;
-	bool is_special_vector = false;
+	property_type type = property_type::other;
 	bool is_derived = false;
-	bool is_bitfield = false;
 
 	int special_pool_size = 1000;
 	std::string data_type;
@@ -141,7 +141,7 @@ inline std::string make_relationship_parameters(relationship_object_def const& o
 
 inline void process_data_type(std::string &second_term, property_def * last_prop, const char * &str_ptr, const char *const &str_end) {
 	if(second_term == "bitfield") {
-		last_prop->is_bitfield = true;
+		last_prop->type = property_type::bitfield;
 	} else if(second_term == "derived") {
 		last_prop->is_derived = true;
 		last_prop->data_type = extract_string(str_ptr, str_end);
@@ -154,10 +154,10 @@ inline void process_data_type(std::string &second_term, property_def * last_prop
 			}
 		}
 	} else if(second_term == "object") {
-		last_prop->is_object = true;
+		last_prop->type = property_type::object;
 		last_prop->data_type = extract_string(str_ptr, str_end);
 	} else if(second_term == "vector_pool") {
-		last_prop->is_special_vector = true;
+		last_prop->type = property_type::special_vector;
 		last_prop->special_pool_size = std::stoi(extract_string(str_ptr, str_end));
 		last_prop->data_type = extract_string(str_ptr, str_end);
 

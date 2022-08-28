@@ -407,7 +407,7 @@ int main(int argc, char *argv[]) {
 
 		for(auto& r : parsed_file.relationship_objects) {
 			for(auto& p : r.properties) {
-				if(p.is_object) {
+				if(p.type == property_type::object) {
 					if(std::find(needs_serialize.begin(), needs_serialize.end(), p.data_type) == needs_serialize.end()) {
 						needs_serialize.push_back(p.data_type);
 						parsed_file.object_types.push_back(p.data_type);
@@ -420,6 +420,14 @@ int main(int argc, char *argv[]) {
 				&& std::find(needs_load_only.begin(), needs_load_only.end(), lt) == needs_load_only.end()) {
 				needs_load_only.push_back(lt);
 				parsed_file.object_types.push_back(lt);
+			}
+		}
+
+		// identify vectorizable types
+		for(auto& ob : parsed_file.relationship_objects) {
+			for(auto& prop : ob.properties) {
+				if(prop.type == property_type::other && is_vectorizable_type(parsed_file, prop.data_type))
+					prop.type = property_type::vectorizable;
 			}
 		}
 
@@ -513,15 +521,15 @@ int main(int argc, char *argv[]) {
 			for(auto& p : ob.properties) {
 				if(p.is_derived) {
 					// no data for a derived property
-				} else if(p.is_bitfield) {
+				} else if(p.type == property_type::bitfield) {
 					output += make_member_container(o, p.name, "dcon::bitfield_type",
 						std::string("((uint32_t(") + std::to_string(ob.size) + " + 7)) / 8ui32 + 63ui32) & ~63ui32",
 						struct_padding::fixed, ob.is_expandable).to_string(3);
-				} else if(p.is_object) {
+				} else if(p.type == property_type::object) {
 					output += make_member_container(o, p.name, p.data_type,
 						std::to_string(ob.size),
 						struct_padding::none, ob.is_expandable).to_string(3);
-				} else if(p.is_special_vector) {
+				} else if(p.type == property_type::special_vector) {
 					//fill in with special vector type and pool object
 					output += make_member_container(o, p.name, "dcon::stable_mk_2_tag",
 						std::to_string(ob.size),
@@ -625,35 +633,35 @@ int main(int argc, char *argv[]) {
 				// hook stubs
 				if(p.hook_get) {
 					output += make_hooked_getters(o, ob.name, p.name, p.data_type,
-						p.is_bitfield ? hook_type::bitfield :
-						(is_vectorizable_type(parsed_file, p.data_type) ? hook_type::vectorizable : hook_type::other),
+						p.type == property_type::bitfield ? hook_type::bitfield :
+						(p.type == property_type::vectorizable ? hook_type::vectorizable : hook_type::other),
 						ob.is_expandable).to_string(2);
 				}
 				if(p.hook_set) {
 					output += make_hooked_setters(o, ob.name, p.name, p.data_type,
-						p.is_bitfield ? hook_type::bitfield :
-						(is_vectorizable_type(parsed_file, p.data_type) ? hook_type::vectorizable : hook_type::other),
+						p.type == property_type::bitfield ? hook_type::bitfield :
+						(p.type == property_type::vectorizable ? hook_type::vectorizable : hook_type::other),
 						ob.is_expandable).to_string(2);
 				}
 
 				if(p.is_derived) {
 					
-				} else if(p.is_bitfield) {
+				} else if(p.type == property_type::bitfield) {
 					if(!p.hook_get)
 						output += make_bitfield_getters(o, ob.name, p.name, ob.is_expandable).to_string(2);
 					if(!p.hook_set) 
 						output += make_bitfield_setters(o, ob.name, p.name, ob.is_expandable).to_string(2);
-				} else if(p.is_object) {
+				} else if(p.type == property_type::object) {
 					if(!p.hook_get)
 						output += make_object_getters(o, ob.name, p.name, p.data_type).to_string(2);
 					if(!p.hook_set)
 						output += make_object_setters(o, ob.name, p.name, p.data_type).to_string(2);
-				} else if(p.is_special_vector) {
+				} else if(p.type == property_type::special_vector) {
 					if(!p.hook_get)
 						output += make_special_array_getters(o, ob.name, p.name, p.data_type).to_string(2);
 					if(!p.hook_set) 
 						output += make_special_array_setters(o, ob.name, p.name, p.data_type).to_string(2);
-				} else if(is_vectorizable_type(parsed_file, p.data_type)) {
+				} else if(p.type == property_type::vectorizable) {
 					if(!p.hook_get)
 						output += make_vectorizable_type_getters(o, ob.name, p.name, p.data_type, ob.is_expandable).to_string(2);
 					if(!p.hook_set)
@@ -777,362 +785,12 @@ int main(int argc, char *argv[]) {
 
 			if(!cob.is_relationship) {
 				if(cob.store_type == storage_type::contiguous || cob.store_type == storage_type::compactable) {
-
-					// pop_back
-					output += "\t\tvoid " + cob.name + "_pop_back() {\n";
-					output += "\t\t\tif(" + cob.name + ".size_used > 0) {\n";
-
-					output += "\t\t\t\t" + id_name + " id_removed(" + cob.name + ".size_used - 1);\n";
-					if(cob.hook_delete)
-						output += "\t\t\t\ton_delete_" + cob.name + "(id_removed);\n";
-
-					for(auto& cr : cob.relationships_involved_in) {
-						if(cr.as_primary_key) {
-							output += "\t\t\t\tdelete_" + cr.relation_name + "(id_removed);\n";
-							output += "\t\t\t\t" + cr.relation_name + ".size_used = " + cob.name + ".size_used - 1;\n";
-							if(cob.is_expandable) {
-								for(auto& rp : cr.rel_ptr->properties) {
-									if(rp.is_special_vector) {
-										output += "\t\t\t\t" + cr.relation_name + "." + rp.name + "_storage.release(" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()]);\n";
-									} else if(rp.is_bitfield) {
-										output += "\t\t\t\tdcon::bit_vector_set(" + cr.relation_name + ".m_" + rp.name + "." + "vptr()" + ", id_removed.index(), false);\n";
-										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.resize(1 + (" + cob.name + ".size_used + 6) / 8);\n";
-									}
-									if(!rp.is_bitfield && !rp.is_derived) {
-										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.pop_back();\n";
-									}
-								}
-								for(auto& ri : cr.rel_ptr->indexed_objects) {
-									if(ri.related_to == cr.rel_ptr->primary_key) {
-									} else {
-										output += "\t\t\t\t" + cr.relation_name + ".m_" + ri.property_name + ".values.pop_back();\n";
-									}
-									if(ri.ltype == list_type::list && ri.index == index_type::many) {
-										output += "\t\t\t\t" + cr.relation_name + ".m_link_" + ri.property_name + ".values.pop_back();\n";
-									}
-								}
-							} else {
-								for(auto& rp : cr.rel_ptr->properties) {
-									if(rp.is_derived) {
-									} else if(rp.is_special_vector) {
-										output += "\t\t\t\t" + cr.relation_name + "." + rp.name + "_storage.release(" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()]);\n";
-									} else if(rp.is_bitfield) {
-										output += "\t\t\t\tdcon::bit_vector_set(" + cr.relation_name + ".m_" + rp.name + ".vptr(), id_removed.index(), false);\n";
-									} else {
-										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()] = " + rp.data_type + "{};\n";
-									}
-								}
-							}
-						} else if(cr.indexed_as == index_type::at_most_one) {
-							output += "\t\t\t\t" + cob.name + "_remove_" + cr.relation_name + "_as_" + cr.property_name + "(id_removed));\n";
-							if(cob.is_expandable) {
-								output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".values.pop_back();\n";
-							}
-						} else if(cr.indexed_as == index_type::many) {
-							output += "\t\t\t\t" + cob.name + "_remove_all_" + cr.relation_name + "_as_" + cr.property_name + "(id_removed);\n";
-							if(cob.is_expandable) {
-								if(cr.listed_as == list_type::list) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".values.pop_back();\n";
-								} else if(cr.listed_as == list_type::array) {
-									output += "\t\t\t\t" + cr.relation_name + "." + cr.property_name + "_storage.release("
-										+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[id_removed.index()]);\n";
-									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.pop_back();\n";
-								} else if(cr.listed_as == list_type::std_vector) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.pop_back();\n";
-								}
-							}
-						}
-					}
-					for(auto& cp : cob.properties) {
-						if(cp.is_derived) {
-						} else if(cp.is_special_vector) {
-							output += "\t\t\t\t" + cob.name + "." + cp.name + "_storage.release(" + cob.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\n";
-						} else if(cp.is_bitfield) {
-							output += "\t\t\t\tdcon::bit_vector_set(" + cob.name + ".m_" + cp.name + ".vptr(), id_removed.index(), false);\n";
-							if(cob.is_expandable)
-								output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".values.resize(1 + (" + cob.name + ".size_used + 6) / 8);\n";
-						} else {
-							if(!cob.is_expandable)
-								output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".vptr()[id_removed.index()] = " + cp.data_type + "{};\n";
-						}
-
-						if(cob.is_expandable && !cp.is_bitfield && !cp.is_derived) {
-							output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".values.pop_back();\n";
-						}
-					}
-					output += "\t\t\t\t--" + cob.name + ".size_used;\n";
-					output += "\t\t\t}\n";
-					output += "\t\t}\n";
-
-
-					//resize
-					output += "\t\tvoid " + cob.name + "_resize(uint32_t new_size) {\n";
-					if(!cob.is_expandable)
-						output += "\t\t\tif(new_size > " + std::to_string(cob.size) + ") std::abort();\n";
-					output += "\t\t\tconst uint32_t old_size = " + cob.name + ".size_used;\n";
-					output += "\t\t\tif(new_size < old_size) {\n"; // contracting
-
-					
-					for(auto& cp : cob.properties) {
-						if(cp.is_derived) {
-						} else if(cp.is_special_vector) {
-							output += "\t\t\t\tstd::for_each(" + cob.name + ".m_" + cp.name + ".vptr() + new_size, "
-								+ cob.name + ".m" + cp.name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->" + cob.name + "."
-								+ cp.name + "_storage.release(i); });\n";
-
-							output += "\t\t\t\t" + cob.name + "." + cp.name + "_storage.release(" + cob.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\n";
-						} else if(cp.is_bitfield) {
-							output += "\t\t\t\tfor(uint32_t i = new_size; i < 8*(((new_size + 7)/8)); ++i)\n";
-							output += "\t\t\t\t\tdcon::bit_vector_set(" + cob.name + ".m_" + cp.name + ".vptr(), i, false);\n";
-							if(!cob.is_expandable)
-								output += "\t\t\t\tstd::fill_n(" + cob.name + ".m_" + cp.name + ".vptr() + (new_size + 7) / 8, (old_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});\n";
-						} else {
-							if(!cob.is_expandable) {
-								if(cp.is_object) {
-									output += "\t\t\t\tstd::std::destroy_n(" + cob.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size);\n";
-									output += "\t\t\t\tstd::uninitialized_default_construct_n(" + cob.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size);\n";
-								} else {
-									output += "\t\t\t\tstd::fill_n(" + cob.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size, " + cp.data_type + "{});\n";
-								}
-							}
-						}
-					}
-
-					output += "\t\t\t} else {\n"; //expanding
-					output += "\t\t\t}\n";
-
-					//both
-					if(cob.is_expandable) {
-						for(auto& cr : cob.relationships_involved_in) {
-							if(cr.as_primary_key) {
-
-							} else if(cr.indexed_as == index_type::at_most_one) {
-								output += "\t\t\tstd::fill_n(" + cr.relation_name + ".m_link_back_" + cr.property_name
-									+ ".vptr(), new_size, " + cr.relation_name + "_id());\n";
-							} else if(cr.indexed_as == index_type::many) {
-								if(cr.listed_as == list_type::list) {
-									output += "\t\t\tstd::fill_n(" + cr.relation_name + ".m_head_back_" + cr.property_name
-										+ ".vptr(), new_size, " + cr.relation_name + "_id());\n";
-								} else if(cr.listed_as == list_type::array) {
-									output += "\t\t\tstd::for_each(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), "
-										+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->"
-										+ cr.relation_name + "." + cr.property_name + "_storage.release(i); });\n";
-								} else if(cr.listed_as == list_type::std_vector) {
-									output += "\t\t\tstd::destroy_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), new_size);\n";
-									output += "\t\t\tstd::uninitialized_default_construct_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), new_size);\n";
-								}
-
-							}
-						}
-
-						for(auto& cr : cob.relationships_involved_in) {
-							if(cr.as_primary_key) {
-								output += "\t\t\t" + cr.relation_name + "_resize(new_size);\n";
-							} else if(cr.indexed_as == index_type::at_most_one) {
-								output += "\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".values.resize(1 + new_size);\n";
-							} else if(cr.indexed_as == index_type::many) {
-								if(cr.listed_as == list_type::list) {
-									output += "\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".values.resize(1 + new_size);\n";
-								} else if(cr.listed_as == list_type::array) {
-									output += "\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
-								} else if(cr.listed_as == list_type::std_vector) {
-									output += "\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.resize(1 + new_size);\n";
-								}
-
-							}
-						}
-						for(auto& cp : cob.properties) {
-							if(cp.is_derived) {
-							} else if(cp.is_special_vector) {
-								output += "\t\t\t" + cob.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
-							} else if(cp.is_bitfield) {
-								output += "\t\t\t" + cob.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\n";
-							} else {
-								output += "\t\t\t" + cob.name + ".m_" + cp.name + ".values.resize(1 + new_size);\n";
-							}
-						}
-					} else {
-						for(auto& cr : cob.relationships_involved_in) {
-							if(cr.as_primary_key) {
-
-							} else if(cr.indexed_as == index_type::at_most_one) {
-								output += "\t\t\tstd::fill_n(" + cr.relation_name + ".m_link_back_" + cr.property_name
-									+ ".vptr(), old_size, " + cr.relation_name + "_id());\n";
-							} else if(cr.indexed_as == index_type::many) {
-								if(cr.listed_as == list_type::list) {
-									output += "\t\t\tstd::fill_n(" + cr.relation_name + ".m_head_back_" + cr.property_name
-										+ ".vptr(), old_size, " + cr.relation_name + "_id());\n";
-								} else if(cr.listed_as == list_type::array) {
-									output += "\t\t\tstd::for_each(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), "
-										+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->"
-										+ cr.relation_name + "." + cr.property_name + "_storage.release(i); });\n";
-								} else if(cr.listed_as == list_type::std_vector) {
-									output += "\t\t\tstd::destroy_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), old_size);\n";
-									output += "\t\t\tstd::uninitialized_default_construct_n(" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr(), old_size);\n";
-								}
-							}
-						}
-
-						for(auto& cr : cob.relationships_involved_in) {
-							if(cr.as_primary_key) {
-								output += "\t\t\t" + cr.relation_name + "_resize(new_size);\n";
-							}
-						}
-					}
-					output += "\t\t\t" + cob.name + ".size_used = new_size;\n";
-					output += "\t\t}\n"; // end resize
+					output += make_pop_back(o, cob).to_string(2);
+					output += make_object_resize(o, cob).to_string(2);
 
 					if(cob.store_type == storage_type::compactable) {
-						//delete
-						output += "\t\tvoid delete_" + cob.name + "(" + id_name + " id) {\n";
-						output += "\t\t\t\t" + id_name + " id_removed = id;\n";
-						output += "\t\t\t\t" + id_name + " last_id(" + cob.name + ".size_used - 1);\n";
-
-						output += "\t\t\t\tif(id_removed == last_id) { " + cob.name + ".pop_back(); return; }\n";
-
-						if(cob.hook_delete)
-							output += "\t\t\t\ton_delete_" + cob.name + "(id_removed);\n";
-
-						for(auto& cr : cob.relationships_involved_in) {
-							if(cr.as_primary_key) {
-								output += "\t\t\t\tdelete_" + cr.relation_name + "(id_removed);\n";
-								output += "\t\t\t\t" + cr.relation_name + ".size_used = " + cob.name + ".size_used - 1;\n";
-
-								for(auto& rp : cr.rel_ptr->properties) {
-									if(rp.is_derived) {
-									} else if(rp.is_special_vector) {
-										output += "\t\t\t\t" + cr.relation_name + "." + rp.name + "_storage.release(" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()]);\n";
-										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()] = " + cr.relation_name + ".m_" + rp.name + ".vptr()[last_id.index()];\n";
-										if(cob.is_expandable)
-											output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.pop_back();\n";
-										else
-											output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".vptr()[last_id.index()] = std::numeric_limits<dcon::stable_mk_2_tag>::max();\n";
-									} else if(rp.is_bitfield) {
-										output += "\t\t\t\tdcon::bit_vector_set(" + cr.relation_name + ".m_" + rp.name + "." + "vptr()" + ", id_removed.index(), "
-											+ "dcon::bit_vector_get(" + cr.relation_name + ".m_" + rp.name + "." + "vptr()" + ", last_id.index()));\n";
-										output += "\t\t\t\tdcon::bit_vector_set(" + cr.relation_name + ".m_" + rp.name + "." + "vptr()" + ", last_id.index(), false);\n";
-										if(cob.is_expandable)
-											output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.resize(1 + (" + cob.name + ".size_used + 6) / 8);\n";
-									} else {
-										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()] = std::move("
-											+ cr.relation_name + ".m_" + rp.name + ".vptr()[last_id.index()]);\n";
-										if(cob.is_expandable)
-											output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.pop_back();\n";
-										else
-											output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".vptr()[last_id.index()] = " + rp.data_type + "{};\n";
-									}
-								}
-								for(auto& ri : cr.rel_ptr->indexed_objects) {
-									if(ri.related_to == cr.rel_ptr->primary_key) {
-									} else {
-										output += "\t\t\t\t" + cr.relation_name + ".m_" + ri.property_name + ".vptr()[id_removed.index()] = " + cr.relation_name + ".m_" + ri.property_name + ".vptr()[last_id.index()];\n";
-										if(cob.is_expandable)
-											output += "\t\t\t\t" + cr.relation_name + ".m_" + ri.property_name + ".values.pop_back();\n";
-										else
-											output += "\t\t\t\t" + cr.relation_name + ".m_" + ri.property_name + ".vptr()[last_id.index()] = " + ri.property_name + "_id();\n";
-									}
-									if(ri.ltype == list_type::list && ri.index == index_type::many) {
-										output += "\t\t\t\t" + cr.relation_name + ".m_link_" + ri.property_name + ".vptr()[id_removed.index()] = " + cr.relation_name + ".m_link_" + ri.property_name + ".vptr()[last_id.index()];\n";
-										if(cob.is_expandable)
-											output += "\t\t\t\t" + cr.relation_name + ".m_link_" + ri.property_name + ".values.pop_back();\n";
-										else
-											output += "\t\t\t\t" + cr.relation_name + ".m_link_" + ri.property_name + ".vptr()[last_id.index()] = " + ri.property_name + "_id_pair();\n";
-									}
-								}
-							} else if(cr.indexed_as == index_type::at_most_one) {
-								output += "\t\t\t\t" + cob.name + "_remove_" + cr.relation_name + "_as_" + cr.property_name + "(id_removed));\n";
-
-								// renumber last_item id
-								output += "\t\t\t\tif(auto bk = " + cr.relation_name + ".m_link_back_" + cr.property_name + ".vptr()[last_id.index()]; bool(bk)) {\n";
-								output += "\t\t\t\t\t" + cr.relation_name + ".m_" + cr.property_name + ".vptr()[bk.index()] = id_removed;\n";
-								output += "\t\t\t\t}\n";
-
-								output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".vptr()[id_removed.index()] = "
-									+ cr.relation_name + ".m_link_back_" + cr.property_name + ".vptr()[last_id.index()];\n";
-								if(cob.is_expandable) {
-									output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".values.pop_back();\n";
-								} else {
-									output += "\t\t\t\t" + cr.relation_name + ".m_link_back_" + cr.property_name + ".vptr()[last_id.index()] = " + cr.relation_name + "_id();\n";
-								}
-							} else if(cr.indexed_as == index_type::many) {
-								output += "\t\t\t\t" + cob.name + "_remove_all_" + cr.relation_name + "_as_" + cr.property_name + "(id_removed);\n";
-
-								// renumber last_item id
-								output += "\t\t\t\t" + cob.name + "_for_each_" + cr.relation_name + "_as_" + cr.property_name
-									+ "(last_id, [t = this](" + cr.relation_name + "_id i){ t->"
-									+ cr.relation_name + "." + cr.property_name + ".vptr()[i.index()] = id_removed; });\n";
-
-								if(cob.is_expandable) {
-									if(cr.listed_as == list_type::list) {
-										output += "\t\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".vptr()[id_removed.index()] = "
-											+ cr.relation_name + ".m_head_back_" + cr.property_name + ".vptr()[last_id.index()];\n";
-										output += "\t\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".values.pop_back();\n";
-									} else if(cr.listed_as == list_type::array) {
-										output += "\t\t\t\t" + cr.relation_name + "." + cr.property_name + "_storage.release("
-											+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[id_removed.index()]);\n";
-										output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[id_removed.index()] = "
-											+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[last_id.index()];\n";
-										output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.pop_back();\n";
-									} else if(cr.listed_as == list_type::std_vector) {
-										output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[id_removed.index()] = std::move("
-											+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[last_id.index()]);\n";
-										output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".values.pop_back();\n";
-									}
-								} else {
-									if(cr.listed_as == list_type::list) {
-										output += "\t\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".vptr()[id_removed.index()] = "
-											+ cr.relation_name + ".m_head_back_" + cr.property_name + ".vptr()[last_id.index()];\n";
-										output += "\t\t\t\t" + cr.relation_name + ".m_head_back_" + cr.property_name + ".vptr()[last_id.index()] = "
-											+ cr.relation_name + "_id_pair();\n";
-									} else if(cr.listed_as == list_type::array) {
-										output += "\t\t\t\t" + cr.relation_name + "." + cr.property_name + "_storage.release("
-											+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[id_removed.index()]);\n";
-										output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[id_removed.index()] = "
-											+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[last_id.index()];\n";
-										output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[last_id.index()] = std::numeric_limits<dcon::stable_mk_2_tag>::max();\n";
-									} else if(cr.listed_as == list_type::std_vector) {
-										output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[id_removed.index()] = std::move("
-											+ cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[last_id.index()]);\n";
-										output += "\t\t\t\t" + cr.relation_name + ".m_array_" + cr.property_name + ".vptr()[last_id.index()].empty();\n";
-									}
-								}
-							}
-						}
-						for(auto& cp : cob.properties) {
-							if(cp.is_derived) {
-							} else if(cp.is_special_vector) {
-								output += "\t\t\t\t" + cob.name + "." + cp.name + "_storage.release(" + cob.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\n";
-								output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".vptr()[id_removed.index()] = "
-									+ cob.name + ".m_" + cp.name + ".vptr()[last_id.index()];\n";
-								if(cob.is_expandable)
-									output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".values.pop_back();\n";
-								else
-									output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".vptr()[last_id.index()] = "
-									+ "std::numeric_limits<dcon::stable_mk_2_tag>::max();\n";
-							} else if(cp.is_bitfield) {
-								output += "\t\t\t\tdcon::bit_vector_set(" + cob.name + ".m_" + cp.name + ".vptr(), id_removed.index(), "
-									+ "dcon::bit_vector_get(" + cob.name + ".m_" + cp.name + ".vptr(), last_id.index()));\n";
-								output += "\t\t\t\tdcon::bit_vector_set(" + cob.name + ".m_" + cp.name + ".vptr(), last_id.index(), false);\n";
-								if(cob.is_expandable)
-									output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".values.resize(1 + (" + cob.name + ".size_used + 6) / 8);\n";
-
-							} else {
-								output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".vptr()[id_removed.index()] = std::move("
-									+ cob.name + ".m_" + cp.name + ".vptr()[last_id.index()]);\n";
-								if(cob.is_expandable)
-									output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".values.pop_back();\n";
-								else
-									output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".vptr()[last_id.index()] = " + cp.data_type + "{};\n";
-							}
-						}
-						output += "\t\t\t\t--" + cob.name + ".size_used;\n";
-						if(cob.hook_move)
-							output += "\t\t\t\ton_move_" + cob.name + "(id_removed, last_id);\n";
-
-						output += "\t\t\t}\n";
-
-						output += "\t\t}\n";
-					} // end compactible delete
+						output += make_compactable_delete(o, cob).to_string(2);
+					}
 
 					//create
 					output += "\t\t" + id_name + " create_" + cob.name + "() {\n";
@@ -1148,9 +806,9 @@ int main(int argc, char *argv[]) {
 							if(cob.is_expandable) {
 								for(auto& rp : cr.rel_ptr->properties) {
 									if(rp.is_derived) {
-									} if(rp.is_bitfield) {
+									} if(rp.type == property_type::bitfield) {
 										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.resize(1 + (" + cob.name + ".size_used + 8) / 8);\n";
-									} else if(rp.is_special_vector) {
+									} else if(rp.type == property_type::special_vector) {
 										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 									} else {
 										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.emplace_back();\n";
@@ -1185,9 +843,9 @@ int main(int argc, char *argv[]) {
 					if(cob.is_expandable) {
 						for(auto& cp : cob.properties) {
 							if(cp.is_derived) {
-							} else if(cp.is_bitfield) {
+							} else if(cp.type == property_type::bitfield) {
 								output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".values.resize(1 + (" + cob.name + ".size_used + 8) / 8);\n";
-							} else if(cp.is_special_vector) {
+							} else if(cp.type == property_type::special_vector) {
 								output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 							} else {
 								output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".values.emplace_back();\n";
@@ -1229,9 +887,9 @@ int main(int argc, char *argv[]) {
 
 							for(auto& rp : cr.rel_ptr->properties) {
 								if(rp.is_derived) {
-								} else if(rp.is_special_vector) {
+								} else if(rp.type == property_type::special_vector) {
 									output += "\t\t\t\t" + cr.relation_name + "." + rp.name + "_storage.release(" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()]);\n";
-								} else if(rp.is_bitfield) {
+								} else if(rp.type == property_type::bitfield) {
 									output += "\t\t\t\tdcon::bit_vector_set(" + cr.relation_name + ".m_" + rp.name + ".vptr(), id_removed.index(), false);\n";
 								} else {
 									output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".vptr()[id_removed.index()] = " + rp.data_type + "{};\n";
@@ -1247,9 +905,9 @@ int main(int argc, char *argv[]) {
 					}
 					for(auto& cp : cob.properties) {
 						if(cp.is_derived) {
-						} else if(cp.is_special_vector) {
+						} else if(cp.type == property_type::special_vector) {
 							output += "\t\t\t\t" + cob.name + "." + cp.name + "_storage.release(" + cob.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\n";
-						} else if(cp.is_bitfield) {
+						} else if(cp.type == property_type::bitfield) {
 							output += "\t\t\t\tdcon::bit_vector_set(" + cob.name + ".m_" + cp.name + ".vptr(), id_removed.index(), false);\n";
 						} else {
 							output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".vptr()[id_removed.index()] = " + cp.data_type + "{};\n";
@@ -1292,9 +950,9 @@ int main(int argc, char *argv[]) {
 							if(cr.as_primary_key) {
 								for(auto& rp : cr.rel_ptr->properties) {
 									if(rp.is_derived) {
-									} if(rp.is_bitfield) {
+									} if(rp.type == property_type::bitfield) {
 										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.resize(1 + (" + cob.name + ".size_used + 7) / 8);\n";
-									} else if(rp.is_special_vector) {
+									} else if(rp.type == property_type::special_vector) {
 										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 									} else {
 										output += "\t\t\t\t" + cr.relation_name + ".m_" + rp.name + ".values.emplace_back();\n";
@@ -1324,9 +982,9 @@ int main(int argc, char *argv[]) {
 
 						for(auto& cp : cob.properties) {
 							if(cp.is_derived) {
-							} else if(cp.is_bitfield) {
+							} else if(cp.type == property_type::bitfield) {
 								output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".values.resize(1 + (" + cob.name + ".size_used + 7) / 8);\n";
-							} else if(cp.is_special_vector) {
+							} else if(cp.type == property_type::special_vector) {
 								output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 							} else {
 								output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".values.emplace_back();\n";
@@ -1373,20 +1031,20 @@ int main(int argc, char *argv[]) {
 					
 					for(auto& cp : cob.properties) {
 						if(cp.is_derived) {
-						} else if(cp.is_special_vector) {
+						} else if(cp.type == property_type::special_vector) {
 							output += "\t\t\t\tstd::for_each(" + cob.name + ".m_" + cp.name + ".vptr() + new_size, "
 								+ cob.name + ".m_" + cp.name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->" + cob.name + "."
 								+ cp.name + "_storage.release(i); });\n";
 
 							output += "\t\t\t\t" + cob.name + "." + cp.name + "_storage.release(" + cob.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\n";
-						} else if(cp.is_bitfield) {
+						} else if(cp.type == property_type::bitfield) {
 							output += "\t\t\t\tfor(uint32_t i = new_size; i < 8*(((new_size + 7)/8)); ++i)\n";
 							output += "\t\t\t\t\tdcon::bit_vector_set(" + cob.name + ".m_" + cp.name + ".vptr(), i, false);\n";
 							if(!cob.is_expandable)
 								output += "\t\t\t\tstd::fill_n(" + cob.name + ".m_" + cp.name + ".vptr() + (new_size + 7) / 8, (old_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});\n";
 						} else {
 							if(!cob.is_expandable) {
-								if(cp.is_object) {
+								if(cp.type == property_type::object) {
 									output += "\t\t\t\tstd::std::destroy_n(" + cob.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size);\n";
 									output += "\t\t\t\tstd::uninitialized_default_construct_n(" + cob.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size);\n";
 								} else {
@@ -1463,9 +1121,9 @@ int main(int argc, char *argv[]) {
 						}
 						for(auto& cp : cob.properties) {
 							if(cp.is_derived) {
-							} else if(cp.is_special_vector) {
+							} else if(cp.type == property_type::special_vector) {
 								output += "\t\t\t" + cob.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
-							} else if(cp.is_bitfield) {
+							} else if(cp.type == property_type::bitfield) {
 								output += "\t\t\t" + cob.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\n";
 							} else {
 								output += "\t\t\t" + cob.name + ".m_" + cp.name + ".values.resize(1 + new_size);\n";
@@ -1520,20 +1178,20 @@ int main(int argc, char *argv[]) {
 
 				for(auto& cp : cob.properties) {
 					if(cp.is_derived) {
-					} else if(cp.is_special_vector) {
+					} else if(cp.type == property_type::special_vector) {
 						output += "\t\t\t\tstd::for_each(" + cob.name + ".m_" + cp.name + ".vptr() + new_size, "
 							+ cob.name + ".m_" + cp.name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->" + cob.name + "."
 							+ cp.name + "_storage.release(i); });\n";
 
 						output += "\t\t\t\t" + cob.name + "." + cp.name + "_storage.release(" + cob.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\n";
-					} else if(cp.is_bitfield) {
+					} else if(cp.type == property_type::bitfield) {
 						output += "\t\t\t\tfor(uint32_t i = new_size; i < 8*(((new_size + 7)/8)); ++i)\n";
 						output += "\t\t\t\t\tdcon::bit_vector_set(" + cob.name + ".m_" + cp.name + ".vptr(), i, false);\n";
 						if(!cob.is_expandable)
 							output += "\t\t\t\tstd::fill_n(" + cob.name + ".m_" + cp.name + ".vptr() + (new_size + 7) / 8, (old_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});\n";
 					} else {
 						if(!cob.is_expandable) {
-							if(cp.is_object) {
+							if(cp.type == property_type::object) {
 								output += "\t\t\t\tstd::std::destroy_n(" + cob.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size);\n";
 								output += "\t\t\t\tstd::uninitialized_default_construct_n(" + cob.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size);\n";
 							} else {
@@ -1563,9 +1221,9 @@ int main(int argc, char *argv[]) {
 
 					for(auto& cp : cob.properties) {
 						if(cp.is_derived) {
-						} else if(cp.is_special_vector) {
+						} else if(cp.type == property_type::special_vector) {
 							output += "\t\t\t" + cob.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
-						} else if(cp.is_bitfield) {
+						} else if(cp.type == property_type::bitfield) {
 							output += "\t\t\t" + cob.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\n";
 						} else {
 							output += "\t\t\t" + cob.name + ".m_" + cp.name + ".values.resize(1 + new_size);\n";
@@ -1644,12 +1302,12 @@ int main(int argc, char *argv[]) {
 
 				for(auto& cp : cob.properties) {
 					if(cp.is_derived) {
-					} else if(cp.is_special_vector) {
+					} else if(cp.type == property_type::special_vector) {
 						output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".vptr()[new_id.index()] = "
 							+ cob.name + ".m_" + cp.name + ".vptr()[old_id.index()];\n";
 						output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".vptr()[old_id.index()] = "
 							+ "std::numeric_limits<dcon::stable_mk_2_tag>::max();\n";
-					} else if(cp.is_bitfield) {
+					} else if(cp.type == property_type::bitfield) {
 						output += "\t\t\t\tdcon::bit_vector_set(" + cob.name + ".m_" + cp.name + ".vptr(), new_id.index(), "
 							+ "dcon::bit_vector_get(" + cob.name + ".m_" + cp.name + ".vptr(), old_id.index()));\n";
 						output += "\t\t\t\tdcon::bit_vector_set(" + cob.name + ".m_" + cp.name + ".vptr(), old_id.index(), false);\n";
@@ -1738,9 +1396,9 @@ int main(int argc, char *argv[]) {
 
 					for(auto& cp : cob.properties) {
 						if(cp.is_derived) {
-						} else if(cp.is_special_vector) {
+						} else if(cp.type == property_type::special_vector) {
 							output += "\t\t\t\t" + cob.name + "." + cp.name + "_storage.release(" + cob.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\n";
-						} else if(cp.is_bitfield) {
+						} else if(cp.type == property_type::bitfield) {
 							output += "\t\t\t\tdcon::bit_vector_set(" + cob.name + ".m_" + cp.name + ".vptr(), id_removed.index(), false);\n";
 							if(cob.is_expandable)
 								output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".values.resize(1 + (" + cob.name + ".size_used + 6) / 8);\n";
@@ -1749,7 +1407,7 @@ int main(int argc, char *argv[]) {
 								output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".vptr()[id_removed.index()] = " + cp.data_type + "{};\n";
 						}
 
-						if(cob.is_expandable && !cp.is_bitfield && !cp.is_derived) {
+						if(cob.is_expandable && cp.type != property_type::bitfield && !cp.is_derived) {
 							output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".values.pop_back();\n";
 						}
 					}
@@ -1768,20 +1426,20 @@ int main(int argc, char *argv[]) {
 
 					for(auto& cp : cob.properties) {
 						if(cp.is_derived) {
-						} else if(cp.is_special_vector) {
+						} else if(cp.type == property_type::special_vector) {
 							output += "\t\t\t\tstd::for_each(" + cob.name + ".m_" + cp.name + ".vptr() + new_size, "
 								+ cob.name + ".m_" + cp.name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->" + cob.name + "."
 								+ cp.name + "_storage.release(i); });\n";
 
 							output += "\t\t\t\t" + cob.name + "." + cp.name + "_storage.release(" + cob.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\n";
-						} else if(cp.is_bitfield) {
+						} else if(cp.type == property_type::bitfield) {
 							output += "\t\t\t\tfor(uint32_t i = new_size; i < 8*(((new_size + 7)/8)); ++i)\n";
 							output += "\t\t\t\t\tdcon::bit_vector_set(" + cob.name + ".m_" + cp.name + ".vptr(), i, false);\n";
 							if(!cob.is_expandable)
 								output += "\t\t\t\tstd::fill_n(" + cob.name + ".m_" + cp.name + ".vptr() + (new_size + 7) / 8, (old_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});\n";
 						} else {
 							if(!cob.is_expandable) {
-								if(cp.is_object) {
+								if(cp.type == property_type::object) {
 									output += "\t\t\t\tstd::std::destroy_n(" + cob.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size);\n";
 									output += "\t\t\t\tstd::uninitialized_default_construct_n(" + cob.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size);\n";
 								} else {
@@ -1812,9 +1470,9 @@ int main(int argc, char *argv[]) {
 						
 						for(auto& cp : cob.properties) {
 							if(cp.is_derived) {
-							} else if(cp.is_special_vector) {
+							} else if(cp.type == property_type::special_vector) {
 								output += "\t\t\t" + cob.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
-							} else if(cp.is_bitfield) {
+							} else if(cp.type == property_type::bitfield) {
 								output += "\t\t\t" + cob.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\n";
 							} else {
 								output += "\t\t\t" + cob.name + ".m_" + cp.name + ".values.resize(1 + new_size);\n";
@@ -1876,7 +1534,7 @@ int main(int argc, char *argv[]) {
 
 						for(auto& cp : cob.properties) {
 							if(cp.is_derived) {
-							} else if(cp.is_special_vector) {
+							} else if(cp.type == property_type::special_vector) {
 								output += "\t\t\t\t" + cob.name + "." + cp.name + "_storage.release(" + cob.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\n";
 								output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".vptr()[id_removed.index()] = "
 									+ cob.name + ".m_" + cp.name + ".vptr()[last_id.index()];\n";
@@ -1885,7 +1543,7 @@ int main(int argc, char *argv[]) {
 								else
 									output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".vptr()[last_id.index()] = "
 									+ "std::numeric_limits<dcon::stable_mk_2_tag>::max();\n";
-							} else if(cp.is_bitfield) {
+							} else if(cp.type == property_type::bitfield) {
 								output += "\t\t\t\tdcon::bit_vector_set(" + cob.name + ".m_" + cp.name + ".vptr(), id_removed.index(), "
 									+ "dcon::bit_vector_get(" + cob.name + ".m_" + cp.name + ".vptr(), last_id.index()));\n";
 								output += "\t\t\t\tdcon::bit_vector_set(" + cob.name + ".m_" + cp.name + ".vptr(), last_id.index(), false);\n";
@@ -1943,9 +1601,9 @@ int main(int argc, char *argv[]) {
 						}
 						for(auto& cp : cob.properties) {
 							if(cp.is_derived) {
-							} else if(cp.is_bitfield) {
+							} else if(cp.type == property_type::bitfield) {
 								output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".values.resize(1 + (" + cob.name + ".size_used + 8) / 8);\n";
-							} else if(cp.is_special_vector) {
+							} else if(cp.type == property_type::special_vector) {
 								output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 							} else {
 								output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".values.emplace_back();\n";
@@ -1989,9 +1647,9 @@ int main(int argc, char *argv[]) {
 
 					for(auto& cp : cob.properties) {
 						if(cp.is_derived) {
-						} else if(cp.is_special_vector) {
+						} else if(cp.type == property_type::special_vector) {
 							output += "\t\t\t\t" + cob.name + "." + cp.name + "_storage.release(" + cob.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\n";
-						} else if(cp.is_bitfield) {
+						} else if(cp.type == property_type::bitfield) {
 							output += "\t\t\t\tdcon::bit_vector_set(" + cob.name + ".m_" + cp.name + ".vptr(), id_removed.index(), false);\n";
 						} else {
 							output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".vptr()[id_removed.index()] = " + cp.data_type + "{};\n";
@@ -2051,9 +1709,9 @@ int main(int argc, char *argv[]) {
 
 						for(auto& cp : cob.properties) {
 							if(cp.is_derived) {
-							} else if(cp.is_bitfield) {
+							} else if(cp.type == property_type::bitfield) {
 								output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".values.resize(1 + (" + cob.name + ".size_used + 7) / 8);\n";
-							} else if(cp.is_special_vector) {
+							} else if(cp.type == property_type::special_vector) {
 								output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
 							} else {
 								output += "\t\t\t\t" + cob.name + ".m_" + cp.name + ".values.emplace_back();\n";
@@ -2105,20 +1763,20 @@ int main(int argc, char *argv[]) {
 
 					for(auto& cp : cob.properties) {
 						if(cp.is_derived) {
-						} else if(cp.is_special_vector) {
+						} else if(cp.type == property_type::special_vector) {
 							output += "\t\t\t\tstd::for_each(" + cob.name + ".m_" + cp.name + ".vptr() + new_size, "
 								+ cob.name + ".m_" + cp.name + ".vptr() + old_size, [t = this](dcon::stable_mk_2_tag& i){ t->" + cob.name + "."
 								+ cp.name + "_storage.release(i); });\n";
 
 							output += "\t\t\t\t" + cob.name + "." + cp.name + "_storage.release(" + cob.name + ".m_" + cp.name + ".vptr()[id_removed.index()]);\n";
-						} else if(cp.is_bitfield) {
+						} else if(cp.type == property_type::bitfield) {
 							output += "\t\t\t\tfor(uint32_t i = new_size; i < 8*(((new_size + 7)/8)); ++i)\n";
 							output += "\t\t\t\t\tdcon::bit_vector_set(" + cob.name + ".m_" + cp.name + ".vptr(), i, false);\n";
 							if(!cob.is_expandable)
 								output += "\t\t\t\tstd::fill_n(" + cob.name + ".m_" + cp.name + ".vptr() + (new_size + 7) / 8, (old_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});\n";
 						} else {
 							if(!cob.is_expandable) {
-								if(cp.is_object) {
+								if(cp.type == property_type::object) {
 									output += "\t\t\t\tstd::std::destroy_n(" + cob.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size);\n";
 									output += "\t\t\t\tstd::uninitialized_default_construct_n(" + cob.name + ".m_" + cp.name + ".vptr() + new_size, old_size - new_size);\n";
 								} else {
@@ -2164,9 +1822,9 @@ int main(int argc, char *argv[]) {
 
 						for(auto& cp : cob.properties) {
 							if(cp.is_derived) {
-							} else if(cp.is_special_vector) {
+							} else if(cp.type == property_type::special_vector) {
 								output += "\t\t\t" + cob.name + ".m_" + cp.name + ".values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());\n";
-							} else if(cp.is_bitfield) {
+							} else if(cp.type == property_type::bitfield) {
 								output += "\t\t\t" + cob.name + ".m_" + cp.name + ".values.resize(1 + (new_size + 7) / 8);\n";
 							} else {
 								output += "\t\t\t" + cob.name + ".m_" + cp.name + ".values.resize(1 + new_size);\n";
@@ -2331,14 +1989,14 @@ int main(int argc, char *argv[]) {
 			for(auto& prop : ob.properties) {
 				if(prop.is_derived) {
 
-				} else if(prop.is_bitfield) {
+				} else if(prop.type == property_type::bitfield) {
 					output += "\t\t\tif(serialize_selection." + ob.name + "_" + prop.name + ") {\n";
 					output += "\t\t\t\tdcon::record_header header((" + ob.name + ".size_used + 7) / 8, \""
 						+ "bitfield" + "\", \"" + ob.name + "\", \"" + prop.name + "\");\n";
 					output += "\t\t\t\ttotal_size += header.serialize_size();\n";
 					output += "\t\t\t\ttotal_size += (" + ob.name + ".size_used + 7) / 8;\n";
 					output += "\t\t\t}\n";
-				} else if(prop.is_special_vector) {
+				} else if(prop.type == property_type::special_vector) {
 					output += "\t\t\tif(serialize_selection." + ob.name + "_" + prop.name + ") {\n";
 					output += "\t\t\t\tstd::for_each(" + ob.name + ".m_" + prop.name + ".vptr(), "
 						+ ob.name + ".m_" + prop.name + ".vptr() " + ob.name + ".size_used, [t = this, &total_size](stable_mk_2_tag obj){\n";
@@ -2349,7 +2007,7 @@ int main(int argc, char *argv[]) {
 					output += "\t\t\t\ttotal_size += header.serialize_size();\n";
 
 					output += "\t\t\t}\n";
-				} else if(prop.is_object) {
+				} else if(prop.type == property_type::object) {
 					output += "\t\t\tif(serialize_selection." + ob.name + "_" + prop.name + ") {\n";
 					output += "\t\t\t\tstd::for_each(" + ob.name + ".m_" + prop.name + ".vptr(), "
 						+ ob.name + ".m_" + prop.name + ".vptr() " + ob.name + ".size_used, [t = this, &total_size]("
@@ -2408,7 +2066,7 @@ int main(int argc, char *argv[]) {
 			for(auto& prop : ob.properties) {
 				if(prop.is_derived) {
 
-				} else if(prop.is_bitfield) {
+				} else if(prop.type == property_type::bitfield) {
 					output += "\t\t\tif(serialize_selection." + ob.name + "_" + prop.name + ") {\n";
 					output += "\t\t\t\tdcon::record_header header((" + ob.name + ".size_used + 7) / 8, \""
 						+ "bitfield" + "\", \"" + ob.name + "\", \"" + prop.name + "\");\n";
@@ -2417,7 +2075,7 @@ int main(int argc, char *argv[]) {
 						+ ob.name + ".m_" + prop.name  + ".vptr(), (" + ob.name + ".size_used + 7) / 8);\n";
 					output += "\t\t\t\toutput_buffer += (" + ob.name + ".size_used + 7) / 8;\n";
 					output += "\t\t\t}\n";
-				} else if(prop.is_special_vector) {
+				} else if(prop.type == property_type::special_vector) {
 					output += "\t\t\tif(serialize_selection." + ob.name + "_" + prop.name + ") {\n";
 
 					output += "\t\t\t\tsize_t total_size = 0;\n";
@@ -2444,7 +2102,7 @@ int main(int argc, char *argv[]) {
 					output += "\t\t\t\t\t});\n";
 
 					output += "\t\t\t}\n";
-				} else if(prop.is_object) {
+				} else if(prop.type == property_type::object) {
 					output += "\t\t\tif(serialize_selection." + ob.name + "_" + prop.name + ") {\n";
 					output += "\t\t\t\tsize_t total_size = 0;\n";
 					output += "\t\t\t\tstd::for_each(" + ob.name + ".m_" + prop.name + ".vptr(), "
@@ -2574,7 +2232,7 @@ int main(int argc, char *argv[]) {
 				output += "\t\t\t\t\telse if(header.is_property(\"" + prop.name + "\")) {\n"; // matches
 				if(prop.is_derived) {
 
-				} else if(prop.is_bitfield) {
+				} else if(prop.type == property_type::bitfield) {
 					output += "\t\t\t\t\tif(header.is_type(\"bitfield\")) {\n"; //correct type
 					output += "\t\t\t\t\t\tmemcpy(" + ob.name + ".m_" + prop.name + ".vptr(), reinterpret_cast<bitfield_type const*>(input_buffer)"
 						", std::min(size_t(" + ob.name + ".size_used + 7) / 8, header.record_size));\n";
@@ -2605,7 +2263,7 @@ int main(int argc, char *argv[]) {
 							}
 						}
 					}
-				} else if(prop.is_special_vector) {
+				} else if(prop.type == property_type::special_vector) {
 					output += "\t\t\t\t\tif(header.is_type(\"stable_mk_2_tag\")) {\n"; //correct type
 					output += "\t\t\t\t\t\t\tuint32_t ix = 0;\n";
 
@@ -2727,7 +2385,7 @@ int main(int argc, char *argv[]) {
 						}
 					}
 					// end if prop is special array
-				} else if(prop.is_object) {
+				} else if(prop.type == property_type::object) {
 					output += "\t\t\t\t\tif(header.is_type(\"" + prop.data_type + "\")) {\n"; //correct type
 
 					output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\n";
@@ -2925,7 +2583,7 @@ int main(int argc, char *argv[]) {
 				output += "\t\t\t\t\telse if(header.is_property(\"" + prop.name + "\") && mask." + ob.name + "_" + prop.name + ") {\n"; // matches
 				if(prop.is_derived) {
 
-				} else if(prop.is_bitfield) {
+				} else if(prop.type == property_type::bitfield) {
 					output += "\t\t\t\t\tif(header.is_type(\"bitfield\")) {\n"; //correct type
 					output += "\t\t\t\t\t\tmemcpy(" + ob.name + ".m_" + prop.name + ".vptr(), reinterpret_cast<bitfield_type const*>(input_buffer)"
 						", std::min(size_t(" + ob.name + ".size_used + 7) / 8, header.record_size));\n";
@@ -2956,7 +2614,7 @@ int main(int argc, char *argv[]) {
 							}
 						}
 					}
-				} else if(prop.is_special_vector) {
+				} else if(prop.type == property_type::special_vector) {
 					output += "\t\t\t\t\tif(header.is_type(\"stable_mk_2_tag\")) {\n"; //correct type
 					output += "\t\t\t\t\t\t\tuint32_t ix = 0;\n";
 
@@ -3078,7 +2736,7 @@ int main(int argc, char *argv[]) {
 						}
 					}
 					// end if prop is special array
-				} else if(prop.is_object) {
+				} else if(prop.type == property_type::object) {
 					output += "\t\t\t\t\tif(header.is_type(\"" + prop.data_type + "\")) {\n"; //correct type
 
 					output += "\t\t\t\t\t\t\tstd::byte const* icpy = input_buffer;\n";

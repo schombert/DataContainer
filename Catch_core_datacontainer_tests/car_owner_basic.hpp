@@ -53,6 +53,7 @@ namespace car_owner_basic {
 	};
 	
 	class car_id_pair {
+		public:
 		car_id left;
 		car_id right;
 	};
@@ -84,6 +85,7 @@ namespace car_owner_basic {
 	};
 	
 	class person_id_pair {
+		public:
 		person_id left;
 		person_id right;
 	};
@@ -454,26 +456,36 @@ namespace car_owner_basic {
 		}
 		
 
+		//
+		// container pop_back for car
+		//
 		void car_pop_back() {
-			if(car.size_used > 0) {
-				car_id id_removed(car.size_used - 1);
-				delete_car_ownership(id_removed);
-				car_ownership.size_used = car.size_used - 1;
-				car_ownership.m_ownership_date.vptr()[id_removed.index()] = int32_t{};
-				car.m_wheels.vptr()[id_removed.index()] = int32_t{};
-				--car.size_used;
-			}
+			if(car.size_used == 0) return;
+			car_id id_removed(car_id::value_base_t(car.size_used - 1));
+			delete_car_ownership(id_removed);
+
+			car_ownership.size_used = car.size_used - 1;
+
+			car_ownership.m_ownership_date.vptr()[id_removed.index()] = int32_t{};
+			car.m_wheels.vptr()[id_removed.index()] = int32_t{};
+			--car.size_used;
 		}
+		
+		//
+		// container resize for car
+		//
 		void car_resize(uint32_t new_size) {
 			if(new_size > 1200) std::abort();
 			const uint32_t old_size = car.size_used;
 			if(new_size < old_size) {
 				std::fill_n(car.m_wheels.vptr() + new_size, old_size - new_size, int32_t{});
+				car_ownership_resize(new_size);
 			} else {
+				car_ownership_resize(new_size);
 			}
-			car_ownership_resize(new_size);
 			car.size_used = new_size;
 		}
+		
 		car_id create_car() {
 			if(car.size_used >= 1200) std::abort();
 			car_id new_id(car.size_used);
@@ -484,25 +496,33 @@ namespace car_owner_basic {
 		bool is_valid_car(car_id id) const {
 			return bool(id) && uint32_t(id.index()) < car.size_used;
 		}
+		//
+		// container pop_back for person
+		//
 		void person_pop_back() {
-			if(person.size_used > 0) {
-				person_id id_removed(person.size_used - 1);
-				person_remove_all_car_ownership_as_owner(id_removed);
-				person.m_age.vptr()[id_removed.index()] = int32_t{};
-				--person.size_used;
-			}
+			if(person.size_used == 0) return;
+			person_id id_removed(person_id::value_base_t(person.size_used - 1));
+			person_remove_all_car_ownership_as_owner(id_removed);
+
+			person.m_age.vptr()[id_removed.index()] = int32_t{};
+			--person.size_used;
 		}
+		
+		//
+		// container resize for person
+		//
 		void person_resize(uint32_t new_size) {
 			if(new_size > 100) std::abort();
 			const uint32_t old_size = person.size_used;
 			if(new_size < old_size) {
 				std::fill_n(person.m_age.vptr() + new_size, old_size - new_size, int32_t{});
+				std::destroy_n(car_ownership.m_array_owner.vptr() + new_size, old_size - new_size);
+				std::uninitialized_default_construct_n(car_ownership.m_array_owner.vptr() + new_size, old_size - new_size);
 			} else {
 			}
-			std::destroy_n(car_ownership.m_array_owner.vptr(), old_size);
-			std::uninitialized_default_construct_n(car_ownership.m_array_owner.vptr(), old_size);
 			person.size_used = new_size;
 		}
+		
 		person_id create_person() {
 			if(person.size_used >= 100) std::abort();
 			person_id new_id(person.size_used);
