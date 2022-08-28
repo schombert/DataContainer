@@ -666,8 +666,6 @@ int main(int argc, char *argv[]) {
 				}
 			} // end loop over each property
 
-			output += "\n";
-
 			// creation / deletion / move hook routines
 			if(ob.hook_create) {
 				output += "\t\tvoid on_create_" + ob.name + "(" + id_name + " id);\n";
@@ -718,494 +716,56 @@ int main(int argc, char *argv[]) {
 
 			for(auto& i : r.indexed_objects) {
 				if(i.index == index_type::at_most_one && i.related_to == r.primary_key) {
-					const std::string id_name = i.type_name + "_id";
-					const std::string con_tags_type = i.related_to->is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags";
+					output += make_relation_pk_getters_setters(o, r.name, i.property_name, r.is_expandable).to_string(2);
+					output += make_relation_pk_reverse_getters_setters(o, r.name, i.property_name, i.type_name,
+						i.related_to->is_expandable, false).to_string(2);
 
-					// getter in relationship
-
-					output += "\t\tDCON_RELEASE_INLINE " + id_name + " " + r.name + "_get_" + i.property_name + "(" + relation_id_name + " id) const noexcept {\n";
-					output += "\t\t\treturn id;\n";
-					output += "\t\t}\n";
-
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept {\n";
-					output += "\t\t\tve::tagged_vector<" + relation_id_name + "> result;\n";
-					output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
-					output += "\t\t\t\tresult.set(uint32_t(i), id[i]);\n";
-					output += "\t\t\treturn result;\n";
-					output += "\t\t}\n";
-
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept {\n";
-					output += "\t\t\tve::tagged_vector<" + relation_id_name + "> result;\n";
-					output += "\t\t\tfor(uint32_t i = 0; i < id.subcount; ++i)\n";
-					output += "\t\t\t\tresult.set(i, id[i]);\n";
-					output += "\t\t\treturn result;\n";
-					output += "\t\t}\n";
-
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept {\n";
-					output += "\t\t\treturn id;\n";
-					output += "\t\t}\n";
-
-					// setter in relationship
-
-					output += "\t\tvoid " + r.name + "_set_" + i.property_name + "(" + relation_id_name + " id, " + id_name + " value) noexcept {\n";
-					output += "\t\t\tif(value) {\n";
-					output += "\t\t\t\tdelete_" + r.name + "(value);\n";
-					output += "\t\t\t\tinternal_move_relationship_" + r.name + "(id, value);\n";
-					output += "\t\t\t} else {\n";
-					output += "\t\t\t\tdelete_" + r.name + "(id);\n";
-					output += "\t\t\t}\n";
-					output += "\t\t}\n";
-
-					// getter in related object
-
-					output += "\t\tDCON_RELEASE_INLINE " + relation_id_name + " get_" + r.name + "_from_" + i.type_name + "_as_" + i.property_name +
-						"(" + id_name + " id) const noexcept {\n";
-					output += "\t\t\treturn id;\n";
-					output += "\t\t}\n";
-
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name + "_as_" + i.property_name +
-						"(" + con_tags_type + "<" + id_name + "> id) const noexcept {\n";
-					output += "\t\t\tve::tagged_vector<" + relation_id_name + "> result;\n";
-					output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
-					output += "\t\t\t\tresult.set(uint32_t(i), id[i]);\n";
-					output += "\t\t\treturn result;\n";
-					output += "\t\t}\n";
-
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name + "_as_" + i.property_name +
-						"(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept {\n";
-					output += "\t\t\tve::tagged_vector<" + relation_id_name + "> result;\n";
-					output += "\t\t\tfor(uint32_t i = 0; i < id.subcount; ++i)\n";
-					output += "\t\t\t\tresult.set(i, id[i]);\n";
-					output += "\t\t\treturn result;\n";
-					output += "\t\t}\n";
-
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name + "_as_" + i.property_name +
-						"(ve::tagged_vector<" + id_name + "> id) const noexcept {\n";
-					output += "\t\t\treturn id;\n";
-					output += "\t\t}\n";
-
-					// setter in related object
-
-					output += "\t\tDCON_RELEASE_INLINE void " + i.type_name + "_remove_" + r.name + "_as_" + i.property_name + "(" + id_name + " id) noexcept {\n";
-					output += "\t\t\tif(bool(id))\n";
-					output += "\t\t\t\tdelete_" + r.name + "(id);\n";
-					output += "\t\t}\n";
-
-					{
-						bool is_only_of_type = true;
-						for(auto ir : r.indexed_objects) {
-							if(ir.type_name == i.type_name && ir.property_name != i.property_name)
-								is_only_of_type = false;
-						}
-
-						if(is_only_of_type) { //make shortcut function names
-							// getter in related object
-
-							output += "\t\tDCON_RELEASE_INLINE " + relation_id_name + " get_" + r.name + "_from_" + i.type_name +
-								"(" + id_name + " id) const noexcept {\n";
-							output += "\t\t\treturn id;\n";
-							output += "\t\t}\n";
-
-							output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name +
-								"(" + con_tags_type + "<" + id_name + "> id) const noexcept {\n";
-							output += "\t\t\tve::tagged_vector<" + relation_id_name + "> result;\n";
-							output += "\t\t\tfor(int32_t i = 0; i < ve::vector_size; ++i)\n";
-							output += "\t\t\t\tresult.set(uint32_t(i), id[i]);\n";
-							output += "\t\t\treturn result;\n";
-							output += "\t\t}\n";
-
-							output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name +
-								"(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept {\n";
-							output += "\t\t\tve::tagged_vector<" + relation_id_name + "> result;\n";
-							output += "\t\t\tfor(uint32_t i = 0; i < id.subcount; ++i)\n";
-							output += "\t\t\t\tresult.set(i, id[i]);\n";
-							output += "\t\t\treturn result;\n";
-							output += "\t\t}\n";
-
-							output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name + 
-								"(ve::tagged_vector<" + id_name + "> id) const noexcept {\n";
-							output += "\t\t\treturn id;\n";
-							output += "\t\t}\n";
-
-							// setter in related object
-
-							output += "\t\tDCON_RELEASE_INLINE void " + i.type_name + "_remove_" + r.name + "(" + id_name + " id) noexcept {\n";
-							output += "\t\t\tif(bool(id))\n";
-							output += "\t\t\t\tdelete_" + r.name + "(id);\n";
-							output += "\t\t}\n";
-						}
+					bool is_only_of_type = true;
+					for(auto ir : r.indexed_objects) {
+						if(ir.type_name == i.type_name && ir.property_name != i.property_name)
+							is_only_of_type = false;
 					}
-
+					if(is_only_of_type) {
+						output += make_relation_pk_reverse_getters_setters(o, r.name, i.property_name, i.type_name,
+							i.related_to->is_expandable, true).to_string(2);
+					}
 				} else if(i.index == index_type::at_most_one) {
-					// first: getter in the relationship itself
-
-					const std::string id_name = i.type_name + "_id";
-					const std::string con_tags_type = i.related_to->is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags";
-
-					output += "\t\tDCON_RELEASE_INLINE " + id_name + " " + r.name + "_get_" + i.property_name + "(" + relation_id_name + " id) const noexcept {\n";
-					output += "\t\t\treturn " + r.name + ".m_" + i.property_name + ".vptr()[id.index()];\n";
-					output += "\t\t}\n";
-
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept {\n";
-					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
-					output += "\t\t}\n";
-
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept {\n";
-					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
-					output += "\t\t}\n";
-
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept {\n";
-					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
-					output += "\t\t}\n";
-
-					// second: setter in the relationship itself
-
-					output += "\t\tvoid " + r.name + "_set_" + i.property_name + "(" + relation_id_name + " id, " + id_name + " value) noexcept {\n";
-					output += "\t\t\tif(auto old_value = " + r.name + ".m_" + i.property_name + ".vptr()[id.index()]; bool(old_value))\n";
-					output += "\t\t\t\t" + r.name + ".m_link_back_" + i.property_name + ".vptr()[old_value].index()] = " + relation_id_name + "();\n";
-					output += "\t\t\t" + r.name + ".m_" + i.property_name + ".vptr()[id.index()] = value;\n";
-					output += "\t\t\tif(value) {\n";
-					output += "\t\t\t\tif(" + r.name + ".m_link_back_" + i.property_name + ".vptr()[value.index()])\n";
-					output += "\t\t\t\t\tdelete_" + r.name + "(" + r.name + ".m_link_back_" + i.property_name + ".vptr()[value.index()]);\n";
-					output += "\t\t\t\t" + r.name + ".m_link_back_" + i.property_name + ".vptr()[value.index()] = id;\n";
-					output += "\t\t\t}\n";
-					output += "\t\t}\n";
-
-					// third: getter in the object related to
-
-					output += "\t\tDCON_RELEASE_INLINE " + relation_id_name + " get_" + r.name + "_from_" + i.type_name + "_as_" + i.property_name +
-						"(" + id_name + " id) const noexcept {\n";
-					output += "\t\t\treturn " + r.name + ".m_link_back_" + i.property_name + ".vptr()[id.index()];\n";
-					output += "\t\t}\n";
-
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name + "_as_" + i.property_name +
-						"(" + con_tags_type + "<" + id_name + "> id) const noexcept {\n";
-					output += "\t\t\treturn ve::load(id, " + r.name + ".m_link_back_" + i.property_name + ".vptr());\n";
-					output += "\t\t}\n";
-
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name + "_as_" + i.property_name +
-						"(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept {\n";
-					output += "\t\t\treturn ve::load(id, " + r.name + ".m_link_back_" + i.property_name + ".vptr());\n";
-					output += "\t\t}\n";
-
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name + "_as_" + i.property_name +
-						"(ve::tagged_vector<" + id_name + "> id) const noexcept {\n";
-					output += "\t\t\treturn ve::load(id, " + r.name + ".m_link_back_" + i.property_name + ".vptr());\n";
-					output += "\t\t}\n";
-
-					// fourth: setter in the object related to
-
-					output += "\t\tDCON_RELEASE_INLINE void " + i.type_name + "_remove_" + r.name + "_as_" + i.property_name + "(" + id_name + " id) noexcept {\n";
-					output += "\t\t\tif(auto id = " + r.name + ".m_link_back_" + i.property_name + ".vptr()[value.index()]; bool(id))\n";
-					output += "\t\t\t\tdelete_" + r.name + "(id);\n";
-					output += "\t\t}\n";
-
-					{
-						bool is_only_of_type = true;
-						for(auto ir : r.indexed_objects) {
-							if(ir.type_name == i.type_name && ir.property_name != i.property_name)
-								is_only_of_type = false;
-						}
-
-						if(is_only_of_type) { //make shortcut function names
-							output += "\t\tDCON_RELEASE_INLINE " + relation_id_name + " get_" + r.name + "_from_" + i.type_name +
-								"(" + id_name + " id) const noexcept {\n";
-							output += "\t\t\treturn " + r.name + ".m_link_back_" + i.property_name + ".vptr()[id.index()];\n";
-							output += "\t\t}\n";
-
-							output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name + 
-								"(" + con_tags_type + "<" + id_name + "> id) const noexcept {\n";
-							output += "\t\t\treturn ve::load(id, " + r.name + ".m_link_back_" + i.property_name + ".vptr());\n";
-							output += "\t\t}\n";
-
-							output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name + 
-								"(ve::partial_contiguous_tags<" + id_name + "> id) const noexcept {\n";
-							output += "\t\t\treturn ve::load(id, " + r.name + ".m_link_back_" + i.property_name + ".vptr());\n";
-							output += "\t\t}\n";
-
-							output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + relation_id_name + "> get_" + r.name + "_from_" + i.type_name +
-								"(ve::tagged_vector<" + id_name + "> id) const noexcept {\n";
-							output += "\t\t\treturn ve::load(id, " + r.name + ".m_link_back_" + i.property_name + ".vptr());\n";
-							output += "\t\t}\n";
-
-							// fourth: setter in the object related to
-
-							output += "\t\tDCON_RELEASE_INLINE void " + i.type_name + "_remove_" + r.name + "(" + id_name + " id) noexcept {\n";
-							output += "\t\t\tif(auto id = " + r.name + ".m_link_back_" + i.property_name + ".vptr()[value.index()]; bool(id))\n";
-							output += "\t\t\t\tdelete_" + r.name + "(id);\n";
-							output += "\t\t}\n";
-						}
+					output += make_relation_unique_non_pk_getters_setters(o, r.name,
+						i.property_name, i.type_name, r.is_expandable).to_string(2);
+					output += make_relation_unique_non_pk_reverse_getters_setters(o, r.name,
+						i.property_name, i.type_name, i.related_to->is_expandable, false).to_string(2);
+					
+					bool is_only_of_type = true;
+					for(auto ir : r.indexed_objects) {
+						if(ir.type_name == i.type_name && ir.property_name != i.property_name)
+							is_only_of_type = false;
 					}
 
+					if(is_only_of_type) { //make shortcut function names
+						output += make_relation_unique_non_pk_reverse_getters_setters(o, r.name,
+							i.property_name, i.type_name, i.related_to->is_expandable, true).to_string(2);
+					}
 				} else if(i.index == index_type::many) {
-					// first: getter in the relationship itself
+					output += make_relation_many_getters_setters(o, r.name, i.ltype,
+						i.property_name, i.type_name, r.is_expandable).to_string(2);
+					output += make_relation_many_reverse_getters_setters(o, r.name, i.ltype,
+						i.property_name, i.type_name, i.related_to->is_expandable, false).to_string(2);
 
-					const std::string id_name = i.type_name + "_id";
-					const std::string con_tags_type = i.related_to->is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags";
-
-					output += "\t\tDCON_RELEASE_INLINE " + id_name + " " + r.name + "_get_" + i.property_name + "(" + relation_id_name + " id) const noexcept {\n";
-					output += "\t\t\treturn " + r.name + ".m_" + i.property_name + ".vptr()[id.index()];\n";
-					output += "\t\t}\n";
-
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept {\n";
-					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
-					output += "\t\t}\n";
-
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept {\n";
-					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
-					output += "\t\t}\n";
-
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept {\n";
-					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
-					output += "\t\t}\n";
-
-					// second: setter in the relationship itself
-
-					output += "\t\tvoid " + r.name + "_set_" + i.property_name + "(" + relation_id_name + " id, " + id_name + " value) noexcept {\n";
-
-					if(i.ltype == list_type::list) {
-						output += "\t\t\tif(auto old_value = " + r.name + ".m_" + i.property_name + ".vptr()[id.index()]; bool(old_value)) {\n";
-						output += "\t\t\t\tif(auto old_left = " + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].left; bool(old_left)) {\n";
-						output += "\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[old_left.index()].right = " + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].right;\n";
-						output += "\t\t\t\t} else {\n";
-						output += "\t\t\t\t\t" + r.name + ".m_head_back_" + i.property_name + ".vptr()[old_value.index()] = m_link_" + i.property_name + ".vptr()[id.index()].right;\n";
-						output += "\t\t\t\t}\n";
-						output += "\t\t\t\tif(auto old_right = " + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].right; bool(old_right))\n";
-						output += "\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[old_right.index()].left = " + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].left;\n";
-						output += "\t\t\t\t}\n";
-						output += "\t\t\t}\n";
-						output += "\t\t\tif(value) {\n";
-						output += "\t\t\t\tif(auto existing_list = " + r.name + ".m_head_back_" + i.property_name + ".vptr()[value.index()]]; bool(existing_list)) {\n";
-						output += "\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].left = existing_list;\n";
-						output += "\t\t\t\t\tif(auto r = " + r.name + ".m_link_" + i.property_name + ".vptr()[existing_list.index()].right; bool(r)) {\n";
-						output += "\t\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].right = r;\n";
-						output += "\t\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[r.index()].left = id;\n";
-						output += "\t\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[existing_list.index()].right = id;\n";
-						output += "\t\t\t\t\t} else {\n";
-						output += "\t\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].right = " + relation_id_name + "();\n";
-						output += "\t\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[existing_list.index()].right = id;\n";
-						output += "\t\t\t\t\t}\n";
-						output += "\t\t\t\t} else {\n";
-						output += "\t\t\t\t\t" + r.name + ".m_head_back_" + i.property_name + ".vptr()[value.index()]] = id;\n";
-						output += "\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].right = " + relation_id_name + "();\n";
-						output += "\t\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].left = " + relation_id_name + "();\n";
-						output += "\t\t\t\t}\n";
-						output += "\t\t\t} else {\n";
-						output += "\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].right = " + relation_id_name + "();\n";
-						output += "\t\t\t\t" + r.name + ".m_link_" + i.property_name + ".vptr()[id.index()].left = " + relation_id_name + "();\n";
-						output += "\t\t\t}\n";
-						output += "\t\t\t" + r.name + ".m_" + i.property_name + ".vptr()[id.index()] = value;\n";
-					} else if(i.ltype == list_type::array) {
-						output += "\t\t\tif(auto old_value = " + r.name + ".m_" + i.property_name + ".vptr()[id.index()]; bool(old_value)) {\n";
-						output += "\t\t\t\tauto vref = " + r.name + ".m_array_" + i.property_name + ".vptr()[old_value.index()];\n";
-						output += "\t\t\t\tdcon::remove_unique_item(" + r.name + "." + i.property_name + "_storage, vref, id)\n";
-						output += "\t\t\t}\n";
-						output += "\t\t\tif(value)\n";
-						output += "\t\t\t\tdcon::push_back(" + r.name + "." + i.property_name + "_storage, " + r.name + ".m_array_" + i.property_name + ".vptr()[value.index()], id);\n";
-						output += "\t\t\t" + r.name + ".m_" + i.property_name + ".vptr()[id.index()] = value;\n";
-					} else if(i.ltype == list_type::std_vector) {
-						output += "\t\t\tif(auto old_value = " + r.name + ".m_" + i.property_name + ".vptr()[id.index()]; bool(old_value)) {\n";
-						output += "\t\t\t\tauto& vref = " + r.name + ".m_array_" + i.property_name + ".vptr()[old_value.index()];\n";
-						output += "\t\t\t\tif(auto it = std::find(vref.begin(), vref.end(), id); it != vref.end()) {\n";
-						output += "\t\t\t\t\t*it = vref.back();\n";
-						output += "\t\t\t\t\tvref.pop_back();\n";
-						output += "\t\t\t\t}\n";
-						output += "\t\t\t}\n";
-						output += "\t\t\tif(value)\n";
-						output += "\t\t\t\t" + r.name + ".m_array_" + i.property_name + ".vptr()[value.index()].push_back(id);\n";
-						output += "\t\t\t" + r.name + ".m_" + i.property_name + ".vptr()[id.index()] = value;\n";
+					bool is_only_of_type = true;
+					for(auto ir : r.indexed_objects) {
+						if(ir.type_name == i.type_name && ir.property_name != i.property_name)
+							is_only_of_type = false;
 					}
-
-					output += "\t\t}\n";
-
-					// third: getter in the object related to
-
-					output += "\t\ttemplate<typename T>\n";
-					output += "\t\tDCON_RELEASE_INLINE void " + i.type_name + "_for_each_" + r.name + "_as_" + i.property_name + "("
-						+ id_name + " id, T&& func) const {\n";
-
-					if(i.ltype == list_type::list) {
-						output += "\t\t\tif(bool(id)) {\n";
-						output += "\t\t\t\tfor(auto list_pos = " + r.name + ".m_head_back_" + i.property_name + ".vptr()[id.index()]; "
-							+ "bool(list_pos); list_pos = " + r.name + ".m_link_" + i.property_name + ".vptr()[list_pos.index()].right) {\n";
-						output += "\t\t\t\t\tfunc(list_pos);";
-						output += "\t\t\t\t}\n";
-						output += "\t\t\t}\n";
-
-					} else if(i.ltype == list_type::array) {
-						output += "\t\t\tif(bool(id)) {\n";
-						output += "\t\t\t\tauto vrange = dcon::get_range(" + r.name + "." + i.property_name + "_storage, "
-							+ r.name + ".m_array_" + i.property_name + ".vptr()[id.index()]);\n";
-						output += "\t\t\t\tstd::for_each(vrange.first, vrange.second, func);\n";
-						output += "\t\t\t}\n";
-					} else if(i.ltype == list_type::std_vector) {
-						output += "\t\t\tif(bool(id)) {\n";
-						output += "\t\t\t\tauto& vref = " + r.name + ".m_array_" + i.property_name + ".vptr()[id.index()];\n";
-						output += "\t\t\t\tstd::for_each(vref.begin(), vref.end(), func);\n";
-						output += "\t\t\t}\n";
-					}
-					output += "\t\t}\n";
-
-
-					if(i.ltype == list_type::array) {
-						output += "\t\tDCON_RELEASE_INLINE std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*> "
-							+ i.type_name + "_range_of_" + r.name + "_as_" + i.property_name + "(" + id_name + " id) const {\n";
-						output += "\t\t\tif(bool(id)) {\n";
-						output += "\t\t\t\tauto vrange = dcon::get_range(" + r.name + "." + i.property_name + "_storage, "
-							+ r.name + ".m_array_" + i.property_name + ".vptr()[id.index()]);\n";
-						output += "\t\t\t\treturn std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*>(vrange.first, vrange.second);\n";
-						output += "\t\t\t} else {\n";
-						output += "\t\t\t\treturn std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*>(nullptr, nullptr);\n";
-						output += "\t\t\t}\n";
-						output += "\t\t}\n";
-					} else if(i.ltype == list_type::std_vector) {
-						output += "\t\tDCON_RELEASE_INLINE std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*> "
-							+ i.type_name + "_range_of_" + r.name + "_as_" + i.property_name + "(" + id_name + " id) const {\n";
-						output += "\t\t\tif(bool(id)) {\n";
-						output += "\t\t\t\tauto& vref = " + r.name + ".m_array_" + i.property_name + ".vptr()[id.index()];\n";
-						output += "\t\t\t\treturn std::pair<" + relation_id_name + " const*, " + relation_id_name
-							+ " const*>(&(*vref.begin()), &(*vref.end()));\n";
-						output += "\t\t\t} else {\n";
-						output += "\t\t\t\treturn std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*>(nullptr, nullptr);\n";
-						output += "\t\t\t}\n";
-						output += "\t\t}\n";
-					}
-
-					// fourth: setter in the object related to
-
-					output += "\t\tvoid " + i.type_name + "_remove_all_" + r.name + "_as_" + i.property_name + "(" + id_name + " id) noexcept {\n";
-					if(i.ltype == list_type::array || i.ltype == list_type::std_vector) {
-						output += "\t\t\tauto rng = " + i.type_name + "_range_of_" + r.name + "_as_" + i.property_name + "(id);\n";
-						output += "\t\t\tstd::vector<" + relation_id_name + "> temp(rng.first, rng.second);\n";
-						output += "\t\t\tstd::for_each(temp.begin(), temp.end(), [t = this](" + relation_id_name + " i) { t->delete_" + r.name + "(i); });\n";
-					} else {
-						output += "\t\t\tstd::vector<" + relation_id_name + "> temp;\n";
-						output += "\t\t\t" + i.type_name + "_for_each_" + r.name + "_as_" + i.property_name +
-							"(id, [&](" + relation_id_name + " j) { temp.push_back(j); });\n";
-						output += "\t\t\tstd::for_each(temp.begin(), temp.end(), [t = this](" + relation_id_name + " i) { t->delete_" + r.name + "(i); });\n";
-					}
-					output += "\t\t}\n";
-
-					{
-						bool is_only_of_type = true;
-						for(auto ir : r.indexed_objects) {
-							if(ir.type_name == i.type_name && ir.property_name != i.property_name)
-								is_only_of_type = false;
-						}
-						if(is_only_of_type) { // shortcut functions
-							// third: getter in the object related to
-
-							output += "\t\ttemplate<typename T>\n";
-							output += "\t\tDCON_RELEASE_INLINE void " + i.type_name + "_for_each_" + r.name + "("
-								+ id_name + " id, T&& func) const {\n";
-
-							if(i.ltype == list_type::list) {
-								output += "\t\t\tif(bool(id)) {\n";
-								output += "\t\t\t\tfor(auto list_pos = " + r.name + ".m_head_back_" + i.property_name + ".vptr()[id.index()]; "
-									+ "bool(list_pos); list_pos = " + r.name + ".m_link_" + i.property_name + ".vptr()[list_pos.index()].right) {\n";
-								output += "\t\t\t\t\tfunc(list_pos);";
-								output += "\t\t\t\t}\n";
-								output += "\t\t\t}\n";
-
-							} else if(i.ltype == list_type::array) {
-								output += "\t\t\tif(bool(id)) {\n";
-								output += "\t\t\t\tauto vrange = dcon::get_range(" + r.name + "." + i.property_name + "_storage, "
-									+ r.name + ".m_array_" + i.property_name + ".vptr()[id.index()]);\n";
-								output += "\t\t\t\tstd::for_each(vrange.first, vrange.second, func);\n";
-								output += "\t\t\t}\n";
-							} else if(i.ltype == list_type::std_vector) {
-								output += "\t\t\tif(bool(id)) {\n";
-								output += "\t\t\t\tauto& vref = " + r.name + ".m_array_" + i.property_name + ".vptr()[id.index()];\n";
-								output += "\t\t\t\tstd::for_each(vref.begin(), vref.end(), func);\n";
-								output += "\t\t\t}\n";
-							}
-							output += "\t\t}\n";
-
-
-							if(i.ltype == list_type::array) {
-								output += "\t\tDCON_RELEASE_INLINE std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*> "
-									+ i.type_name + "_range_of_" + r.name + "(" + id_name + " id) const {\n";
-								output += "\t\t\tif(bool(id)) {\n";
-								output += "\t\t\t\tauto vrange = dcon::get_range(" + r.name + "." + i.property_name + "_storage, "
-									+ r.name + ".m_array_" + i.property_name + ".vptr()[id.index()]);\n";
-								output += "\t\t\t\treturn std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*>(vrange.first, vrange.second);\n";
-								output += "\t\t\t} else {\n";
-								output += "\t\t\t\treturn std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*>(nullptr, nullptr);\n";
-								output += "\t\t\t}\n";
-								output += "\t\t}\n";
-							} else if(i.ltype == list_type::std_vector) {
-								output += "\t\tDCON_RELEASE_INLINE std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*> "
-									+ i.type_name + "_range_of_" + r.name + "(" + id_name + " id) const {\n";
-								output += "\t\t\tif(bool(id)) {\n";
-								output += "\t\t\t\tauto& vref = " + r.name + ".m_array_" + i.property_name + ".vptr()[id.index()];\n";
-								output += "\t\t\t\treturn std::pair<" + relation_id_name + " const*, " + relation_id_name
-									+ " const*>(&(*vref.begin()), &(*vref.end()));\n";
-								output += "\t\t\t} else {\n";
-								output += "\t\t\t\treturn std::pair<" + relation_id_name + " const*, " + relation_id_name + " const*>(nullptr, nullptr);\n";
-								output += "\t\t\t}\n";
-								output += "\t\t}\n";
-							}
-
-							// fourth: setter in the object related to
-
-							output += "\t\tvoid " + i.type_name + "_remove_all_" + r.name + "(" + id_name + " id) noexcept {\n";
-							if(i.ltype == list_type::array || i.ltype == list_type::std_vector) {
-								output += "\t\t\tauto rng = " + i.type_name + "_range_of_" + r.name + "(id);\n";
-								output += "\t\t\tstd::vector<" + relation_id_name + "> temp(rng.first, rng.second);\n";
-								output += "\t\t\tstd::for_each(temp.begin(), temp.end(), [t = this](" + relation_id_name + " i) { t->delete_" + r.name + "(i); });\n";
-							} else {
-								output += "\t\t\tstd::vector<" + relation_id_name + "> temp;\n";
-								output += "\t\t\t" + i.type_name + "_for_each_" + r.name +
-									"(id, [&](" + relation_id_name + " j) { temp.push_back(j); });\n";
-								output += "\t\t\tstd::for_each(temp.begin(), temp.end(), [t = this](" + relation_id_name + " i) { t->delete_" + r.name + "(i); });\n";
-							}
-							output += "\t\t}\n";
-						} //end shortcut functions in relationship
-					}
-
+					if(is_only_of_type) { // shortcut functions
+						output += make_relation_many_reverse_getters_setters(o, r.name, i.ltype,
+							i.property_name, i.type_name, i.related_to->is_expandable, true).to_string(2);
+					} //end shortcut functions in relationship
 				} else if(i.index == index_type::none) {
-					// first: getter in the relationship itself
-
-					const std::string id_name = i.type_name + "_id";
-
-					output += "\t\tDCON_RELEASE_INLINE " + id_name + " " + r.name + "_get_" + i.property_name + "(" + relation_id_name + " id) const noexcept {\n";
-					output += "\t\t\treturn " + r.name + ".m_" + i.property_name + ".vptr()[id.index()];\n";
-					output += "\t\t}\n";
-
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(" + relation_con_tags_type + "<" + relation_id_name + "> id) const noexcept {\n";
-					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
-					output += "\t\t}\n";
-
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(ve::partial_contiguous_tags<" + relation_id_name + "> id) const noexcept {\n";
-					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
-					output += "\t\t}\n";
-
-					output += "\t\tDCON_RELEASE_INLINE ve::tagged_vector<" + id_name + "> " + r.name + "_get_" + i.property_name + "(ve::tagged_vector<" + relation_id_name + "> id) const noexcept {\n";
-					output += "\t\t\treturn ve::load(id, " + r.name + ".m_" + i.property_name + ".vptr());\n";
-					output += "\t\t}\n";
-
-					// second: setter in the relationship itself
-
-					output += "\t\tDCON_RELEASE_INLINE void " + r.name + "_set_" + i.property_name + "(" + relation_id_name + " id, " + id_name + " value) noexcept {\n";
-					output += "\t\t\t" + r.name + ".m_" + i.property_name + ".vptr()[id.index()] = value;\n";
-					output += "\t\t}\n";
-
-					output += "\t\tDCON_RELEASE_INLINE " "void " + r.name + "_set_" + i.property_name + "(" + relation_con_tags_type + "<" + id_name + "> id, "
-						"ve::tagged_vector<" + id_name + "> values) noexcept {\n";
-					output += "\t\t\tve::store(id, " + r.name + ".m_" + i.property_name + ".vptr(), values);\n";
-					output += "\t\t}\n";
-
-					output += "\t\tDCON_RELEASE_INLINE " "void " + r.name + "_set_" + i.property_name + "(ve::partial_contiguous_tags<" + id_name + "> id, "
-						"ve::tagged_vector<" + id_name + "> values) noexcept {\n";
-					output += "\t\t\tve::store(id, " + r.name + ".m_" + i.property_name + ".vptr(), values);\n";
-					output += "\t\t}\n";
-
-					output += "\t\tDCON_RELEASE_INLINE " "void " + r.name + "_set_" + i.property_name + "(ve::tagged_vector<" + id_name + "> id, "
-						"ve::tagged_vector<" + id_name + "> values) noexcept {\n";
-					output += "\t\t\tve::store(id, " + r.name + ".m_" + i.property_name + ".vptr(), values);\n";
-					output += "\t\t}\n";
+					output += make_vectorizable_type_getters(o, r.name, i.property_name,
+						i.type_name + "_id", r.is_expandable).to_string(2);
+					output += make_vectorizable_type_setters(o, r.name, i.property_name,
+						i.type_name + "_id", r.is_expandable).to_string(2);
 				}// end -- creation of property references getters / setters
-
 			} //end of loop creating individual property getters / setters
 		} // end creating relationship getters / setters
 

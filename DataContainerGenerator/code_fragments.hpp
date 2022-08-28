@@ -39,5 +39,15 @@ basic_builder& make_special_array_getters(basic_builder& o, std::string const& o
 	std::string const& type);
 basic_builder& make_special_array_setters(basic_builder& o, std::string const& object_name, std::string const& property_name,
 	std::string const& type);
-
-
+basic_builder& make_relation_pk_getters_setters(basic_builder& o, std::string const& relation_name, std::string const& property_name,
+	bool is_expandable);
+basic_builder& make_relation_pk_reverse_getters_setters(basic_builder& o, std::string const& relation_name,
+	std::string const& property_name, std::string const& property_type, bool is_expandable, bool skip_as);
+basic_builder& make_relation_unique_non_pk_getters_setters(basic_builder& o, std::string const& relation_name,
+	std::string const& property_name, std::string const& property_type, bool is_expandable);
+basic_builder& make_relation_unique_non_pk_reverse_getters_setters(basic_builder& o, std::string const& relation_name,
+	std::string const& property_name, std::string const& property_type, bool is_expandable, bool skip_as);
+basic_builder& make_relation_many_getters_setters(basic_builder& o, std::string const& relation_name, list_type ltype,
+	std::string const& property_name, std::string const& property_type, bool is_expandable);
+basic_builder& make_relation_many_reverse_getters_setters(basic_builder& o, std::string const& relation_name, list_type ltype,
+	std::string const& property_name, std::string const& property_type, bool is_expandable, bool skip_as);

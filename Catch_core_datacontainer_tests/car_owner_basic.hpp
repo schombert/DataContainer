@@ -237,7 +237,6 @@ namespace car_owner_basic {
 			ve::store(id, car.m_wheels.vptr(), values);
 		}
 		
-
 		uint32_t car_size() const noexcept { return car.size_used; }
 
 		//
@@ -275,7 +274,6 @@ namespace car_owner_basic {
 			ve::store(id, person.m_age.vptr(), values);
 		}
 		
-
 		uint32_t person_size() const noexcept { return person.size_used; }
 
 		//
@@ -313,19 +311,21 @@ namespace car_owner_basic {
 			ve::store(id, car_ownership.m_ownership_date.vptr(), values);
 		}
 		
-
 		uint32_t car_ownership_size() const noexcept { return car_ownership.size_used; }
 
+		//
+		// many key getters and setters for car_ownership: owner
+		//
 		DCON_RELEASE_INLINE person_id car_ownership_get_owner(car_ownership_id id) const noexcept {
 			return car_ownership.m_owner.vptr()[id.index()];
 		}
-		DCON_RELEASE_INLINE ve::tagged_vector<person_id> car_ownership_get_owner(ve::contiguous_tags<car_ownership_id> id) const noexcept {
+		DCON_RELEASE_INLINE ve::value_to_vector_type<person_id> car_ownership_get_owner(ve::contiguous_tags<car_ownership_id> id) const noexcept {
 			return ve::load(id, car_ownership.m_owner.vptr());
 		}
-		DCON_RELEASE_INLINE ve::tagged_vector<person_id> car_ownership_get_owner(ve::partial_contiguous_tags<car_ownership_id> id) const noexcept {
+		DCON_RELEASE_INLINE ve::value_to_vector_type<person_id> car_ownership_get_owner(ve::partial_contiguous_tags<car_ownership_id> id) const noexcept {
 			return ve::load(id, car_ownership.m_owner.vptr());
 		}
-		DCON_RELEASE_INLINE ve::tagged_vector<person_id> car_ownership_get_owner(ve::tagged_vector<car_ownership_id> id) const noexcept {
+		DCON_RELEASE_INLINE ve::value_to_vector_type<person_id> car_ownership_get_owner(ve::tagged_vector<car_ownership_id> id) const noexcept {
 			return ve::load(id, car_ownership.m_owner.vptr());
 		}
 		void car_ownership_set_owner(car_ownership_id id, person_id value) noexcept {
@@ -336,10 +336,12 @@ namespace car_owner_basic {
 					vref.pop_back();
 				}
 			}
-			if(value)
+			if(bool(value)) {
 				car_ownership.m_array_owner.vptr()[value.index()].push_back(id);
+			}
 			car_ownership.m_owner.vptr()[id.index()] = value;
 		}
+		
 		template<typename T>
 		DCON_RELEASE_INLINE void person_for_each_car_ownership_as_owner(person_id id, T&& func) const {
 			if(bool(id)) {
@@ -360,6 +362,7 @@ namespace car_owner_basic {
 			std::vector<car_ownership_id> temp(rng.first, rng.second);
 			std::for_each(temp.begin(), temp.end(), [t = this](car_ownership_id i) { t->delete_car_ownership(i); });
 		}
+		
 		template<typename T>
 		DCON_RELEASE_INLINE void person_for_each_car_ownership(person_id id, T&& func) const {
 			if(bool(id)) {
@@ -376,80 +379,80 @@ namespace car_owner_basic {
 			}
 		}
 		void person_remove_all_car_ownership(person_id id) noexcept {
-			auto rng = person_range_of_car_ownership(id);
+			auto rng = person_range_of_car_ownership_as_owner(id);
 			std::vector<car_ownership_id> temp(rng.first, rng.second);
 			std::for_each(temp.begin(), temp.end(), [t = this](car_ownership_id i) { t->delete_car_ownership(i); });
 		}
-		DCON_RELEASE_INLINE car_id car_ownership_get_owned_car(car_ownership_id id) const noexcept {
+		
+		//
+		// primary key getters and setters for car_ownership: owned_car
+		//
+		DCON_RELEASE_INLINE car_ownership_id car_ownership_get_owned_car(car_ownership_id id) const noexcept {
 			return id;
 		}
-		DCON_RELEASE_INLINE ve::tagged_vector<car_id> car_ownership_get_owned_car(ve::contiguous_tags<car_ownership_id> id) const noexcept {
-			ve::tagged_vector<car_ownership_id> result;
-			for(int32_t i = 0; i < ve::vector_size; ++i)
-				result.set(uint32_t(i), id[i]);
-			return result;
+		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> car_ownership_get_owned_car(ve::contiguous_tags<car_ownership_id> id) const noexcept {
+			return ve::apply([](car_ownership_id i){ return i; }, id);
 		}
-		DCON_RELEASE_INLINE ve::tagged_vector<car_id> car_ownership_get_owned_car(ve::partial_contiguous_tags<car_ownership_id> id) const noexcept {
-			ve::tagged_vector<car_ownership_id> result;
-			for(uint32_t i = 0; i < id.subcount; ++i)
-				result.set(i, id[i]);
-			return result;
+		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> car_ownership_get_owned_car(ve::partial_contiguous_tags<car_ownership_id> id) const noexcept {
+			return ve::apply([](car_ownership_id i){ return i; }, id);
 		}
-		DCON_RELEASE_INLINE ve::tagged_vector<car_id> car_ownership_get_owned_car(ve::tagged_vector<car_ownership_id> id) const noexcept {
+		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> car_ownership_get_owned_car(ve::tagged_vector<car_ownership_id> id) const noexcept {
 			return id;
 		}
-		void car_ownership_set_owned_car(car_ownership_id id, car_id value) noexcept {
-			if(value) {
+		void car_ownership_set_owned_car(car_ownership_id id, car_ownership_id value) noexcept {
+			if(bool(value)) {
 				delete_car_ownership(value);
 				internal_move_relationship_car_ownership(id, value);
 			} else {
 				delete_car_ownership(id);
 			}
 		}
+		bool car_ownership_try_set_owned_car(car_ownership_id id, car_ownership_id value) noexcept {
+			if(bool(value)) {
+				if(is_valid_car_ownership(value)) return false;
+				internal_move_relationship_car_ownership(id, value);
+			} else {
+				delete_car_ownership(id);
+			}
+			return true;
+		}
+		
 		DCON_RELEASE_INLINE car_ownership_id get_car_ownership_from_car_as_owned_car(car_id id) const noexcept {
 			return id;
 		}
 		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> get_car_ownership_from_car_as_owned_car(ve::contiguous_tags<car_id> id) const noexcept {
-			ve::tagged_vector<car_ownership_id> result;
-			for(int32_t i = 0; i < ve::vector_size; ++i)
-				result.set(uint32_t(i), id[i]);
-			return result;
+			return ve::apply([](car_ownership_id i){ return i; }, id);
 		}
 		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> get_car_ownership_from_car_as_owned_car(ve::partial_contiguous_tags<car_id> id) const noexcept {
-			ve::tagged_vector<car_ownership_id> result;
-			for(uint32_t i = 0; i < id.subcount; ++i)
-				result.set(i, id[i]);
-			return result;
+			return ve::apply([](car_ownership_id i){ return i; }, id);
 		}
 		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> get_car_ownership_from_car_as_owned_car(ve::tagged_vector<car_id> id) const noexcept {
 			return id;
 		}
 		DCON_RELEASE_INLINE void car_remove_car_ownership_as_owned_car(car_id id) noexcept {
-			if(bool(id))
+			if(is_valid_car_ownership(id)) {
 				delete_car_ownership(id);
+			}
 		}
+		
 		DCON_RELEASE_INLINE car_ownership_id get_car_ownership_from_car(car_id id) const noexcept {
 			return id;
 		}
 		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> get_car_ownership_from_car(ve::contiguous_tags<car_id> id) const noexcept {
-			ve::tagged_vector<car_ownership_id> result;
-			for(int32_t i = 0; i < ve::vector_size; ++i)
-				result.set(uint32_t(i), id[i]);
-			return result;
+			return ve::apply([](car_ownership_id i){ return i; }, id);
 		}
 		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> get_car_ownership_from_car(ve::partial_contiguous_tags<car_id> id) const noexcept {
-			ve::tagged_vector<car_ownership_id> result;
-			for(uint32_t i = 0; i < id.subcount; ++i)
-				result.set(i, id[i]);
-			return result;
+			return ve::apply([](car_ownership_id i){ return i; }, id);
 		}
 		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> get_car_ownership_from_car(ve::tagged_vector<car_id> id) const noexcept {
 			return id;
 		}
 		DCON_RELEASE_INLINE void car_remove_car_ownership(car_id id) noexcept {
-			if(bool(id))
+			if(is_valid_car_ownership(id)) {
 				delete_car_ownership(id);
+			}
 		}
+		
 
 		void car_pop_back() {
 			if(car.size_used > 0) {

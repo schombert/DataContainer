@@ -69,7 +69,7 @@ public:
 	}
 	basic_builder& operator+(append const& a) & {
 		if(lines.size() > 0)
-			lines.back() += a.value;
+			lines.back() += (std::string(" ") + a.value);
 		return *this;
 	}
 	basic_builder& operator+(std::string const& line) & {
@@ -154,8 +154,8 @@ auto trailing_semicolon_state::operator+(T&& func)->std::enable_if_t<std::is_inv
 	return ref;
 }
 
-#define block append{" {"} + [&](basic_builder& o)
-#define class_block append{" {"} + trailing_semicolon{} +  [&](basic_builder& o) 
+#define block append{"{"} + [&](basic_builder& o)
+#define class_block append{"{"} + trailing_semicolon{} +  [&](basic_builder& o) 
 #define inline_block "{" + [&](basic_builder& o)
 
 
