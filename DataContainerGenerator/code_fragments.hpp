@@ -54,4 +54,9 @@ basic_builder& make_relation_many_reverse_getters_setters(basic_builder& o, std:
 basic_builder& make_pop_back(basic_builder& o, relationship_object_def const& obj);
 basic_builder& make_object_resize(basic_builder& o, relationship_object_def const& obj);
 basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def const& obj);
+basic_builder& make_non_erasable_create(basic_builder& o, relationship_object_def const& obj);
+basic_builder& make_erasable_delete(basic_builder& o, relationship_object_def const& obj);
+basic_builder& make_clearing_delete(basic_builder& o, relationship_object_def const& cob);
+basic_builder& make_erasable_create(basic_builder& o, relationship_object_def const& obj);
+basic_builder& make_internal_move_relationship(basic_builder& o, relationship_object_def const& obj);
 

@@ -451,6 +451,14 @@ namespace dcon {
 	}
 
 	template<typename object_type, uint32_t minimum_size, size_t memory_size>
+	void replace_unique_item(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag i, object_type obj, object_type new_val) {
+		const auto range = get_range(storage, i);
+		if(auto pos = std::find(range.first, range.second, obj); pos != range.second) {
+			*pos = new_val;
+		}
+	}
+
+	template<typename object_type, uint32_t minimum_size, size_t memory_size>
 	void load_range(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag& i, object_type const* first, object_type const* last) {
 		storage.increase_capacity(i, static_cast<uint32_t>(last - first));
 		if(i != std::numeric_limits<stable_mk_2_tag>::max()) {
