@@ -457,6 +457,52 @@ namespace car_owner_basic {
 		
 
 		//
+		// convenience getters and setters that operate via an implcit join
+		//
+		template<typename T>
+		void person_for_each_ownership_date_from_car_ownership(person_id id, T&& func) const {
+			person_for_each_car_ownership_as_owner(id, [&](car_ownership_id i) {
+				func(car_ownership_get_ownership_date(i));
+			} );
+		}
+		int32_t car_get_ownership_date_from_car_ownership(car_id ref_id) const {
+			return car_ownership_get_ownership_date(ref_id);
+		}
+		ve::value_to_vector_type<int32_t> car_get_ownership_date_from_car_ownership(ve::contiguous_tags<car_id> ref_id) const {
+			return car_ownership_get_ownership_date(ref_id);
+		}
+		ve::value_to_vector_type<int32_t> car_get_ownership_date_from_car_ownership(ve::partial_contiguous_tags<car_id> ref_id) const {
+			return car_ownership_get_ownership_date(ref_id);
+		}
+		ve::value_to_vector_type<int32_t> car_get_ownership_date_from_car_ownership(ve::tagged_vector<car_id> ref_id) const {
+			return car_ownership_get_ownership_date(ref_id);
+		}
+		void car_set_ownership_date_from_car_ownership(car_id ref_id, int32_t val) {
+			car_ownership_set_ownership_date(ref_id, val);
+		}
+		person_id car_get_owner_from_car_ownership(car_id ref_id) const {
+			return car_ownership_get_owner(ref_id);
+		}
+		ve::value_to_vector_type<person_id> car_get_owner_from_car_ownership(ve::contiguous_tags<car_id> ref_id) const {
+			return car_ownership_get_owner(ref_id);
+		}
+		ve::value_to_vector_type<person_id> car_get_owner_from_car_ownership(ve::partial_contiguous_tags<car_id> ref_id) const {
+			return car_ownership_get_owner(ref_id);
+		}
+		ve::value_to_vector_type<person_id> car_get_owner_from_car_ownership(ve::tagged_vector<car_id> ref_id) const {
+			return car_ownership_get_owner(ref_id);
+		}
+		void car_set_owner_from_car_ownership(car_id ref_id, person_id val) {
+			car_ownership_set_owner(ref_id, val);
+		}
+		template<typename T>
+		void person_for_each_owned_car_from_car_ownership(person_id id, T&& func) const {
+			person_for_each_car_ownership_as_owner(id, [&](car_ownership_id i) {
+				func(car_ownership_get_owned_car(i));
+			} );
+		}
+		
+		//
 		// container pop_back for car
 		//
 		void car_pop_back() {
@@ -691,13 +737,13 @@ namespace car_owner_basic {
 				dcon::record_header header(sizeof(uint32_t), "uint32_t", "car_ownership", "$size");
 				total_size += header.serialize_size();
 				total_size += sizeof(uint32_t);
+				if(serialize_selection.car_ownership_owner) {
+					dcon::record_header header(sizeof(person_id) * car_ownership.size_used, "uint8_t", "car_ownership", "owner");
+					total_size += header.serialize_size();
+					total_size += sizeof(person_id) * car_ownership.size_used;
+				}
 				dcon::record_header headerb(0, "$", "car_ownership", "$index_end");
 				total_size += headerb.serialize_size();
-			}
-			if(serialize_selection.car_ownership_owner) {
-				dcon::record_header header(sizeof(person_id) * car_ownership.size_used, "uint8_t", "car_ownership", "owner");
-				total_size += header.serialize_size();
-				total_size += sizeof(person_id) * car_ownership.size_used;
 			}
 			if(serialize_selection.car_ownership_ownership_date) {
 				dcon::record_header header(sizeof(int32_t) * car_ownership.size_used, "int32_t", "car_ownership", "ownership_date");
@@ -740,15 +786,15 @@ namespace car_owner_basic {
 				header.serialize(output_buffer);
 				*(reinterpret_cast<uint32_t*>(output_buffer)) = car_ownership.size_used;
 				output_buffer += sizeof(uint32_t);
+				{
+					dcon::record_header header(sizeof(person_id) * car_ownership.size_used, "uint8_t", "car_ownership", "owner");
+					header.serialize(output_buffer);
+					memcpy(reinterpret_cast<person_id*>(output_buffer), car_ownership.m_owner.vptr(), sizeof(person_id) * car_ownership.size_used);
+					output_buffer += sizeof(person_id) * car_ownership.size_used;
+				}
+				dcon::record_header headerb(0, "$", "car_ownership", "$index_end");
+				headerb.serialize(output_buffer);
 			}
-			if(serialize_selection.car_ownership_owner) {
-				dcon::record_header header(sizeof(person_id) * car_ownership.size_used, "uint8_t", "car_ownership", "owner");
-				header.serialize(output_buffer);
-				memcpy(reinterpret_cast<person_id*>(output_buffer), car_ownership.m_owner.vptr(), sizeof(person_id) * car_ownership.size_used);
-				output_buffer += sizeof(person_id) * car_ownership.size_used;
-			}
-			dcon::record_header headerb(0, "$", "car_ownership", "$index_end");
-			headerb.serialize(output_buffer);
 			if(serialize_selection.car_ownership_ownership_date) {
 				dcon::record_header header(sizeof(int32_t) * car_ownership.size_used, "int32_t", "car_ownership", "ownership_date");
 				header.serialize(output_buffer);

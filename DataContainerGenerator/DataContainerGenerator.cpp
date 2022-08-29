@@ -779,6 +779,12 @@ int main(int argc, char *argv[]) {
 
 		output += "\n";
 
+		for(auto cob : parsed_file.relationship_objects) {
+			if(cob.is_relationship) {
+				output += make_join_getters_setters(o, cob).to_string(2);
+			}
+		}
+
 		// creation / deletion reoutines
 		for(auto& cob : parsed_file.relationship_objects) {
 			const std::string id_name = cob.name + "_id";

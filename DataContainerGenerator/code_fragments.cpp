@@ -636,7 +636,6 @@ basic_builder& make_relation_many_reverse_getters_setters(basic_builder& o, std:
 		+substitute{ "as_suffix", skip_as ? std::string("") : std::string("_as_") + property_name };
 
 	o + "template<typename T>";
-
 	o + "DCON_RELEASE_INLINE void @type@_for_each_@obj@@as_suffix@(@type@_id id, T&& func) const" + block{
 		o + "if(bool(id))" + block{
 			if(ltype == list_type::list) {
@@ -1820,6 +1819,18 @@ basic_builder& make_serialize_size(basic_builder& o, file_def const& parsed_file
 				o + "total_size += header.serialize_size();";
 				o + "total_size += sizeof(uint32_t);";
 
+				for(auto& iob : ob.indexed_objects) {
+					o + substitute{ "prop", iob.property_name } +substitute{ "type", iob.type_name };
+					o + substitute{ "key_backing", size_to_tag_type(iob.related_to->size) };
+					if(iob.related_to != ob.primary_key) {
+						o + "if(serialize_selection.@obj@_@prop@)" + block{
+							o + "dcon::record_header header(sizeof(@type@_id) * @obj@.size_used, \"@key_backing@\", \"@obj@\", \"@prop@\");";
+							o + "total_size += header.serialize_size();";
+							o + "total_size += sizeof(@type@_id) * @obj@.size_used;";
+						};
+					}
+				}
+
 				if(ob.is_relationship) {
 					o + "dcon::record_header headerb(0, \"$\", \"@obj@\", \"$index_end\");";
 					o + "total_size += headerb.serialize_size();";
@@ -1835,18 +1846,6 @@ basic_builder& make_serialize_size(basic_builder& o, file_def const& parsed_file
 				};
 			}
 
-			for(auto& iob : ob.indexed_objects) {
-				o + substitute{ "prop", iob.property_name } + substitute{ "type", iob.type_name };
-				o + substitute{ "key_backing", size_to_tag_type(iob.related_to->size) };
-				if(iob.related_to != ob.primary_key) {
-					o + "if(serialize_selection.@obj@_@prop@)" + block{
-						o + "dcon::record_header header(sizeof(@type@_id) * @obj@.size_used, \"@key_backing@\", \"@obj@\", \"@prop@\");";
-						o + "total_size += header.serialize_size();";
-						o + "total_size += sizeof(@type@_id) * @obj@.size_used;";
-					};
-				}
-			}
-			
 			for(auto& prop : ob.properties) {
 				o + substitute{ "prop", prop.name } +substitute{ "type", prop.data_type };
 				if(prop.is_derived) {
@@ -1905,6 +1904,25 @@ basic_builder& make_serialize(basic_builder& o, file_def const& parsed_file) {
 				o + "header.serialize(output_buffer);";
 				o + "*(reinterpret_cast<uint32_t*>(output_buffer)) = @obj@.size_used;";
 				o + "output_buffer += sizeof(uint32_t);";
+
+				for(auto& iob : ob.indexed_objects) {
+					if(iob.related_to != ob.primary_key) {
+						o + substitute{ "prop", iob.property_name } +substitute{ "type", iob.type_name };
+						o + substitute{ "u_type", size_to_tag_type(iob.related_to->size) };
+
+						o + inline_block{
+							o + "dcon::record_header header(sizeof(@type@_id) * @obj@.size_used, \"@u_type@\", \"@obj@\", \"@prop@\");";
+							o + "header.serialize(output_buffer);";
+							o + "memcpy(reinterpret_cast<@type@_id*>(output_buffer), @obj@.m_@prop@.vptr(), sizeof(@type@_id) * @obj@.size_used);";
+							o + "output_buffer += sizeof(@type@_id) * @obj@.size_used;";
+						};
+					}
+				}
+
+				if(ob.is_relationship) {
+					o + "dcon::record_header headerb(0, \"$\", \"@obj@\", \"$index_end\");";
+					o + "headerb.serialize(output_buffer);";
+				}
 			};
 
 			if(ob.store_type == storage_type::erasable) {
@@ -1917,23 +1935,7 @@ basic_builder& make_serialize(basic_builder& o, file_def const& parsed_file) {
 				};
 			}
 
-			for(auto& iob : ob.indexed_objects) {
-				if(iob.related_to != ob.primary_key) {
-					o + substitute{ "prop", iob.property_name } +substitute{ "type", iob.type_name };
-					o + substitute{ "u_type", size_to_tag_type(iob.related_to->size) };
-					o + "if(serialize_selection.@obj@_@prop@)" + block{
-						o + "dcon::record_header header(sizeof(@type@_id) * @obj@.size_used, \"@u_type@\", \"@obj@\", \"@prop@\");";
-						o + "header.serialize(output_buffer);";
-						o + "memcpy(reinterpret_cast<@type@_id*>(output_buffer), @obj@.m_@prop@.vptr(), sizeof(@type@_id) * @obj@.size_used);";
-						o + "output_buffer += sizeof(@type@_id) * @obj@.size_used;";
-					};
-				}
-			}
-
-			if(ob.is_relationship) {
-				o + "dcon::record_header headerb(0, \"$\", \"@obj@\", \"$index_end\");";
-				o + "headerb.serialize(output_buffer);";
-			}
+			
 
 			for(auto& prop : ob.properties) {
 				o + substitute{ "prop", prop.name } +substitute{ "type", prop.data_type };
@@ -2309,6 +2311,184 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 			o + "input_buffer += header.record_size;";
 		};
 	};
+
+	o + line_break{};
+	return o;
+}
+
+
+
+basic_builder& make_relation_many_join_getters_setters(basic_builder& o, std::string const& property_name,
+	std::string const& containter_type, std::string const& relation_name,
+	std::string const& name_in_relation) {
+
+	o + substitute{ "obj", containter_type } +substitute{ "rel", relation_name }
+	+substitute{ "prop", property_name } +substitute{ "as_name", name_in_relation };
+
+	o + "template<typename T>";
+	o + "void @obj@_for_each_@prop@_from_@rel@(@obj@_id id, T&& func) const" + block{
+		o + "@obj@_for_each_@rel@_as_@as_name@(id, [&](@rel@_id i)" + block{
+			o + "func(@rel@_get_@prop@(i));";
+		} +append{");"};
+	};
+
+	return o;
+}
+
+basic_builder& make_relation_unique_non_pk_join_getters_setters(basic_builder& o, std::string const& property_name,
+	std::string const& data_type, std::string const& containter_type, std::string const& relation_name,
+	std::string const& name_in_relation, property_type ptype, bool relation_is_expandable) {
+	
+	o + substitute{"obj", containter_type } +substitute{ "rel", relation_name }
+	+substitute{ "prop", property_name } +substitute{ "type", data_type } +substitute{ "as_name", name_in_relation };
+	o + substitute{ "vector_position", relation_is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags" };
+
+	if(ptype == property_type::bitfield) {
+		o + "bool @obj@_get_@prop@_from_@rel@(@obj@_id id) const" + block{
+			o + "if(auto ref_id = @rel@.m_link_@as_name@.vptr()[id.index]; bool(ref_id))" + block{
+				o + "return @rel@_get_@prop@(ref_id);";
+			} +append{ "else" } +block{
+				o + "return false;";
+			};
+		};
+		o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> id) const" + block{
+			o + "auto ref_id = ve::load(id, @rel@.m_link_@as_name@.vptr())";
+			o + "return @rel@_get_@prop@(ref_id);";
+		};
+		o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> id) const" + block{
+			o + "auto ref_id = ve::load(id, @rel@.m_link_@as_name@.vptr())";
+			o + "return @rel@_get_@prop@(ref_id);";
+		};
+		o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> id) const" + block{
+			o + "auto ref_id = ve::load(id, @rel@.m_link_@as_name@.vptr())";
+			o + "return @rel@_get_@prop@(ref_id);";
+		};
+
+		o + "void @obj@_set_@prop@_from_@rel@(@obj@_id id, bool val)" + block{
+			o + "if(auto ref_id = @rel@.m_link_@as_name@.vptr()[id.index]; bool(ref_id))" + block{
+				o + "@rel@_set_@prop@(ref_id, val);";
+			};
+		};
+	} else if(ptype == property_type::object) {
+		
+	} else if(ptype == property_type::special_vector) {
+
+	} else if(ptype == property_type::vectorizable) {
+		o + "@type@ @obj@_get_@prop@_from_@rel@(@obj@_id id) const" + block{
+			o + "if(auto ref_id = @rel@.m_link_@as_name@.vptr()[id.index]; bool(ref_id))" + block{
+				o + "return @rel@_get_@prop@(ref_id);";
+			} +append{ "else" } +block{
+				o + "return @type@{};";
+			};
+		};
+		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> id) const" + block{
+			o + "auto ref_id = ve::load(id, @rel@.m_link_@as_name@.vptr())";
+			o + "return @rel@_get_@prop@(ref_id);";
+		};
+		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> id) const" + block{
+			o + "auto ref_id = ve::load(id, @rel@.m_link_@as_name@.vptr())";
+			o + "return @rel@_get_@prop@(ref_id);";
+		};
+		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> id) const" + block{
+			o + "auto ref_id = ve::load(id, @rel@.m_link_@as_name@.vptr())";
+			o + "return @rel@_get_@prop@(ref_id);";
+		};
+
+		o + "void @obj@_set_@prop@_from_@rel@(@obj@_id id, @type@ val)" + block{
+			o + "if(auto ref_id = @rel@.m_link_@as_name@.vptr()[id.index]; bool(ref_id))" + block{
+				o + "@rel@_set_@prop@(ref_id, val);";
+			};
+		};
+	} else if(ptype == property_type::other) {
+	}
+
+	return o;
+}
+
+basic_builder& make_relation_unique_pk_join_getters_setters(basic_builder& o, std::string const& property_name,
+	std::string const& data_type, std::string const& containter_type, std::string const& relation_name,
+	std::string const& name_in_relation, property_type ptype, bool relation_is_expandable) {
+
+	o + substitute{ "obj", containter_type } +substitute{ "rel", relation_name }
+	+substitute{ "prop", property_name } +substitute{ "type", data_type } +substitute{ "as_name", name_in_relation };
+	o + substitute{ "vector_position", relation_is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags" };
+
+	if(ptype == property_type::bitfield) {
+		o + "bool @obj@_get_@prop@_from_@rel@(@obj@_id ref_id) const" + block{
+			o + "return @rel@_get_@prop@(ref_id);";
+		};
+		o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> ref_id) const" + block{
+			o + "return @rel@_get_@prop@(ref_id);";
+		};
+		o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> ref_id) const" + block{
+			o + "return @rel@_get_@prop@(ref_id);";
+		};
+		o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> ref_id) const" + block{
+			o + "return @rel@_get_@prop@(ref_id);";
+		};
+		o + "void @obj@_set_@prop@_from_@rel@(@obj@_id ref_id, bool val)" + block{
+			o + "@rel@_set_@prop@(ref_id, val);";
+		};
+	} else if(ptype == property_type::object) {
+
+	} else if(ptype == property_type::special_vector) {
+
+	} else if(ptype == property_type::vectorizable) {
+		o + "@type@ @obj@_get_@prop@_from_@rel@(@obj@_id ref_id) const" + block{
+			o + "return @rel@_get_@prop@(ref_id);";
+		};
+		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> ref_id) const" + block{
+			o + "return @rel@_get_@prop@(ref_id);";
+		};
+		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> ref_id) const" + block{
+			o + "return @rel@_get_@prop@(ref_id);";
+		};
+		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> ref_id) const" + block{
+			o + "return @rel@_get_@prop@(ref_id);";
+		};
+
+		o + "void @obj@_set_@prop@_from_@rel@(@obj@_id ref_id, @type@ val)" + block{
+			o + "@rel@_set_@prop@(ref_id, val);";
+		};
+	} else if(ptype == property_type::other) {
+	}
+
+	return o;
+}
+
+basic_builder& make_join_getters_setters(basic_builder& o, relationship_object_def const& obj) {
+	o + heading{ "convenience getters and setters that operate via an implcit join" };
+
+	for(auto& inner_rprop : obj.properties) {
+		for(auto& io : obj.indexed_objects) {
+			if(io.related_to == obj.primary_key) {
+				make_relation_unique_pk_join_getters_setters(o, inner_rprop.name, inner_rprop.data_type,
+					io.type_name, obj.name, io.property_name, inner_rprop.type, obj.is_expandable);
+			} else if(io.index == index_type::at_most_one) {
+				make_relation_unique_non_pk_join_getters_setters(o, inner_rprop.name, inner_rprop.data_type,
+					io.type_name, obj.name, io.property_name, inner_rprop.type, obj.is_expandable);
+			} else if(io.index == index_type::many) {
+				make_relation_many_join_getters_setters(o, inner_rprop.name,
+					io.type_name, obj.name, io.property_name);
+			}
+		}
+	}
+	for(auto& inner_io : obj.indexed_objects) {
+		for(auto& io : obj.indexed_objects) {
+			if(&io != &inner_io) {
+				if(io.related_to == obj.primary_key) {
+					make_relation_unique_pk_join_getters_setters(o, inner_io.property_name, inner_io.type_name + "_id",
+						io.type_name, obj.name, io.property_name, property_type::vectorizable, obj.is_expandable);
+				} else if(io.index == index_type::at_most_one) {
+					make_relation_unique_non_pk_join_getters_setters(o, inner_io.property_name, inner_io.type_name + "_id",
+						io.type_name, obj.name, io.property_name, property_type::vectorizable, obj.is_expandable);
+				} else if(io.index == index_type::many) {
+					make_relation_many_join_getters_setters(o, inner_io.property_name,
+						io.type_name, obj.name, io.property_name);
+				}
+			}
+		}
+	}
 
 	o + line_break{};
 	return o;

@@ -18,11 +18,11 @@ std::string expand_size_to_fill_cacheline_calculation(std::string const& member_
 basic_builder& make_erasable_object_constructor(basic_builder& o, std::string const& name, size_t size);
 
 enum class hook_type { bitfield, vectorizable, other };
+
 basic_builder& make_hooked_getters(basic_builder& o, std::string const& object_name, std::string const& property_name, 
 	std::string const& property_type, hook_type ht, bool is_expandable);
 basic_builder& make_hooked_setters(basic_builder& o, std::string const& object_name, std::string const& property_name,
 	std::string const& property_type, hook_type ht, bool is_expandable);
-
 basic_builder& make_bitfield_getters(basic_builder& o, std::string const& object_name, std::string const& property_name,
 	bool is_expandable);
 basic_builder& make_bitfield_setters(basic_builder& o, std::string const& object_name, std::string const& property_name,
@@ -39,6 +39,8 @@ basic_builder& make_special_array_getters(basic_builder& o, std::string const& o
 	std::string const& type);
 basic_builder& make_special_array_setters(basic_builder& o, std::string const& object_name, std::string const& property_name,
 	std::string const& type);
+
+
 basic_builder& make_relation_pk_getters_setters(basic_builder& o, std::string const& relation_name, std::string const& property_name,
 	bool is_expandable);
 basic_builder& make_relation_pk_reverse_getters_setters(basic_builder& o, std::string const& relation_name,
@@ -66,3 +68,4 @@ basic_builder& make_serialize_size(basic_builder& o, file_def const& parsed_file
 basic_builder& make_serialize(basic_builder& o, file_def const& parsed_file);
 basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, bool with_mask);
 
+basic_builder& make_join_getters_setters(basic_builder& o, relationship_object_def const& obj);
