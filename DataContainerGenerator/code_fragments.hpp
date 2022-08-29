@@ -59,4 +59,10 @@ basic_builder& make_erasable_delete(basic_builder& o, relationship_object_def co
 basic_builder& make_clearing_delete(basic_builder& o, relationship_object_def const& cob);
 basic_builder& make_erasable_create(basic_builder& o, relationship_object_def const& obj);
 basic_builder& make_internal_move_relationship(basic_builder& o, relationship_object_def const& obj);
+basic_builder& make_relation_try_create(basic_builder& o, relationship_object_def const& cob);
+basic_builder& make_relation_force_create(basic_builder& o, relationship_object_def const& cob);
+basic_builder& make_serialize_plan_generator(basic_builder& o, file_def const& parsed_file, load_save_def const& rt);
+basic_builder& make_serialize_size(basic_builder& o, file_def const& parsed_file);
+basic_builder& make_serialize(basic_builder& o, file_def const& parsed_file);
+basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, bool with_mask);
 
