@@ -1,24 +1,46 @@
-namespace: car_owner_basic
+namespace{car_owner_basic}
 
-object: car
-	type: contiguous
-	size: 1200
+object{
+	name{car}
+	storage_type{contiguous}
+	size{1200}
 	
-	properties:
-	wheels: int32_t
+	property{
+		name{wheels}
+		type{int32_t}
+	}
+}
 	
-object: person
-	type: contiguous
-	size: 100
+object{
+	name{person}
+	storage_type{contiguous}
+	size{100}
 	
-	properties:
-	age: int32_t
+	property{
+		name{age}
+		type{int32_t}
+	}
+}
 
-relationship: car_ownership
-	person: owner many std_vector
-	car: owned_car unique std_vector
+
+relationship{
+	name{car_ownership}
 	
-	size: 1000
+	link{
+		object{person}
+		name{owner}
+		type{many}
+		index_storage{std_vector}
+	}
+	link{
+		object{car}
+		name{owned_car}
+		type{unique}
+	}
 	
-	properties:
-	ownership_date: int32_t
+	size{1000}
+	property{
+		name{ownership_date}
+		type{int32_t}
+	}
+}

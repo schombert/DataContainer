@@ -4,36 +4,41 @@
 #include <vector>
 #include <algorithm>
 
-inline std::string extract_string(char const* & input, char const* end) {
-	std::string result;
+struct char_range {
+	char const* start;
+	char const* end;
 
-	while(input < end && (*input == ' ' || *input == ',' || *input == '\t' || *input == '\r' || *input == '\n'))
-		++input;
-
-	if(input >= end)
-		return result;
-
-	bool in_quote = false;
-	int in_lt = 0;
-
-	while(input < end && (in_quote || in_lt > 0 || (*input != ' ' && *input != '\t' && *input != '\r' && *input != '\n'))) {
-		if(!in_quote && *input == '<')
-			++in_lt;
-		else if(!in_quote && *input == '>')
-			--in_lt;
-		else if(*input == '\"')
-			in_quote = !in_quote;
-
-		result += *input;
-		++input;
+	std::string to_string() const {
+		return std::string(start, end);
 	}
+};
 
-	return result;
-}
+struct parsed_item {
+	char_range key;
+	std::vector<char_range> values;
+	char const* terminal;
+};
 
-enum class parsing_state { outer, in_object_relation, in_property, in_load_save };
+struct error_record {
+	std::string accumulated;
+
+	void add(std::string const& s) {
+		if(accumulated.length() > 0)
+			accumulated += "\n";
+		accumulated += s;
+	}
+};
+
+char const* advance_to_closing_bracket(char const* pos, char const* end);
+char const* advance_to_non_whitespace(char const* pos, char const* end);
+char const* advance_to_whitespace(char const* pos, char const* end);
+char const* advance_to_whitespace_or_brace(char const* pos, char const* end);
+char const* reverse_to_non_whitespace(char const* start, char const* pos);
+int32_t calculate_line_from_position(char const* start, char const* pos);
+parsed_item extract_item(char const* input, char const* end, char const* global_start, error_record& err);
+
+
 enum class storage_type { contiguous, erasable, compactable };
-
 enum class property_type { vectorizable, other, object, special_vector, bitfield };
 
 struct property_def {
@@ -120,6 +125,14 @@ struct file_def {
 	std::vector<std::string> object_types;
 };
 
+related_object parse_link_def(char const* start, char const* end, char const* global_start, error_record& err_out);
+property_def parse_property_def(char const* start, char const* end, char const* global_start, error_record& err_out);
+relationship_object_def parse_relationship(char const* start, char const* end, char const* global_start, error_record& err_out);
+relationship_object_def parse_object(char const* start, char const* end, char const* global_start, error_record& err_out);
+std::vector<std::string> parse_legacy_types(char const* start, char const* end, char const* global_start, error_record& err_out);
+conversion_def parse_conversion_def(char const* start, char const* end, char const* global_start, error_record& err_out);
+file_def parse_file(char const* start, char const* end, error_record& err_out);
+
 inline relationship_object_def* find_by_name(file_def& def, std::string const& name) {
 	if(auto r = std::find_if(
 		def.relationship_objects.begin(), def.relationship_objects.end(),
@@ -137,48 +150,6 @@ inline std::string make_relationship_parameters(relationship_object_def const& o
 		result += i.type_name + "_id " + i.property_name + "_p";
 	}
 	return result;
-}
-
-inline void process_data_type(std::string &second_term, property_def * last_prop, const char * &str_ptr, const char *const &str_end) {
-	if(second_term == "bitfield") {
-		last_prop->type = property_type::bitfield;
-	} else if(second_term == "derived") {
-		last_prop->is_derived = true;
-		last_prop->data_type = extract_string(str_ptr, str_end);
-
-		while(str_ptr < str_end) {
-			auto const extra_term = extract_string(str_ptr, str_end);
-			if(extra_term.size() > 0) {
-				last_prop->data_type += " ";
-				last_prop->data_type += extra_term;
-			}
-		}
-	} else if(second_term == "object") {
-		last_prop->type = property_type::object;
-		last_prop->data_type = extract_string(str_ptr, str_end);
-	} else if(second_term == "vector_pool") {
-		last_prop->type = property_type::special_vector;
-		last_prop->special_pool_size = std::stoi(extract_string(str_ptr, str_end));
-		last_prop->data_type = extract_string(str_ptr, str_end);
-
-		while(str_ptr < str_end) {
-			auto const extra_term = extract_string(str_ptr, str_end);
-			if(extra_term.size() > 0) {
-				last_prop->data_type += " ";
-				last_prop->data_type += extra_term;
-			}
-		}
-	} else {
-		last_prop->data_type = second_term;
-
-		while(str_ptr < str_end) {
-			auto const extra_term = extract_string(str_ptr, str_end);
-			if(extra_term.size() > 0) {
-				last_prop->data_type += " ";
-				last_prop->data_type += extra_term;
-			}
-		}
-	}
 }
 
 inline bool is_vectorizable_type(file_def& def, std::string const& name) {

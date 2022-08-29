@@ -21,6 +21,9 @@
     <ClCompile Include="code_fragments.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="parsing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source_builder.hpp">
