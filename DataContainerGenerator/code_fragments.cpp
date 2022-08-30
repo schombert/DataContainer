@@ -770,7 +770,7 @@ basic_builder& make_pop_back(basic_builder& o, relationship_object_def const& co
 						}
 					}
 					for(auto& ri : cr.rel_ptr->indexed_objects) {
-						if(ri.related_to == cr.rel_ptr->primary_key) {
+						if(cr.rel_ptr->primary_key == ri) {
 						} else {
 							pop_value(o, cr.relation_name, ri.property_name, property_type::other, "id_removed");
 						}
@@ -933,7 +933,7 @@ basic_builder& make_object_resize(basic_builder& o, relationship_object_def cons
 				};
 			}
 			for(auto& io : cob.indexed_objects) {
-				if(io.related_to != cob.primary_key) {
+				if(cob.primary_key != io) {
 					if(!cob.is_expandable) {
 						clear_value_range(o, cob.name, io.property_name, io.type_name + "_id", property_type::other,
 							"0", "old_size");
@@ -1060,7 +1060,7 @@ basic_builder& make_object_resize(basic_builder& o, relationship_object_def cons
 					}
 				}
 				for(auto& io : cob.indexed_objects) {
-					if(io.related_to != cob.primary_key) {
+					if(cob.primary_key != io) {
 						grow_value_range(o, cob.name, io.property_name, property_type::other, "new_size");
 					}
 					if(io.index == index_type::many && io.ltype == list_type::list) {
@@ -1264,7 +1264,7 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 			}
 		}
 		for(auto& io : cob.indexed_objects) {
-			if(io.related_to != cob.primary_key) {
+			if(cob.primary_key != io) {
 				o + substitute{ "i_prop", io.property_name } +substitute{ "i_type", io.type_name };
 				o + "@obj@_set_@i_prop@(id_removed, @i_type@_id());";
 
@@ -1354,7 +1354,7 @@ basic_builder& expandable_push_back(basic_builder& o, relationship_object_def co
 			}
 			for(auto& ri : cr.rel_ptr->indexed_objects) {
 				o + substitute{ "r_prop", ri.property_name };
-				if(ri.related_to == cr.rel_ptr->primary_key) {
+				if(cr.rel_ptr->primary_key == ri) {
 				} else {
 					o + "@rel@.m_@r_prop@.values.emplace_back();";
 				}
@@ -1376,7 +1376,7 @@ basic_builder& expandable_push_back(basic_builder& o, relationship_object_def co
 	}
 	for(auto& io : cob.indexed_objects) {
 		o + substitute{ "prop", io.property_name };
-		if(io.index == index_type::at_most_one && io.related_to == cob.primary_key) {
+		if(io.index == index_type::at_most_one && cob.primary_key == io) {
 
 		} else if(io.index == index_type::at_most_one) {
 			o + "@obj@.m_@prop@.values.emplace_back();";
@@ -1451,7 +1451,7 @@ basic_builder& make_clearing_delete(basic_builder& o, relationship_object_def co
 			o + "on_delete_@obj@(id_removed);";
 
 		for(auto& io : cob.indexed_objects) {
-			if(io.related_to != cob.primary_key) {
+			if(cob.primary_key != io) {
 				o + substitute{ "i_prop", io.property_name } +substitute{ "i_type", io.type_name };
 				o + "@obj@_set_@i_prop@(id_removed, @i_type@_id());";
 			}
@@ -1495,7 +1495,7 @@ basic_builder& make_erasable_delete(basic_builder& o, relationship_object_def co
 		};
 
 		for(auto& io : cob.indexed_objects) {
-			if(io.related_to != cob.primary_key) {
+			if(cob.primary_key != io) {
 				o + substitute{ "i_prop", io.property_name } +substitute{ "i_type", io.type_name };
 				o + "@obj@_set_@i_prop@(id_removed, @i_type@_id());";
 			}
@@ -1579,7 +1579,7 @@ basic_builder& make_internal_move_relationship(basic_builder& o, relationship_ob
 
 	o + "void internal_move_relationship_@obj@(@obj@_id last_id, @obj@_id id_removed)" + block{
 		for(auto& io : cob.indexed_objects) {
-			if(io.related_to != cob.primary_key) {
+			if(cob.primary_key != io) {
 				o + substitute{ "i_prop", io.property_name } +substitute{ "i_type", io.type_name };
 				o + "@obj@_set_@i_prop@(id_removed, @i_type@_id());";
 
@@ -1653,7 +1653,7 @@ basic_builder& make_relation_try_create(basic_builder& o, relationship_object_de
 	o + "@obj@_id try_create_@obj@(@params@)" + block{
 		for(auto& iob : cob.indexed_objects) {
 			o + substitute{ "prop", iob.property_name };
-			if(iob.related_to != cob.primary_key) {
+			if(cob.primary_key != iob) {
 				if(iob.index == index_type::at_most_one) {
 					o + "if(bool(@prop@_p) && bool(@obj@.m_link_@prop@.vptr()[@prop@_p.index()])) return @obj@_id();";
 				}
@@ -1662,9 +1662,9 @@ basic_builder& make_relation_try_create(basic_builder& o, relationship_object_de
 			}
 		}
 
-		if(cob.primary_key != nullptr) {
+		if(cob.primary_key.points_to != nullptr) {
 			for(auto& iob : cob.indexed_objects) {
-				if(iob.related_to == cob.primary_key) {
+				if(cob.primary_key == iob) {
 					o + substitute{ "pkey", iob.property_name };
 				}
 			}
@@ -1685,7 +1685,7 @@ basic_builder& make_relation_try_create(basic_builder& o, relationship_object_de
 
 		for(auto& iob : cob.indexed_objects) {
 			o + substitute{ "prop", iob.property_name };
-			if(iob.related_to != cob.primary_key) {
+			if( cob.primary_key != iob)  {
 				o + "@obj@_set_@prop@(new_id, @prop@_p);";
 			}
 		}
@@ -1705,9 +1705,9 @@ basic_builder& make_relation_force_create(basic_builder& o, relationship_object_
 	o + heading{ "container force create relationship for @obj@" };
 
 	o + "@obj@_id force_create_@obj@(@params@)" + block{
-		if(cob.primary_key != nullptr) {
+		if(cob.primary_key.points_to != nullptr) {
 			for(auto& iob : cob.indexed_objects) {
-				if(iob.related_to == cob.primary_key) {
+				if(cob.primary_key == iob) {
 					o + substitute{ "pkey", iob.property_name };
 				}
 			}
@@ -1728,7 +1728,7 @@ basic_builder& make_relation_force_create(basic_builder& o, relationship_object_
 
 		for(auto& iob : cob.indexed_objects) {
 			o + substitute{ "prop", iob.property_name };
-			if(iob.related_to != cob.primary_key) {
+			if( cob.primary_key != iob) {
 				o + "@obj@_set_@prop@(new_id, @prop@_p);";
 			}
 		}
@@ -1753,20 +1753,14 @@ basic_builder& make_serialize_plan_generator(basic_builder& o, file_def const& p
 		for(auto& ob : parsed_file.relationship_objects) {
 			o + substitute{ "obj", ob.name };
 
-			bool passed_filter = false;
-			if(rt.pos_obj_tags.size() == 0) {
-				passed_filter = true;
-			} else {
-				for(auto& tg : rt.pos_obj_tags) {
-					if(std::find(ob.obj_tags.begin(), ob.obj_tags.end(), tg) != ob.obj_tags.end())
-						passed_filter = true;
-				}
+			
+			bool matched_obj_tag = false;
+			for(auto& tg : rt.obj_tags) {
+				matched_obj_tag = matched_obj_tag || (std::find(ob.obj_tags.begin(), ob.obj_tags.end(), tg) != ob.obj_tags.end());
 			}
-			for(auto& tg : rt.neg_obj_tags) {
-				if(std::find(ob.obj_tags.begin(), ob.obj_tags.end(), tg) != ob.obj_tags.end())
-					passed_filter = false;
-			}
-			if(passed_filter) {
+			if((matched_obj_tag && rt.objects_filter == filter_type::include) || 
+				(!matched_obj_tag && rt.objects_filter != filter_type::include)) {
+
 				o + "result.@obj@ = true;";
 				for(auto& iob : ob.indexed_objects) {
 					o + substitute{ "prop", iob.property_name };
@@ -1777,21 +1771,14 @@ basic_builder& make_serialize_plan_generator(basic_builder& o, file_def const& p
 					o + "result.@obj@__index = true;";
 				}
 				for(auto& prop : ob.properties) {
-					bool passed_sub_filter = false;
-					if(rt.pos_property_tags.size() == 0) {
-						passed_sub_filter = true;
-					} else {
-						for(auto& tg : rt.pos_property_tags) {
-							if(std::find(prop.property_tags.begin(), prop.property_tags.end(), tg) != prop.property_tags.end())
-								passed_sub_filter = true;
-						}
-					}
-					for(auto& tg : rt.neg_property_tags) {
-						if(std::find(prop.property_tags.begin(), prop.property_tags.end(), tg) != prop.property_tags.end())
-							passed_sub_filter = false;
+					bool matched_prop_tag = false;
+					for(auto& tg : rt.property_tags) {
+						matched_prop_tag = matched_prop_tag
+							|| (std::find(prop.property_tags.begin(), prop.property_tags.end(), tg) != prop.property_tags.end());
 					}
 
-					if(passed_sub_filter) {
+					if((matched_prop_tag && rt.properties_filter == filter_type::include) ||
+						(!matched_prop_tag && rt.properties_filter != filter_type::include)) {
 						o + substitute{ "prop", prop.name };
 						o + "result.@obj@_@prop@ = true;";
 					}
@@ -1822,7 +1809,7 @@ basic_builder& make_serialize_size(basic_builder& o, file_def const& parsed_file
 				for(auto& iob : ob.indexed_objects) {
 					o + substitute{ "prop", iob.property_name } +substitute{ "type", iob.type_name };
 					o + substitute{ "key_backing", size_to_tag_type(iob.related_to->size) };
-					if(iob.related_to != ob.primary_key) {
+					if(ob.primary_key != iob) {
 						o + "if(serialize_selection.@obj@_@prop@)" + block{
 							o + "dcon::record_header header(sizeof(@type@_id) * @obj@.size_used, \"@key_backing@\", \"@obj@\", \"@prop@\");";
 							o + "total_size += header.serialize_size();";
@@ -1906,7 +1893,7 @@ basic_builder& make_serialize(basic_builder& o, file_def const& parsed_file) {
 				o + "output_buffer += sizeof(uint32_t);";
 
 				for(auto& iob : ob.indexed_objects) {
-					if(iob.related_to != ob.primary_key) {
+					if(ob.primary_key != iob) {
 						o + substitute{ "prop", iob.property_name } +substitute{ "type", iob.type_name };
 						o + substitute{ "u_type", size_to_tag_type(iob.related_to->size) };
 
@@ -2117,7 +2104,7 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 						} // end: load index handling for erasable
 
 						for(auto& iob : ob.indexed_objects) {
-							if(iob.related_to != ob.primary_key) {
+							if(ob.primary_key != iob) {
 								o + substitute{ "prop", iob.property_name } +substitute{ "ob_u_type", size_to_tag_type(ob.size) };
 								o + substitute{ "mcon", with_mask ? std::string(" && mask.") + ob.name + "_" + iob.property_name : std::string() };
 								o + substitute{ "u_type" , size_to_tag_type(iob.related_to->size) };
@@ -2145,7 +2132,7 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 							o + substitute{ "mcon", with_mask ? std::string(" && mask.") + ob.name : std::string() };
 							o + "else if(header.is_property(\"$index_end\")@mcon@)" + block{
 								for(auto& iob : ob.indexed_objects) {
-									if(iob.related_to != ob.primary_key) {
+									if(ob.primary_key != iob) {
 										o + substitute{ "prop", iob.property_name } +substitute{ "type", iob.type_name };
 										o + "if(serialize_selection.@obj@_@prop@ == true)" + block{
 											o + "for(uint32_t i = 0; i < @obj@.size_used; ++i)" + block{
@@ -2461,7 +2448,7 @@ basic_builder& make_join_getters_setters(basic_builder& o, relationship_object_d
 
 	for(auto& inner_rprop : obj.properties) {
 		for(auto& io : obj.indexed_objects) {
-			if(io.related_to == obj.primary_key) {
+			if(obj.primary_key == io) {
 				make_relation_unique_pk_join_getters_setters(o, inner_rprop.name, inner_rprop.data_type,
 					io.type_name, obj.name, io.property_name, inner_rprop.type, obj.is_expandable);
 			} else if(io.index == index_type::at_most_one) {
@@ -2476,7 +2463,7 @@ basic_builder& make_join_getters_setters(basic_builder& o, relationship_object_d
 	for(auto& inner_io : obj.indexed_objects) {
 		for(auto& io : obj.indexed_objects) {
 			if(&io != &inner_io) {
-				if(io.related_to == obj.primary_key) {
+				if(obj.primary_key == io) {
 					make_relation_unique_pk_join_getters_setters(o, inner_io.property_name, inner_io.type_name + "_id",
 						io.type_name, obj.name, io.property_name, property_type::vectorizable, obj.is_expandable);
 				} else if(io.index == index_type::at_most_one) {

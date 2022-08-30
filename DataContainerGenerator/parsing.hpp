@@ -78,8 +78,28 @@ struct in_relation_information {
 	relationship_object_def* rel_ptr;
 };
 
+struct composite_index_def {
+	std::string name;
+	std::vector<std::string> component_indexes;
+};
+
+struct primary_key_type {
+	std::string property_name;
+	relationship_object_def* points_to = nullptr;
+
+	bool operator==(related_object const& other) const {
+		return points_to == other.related_to && other.property_name == property_name;
+	}
+	bool operator!=(related_object const& other) const {
+		return points_to != other.related_to || other.property_name != property_name;
+	}
+};
+
+
+
 struct relationship_object_def {
 	std::string name;
+	std::string force_pk;
 	bool is_relationship = false;
 	std::vector<std::string> obj_tags;
 	size_t size = 1000;
@@ -93,18 +113,19 @@ struct relationship_object_def {
 	std::vector<related_object> indexed_objects;
 	std::vector<property_def> properties;
 	std::vector<in_relation_information> relationships_involved_in;
+	std::vector<composite_index_def> composite_indexes;
 
-	relationship_object_def* primary_key = nullptr;
+	primary_key_type primary_key;
 };
+
+enum class filter_type { default_exclude, exclude, include };
 
 struct load_save_def {
 	std::string name;
-	bool all_properties = true;
-	bool all_objects = true;
-	std::vector<std::string> pos_obj_tags;
-	std::vector<std::string> pos_property_tags;
-	std::vector<std::string> neg_obj_tags;
-	std::vector<std::string> neg_property_tags;
+	filter_type properties_filter = filter_type::default_exclude;
+	filter_type objects_filter = filter_type::default_exclude;
+	std::vector<std::string> obj_tags;
+	std::vector<std::string> property_tags;
 };
 
 struct conversion_def {
@@ -132,6 +153,7 @@ relationship_object_def parse_object(char const* start, char const* end, char co
 std::vector<std::string> parse_legacy_types(char const* start, char const* end, char const* global_start, error_record& err_out);
 conversion_def parse_conversion_def(char const* start, char const* end, char const* global_start, error_record& err_out);
 file_def parse_file(char const* start, char const* end, error_record& err_out);
+load_save_def parse_load_save_def(char const* start, char const* end, char const* global_start, error_record& err_out);
 
 inline relationship_object_def* find_by_name(file_def& def, std::string const& name) {
 	if(auto r = std::find_if(

@@ -3,7 +3,7 @@ namespace{car_owner_basic}
 object{
 	name{car}
 	storage_type{contiguous}
-	size{1200}
+	size{ 1200 }
 	
 	property{
 		name{wheels}
@@ -38,7 +38,6 @@ relationship{
 		type{unique}
 	}
 	
-	size{1000}
 	property{
 		name{ownership_date}
 		type{int32_t}

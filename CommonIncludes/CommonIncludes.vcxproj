@@ -131,7 +131,9 @@
     <ClInclude Include="ve_sse.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\file_format_documentation.md" />
     <None Include="..\LICENSE.md" />
+    <None Include="..\serialization.md" />
     <None Include="..\ve_documentation.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

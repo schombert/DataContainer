@@ -114,24 +114,43 @@ int main(int argc, char *argv[]) {
 					} else {
 						error_to_file(output_file_name, std::string("Could not find object named: ") + l.type_name + " in relationship: " + r.name);
 					}
-					if(l.index == index_type::at_most_one)
-						r.primary_key = better_primary_key(r.primary_key, l.related_to);
+					if(l.index == index_type::at_most_one) {
+						r.primary_key.points_to = better_primary_key(r.primary_key.points_to, l.related_to);
+						r.primary_key.property_name = l.property_name;
+					}
 				}
 
-				for(auto& link : r.indexed_objects) {
-					if(link.index != index_type::none)
-						link.related_to->relationships_involved_in.push_back(in_relation_information{ r.name, link.property_name,
-							r.primary_key == link.related_to, link.index, link.ltype, &r });
-				}
+				
 
 				if(r.indexed_objects.size() <= 1) {
 					error_to_file(output_file_name, std::string("Relationship: ") + r.name + " is between too few objects");
 				}
 
-				if(r.primary_key) {
-					r.size = r.primary_key->size;
+				
+				if(r.force_pk.length() > 0) {
+					bool pk_forced = false;
+					for(auto& link : r.indexed_objects) {
+						if(link.property_name == r.force_pk && link.index == index_type::at_most_one) {
+							r.primary_key.points_to = link.related_to;
+							r.primary_key.property_name = link.property_name;
+							pk_forced = true;
+						}
+					}
+					if(!pk_forced) {
+						error_to_file(output_file_name, std::string("Was unable to use ") + r.force_pk + std::string(" as a primary key for relationship: ") + r.name);
+					}
+				}
+
+				for(auto& link : r.indexed_objects) {
+					if(link.index != index_type::none)
+						link.related_to->relationships_involved_in.push_back(in_relation_information{ r.name, link.property_name,
+							r.primary_key.points_to == link.related_to, link.index, link.ltype, &r });
+				}
+
+				if(r.primary_key.points_to) {
+					r.size = r.primary_key.points_to->size;
 					r.store_type = storage_type::contiguous;
-					r.is_expandable = r.primary_key->is_expandable;
+					r.is_expandable = r.primary_key.points_to->is_expandable;
 				}
 
 			} // end if is a relationship
@@ -208,12 +227,12 @@ int main(int argc, char *argv[]) {
 
 		//id types definitions
 		for(auto& ob : parsed_file.relationship_objects) {
-			if(!ob.primary_key) {
+			if(ob.primary_key.points_to == nullptr) {
 				const auto underlying_type = ob.is_expandable ? std::string("uint32_t") : size_to_tag_type(ob.size);
 				//id class begin
 				output += make_id_definition(o, ob.name, underlying_type).to_string(1);
 			} else {
-				output += "\tusing " + ob.name + "_id = " + ob.primary_key->name + "_id;\n\n";
+				output += "\tusing " + ob.name + "_id = " + ob.primary_key.points_to->name + "_id;\n\n";
 			}
 		}
 
@@ -223,7 +242,7 @@ int main(int argc, char *argv[]) {
 		//mark each id as going into a tagged vector
 		output += "namespace ve {\n";
 		for(auto& ob : parsed_file.relationship_objects) {
-			if(!ob.primary_key) {
+			if(ob.primary_key.points_to == nullptr) {
 				output += make_value_to_vector_type(o, parsed_file.namspace + "::" + ob.name + "_id").to_string(1);
 			}
 		}
@@ -281,7 +300,7 @@ int main(int argc, char *argv[]) {
 
 			// begin relationship members
 			for(auto& i : ob.indexed_objects) {
-				if(i.related_to == ob.primary_key) {
+				if(ob.primary_key == i) {
 					//skip recording index value
 				} else {
 					output += make_member_container(o, i.property_name, i.type_name + "_id",
@@ -324,7 +343,7 @@ int main(int argc, char *argv[]) {
 
 					}
 				} else if(i.index == index_type::at_most_one) {
-					if(i.related_to == ob.primary_key) {
+					if(ob.primary_key == i) {
 						// no link back for primary key
 					} else {
 						output += make_member_container(o, std::string("link_back_") + i.property_name, ob.name + "_id",
@@ -361,7 +380,7 @@ int main(int argc, char *argv[]) {
 		output += "\n";
 
 		for(auto& ob : parsed_file.relationship_objects) {
-			const std::string id_name = (ob.primary_key ? ob.primary_key->name : ob.name) + "_id";
+			const std::string id_name = (ob.primary_key.points_to ? ob.primary_key.points_to->name : ob.name) + "_id";
 			const std::string con_tags_type = ob.is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags";
 
 			//getters and setters
@@ -459,7 +478,7 @@ int main(int argc, char *argv[]) {
 			const std::string relation_con_tags_type = r.is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags";
 
 			for(auto& i : r.indexed_objects) {
-				if(i.index == index_type::at_most_one && i.related_to == r.primary_key) {
+				if(i.index == index_type::at_most_one && r.primary_key == i) {
 					output += make_relation_pk_getters_setters(o, r.name, i.property_name, r.is_expandable).to_string(2);
 					output += make_relation_pk_reverse_getters_setters(o, r.name, i.property_name, i.type_name,
 						i.related_to->is_expandable, false).to_string(2);
@@ -548,15 +567,15 @@ int main(int argc, char *argv[]) {
 						+ cob.name + ".m__index.vptr()[id.index()] == id;\n";
 					output += "\t\t}\n";
 				}
-			} else if(cob.primary_key) { // primary key relationship
+			} else if(cob.primary_key.points_to) { // primary key relationship
 				output += make_object_resize(o, cob).to_string(2);
 				output += make_clearing_delete(o, cob).to_string(2);
 				
 				output += "\t\tbool is_valid_" + cob.name + "(" + id_name + " id) const {\n";
 				output += "\t\t\treturn bool(id) && uint32_t(id.index()) < " + cob.name + ".size_used && " + 
-					"is_valid_" + cob.primary_key->name + "(id) && (";
+					"is_valid_" + cob.primary_key.points_to->name + "(id) && (";
 				for(auto& iob : cob.indexed_objects) {
-					if(iob.related_to != cob.primary_key) {
+					if(cob.primary_key != iob) {
 						output += "bool(" + cob.name + ".m_" + iob.property_name + ".vptr()[id.index()]) || ";
 					}
 				}
