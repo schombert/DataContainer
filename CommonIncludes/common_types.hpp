@@ -318,7 +318,7 @@ namespace dcon {
 
 			detail::mk_2_header* header = (detail::mk_2_header*)(backing_storage + i);
 
-			const uint32_t free_list_pos = rt_log2(header->capacity);
+			const uint32_t free_list_pos = detail::rt_log2(header->capacity);
 
 			uint64_t free_list_value = free_lists[free_list_pos].load(std::memory_order_acquire);
 			do {
@@ -383,7 +383,7 @@ namespace dcon {
 		return *(detail::to_data<object_type>(header) + inner_index);
 	}
 
-	template<typename object_type, uint32_t minimum_size, size_t memory_size, int32_t align>
+	template<typename object_type, uint32_t minimum_size, size_t memory_size>
 	uint32_t get_capacity(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size> const& storage, stable_mk_2_tag i) {
 		if(i != std::numeric_limits<stable_mk_2_tag>::max()) {
 			detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
@@ -393,7 +393,7 @@ namespace dcon {
 		}
 	}
 
-	template<typename object_type, uint32_t minimum_size, size_t memory_size, int32_t align>
+	template<typename object_type, uint32_t minimum_size, size_t memory_size>
 	uint32_t get_size(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size> const& storage, stable_mk_2_tag i) {
 		if(i != std::numeric_limits<stable_mk_2_tag>::max()) {
 			detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
@@ -403,7 +403,7 @@ namespace dcon {
 		}
 	}
 
-	template<typename object_type, uint32_t minimum_size, size_t memory_size, int32_t align>
+	template<typename object_type, uint32_t minimum_size, size_t memory_size>
 	void push_back(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag& i, object_type obj) {
 		if(i == std::numeric_limits<stable_mk_2_tag>::max()) {
 			storage.increase_capacity(i, 1);
@@ -422,20 +422,20 @@ namespace dcon {
 		}
 	}
 
-	template<typename object_type, uint32_t minimum_size, size_t memory_size, int32_t align>
+	template<typename object_type, uint32_t minimum_size, size_t memory_size>
 	void pop_back(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag i) {
 		detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
 		if(header->size != 0)
 			--header->size;
 	}
 
-	template<typename object_type, uint32_t minimum_size, size_t memory_size, int32_t align>
+	template<typename object_type, uint32_t minimum_size, size_t memory_size>
 	bool contains_item(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size> const& storage, stable_mk_2_tag i, object_type obj) {
 		const auto range = get_range(storage, i);
 		return std::find(range.first, range.second, obj) != range.second;
 	}
 
-	template<typename object_type, uint32_t minimum_size, size_t memory_size, int32_t align>
+	template<typename object_type, uint32_t minimum_size, size_t memory_size>
 	void add_unique_item(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag& i, object_type obj) {
 		if(!contains_item(storage, i, obj))
 			push_back(storage, i, obj);
@@ -470,12 +470,12 @@ namespace dcon {
 
 	template<typename object_type, uint32_t minimum_size, size_t memory_size>
 	void resize(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag& i, uint32_t new_size) {
-		auto old_size = get_size(storage, i.value);
+		auto old_size = get_size(storage, i);
 		if(new_size < old_size) {
 			detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
 			header->size = uint16_t(new_size);
 		} else if(new_size > old_size) {
-			storage.increase_capacity(i.value, new_size);
+			storage.increase_capacity(i, new_size);
 			detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
 			std::fill(detail::to_data<object_type>(header) + header->size, detail::to_data<object_type>(header) + new_size, object_type());
 			header->size = uint16_t(new_size);

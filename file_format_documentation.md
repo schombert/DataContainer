@@ -156,6 +156,16 @@ The `property` key expects a single parameter that will in turn be processed as 
 - `hook{...}` with a single parameter. The parameter must be either `get`, or `set`. This will result in the `... _get_ ...` or `... _set_ ...` function to require a user-provided definition. Multiple `hook` keys may appear in a single `property` to hook both get and set functions.
 - `tag{...}` with a single parameter. These tags are referenced by `load_save` to determine which properties in an object will be serialized.
 
+For example:
+
+```
+property{
+	name{outstanding_balance}
+	type{derived{float}}
+	hook{get}
+}
+```
+
 ### `link`
 
 The `link` key expects a single parameter that will in turn be processed as a sequence of sub-keys with their own parameters. Each `link` defines one object involved in the relationship, and a valid relationship contains two or more links. The valid sub-keys are as follows:
@@ -193,7 +203,55 @@ composite_key{
 }
 ```
 
-## Examples
+## Example file
+
+```
+namespace{car_owner_basic}
+
+object{
+	name{car}
+	storage_type{contiguous}
+	size{ 1200 }
+	
+	property{
+		name{wheels}
+		type{int32_t}
+	}
+}
+	
+object{
+	name{person}
+	storage_type{contiguous}
+	size{100}
+	
+	property{
+		name{age}
+		type{int32_t}
+	}
+}
+
+
+relationship{
+	name{car_ownership}
+	
+	link{
+		object{person}
+		name{owner}
+		type{many}
+		index_storage{std_vector}
+	}
+	link{
+		object{car}
+		name{owned_car}
+		type{unique}
+	}
+	
+	property{
+		name{ownership_date}
+		type{int32_t}
+	}
+}
+```
 
 ## Errors
 

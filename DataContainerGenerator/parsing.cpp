@@ -76,13 +76,14 @@ parsed_item extract_item(char const * input, char const * end, char const * glob
 	while(position < end) {
 		if(*position != '{')
 			break;
-		char const* value_close = advance_to_closing_bracket(position + 1, end);
+		position = advance_to_non_whitespace(position + 1, end);
+		char const* value_close = advance_to_closing_bracket(position, end);
 		if(value_close == end) {
 			err.add(std::string("Open bracket on line ") + std::to_string(calculate_line_from_position(global_start, position)) + " was not properly closed.");
 		}
-		result.values.push_back(char_range{ position + 1, reverse_to_non_whitespace(position + 1, value_close) });
+		result.values.push_back(char_range{ position, reverse_to_non_whitespace(position, value_close) });
 		position = advance_to_non_whitespace(value_close + 1, end);
-		result.terminal = position;
+		result.terminal = std::min(end, position);
 	}
 
 	return result;

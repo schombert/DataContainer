@@ -1792,6 +1792,33 @@ basic_builder& make_serialize_plan_generator(basic_builder& o, file_def const& p
 	return o;
 }
 
+basic_builder& make_serialize_all_generator(basic_builder& o, file_def const& parsed_file) {
+
+	o + "load_record serialize_entire_container_record() const noexcept" + block{
+		o + "load_record result;";
+
+		for(auto& ob : parsed_file.relationship_objects) {
+			o + substitute{ "obj", ob.name };
+			o + "result.@obj@ = true;";
+			for(auto& iob : ob.indexed_objects) {
+				o + substitute{ "prop", iob.property_name };
+				o + "result.@obj@_@prop@ = true;";
+			}
+			if(ob.store_type == storage_type::erasable) {
+				o + "result.@obj@__index = true;";
+			}
+			for(auto& prop : ob.properties) {
+				o + substitute{ "prop", prop.name };
+				o + "result.@obj@_@prop@ = true;";
+			}
+		}
+		o + "return result;";
+	};
+
+	o + line_break{};
+	return o;
+}
+
 basic_builder& make_serialize_size(basic_builder& o, file_def const& parsed_file) {
 	o + heading{ "calculate size (in bytes) required to serialize the desired objects, relationships, and properties" };
 
@@ -2068,6 +2095,12 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 
 					o + "if(header.is_object(\"@obj@\")@mcon@)" + block{ //has matched object
 						o + "if(header.is_property(\"$size\") && header.record_size == sizeof(uint32_t))" + block{
+							if(ob.is_relationship) {
+								o + "if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= @obj@.size_used)" + block{
+									// TODO: a better fix than this
+									o + "@obj@_resize(0);";
+								};
+							}
 							o + "@obj@_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));";
 							o + "serialize_selection.@obj@ = true;";
 						};
@@ -2306,10 +2339,10 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 
 
 basic_builder& make_relation_many_join_getters_setters(basic_builder& o, std::string const& property_name,
-	std::string const& containter_type, std::string const& relation_name,
-	std::string const& name_in_relation) {
+	std::string const& property_type, std::string const& containter_type, std::string const& relation_name,
+	std::string const& name_in_relation, list_type indexed_as, bool property_is_pk) {
 
-	o + substitute{ "obj", containter_type } +substitute{ "rel", relation_name }
+	o + substitute{ "obj", containter_type } +substitute{ "rel", relation_name }+substitute{ "p_type", property_type }
 	+substitute{ "prop", property_name } +substitute{ "as_name", name_in_relation };
 
 	o + "template<typename T>";
@@ -2318,6 +2351,40 @@ basic_builder& make_relation_many_join_getters_setters(basic_builder& o, std::st
 			o + "func(@rel@_get_@prop@(i));";
 		} +append{");"};
 	};
+
+	o + substitute{ "ref", is_common_type(property_type) ? "" : " const&" };
+
+	o + "bool @obj@_has_@prop@_from_@rel@(@obj@_id id, @p_type@@ref@ target) const" + block{
+		if(indexed_as == list_type::list) {
+			o + "for(auto list_pos = @rel@.m_head_back_@as_name@.vptr()[id.index()]; "
+				"bool(list_pos); list_pos = @rel@.m_link_@as_name@.vptr()[list_pos.index()].right)" + block{
+				if(!property_is_pk) {
+					o + "if(@rel@.m_@prop@.vptr()[list_pos.index()] == target) return true;";
+				} else {
+					o + "if(list_pos == target) return true;";
+				}
+			};
+		} else if(indexed_as == list_type::array) {
+			o + "auto vrange = dcon::get_range(@rel@.@as_name@_storage, @rel@.m_array_@as_name@.vptr()[id.index()]);";
+			o + "for(auto pos = vrange.first; pos != vrange.second; ++pos)" + block{
+				if(!property_is_pk) {
+					o + "if(@rel@.m_@prop@.vptr()[pos->index()] == target) return true;";
+				} else {
+					o + "if(*pos == target) return true;";
+				}
+			};
+		} else if(indexed_as == list_type::std_vector) {
+			o + "auto& vref = @rel@.m_array_@as_name@.vptr()[id.index()];";
+			o + "for(auto pos = vref.begin(); pos != vref.end(); ++pos)" + block{
+				if(!property_is_pk) {
+					o + "if(@rel@.m_@prop@.vptr()[pos->index()] == target) return true;";
+				} else {
+					o + "if(*pos == target) return true;";
+				}
+			};
+		}
+	};
+	
 
 	return o;
 }
@@ -2455,8 +2522,8 @@ basic_builder& make_join_getters_setters(basic_builder& o, relationship_object_d
 				make_relation_unique_non_pk_join_getters_setters(o, inner_rprop.name, inner_rprop.data_type,
 					io.type_name, obj.name, io.property_name, inner_rprop.type, obj.is_expandable);
 			} else if(io.index == index_type::many) {
-				make_relation_many_join_getters_setters(o, inner_rprop.name,
-					io.type_name, obj.name, io.property_name);
+				make_relation_many_join_getters_setters(o, inner_rprop.name, inner_rprop.data_type,
+					io.type_name, obj.name, io.property_name, io.ltype, false);
 			}
 		}
 	}
@@ -2470,8 +2537,8 @@ basic_builder& make_join_getters_setters(basic_builder& o, relationship_object_d
 					make_relation_unique_non_pk_join_getters_setters(o, inner_io.property_name, inner_io.type_name + "_id",
 						io.type_name, obj.name, io.property_name, property_type::vectorizable, obj.is_expandable);
 				} else if(io.index == index_type::many) {
-					make_relation_many_join_getters_setters(o, inner_io.property_name,
-						io.type_name, obj.name, io.property_name);
+					make_relation_many_join_getters_setters(o, inner_io.property_name, inner_io.type_name + "_id",
+						io.type_name, obj.name, io.property_name, io.ltype, obj.primary_key == inner_io);
 				}
 			}
 		}

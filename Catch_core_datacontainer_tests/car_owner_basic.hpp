@@ -21,6 +21,7 @@ namespace car_owner_basic {
 	struct load_record {
 		bool car = false;
 		bool car_wheels = false;
+		bool car_resale_value = false;
 		bool person = false;
 		bool person_age = false;
 		bool car_ownership = false;
@@ -127,6 +128,18 @@ namespace car_owner_basic {
 				dtype_wheels() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(int32_t) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(int32_t))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(int32_t)) - 1ui32) : uint32_t(1200))); }
 			}
 			m_wheels;
+			
+			//
+			// storage space for resale_value of type float
+			//
+			struct alignas(64) dtype_resale_value {
+				uint8_t padding[(sizeof(float) + 63ui32) & ~63ui32];
+				float values[(sizeof(float) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(float))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(float)) - 1ui32) : uint32_t(1200))];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_resale_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(float) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(float))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(float)) - 1ui32) : uint32_t(1200))); }
+			}
+			m_resale_value;
 			
 
 			public:
@@ -237,6 +250,41 @@ namespace car_owner_basic {
 		}
 		DCON_RELEASE_INLINE void car_set_wheels(ve::tagged_vector<car_id> id, ve::value_to_vector_type<int32_t> values) noexcept {
 			ve::store(id, car.m_wheels.vptr(), values);
+		}
+		
+		//
+		// getters for car: resale_value
+		//
+		DCON_RELEASE_INLINE float const& car_get_resale_value(car_id id) const noexcept {
+			return car.m_resale_value.vptr()[id.index()];
+		}
+		DCON_RELEASE_INLINE float& car_get_resale_value(car_id id) noexcept {
+			return car.m_resale_value.vptr()[id.index()];
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<float> car_get_resale_value(ve::contiguous_tags<car_id> id) const noexcept {
+			return ve::load(id, car.m_resale_value.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<float> car_get_resale_value(ve::partial_contiguous_tags<car_id> id) const noexcept {
+			return ve::load(id, car.m_resale_value.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<float> car_get_resale_value(ve::tagged_vector<car_id> id) const noexcept {
+			return ve::load(id, car.m_resale_value.vptr());
+		}
+		
+		//
+		// setters for car: resale_value
+		//
+		DCON_RELEASE_INLINE void car_set_resale_value(car_id id, float value) noexcept {
+			car.m_resale_value.vptr()[id.index()] = value;
+		}
+		DCON_RELEASE_INLINE void car_set_resale_value(ve::contiguous_tags<car_id> id, ve::value_to_vector_type<float> values) noexcept {
+			ve::store(id, car.m_resale_value.vptr(), values);
+		}
+		DCON_RELEASE_INLINE void car_set_resale_value(ve::partial_contiguous_tags<car_id> id, ve::value_to_vector_type<float> values) noexcept {
+			ve::store(id, car.m_resale_value.vptr(), values);
+		}
+		DCON_RELEASE_INLINE void car_set_resale_value(ve::tagged_vector<car_id> id, ve::value_to_vector_type<float> values) noexcept {
+			ve::store(id, car.m_resale_value.vptr(), values);
 		}
 		
 		uint32_t car_size() const noexcept { return car.size_used; }
@@ -465,6 +513,12 @@ namespace car_owner_basic {
 				func(car_ownership_get_ownership_date(i));
 			} );
 		}
+		bool person_has_ownership_date_from_car_ownership(person_id id, int32_t target) const {
+			auto& vref = car_ownership.m_array_owner.vptr()[id.index()];
+			for(auto pos = vref.begin(); pos != vref.end(); ++pos) {
+				if(car_ownership.m_ownership_date.vptr()[pos->index()] == target) return true;
+			}
+		}
 		int32_t car_get_ownership_date_from_car_ownership(car_id ref_id) const {
 			return car_ownership_get_ownership_date(ref_id);
 		}
@@ -501,6 +555,12 @@ namespace car_owner_basic {
 				func(car_ownership_get_owned_car(i));
 			} );
 		}
+		bool person_has_owned_car_from_car_ownership(person_id id, car_id const& target) const {
+			auto& vref = car_ownership.m_array_owner.vptr()[id.index()];
+			for(auto pos = vref.begin(); pos != vref.end(); ++pos) {
+				if(*pos == target) return true;
+			}
+		}
 		
 		//
 		// container pop_back for car
@@ -512,6 +572,7 @@ namespace car_owner_basic {
 			car_ownership.size_used = car.size_used - 1;
 			car_ownership.m_ownership_date.vptr()[id_removed.index()] = int32_t{};
 			car.m_wheels.vptr()[id_removed.index()] = int32_t{};
+			car.m_resale_value.vptr()[id_removed.index()] = float{};
 			--car.size_used;
 		}
 		
@@ -523,6 +584,7 @@ namespace car_owner_basic {
 			const uint32_t old_size = car.size_used;
 			if(new_size < old_size) {
 				std::fill_n(car.m_wheels.vptr() + new_size, old_size - new_size, int32_t{});
+				std::fill_n(car.m_resale_value.vptr() + new_size, old_size - new_size, float{});
 				car_ownership_resize(new_size);
 			} else if(new_size > old_size) {
 				car_ownership_resize(new_size);
@@ -708,6 +770,20 @@ namespace car_owner_basic {
 		}
 #endif
 
+		load_record serialize_entire_container_record() const noexcept {
+			load_record result;
+			result.car = true;
+			result.car_wheels = true;
+			result.car_resale_value = true;
+			result.person = true;
+			result.person_age = true;
+			result.car_ownership = true;
+			result.car_ownership_owner = true;
+			result.car_ownership_owned_car = true;
+			result.car_ownership_ownership_date = true;
+			return result;
+		}
+		
 		//
 		// calculate size (in bytes) required to serialize the desired objects, relationships, and properties
 		//
@@ -722,6 +798,11 @@ namespace car_owner_basic {
 				dcon::record_header header(sizeof(int32_t) * car.size_used, "int32_t", "car", "wheels");
 				total_size += header.serialize_size();
 				total_size += sizeof(int32_t) * car.size_used;
+			}
+			if(serialize_selection.car_resale_value) {
+				dcon::record_header header(sizeof(float) * car.size_used, "float", "car", "resale_value");
+				total_size += header.serialize_size();
+				total_size += sizeof(float) * car.size_used;
 			}
 			if(serialize_selection.person) {
 				dcon::record_header header(sizeof(uint32_t), "uint32_t", "person", "$size");
@@ -768,6 +849,12 @@ namespace car_owner_basic {
 				header.serialize(output_buffer);
 				memcpy(reinterpret_cast<int32_t*>(output_buffer), car.m_wheels.vptr(), sizeof(int32_t) * car.size_used);
 				output_buffer += sizeof(int32_t) * car.size_used;
+			}
+			if(serialize_selection.car_resale_value) {
+				dcon::record_header header(sizeof(float) * car.size_used, "float", "car", "resale_value");
+				header.serialize(output_buffer);
+				memcpy(reinterpret_cast<float*>(output_buffer), car.m_resale_value.vptr(), sizeof(float) * car.size_used);
+				output_buffer += sizeof(float) * car.size_used;
 			}
 			if(serialize_selection.person) {
 				dcon::record_header header(sizeof(uint32_t), "uint32_t", "person", "$size");
@@ -876,6 +963,66 @@ namespace car_owner_basic {
 								serialize_selection.car_wheels = true;
 							}
 						}
+						else if(header.is_property("resale_value")) {
+							if(header.is_type("float")) {
+								memcpy(car.m_resale_value.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(car.size_used) * sizeof(float), header.record_size));
+								serialize_selection.car_resale_value = true;
+							}
+							else if(header.is_type("int8_t")) {
+								for(uint32_t i = 0; i < std::min(car.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
+									car.m_resale_value.vptr()[i] = float(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.car_resale_value = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(car.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									car.m_resale_value.vptr()[i] = float(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.car_resale_value = true;
+							}
+							else if(header.is_type("int16_t")) {
+								for(uint32_t i = 0; i < std::min(car.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
+									car.m_resale_value.vptr()[i] = float(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+								}
+								serialize_selection.car_resale_value = true;
+							}
+							else if(header.is_type("uint16_t")) {
+								for(uint32_t i = 0; i < std::min(car.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+									car.m_resale_value.vptr()[i] = float(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+								}
+								serialize_selection.car_resale_value = true;
+							}
+							else if(header.is_type("int32_t")) {
+								for(uint32_t i = 0; i < std::min(car.size_used, uint32_t(header.record_size / sizeof(int32_t))); ++i) {
+									car.m_resale_value.vptr()[i] = float(*(reinterpret_cast<int32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.car_resale_value = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(car.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									car.m_resale_value.vptr()[i] = float(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.car_resale_value = true;
+							}
+							else if(header.is_type("int64_t")) {
+								for(uint32_t i = 0; i < std::min(car.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
+									car.m_resale_value.vptr()[i] = float(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+								}
+								serialize_selection.car_resale_value = true;
+							}
+							else if(header.is_type("uint64_t")) {
+								for(uint32_t i = 0; i < std::min(car.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
+									car.m_resale_value.vptr()[i] = float(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+								}
+								serialize_selection.car_resale_value = true;
+							}
+							else if(header.is_type("double")) {
+								for(uint32_t i = 0; i < std::min(car.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
+									car.m_resale_value.vptr()[i] = float(*(reinterpret_cast<double const*>(input_buffer) + i));
+								}
+								serialize_selection.car_resale_value = true;
+							}
+						}
 					} else
 					if(header.is_object("person")) {
 						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
@@ -945,6 +1092,9 @@ namespace car_owner_basic {
 					} else
 					if(header.is_object("car_ownership")) {
 						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+							if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= car_ownership.size_used) {
+								car_ownership_resize(0);
+							}
 							car_ownership_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
 							serialize_selection.car_ownership = true;
 						}
@@ -1114,6 +1264,66 @@ namespace car_owner_basic {
 								serialize_selection.car_wheels = true;
 							}
 						}
+						else if(header.is_property("resale_value") && mask.car_resale_value) {
+							if(header.is_type("float")) {
+								memcpy(car.m_resale_value.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(car.size_used) * sizeof(float), header.record_size));
+								serialize_selection.car_resale_value = true;
+							}
+							else if(header.is_type("int8_t")) {
+								for(uint32_t i = 0; i < std::min(car.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
+									car.m_resale_value.vptr()[i] = float(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.car_resale_value = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(car.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									car.m_resale_value.vptr()[i] = float(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.car_resale_value = true;
+							}
+							else if(header.is_type("int16_t")) {
+								for(uint32_t i = 0; i < std::min(car.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
+									car.m_resale_value.vptr()[i] = float(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+								}
+								serialize_selection.car_resale_value = true;
+							}
+							else if(header.is_type("uint16_t")) {
+								for(uint32_t i = 0; i < std::min(car.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+									car.m_resale_value.vptr()[i] = float(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+								}
+								serialize_selection.car_resale_value = true;
+							}
+							else if(header.is_type("int32_t")) {
+								for(uint32_t i = 0; i < std::min(car.size_used, uint32_t(header.record_size / sizeof(int32_t))); ++i) {
+									car.m_resale_value.vptr()[i] = float(*(reinterpret_cast<int32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.car_resale_value = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(car.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									car.m_resale_value.vptr()[i] = float(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.car_resale_value = true;
+							}
+							else if(header.is_type("int64_t")) {
+								for(uint32_t i = 0; i < std::min(car.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
+									car.m_resale_value.vptr()[i] = float(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+								}
+								serialize_selection.car_resale_value = true;
+							}
+							else if(header.is_type("uint64_t")) {
+								for(uint32_t i = 0; i < std::min(car.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
+									car.m_resale_value.vptr()[i] = float(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+								}
+								serialize_selection.car_resale_value = true;
+							}
+							else if(header.is_type("double")) {
+								for(uint32_t i = 0; i < std::min(car.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
+									car.m_resale_value.vptr()[i] = float(*(reinterpret_cast<double const*>(input_buffer) + i));
+								}
+								serialize_selection.car_resale_value = true;
+							}
+						}
 					} else
 					if(header.is_object("person") && mask.person) {
 						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
@@ -1183,6 +1393,9 @@ namespace car_owner_basic {
 					} else
 					if(header.is_object("car_ownership") && mask.car_ownership) {
 						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+							if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= car_ownership.size_used) {
+								car_ownership_resize(0);
+							}
 							car_ownership_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
 							serialize_selection.car_ownership = true;
 						}

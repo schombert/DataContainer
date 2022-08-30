@@ -9,6 +9,10 @@ object{
 		name{wheels}
 		type{int32_t}
 	}
+	property{
+		name{resale_value}
+		type{float}
+	}
 }
 	
 object{
@@ -22,10 +26,9 @@ object{
 	}
 }
 
-
 relationship{
 	name{car_ownership}
-	
+
 	link{
 		object{person}
 		name{owner}

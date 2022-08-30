@@ -692,6 +692,7 @@ int main(int argc, char *argv[]) {
 		for(auto& rt : parsed_file.load_save_routines) {
 			output += make_serialize_plan_generator(o, parsed_file, rt).to_string(2);
 		}
+		output += make_serialize_all_generator(o, parsed_file).to_string(2);
 
 		output += make_serialize_size(o, parsed_file).to_string(2);
 		output += make_serialize(o, parsed_file).to_string(2);
