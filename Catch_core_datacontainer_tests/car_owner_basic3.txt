@@ -1,0 +1,48 @@
+namespace{cob3}
+
+object{
+	name{car}
+	storage_type{erasable}
+	size{ 1200 }
+	
+	property{
+		name{wheels}
+		type{int32_t}
+	}
+	property{
+		name{resale_value}
+		type{float}
+	}
+}
+	
+object{
+	name{person}
+	storage_type{erasable}
+	size{100}
+	
+	property{
+		name{age}
+		type{int32_t}
+	}
+}
+
+relationship{
+	name{car_ownership}
+
+	link{
+		object{person}
+		name{owner}
+		type{many}
+		index_storage{std_vector}
+	}
+	link{
+		object{car}
+		name{owned_car}
+		type{unique}
+	}
+	
+	property{
+		name{ownership_date}
+		type{int32_t}
+	}
+}

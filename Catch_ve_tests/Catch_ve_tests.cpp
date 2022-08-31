@@ -1,4 +1,5 @@
 #define CATCH_CONFIG_MAIN 
+#pragma warning(disable : 4127)
 
 #include "..\CommonIncludes\catch.hpp"
 #include "..\CommonIncludes\ve.hpp"
@@ -1096,7 +1097,7 @@ TEST_CASE("loads and stores", "[ve_tests]") {
 			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), uint_data);
 			ve::store(ve::contiguous_tags<int32_t>(0), uint_data, res);
 			for(int32_t i = 0; i < ve::vector_size; ++i) {
-				REQUIRE(res[i] == uint_data[i + 0]);
+				REQUIRE(res[i] == int32_t(uint_data[i + 0]));
 			}
 		}
 		{
@@ -1162,7 +1163,7 @@ TEST_CASE("loads and stores", "[ve_tests]") {
 			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), uint_data);
 			ve::store(ve::unaligned_contiguous_tags<int32_t>(3), uint_data, res);
 			for(int32_t i = 0; i < ve::vector_size; ++i) {
-				REQUIRE(res[i] == uint_data[i + 3]);
+				REQUIRE(res[i] == int32_t(uint_data[i + 3]));
 			}
 		}
 		{
@@ -1234,7 +1235,7 @@ TEST_CASE("loads and stores", "[ve_tests]") {
 			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), uint_data);
 			ve::store(ve::partial_contiguous_tags<int32_t>(3, 3), uint_data, res);
 			for(int32_t i = 0; i < 3; ++i) {
-				REQUIRE(res[i] == uint_data[i + 3]);
+				REQUIRE(res[i] == int32_t(uint_data[i + 3]));
 			}
 			for(int32_t i = 3; i < ve::vector_size; ++i) {
 				REQUIRE(uint_data[i + 3] == reference_uint_data[i + 3]);
@@ -1363,7 +1364,7 @@ TEST_CASE("loads and stores", "[ve_tests]") {
 			ve::int_vector res = ve::load(ve::contiguous_tags<int32_t>(16), uint_data);
 			ve::store(tvec, uint_data, res);
 			for(int32_t i = 0; i < ve::vector_size; ++i) {
-				REQUIRE(uint_data[tvec[i].index()] == res[i]);
+				REQUIRE(int32_t(uint_data[tvec[i].index()]) == res[i]);
 			}
 		}
 		{
@@ -1492,7 +1493,7 @@ TEST_CASE("loads and stores", "[ve_tests]") {
 		{
 			ve::int_vector res = ve::load(tvec, uint_data);
 			for(int32_t i = 0; i < ve::vector_size; ++i) {
-				REQUIRE(uint_data[tvec[i].index()] == res[i]);
+				REQUIRE(int32_t(uint_data[tvec[i].index()]) == res[i]);
 			}
 		}
 		{
@@ -1549,7 +1550,7 @@ TEST_CASE("loads and stores", "[ve_tests]") {
 		{
 			ve::int_vector res = ve::load(tvec, mvec, uint_data);
 			for(int32_t i = 0; i < ve::vector_size; ++i) {
-				REQUIRE((mvec[i] ? uint_data[tvec[i].index()] : 0) == res[i]);
+				REQUIRE((mvec[i] ? int32_t(uint_data[tvec[i].index()]) : 0) == res[i]);
 			}
 		}
 		{

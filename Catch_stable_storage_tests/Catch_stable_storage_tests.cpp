@@ -144,3 +144,30 @@ TEST_CASE("growing multiple", "[storage_tests]") {
 	REQUIRE(dcon::contains_item(*ptr, storea, 400.0f) == false);
 	REQUIRE(dcon::contains_item(*ptr, storeb, 400.0f) == true);
 }
+
+TEST_CASE("local vector", "[storage_tests]") {
+	{
+		dcon::local_vector<int> lv;
+
+		for(int i = 0; i < 300; ++i) {
+			lv.push_back(i);
+		}
+
+		REQUIRE(lv.end() - lv.begin() == 300);
+		for(int i = 0; i < 300; ++i) {
+			REQUIRE(*(lv.begin() + i) == i);
+		}
+	}
+	{
+		dcon::local_vector<int> lv;
+
+		for(int i = 0; i < 55; ++i) {
+			lv.push_back(i);
+		}
+
+		REQUIRE(lv.end() - lv.begin() == 55);
+		for(int i = 0; i < 55; ++i) {
+			REQUIRE(*(lv.begin() + i) == i);
+		}
+	}
+}

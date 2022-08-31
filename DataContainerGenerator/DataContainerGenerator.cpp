@@ -219,7 +219,9 @@ int main(int argc, char *argv[]) {
 		output += "#else\n";
 		output += "#define DCON_RELEASE_INLINE inline\n";
 		output += "#endif\n";
-
+		output += "#pragma warning( push )\n";
+		output += "#pragma warning( disable : 4324 )\n";
+		
 		output += "\n";
 		output += "namespace " + parsed_file.namspace + " {\n";
 
@@ -232,23 +234,31 @@ int main(int argc, char *argv[]) {
 			if(ob.primary_key.points_to == nullptr) {
 				const auto underlying_type = ob.is_expandable ? std::string("uint32_t") : size_to_tag_type(ob.size);
 				//id class begin
-				output += make_id_definition(o, ob.name, underlying_type).to_string(1);
+				output += make_id_definition(o, ob.name + "_id", underlying_type).to_string(1);
 			} else {
 				output += "\tusing " + ob.name + "_id = " + ob.primary_key.points_to->name + "_id;\n\n";
 			}
+		}
+		for(auto& mi : parsed_file.extra_ids) {
+			output += make_id_definition(o, mi.name, mi.base_type).to_string(1);
 		}
 
 		// close namespace briefly
 		output += "}\n\n";
 
 		//mark each id as going into a tagged vector
+		output += "#ifndef DCON_NO_VE\n";
 		output += "namespace ve {\n";
 		for(auto& ob : parsed_file.relationship_objects) {
 			if(ob.primary_key.points_to == nullptr) {
 				output += make_value_to_vector_type(o, parsed_file.namspace + "::" + ob.name + "_id").to_string(1);
 			}
 		}
+		for(auto& mi : parsed_file.extra_ids) {
+			output += make_value_to_vector_type(o, parsed_file.namspace + "::" + mi.name).to_string(1);
+		}
 		output += "}\n\n";
+		output += "#endif\n";
 
 
 		//reopen namespace
@@ -269,7 +279,6 @@ int main(int argc, char *argv[]) {
 			//begin members declaration
 
 			output += "\t\t\tprivate:\n";
-			output += "\t\t\tuint32_t size_used = 0;\n";
 			if(ob.store_type == storage_type::erasable) {
 				output += make_member_container(o, "_index", ob.name + "_id",
 					std::to_string(ob.size), struct_padding::none, ob.is_expandable).to_string(3);
@@ -355,7 +364,11 @@ int main(int argc, char *argv[]) {
 				}
 			} // end relationship members
 
+			if(ob.store_type == storage_type::erasable) {
+				output += "\t\t\t" + ob.name + "_id first_free = " + ob.name + "_id();\n";
+			}
 
+			output += "\t\t\tuint32_t size_used = 0;\n";
 
 			output += "\n";
 			output += "\t\t\tpublic:\n";
@@ -720,6 +733,7 @@ int main(int argc, char *argv[]) {
 
 
 		output += "#undef DCON_RELEASE_INLINE\n";
+		output += "#pragma warning( pop )\n";
 
 		//newline at end of file
 		output += "\n";

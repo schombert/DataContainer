@@ -970,9 +970,6 @@ namespace ve {
 	}
 	
 
-#pragma warning( push )
-#pragma warning( disable : 4245)
-
 	template<typename T>
 	RELEASE_INLINE int_vector load(contiguous_tags<T> e, int16_t const* source) {
 		auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
@@ -1396,7 +1393,6 @@ namespace ve {
 			(int32_t((mask.v & 0x080) != 0 ? dcon::bit_vector_test(source, indices.value.m256i_i32[7]) : false) << 7)
 		) };
 	}
-#pragma warning( pop ) 
 
 	//-----
 

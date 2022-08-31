@@ -4,7 +4,8 @@
 #include "..\CommonIncludes\ve.hpp"
 #include "..\CommonIncludes\common_types.hpp"
 #include "car_owner_basic.hpp"
-
+#include "car_owner_basic2.hpp"
+#include "car_owner_basic3.hpp"
 TEST_CASE("simple case", "[core_datacontainer_tests]") {
 	auto ptr = std::make_unique< car_owner_basic::data_container >();
 	
@@ -238,7 +239,7 @@ TEST_CASE("remove in the other direction", "[core_datacontainer_tests]") {
 	REQUIRE(ptr->person_has_owned_car_from_car_ownership(persona, carb) == true);
 	REQUIRE(ptr->person_has_owned_car_from_car_ownership(persona, cara) == false);
 
-	ptr->person_for_each_owned_car_from_car_ownership(persona, [&](car_owner_basic::car_id i) { ++count; });
+	ptr->person_for_each_owned_car_from_car_ownership(persona, [&](car_owner_basic::car_id ) { ++count; });
 
 	REQUIRE(count == 2);
 
@@ -258,5 +259,415 @@ TEST_CASE("remove in the other direction", "[core_datacontainer_tests]") {
 
 	REQUIRE(count == 0);
 	REQUIRE(found_car == false);
+}
+TEST_CASE("for compatactable basic relationship functions", "[core_datacontainer_tests]") {
+	auto ptr = std::make_unique< cob2::data_container >();
+
+	auto cara = ptr->create_car();
+	auto carb = ptr->create_car();
+	auto carc = ptr->create_car();
+
+	auto persona = ptr->create_person();
+	auto personb = ptr->create_person();
+
+	auto r1 = ptr->try_create_car_ownership(persona, carb);
+
+	REQUIRE(bool(r1) == true);
+	ptr->car_ownership_set_ownership_date(r1, 7);
+
+	REQUIRE(ptr->is_valid_car_ownership(r1));
+	REQUIRE(ptr->car_ownership_get_owner(r1) == persona);
+	REQUIRE(ptr->car_ownership_get_owned_car(r1) == carb);
+	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == persona);
+	REQUIRE(ptr->car_get_ownership_date_from_car_ownership(carb) == 7);
+	REQUIRE(ptr->car_get_car_ownership(carb) == r1);
+	REQUIRE(ptr->car_get_car_ownership_as_owned_car(carb) == r1);
+
+	int32_t count = 0;
+	bool found_car = false;
+	ptr->person_for_each_car_ownership_as_owner(personb, [&](cob2::car_id i) {
+		++count;
+		if(i == carb)
+			found_car = true;
+	});
+
+	REQUIRE(count == 0);
+	REQUIRE(found_car == false);
+
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_id i) {
+		++count;
+		if(i == carb)
+			found_car = true;
+	});
+
+	REQUIRE(count == 1);
+	REQUIRE(found_car == true);
+
+	count = 0;
+	found_car = false;
+
+	auto r2 = ptr->try_create_car_ownership(personb, carb);
+	REQUIRE(!ptr->is_valid_car_ownership(r2));
+
+	auto r3 = ptr->try_create_car_ownership(persona, cara);
+
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_id i) {
+		++count;
+		if(i == carb)
+			found_car = true;
+	});
+
+	REQUIRE(count == 2);
+	REQUIRE(found_car == true);
+
+	count = 0;
+	found_car = false;
+
+	ptr->car_ownership_set_owner(r1, cob2::person_id());
+
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_id i) {
+		++count;
+		if(i == carb)
+			found_car = true;
+	});
+
+	REQUIRE(count == 1);
+	REQUIRE(found_car == false);
+
+	auto r4 = ptr->force_create_car_ownership(personb, cara);
+	REQUIRE(ptr->is_valid_car_ownership(r4));
+
+	count = 0;
+	found_car = false;
+
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_id i) {
+		++count;
+		if(i == cara)
+			found_car = true;
+	});
+
+	REQUIRE(count == 0);
+	REQUIRE(found_car == false);
+
+	ptr->person_for_each_car_ownership_as_owner(personb, [&](cob2::car_id i) {
+		++count;
+		if(i == cara)
+			found_car = true;
+	});
+
+	REQUIRE(count == 1);
+	REQUIRE(found_car == true);
 
 }
+
+TEST_CASE("for compatactable remove in the other direction", "[core_datacontainer_tests]") {
+	auto ptr = std::make_unique< cob2::data_container >();
+
+	auto cara = ptr->create_car();
+	auto carb = ptr->create_car();
+	auto carc = ptr->create_car();
+
+	auto persona = ptr->create_person();
+	auto personb = ptr->create_person();
+
+	auto r1 = ptr->try_create_car_ownership(persona, carb);
+
+	REQUIRE(bool(r1) == true);
+	ptr->car_ownership_set_ownership_date(r1, 7);
+
+	REQUIRE(ptr->is_valid_car_ownership(r1));
+	REQUIRE(ptr->car_ownership_get_owner(r1) == persona);
+	REQUIRE(ptr->car_ownership_get_owned_car(r1) == carb);
+	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == persona);
+	REQUIRE(ptr->car_get_ownership_date_from_car_ownership(carb) == 7);
+	REQUIRE(ptr->car_get_car_ownership(carb) == r1);
+	REQUIRE(ptr->car_get_car_ownership_as_owned_car(carb) == r1);
+
+	int32_t count = 0;
+	bool found_car = false;
+
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_id i) {
+		++count;
+		if(i == carb)
+			found_car = true;
+	});
+
+	REQUIRE(count == 1);
+	REQUIRE(found_car == true);
+
+	count = 0;
+	found_car = false;
+
+	ptr->car_remove_car_ownership_as_owned_car(carb);
+
+	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == cob2::person_id());
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_id i) {
+		++count;
+		if(i == carb)
+			found_car = true;
+	});
+
+	REQUIRE(count == 0);
+	REQUIRE(found_car == false);
+
+	r1 = ptr->try_create_car_ownership(persona, carb);
+	ptr->try_create_car_ownership(persona, carc);
+
+	REQUIRE(bool(r1) == true);
+	ptr->car_ownership_set_ownership_date(r1, 7);
+
+	REQUIRE(ptr->is_valid_car_ownership(r1));
+	REQUIRE(ptr->car_ownership_get_owner(r1) == persona);
+	REQUIRE(ptr->car_ownership_get_owned_car(r1) == carb);
+	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == persona);
+	REQUIRE(ptr->car_get_ownership_date_from_car_ownership(carb) == 7);
+	REQUIRE(ptr->car_get_car_ownership(carb) == r1);
+	REQUIRE(ptr->car_get_car_ownership_as_owned_car(carb) == r1);
+
+	count = 0;
+	found_car = false;
+
+
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_id i) {
+		++count;
+		if(i == carb)
+			found_car = true;
+	});
+
+	REQUIRE(count == 2);
+	REQUIRE(found_car == true);
+
+	count = 0;
+	found_car = false;
+
+	REQUIRE(ptr->person_has_owned_car_from_car_ownership(persona, carb) == true);
+	REQUIRE(ptr->person_has_owned_car_from_car_ownership(persona, cara) == false);
+
+	ptr->person_for_each_owned_car_from_car_ownership(persona, [&](cob2::car_id ) { ++count; });
+
+	REQUIRE(count == 2);
+
+	ptr->person_remove_all_car_ownership_as_owner(persona);
+
+	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == cob2::person_id());
+	REQUIRE(ptr->car_get_owner_from_car_ownership(carc) == cob2::person_id());
+
+	count = 0;
+	found_car = false;
+
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_id i) {
+		++count;
+		if(i == carb)
+			found_car = true;
+	});
+
+	REQUIRE(count == 0);
+	REQUIRE(found_car == false);
+}
+
+
+TEST_CASE("for erasable basic relationship functions", "[core_datacontainer_tests]") {
+	auto ptr = std::make_unique< cob3::data_container >();
+
+	auto cara = ptr->create_car();
+	auto carb = ptr->create_car();
+	auto carc = ptr->create_car();
+
+	auto persona = ptr->create_person();
+	auto personb = ptr->create_person();
+
+	auto r1 = ptr->try_create_car_ownership(persona, carb);
+
+	REQUIRE(bool(r1) == true);
+	ptr->car_ownership_set_ownership_date(r1, 7);
+
+	REQUIRE(ptr->is_valid_car_ownership(r1));
+	REQUIRE(ptr->car_ownership_get_owner(r1) == persona);
+	REQUIRE(ptr->car_ownership_get_owned_car(r1) == carb);
+	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == persona);
+	REQUIRE(ptr->car_get_ownership_date_from_car_ownership(carb) == 7);
+	REQUIRE(ptr->car_get_car_ownership(carb) == r1);
+	REQUIRE(ptr->car_get_car_ownership_as_owned_car(carb) == r1);
+
+	int32_t count = 0;
+	bool found_car = false;
+	ptr->person_for_each_car_ownership_as_owner(personb, [&](cob3::car_id i) {
+		++count;
+		if(i == carb)
+			found_car = true;
+	});
+
+	REQUIRE(count == 0);
+	REQUIRE(found_car == false);
+
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_id i) {
+		++count;
+		if(i == carb)
+			found_car = true;
+	});
+
+	REQUIRE(count == 1);
+	REQUIRE(found_car == true);
+
+	count = 0;
+	found_car = false;
+
+	auto r2 = ptr->try_create_car_ownership(personb, carb);
+	REQUIRE(!ptr->is_valid_car_ownership(r2));
+
+	auto r3 = ptr->try_create_car_ownership(persona, cara);
+
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_id i) {
+		++count;
+		if(i == carb)
+			found_car = true;
+	});
+
+	REQUIRE(count == 2);
+	REQUIRE(found_car == true);
+
+	count = 0;
+	found_car = false;
+
+	ptr->car_ownership_set_owner(r1, cob3::person_id());
+
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_id i) {
+		++count;
+		if(i == carb)
+			found_car = true;
+	});
+
+	REQUIRE(count == 1);
+	REQUIRE(found_car == false);
+
+	auto r4 = ptr->force_create_car_ownership(personb, cara);
+	REQUIRE(ptr->is_valid_car_ownership(r4));
+
+	count = 0;
+	found_car = false;
+
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_id i) {
+		++count;
+		if(i == cara)
+			found_car = true;
+	});
+
+	REQUIRE(count == 0);
+	REQUIRE(found_car == false);
+
+	ptr->person_for_each_car_ownership_as_owner(personb, [&](cob3::car_id i) {
+		++count;
+		if(i == cara)
+			found_car = true;
+	});
+
+	REQUIRE(count == 1);
+	REQUIRE(found_car == true);
+
+}
+
+TEST_CASE("for erasable remove in the other direction", "[core_datacontainer_tests]") {
+	auto ptr = std::make_unique< cob3::data_container >();
+
+	auto cara = ptr->create_car();
+	auto carb = ptr->create_car();
+	auto carc = ptr->create_car();
+
+	auto persona = ptr->create_person();
+	auto personb = ptr->create_person();
+
+	auto r1 = ptr->try_create_car_ownership(persona, carb);
+
+	REQUIRE(bool(r1) == true);
+	ptr->car_ownership_set_ownership_date(r1, 7);
+
+	REQUIRE(ptr->is_valid_car_ownership(r1));
+	REQUIRE(ptr->car_ownership_get_owner(r1) == persona);
+	REQUIRE(ptr->car_ownership_get_owned_car(r1) == carb);
+	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == persona);
+	REQUIRE(ptr->car_get_ownership_date_from_car_ownership(carb) == 7);
+	REQUIRE(ptr->car_get_car_ownership(carb) == r1);
+	REQUIRE(ptr->car_get_car_ownership_as_owned_car(carb) == r1);
+
+	int32_t count = 0;
+	bool found_car = false;
+
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_id i) {
+		++count;
+		if(i == carb)
+			found_car = true;
+	});
+
+	REQUIRE(count == 1);
+	REQUIRE(found_car == true);
+
+	count = 0;
+	found_car = false;
+
+	ptr->car_remove_car_ownership_as_owned_car(carb);
+
+	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == cob3::person_id());
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_id i) {
+		++count;
+		if(i == carb)
+			found_car = true;
+	});
+
+	REQUIRE(count == 0);
+	REQUIRE(found_car == false);
+
+	r1 = ptr->try_create_car_ownership(persona, carb);
+	ptr->try_create_car_ownership(persona, carc);
+
+	REQUIRE(bool(r1) == true);
+	ptr->car_ownership_set_ownership_date(r1, 7);
+
+	REQUIRE(ptr->is_valid_car_ownership(r1));
+	REQUIRE(ptr->car_ownership_get_owner(r1) == persona);
+	REQUIRE(ptr->car_ownership_get_owned_car(r1) == carb);
+	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == persona);
+	REQUIRE(ptr->car_get_ownership_date_from_car_ownership(carb) == 7);
+	REQUIRE(ptr->car_get_car_ownership(carb) == r1);
+	REQUIRE(ptr->car_get_car_ownership_as_owned_car(carb) == r1);
+
+	count = 0;
+	found_car = false;
+
+
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_id i) {
+		++count;
+		if(i == carb)
+			found_car = true;
+	});
+
+	REQUIRE(count == 2);
+	REQUIRE(found_car == true);
+
+	count = 0;
+	found_car = false;
+
+	REQUIRE(ptr->person_has_owned_car_from_car_ownership(persona, carb) == true);
+	REQUIRE(ptr->person_has_owned_car_from_car_ownership(persona, cara) == false);
+
+	ptr->person_for_each_owned_car_from_car_ownership(persona, [&](cob3::car_id ) { ++count; });
+
+	REQUIRE(count == 2);
+
+	ptr->person_remove_all_car_ownership_as_owner(persona);
+
+	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == cob3::person_id());
+	REQUIRE(ptr->car_get_owner_from_car_ownership(carc) == cob3::person_id());
+
+	count = 0;
+	found_car = false;
+
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_id i) {
+		++count;
+		if(i == carb)
+			found_car = true;
+	});
+
+	REQUIRE(count == 0);
+	REQUIRE(found_car == false);
+}
+

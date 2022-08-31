@@ -133,11 +133,17 @@ struct conversion_def {
 	std::string to;
 };
 
+struct made_id {
+	std::string name;
+	std::string base_type;
+};
+
 struct file_def {
 	std::string namspace = "dcon";
 	std::vector<std::string> includes;
 	std::vector<std::string> globals;
 	std::vector<std::string> legacy_types;
+	std::vector<made_id> extra_ids;
 
 	std::vector<relationship_object_def> relationship_objects;
 	std::vector<load_save_def> load_save_routines;
@@ -179,6 +185,8 @@ inline bool is_vectorizable_type(file_def& def, std::string const& name) {
 		name == "unsigned int" || name == "unsigned char" || name == "signed char" ||
 		name == "float" || name == "int8_t" || name == "uint8_t" ||
 		name == "int16_t" || name == "uint16_t" || name == "int32_t" || name == "uint32_t"
+		|| std::find_if(def.extra_ids.begin(), def.extra_ids.end(), [&](made_id const& mi) {
+			return mi.name == name; }) != def.extra_ids.end()
 		|| [&]() {
 		return name.length() >= 4 && name[name.length() - 1] == 'd' && name[name.length() - 2] == 'i' &&
 			name[name.length() - 3] == '_' && find_by_name(def, name.substr(0, name.length() - 3)) != nullptr;

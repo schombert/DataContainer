@@ -2194,7 +2194,8 @@ namespace Catch { \
 #pragma warning(disable:4018) // more "signed/unsigned mismatch"
 #pragma warning(disable:4312) // Converting int to T* using reinterpret_cast (issue on x64 platform)
 #pragma warning(disable:4180) // qualifier applied to function type has no meaning
-#pragma warning(disable:4800) // Forcing result to true or false
+#pragma warning(disable:4623) // Forcing result to true or false
+#pragma warning(disable:5039)
 #endif
 
 namespace Catch {

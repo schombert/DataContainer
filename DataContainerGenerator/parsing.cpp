@@ -655,6 +655,13 @@ file_def parse_file(char const * start, char const * end, error_record & err_out
 				} else {
 					parsed_file.globals.push_back(extracted.values[0].to_string());
 				}
+			} else if(kstr == "make_index") {
+				if(extracted.values.size() != 2) {
+					err_out.add(std::string("wrong number of parameters for \"make_index\" on line ")
+						+ std::to_string(calculate_line_from_position(start, extracted.key.start)));
+				} else {
+					parsed_file.extra_ids.push_back(made_id{ extracted.values[0].to_string() , extracted.values[1].to_string() });
+				}
 			} else if(kstr == "load_save") {
 				if(extracted.values.size() != 1) {
 					err_out.add(std::string("wrong number of parameters for \"load_save\" on line ")

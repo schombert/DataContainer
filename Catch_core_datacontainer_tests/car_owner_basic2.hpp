@@ -21,7 +21,7 @@
 #pragma warning( push )
 #pragma warning( disable : 4324 )
 
-namespace car_owner_basic {
+namespace cob2 {
 	struct load_record {
 		bool car : 1;
 		bool car_wheels : 1;
@@ -115,19 +115,19 @@ namespace car_owner_basic {
 #ifndef DCON_NO_VE
 namespace ve {
 	template<>
-	struct value_to_vector_type_s<car_owner_basic::car_id> {
-		using type = tagged_vector<car_owner_basic::car_id>;
+	struct value_to_vector_type_s<cob2::car_id> {
+		using type = tagged_vector<cob2::car_id>;
 	};
 	
 	template<>
-	struct value_to_vector_type_s<car_owner_basic::person_id> {
-		using type = tagged_vector<car_owner_basic::person_id>;
+	struct value_to_vector_type_s<cob2::person_id> {
+		using type = tagged_vector<cob2::person_id>;
 	};
 	
 }
 
 #endif
-namespace car_owner_basic {
+namespace cob2 {
 	class data_container;
 
 	namespace internal {
@@ -650,6 +650,23 @@ namespace car_owner_basic {
 			return new_id;
 		}
 		
+		//
+		// container compactable delete for car
+		//
+		void delete_car(car_id id) {
+			car_id id_removed = id;
+			car_id last_id(car_id::value_base_t(car.size_used - 1));
+			if(id_removed == last_id) { car_pop_back(); return; }
+			delete_car_ownership(id_removed);
+			internal_move_relationship_car_ownership(last_id, id_removed);
+			car_ownership.size_used = car.size_used - 1;
+			car.m_wheels.vptr()[id_removed.index()] = std::move(car.m_wheels.vptr()[last_id.index()]);
+			car.m_wheels.vptr()[last_id.index()] = int32_t{};
+			car.m_resale_value.vptr()[id_removed.index()] = std::move(car.m_resale_value.vptr()[last_id.index()]);
+			car.m_resale_value.vptr()[last_id.index()] = float{};
+			--car.size_used;
+		}
+		
 		bool is_valid_car(car_id id) const {
 			return bool(id) && uint32_t(id.index()) < car.size_used;
 		}
@@ -691,6 +708,22 @@ namespace car_owner_basic {
 			if(person.size_used >= 100) std::abort();
 			++person.size_used;
 			return new_id;
+		}
+		
+		//
+		// container compactable delete for person
+		//
+		void delete_person(person_id id) {
+			person_id id_removed = id;
+			person_id last_id(person_id::value_base_t(person.size_used - 1));
+			if(id_removed == last_id) { person_pop_back(); return; }
+			person_remove_all_car_ownership_as_owner(id_removed);
+			person_for_each_car_ownership_as_owner(last_id, [t = this, id_removed](car_ownership_id i){ t->car_ownership.m_owner.vptr()[i.index()] = id_removed; });
+			car_ownership.m_array_owner.vptr()[id_removed.index()] = std::move(car_ownership.m_array_owner.vptr()[last_id.index()]);
+			car_ownership.m_array_owner.vptr()[last_id.index()] = std::vector<car_ownership_id>{};
+			person.m_age.vptr()[id_removed.index()] = std::move(person.m_age.vptr()[last_id.index()]);
+			person.m_age.vptr()[last_id.index()] = int32_t{};
+			--person.size_used;
 		}
 		
 		bool is_valid_person(person_id id) const {

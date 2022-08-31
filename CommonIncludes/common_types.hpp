@@ -75,6 +75,43 @@ namespace dcon {
 		}
 	}
 
+	template<typename T>
+	class local_vector {
+		// yes, I am aware that boost has a better version of the small vector optimization,
+		// but I didn't want to force anyone to take a dependency on boost just for that
+
+		T* ptr_end = nullptr;
+		std::vector<T> expanded_storage;
+		T storage[128];
+	public:
+		template<typename it>
+		local_vector(it first, it second) {
+			if(second - first > 128) {
+				expanded_storage.insert(expanded_storage.end(), first, second);
+				ptr_end = storage + 129;
+			} else {
+				ptr_end = std::copy(first, second, storage);
+			}
+		}
+		local_vector() {
+			ptr_end = storage;
+		}
+		void push_back(T val) {
+			if(ptr_end - storage < 128) {
+				*ptr_end = val;
+				++ptr_end;
+			} else if(ptr_end - storage == 128) {
+				expanded_storage.insert(expanded_storage.end(), storage, ptr_end);
+				++ptr_end;
+				expanded_storage.push_back(val);
+			} else {
+				expanded_storage.push_back(val);
+			}
+		}
+		T* begin() { return (ptr_end - storage <= 128) ? storage : expanded_storage.data(); }
+		T* end() { return (ptr_end - storage <= 128) ? ptr_end : expanded_storage.data() + expanded_storage.size(); }
+	};
+
 	struct record_header {
 		uint64_t record_size;
 
@@ -518,7 +555,7 @@ namespace dcon {
 		T* allocate(size_t n) {
 			return (T*)(::operator new(n * sizeof(T), std::align_val_t{ 64 }));
 		}
-		void deallocate(T* p, size_t n) {
+		void deallocate(T* p, size_t ) {
 			::operator delete(p, std::align_val_t{ 64 });
 		}
 	};

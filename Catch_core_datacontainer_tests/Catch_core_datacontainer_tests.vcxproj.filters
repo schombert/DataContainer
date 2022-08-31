@@ -20,11 +20,21 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="car_owner_basic.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="car_owner_basic.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="car_owner_basic2.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="car_owner_basic3.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="car_owner_basic.txt" />
+    <CustomBuild Include="car_owner_basic2.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="car_owner_basic3.txt" />
   </ItemGroup>
 </Project>

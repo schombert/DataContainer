@@ -985,8 +985,6 @@ namespace ve {
 		) };
 	}
 
-#pragma warning( push )
-#pragma warning( disable : 4245)
 
 	namespace detail {
 		template<typename T>
@@ -1145,7 +1143,6 @@ namespace ve {
 		}
 	}
 
-#pragma warning( pop ) 
 
 	template<typename T>
 	RELEASE_INLINE void store(contiguous_tags<T> e, float* dest, fp_vector values) {

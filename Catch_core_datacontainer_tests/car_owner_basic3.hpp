@@ -21,12 +21,14 @@
 #pragma warning( push )
 #pragma warning( disable : 4324 )
 
-namespace car_owner_basic {
+namespace cob3 {
 	struct load_record {
 		bool car : 1;
+		bool car__index : 1;
 		bool car_wheels : 1;
 		bool car_resale_value : 1;
 		bool person : 1;
+		bool person__index : 1;
 		bool person_age : 1;
 		bool car_ownership : 1;
 		bool car_ownership_owner : 1;
@@ -34,9 +36,11 @@ namespace car_owner_basic {
 		bool car_ownership_ownership_date : 1;
 		load_record() {
 			car = false;
+			car__index = false;
 			car_wheels = false;
 			car_resale_value = false;
 			person = false;
+			person__index = false;
 			person_age = false;
 			car_ownership = false;
 			car_ownership_owner = false;
@@ -115,24 +119,35 @@ namespace car_owner_basic {
 #ifndef DCON_NO_VE
 namespace ve {
 	template<>
-	struct value_to_vector_type_s<car_owner_basic::car_id> {
-		using type = tagged_vector<car_owner_basic::car_id>;
+	struct value_to_vector_type_s<cob3::car_id> {
+		using type = tagged_vector<cob3::car_id>;
 	};
 	
 	template<>
-	struct value_to_vector_type_s<car_owner_basic::person_id> {
-		using type = tagged_vector<car_owner_basic::person_id>;
+	struct value_to_vector_type_s<cob3::person_id> {
+		using type = tagged_vector<cob3::person_id>;
 	};
 	
 }
 
 #endif
-namespace car_owner_basic {
+namespace cob3 {
 	class data_container;
 
 	namespace internal {
 		class alignas(64) car_class {
 			private:
+			//
+			// storage space for _index of type car_id
+			//
+			struct dtype__index {
+				car_id values[1200];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype__index() { std::uninitialized_value_construct_n(values, 1200); }
+			}
+			m__index;
+			
 			//
 			// storage space for wheels of type int32_t
 			//
@@ -157,14 +172,32 @@ namespace car_owner_basic {
 			}
 			m_resale_value;
 			
+			car_id first_free = car_id();
 			uint32_t size_used = 0;
 
 			public:
+			car_class() {
+				for(int32_t i = 1200 - 1; i >= 0; --i) {
+					m__index.vptr()[i] = first_free;
+					first_free = car_id(uint16_t(i));
+				}
+			}
 			friend class data_container;
 		};
 
 		class alignas(64) person_class {
 			private:
+			//
+			// storage space for _index of type person_id
+			//
+			struct dtype__index {
+				person_id values[100];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype__index() { std::uninitialized_value_construct_n(values, 100); }
+			}
+			m__index;
+			
 			//
 			// storage space for age of type int32_t
 			//
@@ -177,9 +210,16 @@ namespace car_owner_basic {
 			}
 			m_age;
 			
+			person_id first_free = person_id();
 			uint32_t size_used = 0;
 
 			public:
+			person_class() {
+				for(int32_t i = 100 - 1; i >= 0; --i) {
+					m__index.vptr()[i] = first_free;
+					first_free = person_id(uint8_t(i));
+				}
+			}
 			friend class data_container;
 		};
 
@@ -610,17 +650,32 @@ namespace car_owner_basic {
 		}
 		
 		//
-		// container pop_back for car
+		// container delete for car
 		//
-		void car_pop_back() {
-			if(car.size_used == 0) return;
-			car_id id_removed(car_id::value_base_t(car.size_used - 1));
+		void delete_car(car_id id_removed) {
+			if(!is_valid_car(id_removed)) return;
+			car.m__index.vptr()[id_removed.index()] = car.first_free;
+			car.first_free = id_removed;
+			if(int32_t(car.size_used) - 1 == id_removed.index()) {
+				for( ; car.size_used > 0 && car.m__index.vptr()[car.size_used - 1] != car_id(car_id::value_base_t(car.size_used - 1));  --car.size_used) ;
+			}
 			delete_car_ownership(id_removed);
-			car_ownership.size_used = car.size_used - 1;
-			car_ownership.m_ownership_date.vptr()[id_removed.index()] = int32_t{};
+			car_ownership.size_used = car.size_used;
 			car.m_wheels.vptr()[id_removed.index()] = int32_t{};
 			car.m_resale_value.vptr()[id_removed.index()] = float{};
-			--car.size_used;
+		}
+		
+		//
+		// container create for car
+		//
+		car_id create_car() {
+			if(!bool(car.first_free)) std::abort();
+			car_id new_id = car.first_free;
+			car.first_free = car.m__index.vptr()[car.first_free.index()];
+			car.m__index.vptr()[new_id.index()] = new_id;
+			car.size_used = std::max(car.size_used, uint32_t(new_id.index() + 1));
+			car_ownership.size_used = car.size_used;
+			return new_id;
 		}
 		
 		//
@@ -630,38 +685,66 @@ namespace car_owner_basic {
 			if(new_size > 1200) std::abort();
 			const uint32_t old_size = car.size_used;
 			if(new_size < old_size) {
+				car.first_free = car_id();
+				int32_t i = int32_t(1200 - 1);
+				for(; i >= int32_t(new_size); --i) {
+					car.m__index.vptr()[i] = car.first_free;
+					car.first_free = car_id(car_id::value_base_t(i));
+				}
+				for(; i >= 0; --i) {
+					if(car.m__index.vptr()[i] != car_id(car_id::value_base_t(i))) {
+						car.m__index.vptr()[i] = car.first_free;
+						car.first_free = car_id(car_id::value_base_t(i));
+					}
+				}
 				std::fill_n(car.m_wheels.vptr() + new_size, old_size - new_size, int32_t{});
 				std::fill_n(car.m_resale_value.vptr() + new_size, old_size - new_size, float{});
 				car_ownership_resize(new_size);
 			} else if(new_size > old_size) {
+				car.first_free = car_id();
+				int32_t i = int32_t(1200 - 1);
+				for(; i >= int32_t(old_size); --i) {
+					car.m__index.vptr()[i] = car.first_free;
+					car.first_free = car_id(car_id::value_base_t(i));
+				}
+				for(; i >= 0; --i) {
+					if(car.m__index.vptr()[i] != car_id(car_id::value_base_t(i))) {
+						car.m__index.vptr()[i] = car.first_free;
+						car.first_free = car_id(car_id::value_base_t(i));
+					}
+				}
 				car_ownership_resize(new_size);
 			}
 			car.size_used = new_size;
 		}
 		
-		//
-		// container create for car
-		//
-		car_id create_car() {
-			car_id new_id(car_id::value_base_t(car.size_used));
-			if(car.size_used >= 1200) std::abort();
-			car_ownership.size_used = car.size_used + 1;
-			++car.size_used;
-			return new_id;
-		}
-		
 		bool is_valid_car(car_id id) const {
-			return bool(id) && uint32_t(id.index()) < car.size_used;
+			return bool(id) && uint32_t(id.index()) < car.size_used && car.m__index.vptr()[id.index()] == id;
 		}
 		//
-		// container pop_back for person
+		// container delete for person
 		//
-		void person_pop_back() {
-			if(person.size_used == 0) return;
-			person_id id_removed(person_id::value_base_t(person.size_used - 1));
+		void delete_person(person_id id_removed) {
+			if(!is_valid_person(id_removed)) return;
+			person.m__index.vptr()[id_removed.index()] = person.first_free;
+			person.first_free = id_removed;
+			if(int32_t(person.size_used) - 1 == id_removed.index()) {
+				for( ; person.size_used > 0 && person.m__index.vptr()[person.size_used - 1] != person_id(person_id::value_base_t(person.size_used - 1));  --person.size_used) ;
+			}
 			person_remove_all_car_ownership_as_owner(id_removed);
 			person.m_age.vptr()[id_removed.index()] = int32_t{};
-			--person.size_used;
+		}
+		
+		//
+		// container create for person
+		//
+		person_id create_person() {
+			if(!bool(person.first_free)) std::abort();
+			person_id new_id = person.first_free;
+			person.first_free = person.m__index.vptr()[person.first_free.index()];
+			person.m__index.vptr()[new_id.index()] = new_id;
+			person.size_used = std::max(person.size_used, uint32_t(new_id.index() + 1));
+			return new_id;
 		}
 		
 		//
@@ -671,11 +754,35 @@ namespace car_owner_basic {
 			if(new_size > 100) std::abort();
 			const uint32_t old_size = person.size_used;
 			if(new_size < old_size) {
+				person.first_free = person_id();
+				int32_t i = int32_t(100 - 1);
+				for(; i >= int32_t(new_size); --i) {
+					person.m__index.vptr()[i] = person.first_free;
+					person.first_free = person_id(person_id::value_base_t(i));
+				}
+				for(; i >= 0; --i) {
+					if(person.m__index.vptr()[i] != person_id(person_id::value_base_t(i))) {
+						person.m__index.vptr()[i] = person.first_free;
+						person.first_free = person_id(person_id::value_base_t(i));
+					}
+				}
 				std::fill_n(person.m_age.vptr() + new_size, old_size - new_size, int32_t{});
 				std::destroy_n(car_ownership.m_array_owner.vptr() + 0, old_size);
 				std::uninitialized_default_construct_n(car_ownership.m_array_owner.vptr() + 0, old_size);
 				std::fill_n(car_ownership.m_owner.vptr() + 0, car_ownership.size_used, person_id{});
 			} else if(new_size > old_size) {
+				person.first_free = person_id();
+				int32_t i = int32_t(100 - 1);
+				for(; i >= int32_t(old_size); --i) {
+					person.m__index.vptr()[i] = person.first_free;
+					person.first_free = person_id(person_id::value_base_t(i));
+				}
+				for(; i >= 0; --i) {
+					if(person.m__index.vptr()[i] != person_id(person_id::value_base_t(i))) {
+						person.m__index.vptr()[i] = person.first_free;
+						person.first_free = person_id(person_id::value_base_t(i));
+					}
+				}
 				std::destroy_n(car_ownership.m_array_owner.vptr() + 0, new_size);
 				std::uninitialized_default_construct_n(car_ownership.m_array_owner.vptr() + 0, new_size);
 				std::fill_n(car_ownership.m_owner.vptr() + 0, car_ownership.size_used, person_id{});
@@ -683,18 +790,8 @@ namespace car_owner_basic {
 			person.size_used = new_size;
 		}
 		
-		//
-		// container create for person
-		//
-		person_id create_person() {
-			person_id new_id(person_id::value_base_t(person.size_used));
-			if(person.size_used >= 100) std::abort();
-			++person.size_used;
-			return new_id;
-		}
-		
 		bool is_valid_person(person_id id) const {
-			return bool(id) && uint32_t(id.index()) < person.size_used;
+			return bool(id) && uint32_t(id.index()) < person.size_used && person.m__index.vptr()[id.index()] == id;
 		}
 		//
 		// container resize for car_ownership
@@ -764,7 +861,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE void for_each_car(T&& func) {
 			for(uint32_t i = 0; i < car.size_used; ++i) {
 				car_id tmp(car_id::value_base_t(i));
-				func(tmp);
+				if(car.m__index.vptr()[tmp.index()] == tmp) func(tmp);
 			}
 		}
 		
@@ -772,7 +869,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE void for_each_person(T&& func) {
 			for(uint32_t i = 0; i < person.size_used; ++i) {
 				person_id tmp(person_id::value_base_t(i));
-				func(tmp);
+				if(person.m__index.vptr()[tmp.index()] == tmp) func(tmp);
 			}
 		}
 		
@@ -846,9 +943,11 @@ namespace car_owner_basic {
 		load_record serialize_entire_container_record() const noexcept {
 			load_record result;
 			result.car = true;
+			result.car__index = true;
 			result.car_wheels = true;
 			result.car_resale_value = true;
 			result.person = true;
+			result.person__index = true;
 			result.person_age = true;
 			result.car_ownership = true;
 			result.car_ownership_owner = true;
@@ -867,6 +966,11 @@ namespace car_owner_basic {
 				total_size += header.serialize_size();
 				total_size += sizeof(uint32_t);
 			}
+			if(serialize_selection.car__index) {
+				dcon::record_header iheader(sizeof(car_id) * car.size_used, "uint16_t", "car", "_index");
+				total_size += iheader.serialize_size();
+				total_size += sizeof(car_id) * car.size_used;
+			}
 			if(serialize_selection.car_wheels) {
 				dcon::record_header iheader(sizeof(int32_t) * car.size_used, "int32_t", "car", "wheels");
 				total_size += iheader.serialize_size();
@@ -881,6 +985,11 @@ namespace car_owner_basic {
 				dcon::record_header header(sizeof(uint32_t), "uint32_t", "person", "$size");
 				total_size += header.serialize_size();
 				total_size += sizeof(uint32_t);
+			}
+			if(serialize_selection.person__index) {
+				dcon::record_header iheader(sizeof(person_id) * person.size_used, "uint8_t", "person", "_index");
+				total_size += iheader.serialize_size();
+				total_size += sizeof(person_id) * person.size_used;
 			}
 			if(serialize_selection.person_age) {
 				dcon::record_header iheader(sizeof(int32_t) * person.size_used, "int32_t", "person", "age");
@@ -917,6 +1026,12 @@ namespace car_owner_basic {
 				*(reinterpret_cast<uint32_t*>(output_buffer)) = car.size_used;
 				output_buffer += sizeof(uint32_t);
 			}
+			if(serialize_selection.car__index) {
+				dcon::record_header header(sizeof(car_id) * car.size_used, "uint16_t", "car", "_index");
+				header.serialize(output_buffer);
+				memcpy(reinterpret_cast<car_id*>(output_buffer), car.m__index.vptr(), sizeof(car_id) * car.size_used);
+				output_buffer += sizeof(car_id) * car.size_used;
+			}
 			if(serialize_selection.car_wheels) {
 				dcon::record_header header(sizeof(int32_t) * car.size_used, "int32_t", "car", "wheels");
 				header.serialize(output_buffer);
@@ -934,6 +1049,12 @@ namespace car_owner_basic {
 				header.serialize(output_buffer);
 				*(reinterpret_cast<uint32_t*>(output_buffer)) = person.size_used;
 				output_buffer += sizeof(uint32_t);
+			}
+			if(serialize_selection.person__index) {
+				dcon::record_header header(sizeof(person_id) * person.size_used, "uint8_t", "person", "_index");
+				header.serialize(output_buffer);
+				memcpy(reinterpret_cast<person_id*>(output_buffer), person.m__index.vptr(), sizeof(person_id) * person.size_used);
+				output_buffer += sizeof(person_id) * person.size_used;
 			}
 			if(serialize_selection.person_age) {
 				dcon::record_header header(sizeof(int32_t) * person.size_used, "int32_t", "person", "age");
@@ -973,6 +1094,36 @@ namespace car_owner_basic {
 						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
 							car_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
 							serialize_selection.car = true;
+						}
+						else if(header.is_property("__index")) {
+							if(header.is_type("uint16_t")) {
+								memcpy(car.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(car.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.car__index = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(car.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									car.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.car__index = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(car.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									car.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.car__index = true;
+							}
+							if(serialize_selection.car__index == true) {
+								car.size_used = 0;
+								car.first_free = car_id();
+								for(int32_t j = 1200 - 1; j > 0; --j) {
+									if(car.m__index.vptr()[j] != car_id(uint16_t(j))) {
+										car.m__index.vptr()[j] = car.first_free;
+										car.first_free = car_id(uint16_t(j));
+									} else {
+										car.size_used = std::max(car.size_used, uint32_t(j));
+									}
+								}
+							}
 						}
 						else if(header.is_property("wheels")) {
 							if(header.is_type("int32_t")) {
@@ -1099,6 +1250,36 @@ namespace car_owner_basic {
 						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
 							person_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
 							serialize_selection.person = true;
+						}
+						else if(header.is_property("__index")) {
+							if(header.is_type("uint8_t")) {
+								memcpy(person.m__index.vptr(), reinterpret_cast<uint8_t const*>(input_buffer), std::min(size_t(person.size_used) * sizeof(uint8_t), header.record_size));
+								serialize_selection.person__index = true;
+							}
+							else if(header.is_type("uint16_t")) {
+								for(uint32_t i = 0; i < std::min(person.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+									person.m__index.vptr()[i].value = uint8_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+								}
+								serialize_selection.person__index = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(person.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									person.m__index.vptr()[i].value = uint8_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.person__index = true;
+							}
+							if(serialize_selection.person__index == true) {
+								person.size_used = 0;
+								person.first_free = person_id();
+								for(int32_t j = 100 - 1; j > 0; --j) {
+									if(person.m__index.vptr()[j] != person_id(uint8_t(j))) {
+										person.m__index.vptr()[j] = person.first_free;
+										person.first_free = person_id(uint8_t(j));
+									} else {
+										person.size_used = std::max(person.size_used, uint32_t(j));
+									}
+								}
+							}
 						}
 						else if(header.is_property("age")) {
 							if(header.is_type("int32_t")) {
@@ -1275,6 +1456,36 @@ namespace car_owner_basic {
 							car_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
 							serialize_selection.car = true;
 						}
+						else if(header.is_property("__index") && mask.car__index) {
+							if(header.is_type("uint16_t")) {
+								memcpy(car.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(car.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.car__index = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(car.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									car.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.car__index = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(car.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									car.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.car__index = true;
+							}
+							if(serialize_selection.car__index == true) {
+								car.size_used = 0;
+								car.first_free = car_id();
+								for(int32_t j = 1200 - 1; j > 0; --j) {
+									if(car.m__index.vptr()[j] != car_id(uint16_t(j))) {
+										car.m__index.vptr()[j] = car.first_free;
+										car.first_free = car_id(uint16_t(j));
+									} else {
+										car.size_used = std::max(car.size_used, uint32_t(j));
+									}
+								}
+							}
+						}
 						else if(header.is_property("wheels") && mask.car_wheels) {
 							if(header.is_type("int32_t")) {
 								memcpy(car.m_wheels.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(car.size_used) * sizeof(int32_t), header.record_size));
@@ -1400,6 +1611,36 @@ namespace car_owner_basic {
 						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
 							person_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
 							serialize_selection.person = true;
+						}
+						else if(header.is_property("__index") && mask.person__index) {
+							if(header.is_type("uint8_t")) {
+								memcpy(person.m__index.vptr(), reinterpret_cast<uint8_t const*>(input_buffer), std::min(size_t(person.size_used) * sizeof(uint8_t), header.record_size));
+								serialize_selection.person__index = true;
+							}
+							else if(header.is_type("uint16_t")) {
+								for(uint32_t i = 0; i < std::min(person.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+									person.m__index.vptr()[i].value = uint8_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+								}
+								serialize_selection.person__index = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(person.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									person.m__index.vptr()[i].value = uint8_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.person__index = true;
+							}
+							if(serialize_selection.person__index == true) {
+								person.size_used = 0;
+								person.first_free = person_id();
+								for(int32_t j = 100 - 1; j > 0; --j) {
+									if(person.m__index.vptr()[j] != person_id(uint8_t(j))) {
+										person.m__index.vptr()[j] = person.first_free;
+										person.first_free = person_id(uint8_t(j));
+									} else {
+										person.size_used = std::max(person.size_used, uint32_t(j));
+									}
+								}
+							}
 						}
 						else if(header.is_property("age") && mask.person_age) {
 							if(header.is_type("int32_t")) {

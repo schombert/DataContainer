@@ -114,8 +114,8 @@ Obviously working with relationships can become a bit cumbersome. For example, y
 
 The examples given so far have worked with individual objects and relationships. Often, however, you will want to operate on the managed objects and relationships as a whole, for which the following functions are provided:
 
-- `𝑜𝑏𝑗𝑒𝑐𝑡\𝑟𝑒𝑙𝑎𝑡𝑖𝑜𝑛 𝑛𝑎𝑚𝑒_size()` Returns the number of objects or relationships currently in the data container of the given type. (Note that this may be an overestimation if the storage type of the object or relationship is `erasable` or if the relationship has a primary key.)
-- `template<typename T> for_each_𝑜𝑏𝑗𝑒𝑐𝑡\𝑟𝑒𝑙𝑎𝑡𝑖𝑜𝑛 𝑛𝑎𝑚𝑒(T&& functor)` calls the passed function once with the handle for each object or relationships currently in the data container.
+- *`object/relation name`*`_size()` Returns the number of objects or relationships currently in the data container of the given type. (Note that this may be an overestimation if the storage type of the object or relationship is `erasable` or if the relationship has a primary key.)
+- `template<typename T> for_each_`*`object/relation name`*`(T&& functor)` calls the passed function once with the handle for each object or relationships currently in the data container.
 - `reset()` Removes all objects and relationships from the data container
 
 

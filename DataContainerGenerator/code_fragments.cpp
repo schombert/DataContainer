@@ -4,49 +4,67 @@ basic_builder& make_load_record(basic_builder& o, file_def const & fd) {
 	o + "struct load_record" + class_block{
 		for(auto& ro : fd.relationship_objects) {
 			o + substitute("object", ro.name);
-			o + "bool @object@ = false;";
+			o + "bool @object@ : 1;";
+			if(ro.store_type == storage_type::erasable)
+				o + "bool @object@__index : 1;";
 			for(auto& io : ro.indexed_objects) {
 				o + substitute("prop_name", io.property_name);
-				o + "bool @object@_@prop_name@ = false;";
+				o + "bool @object@_@prop_name@ : 1;";
 			}
 			for(auto& io : ro.properties) {
 				o + substitute("prop_name", io.name);
-				o + "bool @object@_@prop_name@ = false;";
+				o + "bool @object@_@prop_name@ : 1;";
 			}
 		}
+		o + "load_record()" + block{
+			for(auto& ro : fd.relationship_objects) {
+				o + substitute("object", ro.name);
+				o + "@object@ = false;";
+				if(ro.store_type == storage_type::erasable)
+					o + "@object@__index = false;";
+				for(auto& io : ro.indexed_objects) {
+					o + substitute("prop_name", io.property_name);
+					o + "@object@_@prop_name@ = false;";
+				}
+				for(auto& io : ro.properties) {
+					o + substitute("prop_name", io.name);
+					o + "@object@_@prop_name@ = false;";
+				}
+			}
+		};
 	};
 	return o;
 }
 
 basic_builder& make_id_definition(basic_builder& o, std::string const& type_name, std::string const& underlying_type) {
-	o + substitute("name", type_name) + substitute("type", underlying_type);
+	o + substitute("name", type_name ) + substitute("type", underlying_type);
 	o + heading{"definition of strongly typed index for @name@"};
-	o + "class @name@_id" + class_block{ o
+	o + "class @name@" + class_block{ o
 		+ "public:"
 		+ "using value_base_t = @type@;"
 		+ "using zero_is_null_t = std::true_type;"
 		+ line_break{}
 		+"@type@ value;"
 		+ line_break{}
-		+"explicit constexpr @name@_id(@type@ v) noexcept : value(v + 1) {}"
-		+ "constexpr @name@_id(@name@_id const& v) noexcept = default;"
-		+ "constexpr @name@_id(@name@_id&& v) noexcept = default;"
-		+ "constexpr @name@_id() noexcept : value(@type@(0)) {}"
+		+"explicit constexpr @name@(@type@ v) noexcept : value(v + 1) {}"
+		+ "constexpr @name@(@name@ const& v) noexcept = default;"
+		+ "constexpr @name@(@name@&& v) noexcept = default;"
+		+ "constexpr @name@() noexcept : value(@type@(0)) {}"
 		+ line_break{}
-		+"@name@_id& operator=(@name@_id v) noexcept { value = v.value; return *this; }"
-		+"constexpr bool operator==(@name@_id v) const noexcept { return value == v.value; }"
-		+ "constexpr bool operator!=(@name@_id v) const noexcept { return value != v.value; }"
+		+"@name@& operator=(@name@ v) noexcept { value = v.value; return *this; }"
+		+"constexpr bool operator==(@name@ v) const noexcept { return value == v.value; }"
+		+ "constexpr bool operator!=(@name@ v) const noexcept { return value != v.value; }"
 		+ "explicit constexpr operator bool() const noexcept { return value != @type@(0); }"
 		+ "constexpr DCON_RELEASE_INLINE int32_t index() const noexcept" + block{
 			o + "return int32_t(value) - 1;";
 		};
 	} + line_break{}
-	+"class @name@_id_pair" + class_block{ o
+	+"class @name@_pair" + class_block{ o
 		+ "public:"
-		+ "@name@_id left;"
-		+ "@name@_id right;";
+		+ "@name@ left;"
+		+ "@name@ right;";
 	} + line_break{}
-	+ "DCON_RELEASE_INLINE bool is_valid_index(@name@_id id) { return bool(id); }" + line_break{};
+	+ "DCON_RELEASE_INLINE bool is_valid_index(@name@ id) { return bool(id); }" + line_break{};
 
 	return o;
 }
@@ -112,7 +130,7 @@ std::string expand_size_to_fill_cacheline_calculation(std::string const& member_
 
 basic_builder& make_erasable_object_constructor(basic_builder& o, std::string const& name, size_t size) {
 	o + substitute{ "name", name } +substitute{ "size", std::to_string(size) } +substitute{"u_type", size_to_tag_type(size) }
-	+"@name@" + block{
+	+"@name@_class()" + block{
 		o + "for(int32_t i = @size@ - 1; i >= 0; --i)" + block{
 			o + "m__index.vptr()[i] = first_free;";
 			o + "first_free = @name@_id(@u_type@(i));";
@@ -135,21 +153,21 @@ basic_builder& make_hooked_getters(basic_builder& o, std::string const& object_n
 		o + "ve::vbitfield_type @obj@_get_@prop@(@vector_position@<@obj@_id> id) const" + block{
 			o + "ve::vbitfield_type r; r.v = 0;";
 			o + "for(int32_t i = 0; i < ve::vector_size; ++i)" + block{
-				o + "tr.v |= (@obj@_get_@prop@(@@obj_id(id.value + i))) << i;";
+				o + "tr.v |= (@obj@_get_@prop@(@obj@_id(id.value + i))) << i;";
 			};
 			o + "return r;";
 		};
 		o + "ve::vbitfield_type @obj@_get_@prop@(ve::partial_contiguous_tags<@obj@_id> id) const" + block{
 			o + "ve::vbitfield_type r; r.v = 0;";
 			o + "for(int32_t i = 0; i < id.subcount; ++i)" + block{
-				o + "tr.v |= (@obj@_get_@prop@(@@obj_id(id.value + i))) << i;";
+				o + "tr.v |= (@obj@_get_@prop@(@obj@_id(id.value + i))) << i;";
 			};
 			o + "return r;";
 		};
 		o + "ve::vbitfield_type @obj@_get_@prop@(ve::tagged_vector<@obj@ _id> id) const" + block{
 			o + "ve::vbitfield_type r; r.v = 0;";
 			o + "for(int32_t i = 0; i < ve::vector_size; ++i)" + block{
-				o + "tr.v |= (@obj@_get_@prop@(@@obj_id(id.value + i))) << i;";
+				o + "tr.v |= (@obj@_get_@prop@(@obj@_id(id.value + i))) << i;";
 			};
 			o + "return r;";
 		};
@@ -697,10 +715,10 @@ basic_builder& make_relation_many_reverse_getters_setters(basic_builder& o, std:
 	o + "void @type@_remove_all_@obj@@as_suffix@(@type@_id id) noexcept" + block{
 		if(ltype == list_type::array || ltype == list_type::std_vector) {
 			o + "auto rng = @type@_range_of_@obj@_as_@prop@(id);";
-			o + "std::vector<@obj@_id> temp(rng.first, rng.second);";
+			o + "dcon::local_vector<@obj@_id> temp(rng.first, rng.second);";
 			o + "std::for_each(temp.begin(), temp.end(), [t = this](@obj@_id i) { t->delete_@obj@(i); });";
 		} else {
-			o + "std::vector<@obj@_id> temp;";
+			o + "dcon::local_vector<@obj@_id> temp;";
 			o + "@type@_for_each_@obj@_as_@prop@(id, [&](@obj@_id j) { temp.push_back(j); });";
 			o + "std::for_each(temp.begin(), temp.end(), [t = this](@obj@_id i) { t->delete_@obj@(i); });";
 		}
@@ -936,10 +954,10 @@ basic_builder& make_object_resize(basic_builder& o, relationship_object_def cons
 				o + "@obj@.first_free = @obj@_id();";
 				if(cob.is_expandable) {
 					o + "@obj@.m__index.values.resize(new_size + 1);";
-					o + "int32_t i = int32_t(new_size);";
+					o + "int32_t i = int32_t(new_size - 1);";
 				} else {
-					o + "int32_t i = int32_t(@obj_sz@);";
-					o + "for(; i >= new_size; --i)" + block{
+					o + "int32_t i = int32_t(@obj_sz@ - 1);";
+					o + "for(; i >= int32_t(new_size); --i)" + block{
 						o + "@obj@.m__index.vptr()[i] = @obj@.first_free;";
 						o + "@obj@.first_free = @obj@_id(@obj@_id::value_base_t(i));";
 					};
@@ -1056,10 +1074,10 @@ basic_builder& make_object_resize(basic_builder& o, relationship_object_def cons
 				o + "@obj@.first_free = @obj@_id();";
 				if(cob.is_expandable) {
 					o + "@obj@.m__index.values.resize(new_size + 1);";
-					o + "int32_t i = int32_t(new_size);";
+					o + "int32_t i = int32_t(new_size - 1);";
 				} else {
-					o + "int32_t i = int32_t(@obj_sz@);";
-					o + "for(; i >= old_size; --i)" + block{
+					o + "int32_t i = int32_t(@obj_sz@ - 1);";
+					o + "for(; i >= int32_t(old_size); --i)" + block{
 						o + "@obj@.m__index.vptr()[i] = @obj@.first_free;";
 						o + "@obj@.first_free = @obj@_id(@obj@_id::value_base_t(i));";
 					};
@@ -1267,8 +1285,8 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 					"last_id", "id_removed", cr.relation_name + "_id()", cob.is_expandable);
 			} else if(cr.indexed_as == index_type::many) {
 				o + "@obj@_remove_all_@rel@_as_@r_prop@(id_removed);";
-				o + "obj_for_each_@rel@_as_@r_prop@(last_id, "
-					"[t = this](@rel@_id i){ t->@rel@.m_@r_prop@.vptr()[i.index()] = id_removed; });";
+				o + "@obj@_for_each_@rel@_as_@r_prop@(last_id, "
+					"[t = this, id_removed](@rel@_id i){ t->@rel@.m_@r_prop@.vptr()[i.index()] = id_removed; });";
 				if(cr.listed_as == list_type::list) {
 					move_value_from_back(o, cr.relation_name, std::string("head_back_") + cr.property_name,
 						"last_id", "id_removed", cr.relation_name + "_id()", cob.is_expandable);
@@ -1278,7 +1296,7 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 						"last_id", "id_removed", "std::numeric_limits<dcon::stable_mk_2_tag>::max()", cob.is_expandable);
 				} else if(cr.listed_as == list_type::std_vector) {
 					move_value_from_back(o, cr.relation_name, std::string("array_") + cr.property_name,
-						"last_id", "id_removed", "std::vector<@rel@_id>{}", cob.is_expandable);
+						"last_id", "id_removed", std::string("std::vector<") + cr.relation_name + "_id>{}", cob.is_expandable);
 				}
 			}
 		}
@@ -1501,13 +1519,13 @@ basic_builder& make_erasable_delete(basic_builder& o, relationship_object_def co
 	o + heading{ "container delete for @obj@" };
 
 	o + "void delete_@obj@(@obj@_id id_removed)" + block{
-		o + "if(!is_valid_@@obj(id_removed)) return;";
+		o + "if(!is_valid_@obj@(id_removed)) return;";
 		if(cob.hook_delete)
 			o + "on_delete_@obj@(id_removed);";
 
 		o + "@obj@.m__index.vptr()[id_removed.index()] = @obj@.first_free;"; 
 		o + "@obj@.first_free = id_removed;";
-		o + "if(@obj@.size_used - 1 == id_removed.index())" + block{
+		o + "if(int32_t(@obj@.size_used) - 1 == id_removed.index())" + block{
 			o + "for( ; @obj@.size_used > 0 && "
 			"@obj@.m__index.vptr()[@obj@.size_used - 1] != @obj@_id(@obj@_id::value_base_t(@obj@.size_used - 1));  "
 			"--@obj@.size_used) ;";
@@ -1525,9 +1543,9 @@ basic_builder& make_erasable_delete(basic_builder& o, relationship_object_def co
 				o + "delete_@rel@(id_removed);";
 				o + "@rel@.size_used = @obj@.size_used;";
 			} else if(cr.indexed_as == index_type::at_most_one) {
-				o + "@obj@_remove_@rel@_as_@r_prop@(id_removed));";
+				o + "@obj@_remove_@rel@_as_@r_prop@(id_removed);";
 			} else if(cr.indexed_as == index_type::many) {
-				o + "@obj@_remove_all_@rel@_as_@r_prop@(id_removed));";
+				o + "@obj@_remove_all_@rel@_as_@r_prop@(id_removed);";
 			}
 		}
 		for(auto& cp : cob.properties) {
@@ -1857,8 +1875,8 @@ basic_builder& make_serialize_size(basic_builder& o, file_def const& parsed_file
 					o + substitute{ "key_backing", size_to_tag_type(iob.related_to->size) };
 					if(ob.primary_key != iob) {
 						o + "if(serialize_selection.@obj@_@prop@)" + block{
-							o + "dcon::record_header header(sizeof(@type@_id) * @obj@.size_used, \"@key_backing@\", \"@obj@\", \"@prop@\");";
-							o + "total_size += header.serialize_size();";
+							o + "dcon::record_header iheader(sizeof(@type@_id) * @obj@.size_used, \"@key_backing@\", \"@obj@\", \"@prop@\");";
+							o + "total_size += iheader.serialize_size();";
 							o + "total_size += sizeof(@type@_id) * @obj@.size_used;";
 						};
 					}
@@ -1873,8 +1891,8 @@ basic_builder& make_serialize_size(basic_builder& o, file_def const& parsed_file
 			if(ob.store_type == storage_type::erasable) {
 				o + substitute{ "key_backing", size_to_tag_type(ob.size) };
 				o + "if(serialize_selection.@obj@__index)" + block{
-					o + "dcon::record_header header(sizeof(@obj@_id) * @obj@.size_used, \"@key_backing@\", \"@obj@\", \"_index\");";
-					o + "total_size += header.serialize_size();";
+					o + "dcon::record_header iheader(sizeof(@obj@_id) * @obj@.size_used, \"@key_backing@\", \"@obj@\", \"_index\");";
+					o + "total_size += iheader.serialize_size();";
 					o + "total_size += sizeof(@obj@_id) * @obj@.size_used;";
 				};
 			}
@@ -1885,8 +1903,8 @@ basic_builder& make_serialize_size(basic_builder& o, file_def const& parsed_file
 
 				} else if(prop.type == property_type::bitfield) {
 					o + "if(serialize_selection.@obj@_@prop@)" + block{
-						o + "dcon::record_header header((@obj@.size_used + 7) / 8, \"bitfield\", \"@obj@\", \"@prop@\");";
-						o + "total_size += header.serialize_size();";
+						o + "dcon::record_header iheader((@obj@.size_used + 7) / 8, \"bitfield\", \"@obj@\", \"@prop@\");";
+						o + "total_size += iheader.serialize_size();";
 						o + "total_size += (@obj@.size_used + 7) / 8;";
 					};
 				} else if(prop.type == property_type::special_vector) {
@@ -1899,20 +1917,20 @@ basic_builder& make_serialize_size(basic_builder& o, file_def const& parsed_file
 						} +append{");"};
 						
 						o + "total_size += @vtype_name_sz@;";
-						o + "dcon::record_header header(total_size, \"stable_mk_2_tag\", \"@obj@\", \"@prop@\");";
-						o + "total_size += header.serialize_size();";
+						o + "dcon::record_header iheader(total_size, \"stable_mk_2_tag\", \"@obj@\", \"@prop@\");";
+						o + "total_size += iheader.serialize_size();";
 					};
 				} else if(prop.type == property_type::object) {
 					o + "if(serialize_selection.@obj@_@prop@)" + block{
 						o + "std::for_each(@obj@.m_@prop@.vptr(), @obj@.m_@prop@.vptr() @obj@.size_used, "
 						"[t = this, &total_size](@type@ const& obj){ total_size += t->serialize_size(obj); });";
-						o + "dcon::record_header header(total_size, \"@type@\", \"@obj@\", \"@prop@\");";
-						o + "total_size += header.serialize_size();";
+						o + "dcon::record_header iheader(total_size, \"@type@\", \"@obj@\", \"@prop@\");";
+						o + "total_size += iheader.serialize_size();";
 					};
 				} else {
 					o + "if(serialize_selection.@obj@_@prop@)" + block{
-						o + "dcon::record_header header(sizeof(@type@) * @obj@.size_used, \"@type@\", \"@obj@\", \"@prop@\");";
-						o + "total_size += header.serialize_size();";
+						o + "dcon::record_header iheader(sizeof(@type@) * @obj@.size_used, \"@type@\", \"@obj@\", \"@prop@\");";
+						o + "total_size += iheader.serialize_size();";
 						o + "total_size += sizeof(@type@) * @obj@.size_used;";
 					};
 				}
@@ -1943,12 +1961,10 @@ basic_builder& make_serialize(basic_builder& o, file_def const& parsed_file) {
 						o + substitute{ "prop", iob.property_name } +substitute{ "type", iob.type_name };
 						o + substitute{ "u_type", size_to_tag_type(iob.related_to->size) };
 
-						o + inline_block{
-							o + "dcon::record_header header(sizeof(@type@_id) * @obj@.size_used, \"@u_type@\", \"@obj@\", \"@prop@\");";
-							o + "header.serialize(output_buffer);";
-							o + "memcpy(reinterpret_cast<@type@_id*>(output_buffer), @obj@.m_@prop@.vptr(), sizeof(@type@_id) * @obj@.size_used);";
-							o + "output_buffer += sizeof(@type@_id) * @obj@.size_used;";
-						};
+						o + "dcon::record_header iheader(sizeof(@type@_id) * @obj@.size_used, \"@u_type@\", \"@obj@\", \"@prop@\");";
+						o + "iheader.serialize(output_buffer);";
+						o + "memcpy(reinterpret_cast<@type@_id*>(output_buffer), @obj@.m_@prop@.vptr(), sizeof(@type@_id) * @obj@.size_used);";
+						o + "output_buffer += sizeof(@type@_id) * @obj@.size_used;";
 					}
 				}
 
@@ -2144,11 +2160,14 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 
 								//redo free list
 								o + "if(serialize_selection.@obj@__index == true)" + block{
+									o + "@obj@.size_used = 0;";
 									o + "@obj@.first_free = @obj@_id();";
-									o + "for(int32_t j = @obj_sz@; j >= 0; --j)" + block{
+									o + "for(int32_t j = @obj_sz@ - 1; j > 0; --j)" + block{
 										o + "if(@obj@.m__index.vptr()[j] != @obj@_id(@u_type@(j)))" + block{
 											o + "@obj@.m__index.vptr()[j] = @obj@.first_free;";
 											o + "@obj@.first_free = @obj@_id(@u_type@(j));";
+										} +append{"else"} +block{
+											o + "@obj@.size_used = std::max(@obj@.size_used, uint32_t(j));";
 										};
 									};
 								};

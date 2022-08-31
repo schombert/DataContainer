@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="docs">
+      <UniqueIdentifier>{0a7af04a-d655-48f4-8ba9-725074e16ef3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common_types.hpp">
@@ -35,14 +38,32 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\ve_documentation.md" />
-    <None Include="..\LICENSE.md" />
-    <None Include="..\file_format_documentation.md" />
-    <None Include="..\serialization.md" />
-    <None Include="..\getting_started.md" />
-    <None Include="..\objects_and_properties.md" />
-    <None Include="..\overview.md" />
-    <None Include="..\relationships.md" />
-    <None Include="..\multithreading.md" />
+    <None Include="..\file_format_documentation.md">
+      <Filter>docs</Filter>
+    </None>
+    <None Include="..\getting_started.md">
+      <Filter>docs</Filter>
+    </None>
+    <None Include="..\LICENSE.md">
+      <Filter>docs</Filter>
+    </None>
+    <None Include="..\multithreading.md">
+      <Filter>docs</Filter>
+    </None>
+    <None Include="..\objects_and_properties.md">
+      <Filter>docs</Filter>
+    </None>
+    <None Include="..\overview.md">
+      <Filter>docs</Filter>
+    </None>
+    <None Include="..\relationships.md">
+      <Filter>docs</Filter>
+    </None>
+    <None Include="..\serialization.md">
+      <Filter>docs</Filter>
+    </None>
+    <None Include="..\ve_documentation.md">
+      <Filter>docs</Filter>
+    </None>
   </ItemGroup>
 </Project>

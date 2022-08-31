@@ -25,8 +25,6 @@
 #define RELEASE_INLINE inline
 #endif
 
-#pragma warning( push )
-#pragma warning( disable : 4324)
 
 #ifdef __AVX2__
 #include "ve_avx2.hpp"
@@ -38,7 +36,6 @@
 #endif
 #endif
 
-#pragma warning( pop ) 
 
 namespace ve {
 
@@ -73,10 +70,10 @@ namespace ve {
 		RELEASE_INLINE value_to_vector_type<T> get(tagged_vector<index_type> i) const noexcept { return ve::load(i, vptr()); }
 
 		RELEASE_INLINE void set(index_type i, T value) noexcept { vptr()[i.index()] = value; }
-		RELEASE_INLINE void set(contiguous_tags<index_type> i, value_to_vector_type<T> values) noexcept { ve::store(i, vptr(), values); }
-		RELEASE_INLINE void set(unaligned_contiguous_tags<index_type> i, value_to_vector_type<T> values) noexcept { ve::store(i, vptr(), values); }
-		RELEASE_INLINE void set(partial_contiguous_tags<index_type> i, value_to_vector_type<T> values) noexcept { ve::store(i, vptr(), values); }
-		RELEASE_INLINE void set(tagged_vector<index_type> i, value_to_vector_type<T> values) noexcept { ve::store(i, vptr(), values); }
+		RELEASE_INLINE void set(contiguous_tags<index_type> i, value_to_vector_type<T> vin) noexcept { ve::store(i, vptr(), vin); }
+		RELEASE_INLINE void set(unaligned_contiguous_tags<index_type> i, value_to_vector_type<T> vin) noexcept { ve::store(i, vptr(), vin); }
+		RELEASE_INLINE void set(partial_contiguous_tags<index_type> i, value_to_vector_type<T> vin) noexcept { ve::store(i, vptr(), vin); }
+		RELEASE_INLINE void set(tagged_vector<index_type> i, value_to_vector_type<T> vin) noexcept { ve::store(i, vptr(), vin); }
 
 	};
 

@@ -35,6 +35,10 @@ The `include` key expects a single parameter. Each occurrence of this key will r
 
 The `global` key expects a single parameter. Each occurrence of this key will result in an additional line at the end of the generated `data_container` class, with the verbatim contents of the `global` parameter. This may be necessary if you want to access any outside information from within a user-defined hook function or conversion routine, since as member functions of `data_container` they can see any member variables added by a `global` key. For example, `global{my_data_type* global_pointer = nullptr;}` will result in the generated `data_container` having an additional public member variable named `global_pointer` of type `my_data_type*`;
 
+### `make_index`
+
+The `make_index` key expects two parameters. Each occurrence of this key will cause the generator to create an additional strongly typed index class with name equal to the first parameter and underlying index type equal to the second parameter. Note that each object and relationship will have a strongly typed index generated for it automatically.
+
 ### `load_save`
 
 The `load_save` key expects a single parameter that will in turn be processed as a sequence of sub-keys with their own parameters. These sub-keys must be either one of the following four options: `only_objects`, `exclude_objects`, `only_properties`, and `exclude_properties`, each of which may come with one or more parameters, or be `name` with a single parameter. These sub-keys collectively define the name of a serialization record and the objects and properties that it will write out. (See [serialization](serialization.md) for more details.)
@@ -43,7 +47,7 @@ For example:
 
 ```
 load_save{
-	name{store_standard}
+name{store_standard}
 	only_objects{standard}{bonus}
 	exclude_properties{discard}
 }
