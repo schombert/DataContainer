@@ -5,6 +5,8 @@
 #include <vector>
 #include <algorithm>
 #include <cassert>
+#include <memory>
+#include "common_types.hpp"
 #ifndef DCON_NO_VE
 #include "ve.hpp"
 #endif
@@ -612,7 +614,7 @@ namespace car_owner_basic {
 		//
 		// container pop_back for car
 		//
-		void car_pop_back() {
+		void pop_back_car() {
 			if(car.size_used == 0) return;
 			car_id id_removed(car_id::value_base_t(car.size_used - 1));
 			delete_car_ownership(id_removed);
@@ -627,7 +629,11 @@ namespace car_owner_basic {
 		// container resize for car
 		//
 		void car_resize(uint32_t new_size) {
+			#ifndef DCON_USE_EXCEPTIONS
 			if(new_size > 1200) std::abort();
+			#else
+			if(new_size > 1200) throw dcon::out_of_space{};
+			#endif
 			const uint32_t old_size = car.size_used;
 			if(new_size < old_size) {
 				std::fill_n(car.m_wheels.vptr() + new_size, old_size - new_size, int32_t{});
@@ -644,7 +650,11 @@ namespace car_owner_basic {
 		//
 		car_id create_car() {
 			car_id new_id(car_id::value_base_t(car.size_used));
+			#ifndef DCON_USE_EXCEPTIONS
 			if(car.size_used >= 1200) std::abort();
+			#else
+			if(car.size_used >= 1200) throw dcon::out_of_space{};
+			#endif
 			car_ownership.size_used = car.size_used + 1;
 			++car.size_used;
 			return new_id;
@@ -656,7 +666,7 @@ namespace car_owner_basic {
 		//
 		// container pop_back for person
 		//
-		void person_pop_back() {
+		void pop_back_person() {
 			if(person.size_used == 0) return;
 			person_id id_removed(person_id::value_base_t(person.size_used - 1));
 			person_remove_all_car_ownership_as_owner(id_removed);
@@ -668,7 +678,11 @@ namespace car_owner_basic {
 		// container resize for person
 		//
 		void person_resize(uint32_t new_size) {
+			#ifndef DCON_USE_EXCEPTIONS
 			if(new_size > 100) std::abort();
+			#else
+			if(new_size > 100) throw dcon::out_of_space{};
+			#endif
 			const uint32_t old_size = person.size_used;
 			if(new_size < old_size) {
 				std::fill_n(person.m_age.vptr() + new_size, old_size - new_size, int32_t{});
@@ -688,7 +702,11 @@ namespace car_owner_basic {
 		//
 		person_id create_person() {
 			person_id new_id(person_id::value_base_t(person.size_used));
+			#ifndef DCON_USE_EXCEPTIONS
 			if(person.size_used >= 100) std::abort();
+			#else
+			if(person.size_used >= 100) throw dcon::out_of_space{};
+			#endif
 			++person.size_used;
 			return new_id;
 		}
@@ -700,7 +718,11 @@ namespace car_owner_basic {
 		// container resize for car_ownership
 		//
 		void car_ownership_resize(uint32_t new_size) {
+			#ifndef DCON_USE_EXCEPTIONS
 			if(new_size > 1200) std::abort();
+			#else
+			if(new_size > 1200) throw dcon::out_of_space{};
+			#endif
 			const uint32_t old_size = car_ownership.size_used;
 			if(new_size < old_size) {
 				std::fill_n(car_ownership.m_owner.vptr() + 0, old_size, person_id{});
@@ -946,10 +968,12 @@ namespace car_owner_basic {
 				header.serialize(output_buffer);
 				*(reinterpret_cast<uint32_t*>(output_buffer)) = car_ownership.size_used;
 				output_buffer += sizeof(uint32_t);
-				dcon::record_header iheader(sizeof(person_id) * car_ownership.size_used, "uint8_t", "car_ownership", "owner");
-				iheader.serialize(output_buffer);
-				memcpy(reinterpret_cast<person_id*>(output_buffer), car_ownership.m_owner.vptr(), sizeof(person_id) * car_ownership.size_used);
-				output_buffer += sizeof(person_id) * car_ownership.size_used;
+				{
+					dcon::record_header iheader(sizeof(person_id) * car_ownership.size_used, "uint8_t", "car_ownership", "owner");
+					iheader.serialize(output_buffer);
+					memcpy(reinterpret_cast<person_id*>(output_buffer), car_ownership.m_owner.vptr(), sizeof(person_id) * car_ownership.size_used);
+					output_buffer += sizeof(person_id) * car_ownership.size_used;
+				}
 				dcon::record_header headerb(0, "$", "car_ownership", "$index_end");
 				headerb.serialize(output_buffer);
 			}

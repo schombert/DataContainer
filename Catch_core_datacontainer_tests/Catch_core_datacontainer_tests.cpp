@@ -6,6 +6,7 @@
 #include "car_owner_basic.hpp"
 #include "car_owner_basic2.hpp"
 #include "car_owner_basic3.hpp"
+#include "expandable_test.hpp"
 TEST_CASE("simple case", "[core_datacontainer_tests]") {
 	auto ptr = std::make_unique< car_owner_basic::data_container >();
 	
@@ -32,7 +33,7 @@ TEST_CASE("simple case", "[core_datacontainer_tests]") {
 	REQUIRE(ptr->car_get_wheels(new_car) == 4);
 	REQUIRE(ptr->car_get_resale_value(new_car) == 100.5f);
 
-	ptr->car_pop_back();
+	ptr->pop_back_car();
 	REQUIRE(ptr->car_size() == 0);
 	REQUIRE(ptr->car_get_wheels(new_car) == 0);
 	REQUIRE(ptr->car_get_resale_value(new_car) == 0.0f);
@@ -671,3 +672,71 @@ TEST_CASE("for erasable remove in the other direction", "[core_datacontainer_tes
 	REQUIRE(found_car == false);
 }
 
+TEST_CASE("objects and relationships with expandable storage", "[core_datacontainer_tests]") {
+	auto ptr = std::make_unique< ex1::data_container >();
+
+	auto ta = ptr->create_top();
+	auto tb = ptr->create_top();
+	auto tc = ptr->create_top();
+	auto td = ptr->create_top();
+	auto te = ptr->create_top();
+	auto tf = ptr->create_top();
+
+	auto ba = ptr->create_bottom();
+	auto bb = ptr->create_bottom();
+	auto bc = ptr->create_bottom();
+	auto bd = ptr->create_bottom();
+	auto be = ptr->create_bottom();
+	auto bf = ptr->create_bottom();
+	auto bg = ptr->create_bottom();
+
+	REQUIRE(bool(ptr->try_create_lr_relation(ta, bc)));
+	REQUIRE(bool(ptr->try_create_lr_relation(ta, bd)));
+	REQUIRE(bool(ptr->try_create_lr_relation(ta, be)));
+	REQUIRE(bool(ptr->try_create_lr_relation(tb, ba)));
+	REQUIRE(bool(ptr->try_create_lr_relation(tb, bc)));
+	REQUIRE(bool(ptr->try_create_lr_relation(tc, bf)));
+	REQUIRE(bool(ptr->try_create_lr_relation(td, bc)));
+	REQUIRE(bool(ptr->try_create_lr_relation(td, bd)));
+	REQUIRE(bool(ptr->try_create_lr_relation(te, bf)));
+	REQUIRE(bool(ptr->try_create_lr_relation(tf, bc)));
+
+	{
+		auto rng = ptr->bottom_range_of_lr_relation(bc);
+		REQUIRE(rng.second - rng.first == 4);
+		REQUIRE(ptr->bottom_has_left_from_lr_relation(bc, tb));
+	}
+
+	{
+		auto rng = ptr->bottom_range_of_lr_relation(bd);
+		REQUIRE(rng.second - rng.first == 2);
+		REQUIRE(ptr->bottom_has_left_from_lr_relation(bc, ta));
+		REQUIRE(!ptr->bottom_has_left_from_lr_relation(bc, te));
+	}
+
+	{
+		auto rng = ptr->top_range_of_lr_relation(tc);
+		REQUIRE(rng.second - rng.first == 1);
+		REQUIRE(ptr->top_has_right_from_lr_relation(tc, bf));
+	}
+
+	{
+		auto rng = ptr->top_range_of_lr_relation(ta);
+		REQUIRE(rng.second - rng.first == 3);
+		REQUIRE(ptr->top_has_right_from_lr_relation(ta, bd));
+	}
+
+	ptr->top_remove_all_lr_relation(tb);
+
+	{
+		auto rng = ptr->bottom_range_of_lr_relation(bc);
+		REQUIRE(rng.second - rng.first == 3);
+		REQUIRE(!ptr->bottom_has_left_from_lr_relation(bc, tb));
+	}
+
+	{
+		auto rng = ptr->top_range_of_lr_relation(tb);
+		REQUIRE(rng.second - rng.first == 0);
+		REQUIRE(!ptr->top_has_right_from_lr_relation(ta, ba));
+	}
+}

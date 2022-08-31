@@ -1,0 +1,47 @@
+namespace{ex1}
+
+object{
+	name{top}
+	storage_type{compactable}
+	size{ expandable }
+	
+	property{
+		name{wheels}
+		type{int32_t}
+	}
+}
+
+object{
+	name{bottom}
+	storage_type{contiguous}
+	size{ expandable }
+	
+	property{
+		name{legs}
+		type{int32_t}
+	}
+}
+
+relationship{
+	name{lr_relation}
+	size{ expandable }
+	storage_type{erasable}
+
+	link{
+		object{top}
+		name{left}
+		type{many}
+		index_storage{std_vector}
+	}
+	link{
+		object{bottom}
+		name{right}
+		type{many}
+		index_storage{std_vector}
+	}
+	
+	property{
+		name{thingies}
+		type{int32_t}
+	}
+}

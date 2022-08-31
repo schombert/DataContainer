@@ -1,0 +1,16 @@
+object{
+	name{thingy}
+	storage_type{compactable}
+	size{1200}
+	
+	hook{create}
+	hook{delete}
+	hook{move}
+	
+	property{
+		name{some_value}
+		type{int32_t}
+	}
+}
+
+global{int32_t counter = 0;}

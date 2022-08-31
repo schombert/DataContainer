@@ -4,7 +4,7 @@ object{
 	name{car}
 	storage_type{contiguous}
 	size{ 1200 }
-	
+
 	property{
 		name{wheels}
 		type{int32_t}

@@ -774,7 +774,7 @@ basic_builder& make_pop_back(basic_builder& o, relationship_object_def const& co
 
 	o + heading{ "container pop_back for @obj@" };
 
-	o + "void @obj@_pop_back()" + block{
+	o + "void pop_back_@obj@()" + block{
 		o + "if(@obj@.size_used == 0) return;";
 		o + "@obj@_id id_removed(@obj@_id::value_base_t(@obj@.size_used - 1));";
 
@@ -795,7 +795,7 @@ basic_builder& make_pop_back(basic_builder& o, relationship_object_def const& co
 			o + substitute{ "rel_name", cr.relation_name } +substitute{"rel_prop_name", cr.property_name };
 			if(cr.as_primary_key) {
 				if(cob.is_expandable) {
-					o + "@rel_name@_pop_back();";
+					o + "pop_back_@rel_name@();";
 				} else {
 					o + "delete_@rel_name@(id_removed);";
 					o + "@rel_name@.size_used = @obj@.size_used - 1;";
@@ -946,7 +946,11 @@ basic_builder& make_object_resize(basic_builder& o, relationship_object_def cons
 
 	o + "void @obj@_resize(uint32_t new_size)" + block{
 		if(!cob.is_expandable) {
+			o + "#ifndef DCON_USE_EXCEPTIONS";
 			o + "if(new_size > @obj_sz@) std::abort();";
+			o + "#else";
+			o + "if(new_size > @obj_sz@) throw dcon::out_of_space{};";
+			o + "#endif";
 		}
 		o + "const uint32_t old_size = @obj@.size_used;";
 		o + "if(new_size < old_size)" + block{ // contracting
@@ -1218,7 +1222,7 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 	o + "void delete_@obj@(@obj@_id id)" + block{ 
 		o + "@obj@_id id_removed = id;";
 		o + "@obj@_id last_id(@obj@_id::value_base_t(@obj@.size_used - 1));";
-		o + "if(id_removed == last_id) { @obj@_pop_back(); return; }";
+		o + "if(id_removed == last_id) { pop_back_@obj@(); return; }";
 		if(cob.hook_delete)
 			o + "on_delete_@obj@(id_removed);";
 
@@ -1272,7 +1276,7 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 				o + "delete_@rel@(id_removed);";
 				o + "internal_move_relationship_@rel@(last_id, id_removed);";
 				if(cob.is_expandable) {
-					o + "@rel@_pop_back();";
+					o + "pop_back_@rel@();";
 				} else {
 					o + "@rel@.size_used = @obj@.size_used - 1;";
 				}
@@ -1467,7 +1471,11 @@ basic_builder& make_non_erasable_create(basic_builder& o, relationship_object_de
 		if(cob.is_expandable) {
 			expandable_push_back(o, cob);
 		} else {
+			o + "#ifndef DCON_USE_EXCEPTIONS";
 			o + "if(@obj@.size_used >= @size@) std::abort();";
+			o + "#else";
+			o + "if(@obj@.size_used >= @size@) throw dcon::out_of_space{};";
+			o + "#endif";
 			increase_size(o, cob);
 		}
 		if(cob.hook_create)
@@ -1561,7 +1569,11 @@ basic_builder& make_erasable_delete(basic_builder& o, relationship_object_def co
 basic_builder& erasable_set_new_id(basic_builder& o, relationship_object_def const& cob) {
 	o + substitute{ "t_obj", cob.name };
 	if(!cob.is_expandable) {
+		o + "#ifndef DCON_USE_EXCEPTIONS";
 		o + "if(!bool(@t_obj@.first_free)) std::abort();";
+		o + "#else";
+		o + "if(!bool(@t_obj@.first_free)) throw dcon::out_of_space{};";
+		o + "#endif";
 		o + "@t_obj@_id new_id = @t_obj@.first_free;";
 		o + "@t_obj@.first_free = @t_obj@.m__index.vptr()[@t_obj@.first_free.index()];";
 		o + "@t_obj@.m__index.vptr()[new_id.index()] = new_id;";
@@ -1571,23 +1583,21 @@ basic_builder& erasable_set_new_id(basic_builder& o, relationship_object_def con
 		o + "if(expanded)" + block{
 			o + "new_id = @t_obj@_id(@t_obj@_id::value_base_t(@t_obj@.size_used));";
 			o + "@t_obj@.m__index.values.push_back(new_id);";
+			expandable_push_back(o, cob);
 		} +append{ "else" } +block{
 			o + "@t_obj@.first_free = @t_obj@.m__index.vptr()[@t_obj@.first_free.index()];";
 			o + "@t_obj@.m__index.vptr()[new_id.index()] = new_id;";
+			o + "@t_obj@.size_used = std::max(@t_obj@.size_used, uint32_t(new_id.index() + 1));";
 		};
 	}
-	o + "@t_obj@.size_used = std::max(@t_obj@.size_used, uint32_t(new_id.index() + 1));";
+	
 	for(auto& cr : cob.relationships_involved_in) {
 		if(cr.as_primary_key) {
 			o + substitute{ "rel", cr.relation_name };
 			o + "@rel@.size_used = @t_obj@.size_used;";
 		}
 	}
-	if(cob.is_expandable) {
-		o + "if(expanded)" + block{
-			expandable_push_back(o, cob);
-		};
-	}
+	
 
 	return o;
 }
@@ -1710,7 +1720,11 @@ basic_builder& make_relation_try_create(basic_builder& o, relationship_object_de
 			o + "@obj@_id new_id = @obj@_id(@obj@_id::value_base_t(@obj@.size_used));";
 
 			if(!cob.is_expandable) {
-				o + "if@obj@.size_used >= @size@) std::abort();";
+				o + "#ifndef DCON_USE_EXCEPTIONS";
+				o + "if(@obj@.size_used >= @size@) std::abort();";
+				o + "#else";
+				o + "if(@obj@.size_used >= @size@) throw dcon::out_of_space{};";
+				o + "#endif";
 				increase_size(o, cob);
 			} else {
 				expandable_push_back(o, cob);
@@ -1753,7 +1767,11 @@ basic_builder& make_relation_force_create(basic_builder& o, relationship_object_
 			o + "@obj@_id new_id = @obj@_id(@obj@_id::value_base_t(@obj@.size_used));";
 
 			if(!cob.is_expandable) {
-				o + "if@obj@.size_used >= @size@) std::abort();";
+				o + "#ifndef DCON_USE_EXCEPTIONS";
+				o + "if(@obj@.size_used >= @size@) std::abort();";
+				o + "#else";
+				o + "if(@obj@.size_used >= @size@) throw dcon::out_of_space{};";
+				o + "#endif";
 				increase_size(o, cob);
 			} else {
 				expandable_push_back(o, cob);
@@ -1916,9 +1934,11 @@ basic_builder& make_serialize_size(basic_builder& o, file_def const& parsed_file
 							o + "total_size += sizeof(@type@) * (rng.second - rng.first);";
 						} +append{");"};
 						
-						o + "total_size += @vtype_name_sz@;";
-						o + "dcon::record_header iheader(total_size, \"stable_mk_2_tag\", \"@obj@\", \"@prop@\");";
-						o + "total_size += iheader.serialize_size();";
+						o + inline_block{
+							o + "total_size += @vtype_name_sz@;";
+							o + "dcon::record_header iheader(total_size, \"stable_mk_2_tag\", \"@obj@\", \"@prop@\");";
+							o + "total_size += iheader.serialize_size();";
+						};
 					};
 				} else if(prop.type == property_type::object) {
 					o + "if(serialize_selection.@obj@_@prop@)" + block{
@@ -1961,10 +1981,12 @@ basic_builder& make_serialize(basic_builder& o, file_def const& parsed_file) {
 						o + substitute{ "prop", iob.property_name } +substitute{ "type", iob.type_name };
 						o + substitute{ "u_type", size_to_tag_type(iob.related_to->size) };
 
-						o + "dcon::record_header iheader(sizeof(@type@_id) * @obj@.size_used, \"@u_type@\", \"@obj@\", \"@prop@\");";
-						o + "iheader.serialize(output_buffer);";
-						o + "memcpy(reinterpret_cast<@type@_id*>(output_buffer), @obj@.m_@prop@.vptr(), sizeof(@type@_id) * @obj@.size_used);";
-						o + "output_buffer += sizeof(@type@_id) * @obj@.size_used;";
+						o + inline_block{
+							o + "dcon::record_header iheader(sizeof(@type@_id) * @obj@.size_used, \"@u_type@\", \"@obj@\", \"@prop@\");";
+							o + "iheader.serialize(output_buffer);";
+							o + "memcpy(reinterpret_cast<@type@_id*>(output_buffer), @obj@.m_@prop@.vptr(), sizeof(@type@_id) * @obj@.size_used);";
+							o + "output_buffer += sizeof(@type@_id) * @obj@.size_used;";
+						};
 					}
 				}
 

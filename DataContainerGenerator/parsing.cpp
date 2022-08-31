@@ -442,7 +442,7 @@ relationship_object_def parse_relationship(char const * start, char const * end,
 				} else if(extracted.values[0].to_string() == "delete") {
 					result.hook_delete = true;
 				} else if(extracted.values[0].to_string() == "move") {
-					result.hook_delete = true;
+					result.hook_move = true;
 				} else {
 					err_out.add(std::string("unknown parameter \"") + extracted.values[0].to_string() + "\" passed to hook on line "
 						+ std::to_string(calculate_line_from_position(start, extracted.key.start)));
@@ -520,7 +520,7 @@ relationship_object_def parse_object(char const * start, char const * end, char 
 				} else if(extracted.values[0].to_string() == "delete") {
 					result.hook_delete = true;
 				} else if(extracted.values[0].to_string() == "move") {
-					result.hook_delete = true;
+					result.hook_move = true;
 				} else {
 					err_out.add(std::string("unknown parameter \"") + extracted.values[0].to_string() + "\" passed to hook on line "
 						+ std::to_string(calculate_line_from_position(start, extracted.key.start)));

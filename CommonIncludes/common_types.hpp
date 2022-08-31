@@ -47,7 +47,7 @@ namespace dcon {
 		return (v[real_index].v & (1ui32 << sub_index)) != 0;
 	}
 
-	bool char_span_equals_str(char const* start, char const* end, char const* n) {
+	inline bool char_span_equals_str(char const* start, char const* end, char const* n) {
 		while(start != end) {
 			if(*start != *n)
 				return false;
@@ -74,6 +74,10 @@ namespace dcon {
 			return static_cast<int32_t>(static_cast<signed_type>( id ) );
 		}
 	}
+
+#ifdef DCON_USE_EXCEPTIONS
+	struct out_of_space {};
+#endif
 
 	template<typename T>
 	class local_vector {
@@ -406,7 +410,11 @@ namespace dcon {
 
 
 			if(storage.first_free >= memory_size) {
+#ifndef DCON_USE_EXCEPTIONS
 				std::abort();
+#else
+				throw out_of_space{};
+#endif
 			}
 
 

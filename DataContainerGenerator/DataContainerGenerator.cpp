@@ -151,6 +151,10 @@ int main(int argc, char *argv[]) {
 					r.size = r.primary_key.points_to->size;
 					r.store_type = storage_type::contiguous;
 					r.is_expandable = r.primary_key.points_to->is_expandable;
+				} else {
+					if(r.store_type != storage_type::erasable && r.store_type != storage_type::compactable)
+						error_to_file(output_file_name, std::string("Relationship ") + r.name + 
+							" has no primary key, and thus must have either a compactable or erasable storage type to provide a delete function.");
 				}
 
 			} // end if is a relationship
@@ -198,6 +202,8 @@ int main(int argc, char *argv[]) {
 		output += "#include <vector>\n";
 		output += "#include <algorithm>\n";
 		output += "#include <cassert>\n";
+		output += "#include <memory>\n";
+		output += "#include \"common_types.hpp\"\n";
 		output += "#ifndef DCON_NO_VE\n";
 		output += "#include \"ve.hpp\"\n";
 		output += "#endif\n";
