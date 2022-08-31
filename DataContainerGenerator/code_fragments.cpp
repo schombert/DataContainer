@@ -131,6 +131,7 @@ basic_builder& make_hooked_getters(basic_builder& o, std::string const& object_n
 	
 	if(ht == hook_type::bitfield) {
 		o + "bool @obj@_get_@prop@(@obj@_id id) const;";
+		o + "#ifndef DCON_NO_VE";
 		o + "ve::vbitfield_type @obj@_get_@prop@(@vector_position@<@obj@_id> id) const" + block{
 			o + "ve::vbitfield_type r; r.v = 0;";
 			o + "for(int32_t i = 0; i < ve::vector_size; ++i)" + block{
@@ -152,8 +153,10 @@ basic_builder& make_hooked_getters(basic_builder& o, std::string const& object_n
 			};
 			o + "return r;";
 		};
+		o + "#endif";
 	} else if(ht == hook_type::vectorizable) {
 		o + "@type@ @obj@_get_@prop@(@obj@_id id) const;";
+		o + "#ifndef DCON_NO_VE";
 		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@(@vector_position@<@obj@_id> id) const" + block{
 			o + "return ve::apply([t = this](@obj@_id i){ return t->@obj@_get_@prop@(i); }, id);";
 		};
@@ -162,6 +165,7 @@ basic_builder& make_hooked_getters(basic_builder& o, std::string const& object_n
 		};
 		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@(ve::tagged_vector<@obj@_id> id) const" + block{
 			o + "return ve::apply([t = this](@obj@_id i){ return t->@obj@_get_@prop@(i); }, id);";
+		o + "#endif";
 		};
 	} else {
 		o + "@type@ @obj@_get_@prop@(@obj@_id id) const;";
@@ -179,6 +183,7 @@ basic_builder& make_hooked_setters(basic_builder& o, std::string const& object_n
 
 	if(ht == hook_type::bitfield) {
 		o + "void @obj@_set_@prop@(@obj@_id id, bool value);";
+		o + "#ifndef DCON_NO_VE";
 		o + "void @obj@_set_@prop@(@vector_position@<@obj@_id> id, ve::vbitfield_type value)" + block{
 			o + "for(int32_t i = 0; i < ve::vector_size; ++i)" + block{
 				o + "@obj@_set_@prop@(@obj@_id(id.value + i), (value.v & uint8_t(1 << i)) != 0);";
@@ -194,8 +199,10 @@ basic_builder& make_hooked_setters(basic_builder& o, std::string const& object_n
 				o + "@obj@_set_@prop@(id[i], (value.v & uint8_t(1 << i)) != 0);";
 			};
 		};
+		o + "#endif";
 	} else if(ht == hook_type::vectorizable) {
 		o + "void @obj@_set_@prop@(@obj@_id id, @type@ value);";
+		o + "#ifndef DCON_NO_VE";
 		o + "void @obj@_set_@prop@(@vector_position@<@obj@_id> id, ve::value_to_vector_type<@type@> value)" + block{
 			o + "ve::apply(value, [t = this](@obj@_id i, @type@ v){ t->@obj@_set_@prop@(i, v); }, id);";
 		};
@@ -204,6 +211,7 @@ basic_builder& make_hooked_setters(basic_builder& o, std::string const& object_n
 		};
 		o + "void @obj@_set_@prop@(ve::tagged_vector<@obj@_id> id, ve::value_to_vector_type<@type@> value)" + block{
 			o + "ve::apply(value, [t = this](@obj@_id i, @type@ v){ t->@obj@_set_@prop@(i, v); }, id);";
+		o + "#endif";
 		};
 	} else {
 		o + "void @obj@_set_@prop@(@obj@_id id, @type@ const& value);";
@@ -216,6 +224,7 @@ basic_builder& make_hooked_setters(basic_builder& o, std::string const& object_n
 basic_builder& make_vectorizable_getters(basic_builder& o, std::string const& type, bool is_expandable) {
 	o + substitute{ "vector_position", is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags" }
 		+ substitute{"type", type};
+	o + "#ifndef DCON_NO_VE";
 	o + "DCON_RELEASE_INLINE @type@ @obj@_get_@prop@(@vector_position@<@obj@_id> id) const noexcept" + block{
 		o + "return ve::load(id, @obj@.m_@prop@.vptr());";
 	};
@@ -225,6 +234,7 @@ basic_builder& make_vectorizable_getters(basic_builder& o, std::string const& ty
 	o + "DCON_RELEASE_INLINE @type@ @obj@_get_@prop@(ve::tagged_vector<@obj@_id> id) const noexcept" + block{
 		o + "return ve::load(id, @obj@.m_@prop@.vptr());";
 	};
+	o + "#endif";
 
 	return o;
 }
@@ -233,6 +243,7 @@ basic_builder& make_vectorizable_setters(basic_builder& o, std::string const& ty
 	o + substitute{ "vector_position", is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags" }
 	+substitute{ "type", type };
 
+	o + "#ifndef DCON_NO_VE";
 	o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(@vector_position@<@obj@_id> id, @type@ values) noexcept" + block{
 		o + "ve::store(id, @obj@.m_@prop@.vptr(), values);";
 	};
@@ -242,6 +253,7 @@ basic_builder& make_vectorizable_setters(basic_builder& o, std::string const& ty
 	o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(ve::tagged_vector<@obj@_id> id, @type@ values) noexcept" + block{
 		o + "ve::store(id, @obj@.m_@prop@.vptr(), values);";
 	};
+	o + "#endif";
 
 	return o;
 }
@@ -414,6 +426,7 @@ basic_builder& make_relation_pk_getters_setters(basic_builder& o, std::string co
 		o + "return id;";
 	};
 
+	o + "#ifndef DCON_NO_VE";
 	o + "DCON_RELEASE_INLINE ve::tagged_vector<@rel@_id> @rel@_get_@prop@(@vector_position@<@rel@_id> id) const noexcept" + block{
 		o + "return ve::apply([](@rel@_id i){ return i; }, id);";
 	};
@@ -425,6 +438,7 @@ basic_builder& make_relation_pk_getters_setters(basic_builder& o, std::string co
 	o + "DCON_RELEASE_INLINE ve::tagged_vector<@rel@_id> @rel@_get_@prop@(ve::tagged_vector<@rel@_id> id) const noexcept" + block{
 		o + "return id;";
 	};
+	o + "#endif";
 
 	o + "void @rel@_set_@prop@(@rel@_id id, @rel@_id value) noexcept" + block{
 		o + "if(bool(value))" + block{
@@ -455,23 +469,25 @@ basic_builder& make_relation_pk_reverse_getters_setters(basic_builder& o, std::s
 		+ substitute{ "vector_position", is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags" }
 		+ substitute{ "as_suffix", skip_as ? std::string("") : std::string("_as_") + property_name };
 
-	o + "DCON_RELEASE_INLINE @rel@_id get_@rel@_from_@prop_type@@as_suffix@(@prop_type@_id id) const noexcept" + block{
+	o + "DCON_RELEASE_INLINE @rel@_id @prop_type@_get_@rel@@as_suffix@(@prop_type@_id id) const noexcept" + block{
 		o + "return id;";
 	};
 
-	o + "DCON_RELEASE_INLINE ve::tagged_vector<@rel@_id> get_@rel@_from_@prop_type@@as_suffix@"
+	o + "#ifndef DCON_NO_VE";
+	o + "DCON_RELEASE_INLINE ve::tagged_vector<@rel@_id> @prop_type@_get_@rel@@as_suffix@"
 		"(@vector_position@<@prop_type@_id> id) const noexcept" + block{
 		o + "return ve::apply([](@rel@_id i){ return i; }, id);";
 	};
-	o + "DCON_RELEASE_INLINE ve::tagged_vector<@rel@_id> get_@rel@_from_@prop_type@@as_suffix@"
+	o + "DCON_RELEASE_INLINE ve::tagged_vector<@rel@_id> @prop_type@_get_@rel@@as_suffix@"
 		"(ve::partial_contiguous_tags<@prop_type@_id> id) const noexcept" + block{
 		o + "return ve::apply([](@rel@_id i){ return i; }, id);";
 	};
 
-	o + "DCON_RELEASE_INLINE ve::tagged_vector<@rel@_id> get_@rel@_from_@prop_type@@as_suffix@"
+	o + "DCON_RELEASE_INLINE ve::tagged_vector<@rel@_id> @prop_type@_get_@rel@@as_suffix@"
 		"(ve::tagged_vector<@prop_type@_id> id) const noexcept" + block{
 		o + "return id;";
 	};
+	o + "#endif";
 
 	o + "DCON_RELEASE_INLINE void @prop_type@_remove_@rel@@as_suffix@(@prop_type@_id id) noexcept" + block{
 		o + "if(is_valid_@rel@(id))" + block{
@@ -530,18 +546,20 @@ basic_builder& make_relation_unique_non_pk_reverse_getters_setters(basic_builder
 		+substitute{ "vector_position", is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags" }
 		+substitute{ "as_suffix", skip_as ? std::string("") : std::string("_as_") + property_name };
 
-	o + "DCON_RELEASE_INLINE @obj@_id get_@obj@_from_@type@@as_suffix@(@type@_id id) const noexcept" + block{
+	o + "DCON_RELEASE_INLINE @obj@_id @type@_get_@obj@@as_suffix@(@type@_id id) const noexcept" + block{
 		o + "return @obj@.m_link_back_@prop@.vptr()[id.index()];";
 	};
-	o + "DCON_RELEASE_INLINE ve::tagged_vector<@obj@_id> get_@obj@_from_@type@@as_suffix@"
+
+	o + "#ifndef DCON_NO_VE";
+	o + "DCON_RELEASE_INLINE ve::tagged_vector<@obj@_id> @type@_get_@obj@@as_suffix@"
 		"(@vector_position@<@type@_id> id) const noexcept" + block{
 		o + "return ve::load(id, @obj@.m_link_back_@prop@.vptr());";
 	};
-	o + "DCON_RELEASE_INLINE ve::tagged_vector<@obj@_id> get_@obj@_from_@type@@as_suffix@"
+	o + "DCON_RELEASE_INLINE ve::tagged_vector<@obj@_id> @type@_get_@obj@@as_suffix@"
 		"(partial_contiguous_tags<@type@_id> id) const noexcept" + block{
 		o + "return ve::load(id, @obj@.m_link_back_@prop@.vptr());";
 	};
-	o + "DCON_RELEASE_INLINE ve::tagged_vector<@obj@_id> get_@obj@_from_@type@@as_suffix@"
+	o + "DCON_RELEASE_INLINE ve::tagged_vector<@obj@_id> @type@_get_@obj@@as_suffix@"
 		"(tagged_vector<@type@_id> id) const noexcept" + block{
 		o + "return ve::load(id, @obj@.m_link_back_@prop@.vptr());";
 	};
@@ -550,6 +568,7 @@ basic_builder& make_relation_unique_non_pk_reverse_getters_setters(basic_builder
 			o + "delete_@obj@(backid);";
 		};
 	};
+	o + "#endif";
 
 	o + line_break{};
 	return o;
@@ -668,7 +687,7 @@ basic_builder& make_relation_many_reverse_getters_setters(basic_builder& o, std:
 			"(@type@_id id) const" + block{
 			o + "if(bool(id))" + block{
 				o + "auto& vref = @obj@.m_array_@prop@.vptr()[id.index()];";
-				o + "return std::pair<@obj@_id const*, @obj@_id const*>(&(*vref.begin()), &(*vref.end()));";
+				o + "return std::pair<@obj@_id const*, @obj@_id const*>(vref.data(), vref.data() + vref.size());";
 			} +append{"else"} +block{
 				o + "return std::pair<@obj@_id const*, @obj@_id const*>(nullptr, nullptr);";
 			};
@@ -2364,6 +2383,7 @@ basic_builder& make_relation_many_join_getters_setters(basic_builder& o, std::st
 					o + "if(list_pos == target) return true;";
 				}
 			};
+			o + "return false;";
 		} else if(indexed_as == list_type::array) {
 			o + "auto vrange = dcon::get_range(@rel@.@as_name@_storage, @rel@.m_array_@as_name@.vptr()[id.index()]);";
 			o + "for(auto pos = vrange.first; pos != vrange.second; ++pos)" + block{
@@ -2373,6 +2393,7 @@ basic_builder& make_relation_many_join_getters_setters(basic_builder& o, std::st
 					o + "if(*pos == target) return true;";
 				}
 			};
+			o + "return false;";
 		} else if(indexed_as == list_type::std_vector) {
 			o + "auto& vref = @rel@.m_array_@as_name@.vptr()[id.index()];";
 			o + "for(auto pos = vref.begin(); pos != vref.end(); ++pos)" + block{
@@ -2382,6 +2403,7 @@ basic_builder& make_relation_many_join_getters_setters(basic_builder& o, std::st
 					o + "if(*pos == target) return true;";
 				}
 			};
+			o + "return false;";
 		}
 	};
 	
@@ -2405,6 +2427,8 @@ basic_builder& make_relation_unique_non_pk_join_getters_setters(basic_builder& o
 				o + "return false;";
 			};
 		};
+
+		o + "#ifndef DCON_NO_VE";
 		o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> id) const" + block{
 			o + "auto ref_id = ve::load(id, @rel@.m_link_@as_name@.vptr())";
 			o + "return @rel@_get_@prop@(ref_id);";
@@ -2417,6 +2441,7 @@ basic_builder& make_relation_unique_non_pk_join_getters_setters(basic_builder& o
 			o + "auto ref_id = ve::load(id, @rel@.m_link_@as_name@.vptr())";
 			o + "return @rel@_get_@prop@(ref_id);";
 		};
+		o + "#endif";
 
 		o + "void @obj@_set_@prop@_from_@rel@(@obj@_id id, bool val)" + block{
 			o + "if(auto ref_id = @rel@.m_link_@as_name@.vptr()[id.index]; bool(ref_id))" + block{
@@ -2435,6 +2460,8 @@ basic_builder& make_relation_unique_non_pk_join_getters_setters(basic_builder& o
 				o + "return @type@{};";
 			};
 		};
+
+		o + "#ifndef DCON_NO_VE";
 		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> id) const" + block{
 			o + "auto ref_id = ve::load(id, @rel@.m_link_@as_name@.vptr())";
 			o + "return @rel@_get_@prop@(ref_id);";
@@ -2447,6 +2474,7 @@ basic_builder& make_relation_unique_non_pk_join_getters_setters(basic_builder& o
 			o + "auto ref_id = ve::load(id, @rel@.m_link_@as_name@.vptr())";
 			o + "return @rel@_get_@prop@(ref_id);";
 		};
+		o + "#endif";
 
 		o + "void @obj@_set_@prop@_from_@rel@(@obj@_id id, @type@ val)" + block{
 			o + "if(auto ref_id = @rel@.m_link_@as_name@.vptr()[id.index]; bool(ref_id))" + block{
@@ -2471,6 +2499,7 @@ basic_builder& make_relation_unique_pk_join_getters_setters(basic_builder& o, st
 		o + "bool @obj@_get_@prop@_from_@rel@(@obj@_id ref_id) const" + block{
 			o + "return @rel@_get_@prop@(ref_id);";
 		};
+		o + "#ifndef DCON_NO_VE";
 		o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> ref_id) const" + block{
 			o + "return @rel@_get_@prop@(ref_id);";
 		};
@@ -2480,6 +2509,7 @@ basic_builder& make_relation_unique_pk_join_getters_setters(basic_builder& o, st
 		o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> ref_id) const" + block{
 			o + "return @rel@_get_@prop@(ref_id);";
 		};
+		o + "#endif";
 		o + "void @obj@_set_@prop@_from_@rel@(@obj@_id ref_id, bool val)" + block{
 			o + "@rel@_set_@prop@(ref_id, val);";
 		};
@@ -2491,6 +2521,7 @@ basic_builder& make_relation_unique_pk_join_getters_setters(basic_builder& o, st
 		o + "@type@ @obj@_get_@prop@_from_@rel@(@obj@_id ref_id) const" + block{
 			o + "return @rel@_get_@prop@(ref_id);";
 		};
+		o + "#ifndef DCON_NO_VE";
 		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> ref_id) const" + block{
 			o + "return @rel@_get_@prop@(ref_id);";
 		};
@@ -2500,6 +2531,7 @@ basic_builder& make_relation_unique_pk_join_getters_setters(basic_builder& o, st
 		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> ref_id) const" + block{
 			o + "return @rel@_get_@prop@(ref_id);";
 		};
+		o + "#endif";
 
 		o + "void @obj@_set_@prop@_from_@rel@(@obj@_id ref_id, @type@ val)" + block{
 			o + "@rel@_set_@prop@(ref_id, val);";
@@ -2544,6 +2576,24 @@ basic_builder& make_join_getters_setters(basic_builder& o, relationship_object_d
 		}
 	}
 
+	o + line_break{};
+	return o;
+}
+
+basic_builder& make_iterate_over_objects(basic_builder& o, relationship_object_def const& obj) {
+	o + substitute{ "obj", obj.name };
+
+	o + "template <typename T>";
+	o + "DCON_RELEASE_INLINE void for_each_@obj@(T&& func)" + block{
+		o + "for(uint32_t i = 0; i < @obj@.size_used; ++i)" + block{
+			o + "@obj@_id tmp(@obj@_id::value_base_t(i));";
+			if(obj.store_type == storage_type::erasable) {
+				o + "if(@obj@.m__index.vptr()[tmp.index()] == tmp) func(tmp);";
+			} else {
+				o + "func(tmp);";
+			}
+		};
+	};
 	o + line_break{};
 	return o;
 }

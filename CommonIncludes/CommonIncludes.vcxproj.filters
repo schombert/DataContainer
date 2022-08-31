@@ -43,5 +43,6 @@
     <None Include="..\objects_and_properties.md" />
     <None Include="..\overview.md" />
     <None Include="..\relationships.md" />
+    <None Include="..\multithreading.md" />
   </ItemGroup>
 </Project>

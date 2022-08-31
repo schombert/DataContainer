@@ -134,6 +134,7 @@
     <None Include="..\file_format_documentation.md" />
     <None Include="..\getting_started.md" />
     <None Include="..\LICENSE.md" />
+    <None Include="..\multithreading.md" />
     <None Include="..\objects_and_properties.md" />
     <None Include="..\overview.md" />
     <None Include="..\relationships.md" />

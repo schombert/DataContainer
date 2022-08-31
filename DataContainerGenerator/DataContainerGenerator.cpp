@@ -198,7 +198,9 @@ int main(int argc, char *argv[]) {
 		output += "#include <vector>\n";
 		output += "#include <algorithm>\n";
 		output += "#include <cassert>\n";
+		output += "#ifndef DCON_NO_VE\n";
 		output += "#include \"ve.hpp\"\n";
+		output += "#endif\n";
 		for(auto& i : parsed_file.includes) {
 			output += "#include ";
 			output += i;
@@ -381,7 +383,6 @@ int main(int argc, char *argv[]) {
 
 		for(auto& ob : parsed_file.relationship_objects) {
 			const std::string id_name = (ob.primary_key.points_to ? ob.primary_key.points_to->name : ob.name) + "_id";
-			const std::string con_tags_type = ob.is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags";
 
 			//getters and setters
 			for(auto& p : ob.properties) {
@@ -474,8 +475,6 @@ int main(int argc, char *argv[]) {
 			*/
 
 		for(auto& r : parsed_file.relationship_objects) {
-			const std::string relation_id_name = r.name + "_id";
-			const std::string relation_con_tags_type = r.is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags";
 
 			for(auto& i : r.indexed_objects) {
 				if(i.index == index_type::at_most_one && r.primary_key == i) {
@@ -540,7 +539,7 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
-		// creation / deletion reoutines
+		// creation / deletion routines
 		for(auto& cob : parsed_file.relationship_objects) {
 			const std::string id_name = cob.name + "_id";
 
@@ -618,6 +617,11 @@ int main(int argc, char *argv[]) {
 			} // end case relationship no primary key
 		} // end creation / deletion reoutines creation loop
 
+		//iterate over all routines
+		for(auto& cob : parsed_file.relationship_objects) {
+			output += make_iterate_over_objects(o, cob).to_string(2);
+		}
+
 		//write save and load object stubs
 		output += "\n";
 		for(auto& ostr : needs_serialize) {
@@ -652,7 +656,7 @@ int main(int argc, char *argv[]) {
 
 		output += "\n";
 		//make ve interface
-
+		output += "\t\t#ifndef DCON_NO_VE\n";
 		for(auto& ob : parsed_file.relationship_objects) {
 			output += "\t\tve::vectorizable_buffer<float, " + ob.name + "_id> " + ob.name + "_make_vectorizable_float_buffer() const noexcept {\n";
 			output += "\t\t\treturn ve::vectorizable_buffer<float, " + ob.name + "_id>(" + ob.name + ".size_used);\n";
@@ -684,6 +688,7 @@ int main(int argc, char *argv[]) {
 				output += "#endif\n";
 			}
 		}
+		output += "\t\t#endif\n";
 
 		
 

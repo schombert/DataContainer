@@ -10,6 +10,7 @@
 #include <intrin.h>
 #include <atomic>
 #include <cstddef>
+#include <type_traits>
 #include <new>
 
 #ifdef NDEBUG 
@@ -54,6 +55,24 @@ namespace dcon {
 			++start;
 		}
 		return *n == 0;
+	}
+
+	namespace detail {
+		template<typename T>
+		constexpr auto has_index_fn(int) -> std::enable_if_t<!std::is_same_v<decltype(std::declval<T>().index()), void>, bool> { return true; }
+		template<typename T>
+		constexpr auto has_index_fn(...) { return false; }
+	}
+
+	template<typename T>
+	int32_t get_index(T id) {
+		if constexpr(detail::has_index_fn<T>(0)) {
+			return static_cast<int32_t>(id.index());
+		} else {
+			using ref_removed_type = std::remove_cv_t<std::remove_reference_t<T>>;
+			using signed_type = std::make_signed_t<ref_removed_type>;
+			return static_cast<int32_t>(static_cast<signed_type>( id ) );
+		}
 	}
 
 	struct record_header {

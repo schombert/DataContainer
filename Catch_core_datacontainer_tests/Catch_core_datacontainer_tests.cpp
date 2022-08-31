@@ -51,8 +51,8 @@ TEST_CASE("simple case", "[core_datacontainer_tests]") {
 	auto car_b = ptr->create_car();
 
 	REQUIRE(car_a != car_b);
-	REQUIRE(ptr->is_valid_car_ownership(ptr->get_car_ownership_from_car_as_owned_car(car_a)) == false);
-	REQUIRE(ptr->is_valid_car_ownership(ptr->get_car_ownership_from_car_as_owned_car(car_b)) == false);
+	REQUIRE(ptr->is_valid_car_ownership(ptr->car_get_car_ownership_as_owned_car(car_a)) == false);
+	REQUIRE(ptr->is_valid_car_ownership(ptr->car_get_car_ownership_as_owned_car(car_b)) == false);
 }
 
 TEST_CASE("basic relationship functions", "[core_datacontainer_tests]") {
@@ -75,6 +75,8 @@ TEST_CASE("basic relationship functions", "[core_datacontainer_tests]") {
 	REQUIRE(ptr->car_ownership_get_owned_car(r1) == carb);
 	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == persona);
 	REQUIRE(ptr->car_get_ownership_date_from_car_ownership(carb) == 7);
+	REQUIRE(ptr->car_get_car_ownership(carb) == r1);
+	REQUIRE(ptr->car_get_car_ownership_as_owned_car(carb) == r1);
 
 	int32_t count = 0;
 	bool found_car = false;
@@ -150,5 +152,111 @@ TEST_CASE("basic relationship functions", "[core_datacontainer_tests]") {
 
 	REQUIRE(count == 1);
 	REQUIRE(found_car == true);
+
+}
+
+TEST_CASE("remove in the other direction", "[core_datacontainer_tests]") {
+	auto ptr = std::make_unique< car_owner_basic::data_container >();
+
+	auto cara = ptr->create_car();
+	auto carb = ptr->create_car();
+	auto carc = ptr->create_car();
+
+	auto persona = ptr->create_person();
+	auto personb = ptr->create_person();
+
+	auto r1 = ptr->try_create_car_ownership(persona, carb);
+
+	REQUIRE(bool(r1) == true);
+	ptr->car_ownership_set_ownership_date(r1, 7);
+
+	REQUIRE(ptr->is_valid_car_ownership(r1));
+	REQUIRE(ptr->car_ownership_get_owner(r1) == persona);
+	REQUIRE(ptr->car_ownership_get_owned_car(r1) == carb);
+	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == persona);
+	REQUIRE(ptr->car_get_ownership_date_from_car_ownership(carb) == 7);
+	REQUIRE(ptr->car_get_car_ownership(carb) == r1);
+	REQUIRE(ptr->car_get_car_ownership_as_owned_car(carb) == r1);
+
+	int32_t count = 0;
+	bool found_car = false;
+
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](car_owner_basic::car_id i) {
+		++count;
+		if(i == carb)
+			found_car = true;
+	});
+
+	REQUIRE(count == 1);
+	REQUIRE(found_car == true);
+
+	count = 0;
+	found_car = false;
+
+	ptr->car_remove_car_ownership_as_owned_car(carb);
+
+	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == car_owner_basic::person_id());
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](car_owner_basic::car_id i) {
+		++count;
+		if(i == carb)
+			found_car = true;
+	});
+
+	REQUIRE(count == 0);
+	REQUIRE(found_car == false);
+
+	r1 = ptr->try_create_car_ownership(persona, carb);
+	ptr->try_create_car_ownership(persona, carc);
+
+	REQUIRE(bool(r1) == true);
+	ptr->car_ownership_set_ownership_date(r1, 7);
+
+	REQUIRE(ptr->is_valid_car_ownership(r1));
+	REQUIRE(ptr->car_ownership_get_owner(r1) == persona);
+	REQUIRE(ptr->car_ownership_get_owned_car(r1) == carb);
+	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == persona);
+	REQUIRE(ptr->car_get_ownership_date_from_car_ownership(carb) == 7);
+	REQUIRE(ptr->car_get_car_ownership(carb) == r1);
+	REQUIRE(ptr->car_get_car_ownership_as_owned_car(carb) == r1);
+
+	count = 0;
+	found_car = false;
+
+
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](car_owner_basic::car_id i) {
+		++count;
+		if(i == carb)
+			found_car = true;
+	});
+
+	REQUIRE(count == 2);
+	REQUIRE(found_car == true);
+
+	count = 0;
+	found_car = false;
+
+	REQUIRE(ptr->person_has_owned_car_from_car_ownership(persona, carb) == true);
+	REQUIRE(ptr->person_has_owned_car_from_car_ownership(persona, cara) == false);
+
+	ptr->person_for_each_owned_car_from_car_ownership(persona, [&](car_owner_basic::car_id i) { ++count; });
+
+	REQUIRE(count == 2);
+
+	ptr->person_remove_all_car_ownership_as_owner(persona);
+
+	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == car_owner_basic::person_id());
+	REQUIRE(ptr->car_get_owner_from_car_ownership(carc) == car_owner_basic::person_id());
+
+	count = 0;
+	found_car = false;
+
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](car_owner_basic::car_id i) {
+		++count;
+		if(i == carb)
+			found_car = true;
+	});
+
+	REQUIRE(count == 0);
+	REQUIRE(found_car == false);
 
 }

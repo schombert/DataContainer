@@ -5,7 +5,9 @@
 #include <vector>
 #include <algorithm>
 #include <cassert>
+#ifndef DCON_NO_VE
 #include "ve.hpp"
+#endif
 
 #ifdef NDEBUG
 #ifdef _MSC_VER
@@ -226,6 +228,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE int32_t& car_get_wheels(car_id id) noexcept {
 			return car.m_wheels.vptr()[id.index()];
 		}
+		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::value_to_vector_type<int32_t> car_get_wheels(ve::contiguous_tags<car_id> id) const noexcept {
 			return ve::load(id, car.m_wheels.vptr());
 		}
@@ -235,6 +238,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE ve::value_to_vector_type<int32_t> car_get_wheels(ve::tagged_vector<car_id> id) const noexcept {
 			return ve::load(id, car.m_wheels.vptr());
 		}
+		#endif
 		
 		//
 		// setters for car: wheels
@@ -242,6 +246,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE void car_set_wheels(car_id id, int32_t value) noexcept {
 			car.m_wheels.vptr()[id.index()] = value;
 		}
+		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE void car_set_wheels(ve::contiguous_tags<car_id> id, ve::value_to_vector_type<int32_t> values) noexcept {
 			ve::store(id, car.m_wheels.vptr(), values);
 		}
@@ -251,6 +256,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE void car_set_wheels(ve::tagged_vector<car_id> id, ve::value_to_vector_type<int32_t> values) noexcept {
 			ve::store(id, car.m_wheels.vptr(), values);
 		}
+		#endif
 		
 		//
 		// getters for car: resale_value
@@ -261,6 +267,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE float& car_get_resale_value(car_id id) noexcept {
 			return car.m_resale_value.vptr()[id.index()];
 		}
+		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::value_to_vector_type<float> car_get_resale_value(ve::contiguous_tags<car_id> id) const noexcept {
 			return ve::load(id, car.m_resale_value.vptr());
 		}
@@ -270,6 +277,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE ve::value_to_vector_type<float> car_get_resale_value(ve::tagged_vector<car_id> id) const noexcept {
 			return ve::load(id, car.m_resale_value.vptr());
 		}
+		#endif
 		
 		//
 		// setters for car: resale_value
@@ -277,6 +285,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE void car_set_resale_value(car_id id, float value) noexcept {
 			car.m_resale_value.vptr()[id.index()] = value;
 		}
+		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE void car_set_resale_value(ve::contiguous_tags<car_id> id, ve::value_to_vector_type<float> values) noexcept {
 			ve::store(id, car.m_resale_value.vptr(), values);
 		}
@@ -286,6 +295,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE void car_set_resale_value(ve::tagged_vector<car_id> id, ve::value_to_vector_type<float> values) noexcept {
 			ve::store(id, car.m_resale_value.vptr(), values);
 		}
+		#endif
 		
 		uint32_t car_size() const noexcept { return car.size_used; }
 
@@ -298,6 +308,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE int32_t& person_get_age(person_id id) noexcept {
 			return person.m_age.vptr()[id.index()];
 		}
+		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::value_to_vector_type<int32_t> person_get_age(ve::contiguous_tags<person_id> id) const noexcept {
 			return ve::load(id, person.m_age.vptr());
 		}
@@ -307,6 +318,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE ve::value_to_vector_type<int32_t> person_get_age(ve::tagged_vector<person_id> id) const noexcept {
 			return ve::load(id, person.m_age.vptr());
 		}
+		#endif
 		
 		//
 		// setters for person: age
@@ -314,6 +326,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE void person_set_age(person_id id, int32_t value) noexcept {
 			person.m_age.vptr()[id.index()] = value;
 		}
+		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE void person_set_age(ve::contiguous_tags<person_id> id, ve::value_to_vector_type<int32_t> values) noexcept {
 			ve::store(id, person.m_age.vptr(), values);
 		}
@@ -323,6 +336,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE void person_set_age(ve::tagged_vector<person_id> id, ve::value_to_vector_type<int32_t> values) noexcept {
 			ve::store(id, person.m_age.vptr(), values);
 		}
+		#endif
 		
 		uint32_t person_size() const noexcept { return person.size_used; }
 
@@ -335,6 +349,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE int32_t& car_ownership_get_ownership_date(car_ownership_id id) noexcept {
 			return car_ownership.m_ownership_date.vptr()[id.index()];
 		}
+		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::value_to_vector_type<int32_t> car_ownership_get_ownership_date(ve::contiguous_tags<car_ownership_id> id) const noexcept {
 			return ve::load(id, car_ownership.m_ownership_date.vptr());
 		}
@@ -344,6 +359,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE ve::value_to_vector_type<int32_t> car_ownership_get_ownership_date(ve::tagged_vector<car_ownership_id> id) const noexcept {
 			return ve::load(id, car_ownership.m_ownership_date.vptr());
 		}
+		#endif
 		
 		//
 		// setters for car_ownership: ownership_date
@@ -351,6 +367,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE void car_ownership_set_ownership_date(car_ownership_id id, int32_t value) noexcept {
 			car_ownership.m_ownership_date.vptr()[id.index()] = value;
 		}
+		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE void car_ownership_set_ownership_date(ve::contiguous_tags<car_ownership_id> id, ve::value_to_vector_type<int32_t> values) noexcept {
 			ve::store(id, car_ownership.m_ownership_date.vptr(), values);
 		}
@@ -360,6 +377,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE void car_ownership_set_ownership_date(ve::tagged_vector<car_ownership_id> id, ve::value_to_vector_type<int32_t> values) noexcept {
 			ve::store(id, car_ownership.m_ownership_date.vptr(), values);
 		}
+		#endif
 		
 		uint32_t car_ownership_size() const noexcept { return car_ownership.size_used; }
 
@@ -369,6 +387,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE person_id car_ownership_get_owner(car_ownership_id id) const noexcept {
 			return car_ownership.m_owner.vptr()[id.index()];
 		}
+		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::value_to_vector_type<person_id> car_ownership_get_owner(ve::contiguous_tags<car_ownership_id> id) const noexcept {
 			return ve::load(id, car_ownership.m_owner.vptr());
 		}
@@ -378,6 +397,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE ve::value_to_vector_type<person_id> car_ownership_get_owner(ve::tagged_vector<car_ownership_id> id) const noexcept {
 			return ve::load(id, car_ownership.m_owner.vptr());
 		}
+		#endif
 		void car_ownership_set_owner(car_ownership_id id, person_id value) noexcept {
 			if(auto old_value = car_ownership.m_owner.vptr()[id.index()]; bool(old_value)) {
 				auto& vref = car_ownership.m_array_owner.vptr()[old_value.index()];
@@ -402,7 +422,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> person_range_of_car_ownership_as_owner(person_id id) const {
 			if(bool(id)) {
 				auto& vref = car_ownership.m_array_owner.vptr()[id.index()];
-				return std::pair<car_ownership_id const*, car_ownership_id const*>(&(*vref.begin()), &(*vref.end()));
+				return std::pair<car_ownership_id const*, car_ownership_id const*>(vref.data(), vref.data() + vref.size());
 			} else {
 				return std::pair<car_ownership_id const*, car_ownership_id const*>(nullptr, nullptr);
 			}
@@ -423,7 +443,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> person_range_of_car_ownership(person_id id) const {
 			if(bool(id)) {
 				auto& vref = car_ownership.m_array_owner.vptr()[id.index()];
-				return std::pair<car_ownership_id const*, car_ownership_id const*>(&(*vref.begin()), &(*vref.end()));
+				return std::pair<car_ownership_id const*, car_ownership_id const*>(vref.data(), vref.data() + vref.size());
 			} else {
 				return std::pair<car_ownership_id const*, car_ownership_id const*>(nullptr, nullptr);
 			}
@@ -440,6 +460,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE car_ownership_id car_ownership_get_owned_car(car_ownership_id id) const noexcept {
 			return id;
 		}
+		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> car_ownership_get_owned_car(ve::contiguous_tags<car_ownership_id> id) const noexcept {
 			return ve::apply([](car_ownership_id i){ return i; }, id);
 		}
@@ -449,6 +470,7 @@ namespace car_owner_basic {
 		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> car_ownership_get_owned_car(ve::tagged_vector<car_ownership_id> id) const noexcept {
 			return id;
 		}
+		#endif
 		void car_ownership_set_owned_car(car_ownership_id id, car_ownership_id value) noexcept {
 			if(bool(value)) {
 				delete_car_ownership(value);
@@ -467,36 +489,40 @@ namespace car_owner_basic {
 			return true;
 		}
 		
-		DCON_RELEASE_INLINE car_ownership_id get_car_ownership_from_car_as_owned_car(car_id id) const noexcept {
+		DCON_RELEASE_INLINE car_ownership_id car_get_car_ownership_as_owned_car(car_id id) const noexcept {
 			return id;
 		}
-		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> get_car_ownership_from_car_as_owned_car(ve::contiguous_tags<car_id> id) const noexcept {
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> car_get_car_ownership_as_owned_car(ve::contiguous_tags<car_id> id) const noexcept {
 			return ve::apply([](car_ownership_id i){ return i; }, id);
 		}
-		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> get_car_ownership_from_car_as_owned_car(ve::partial_contiguous_tags<car_id> id) const noexcept {
+		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> car_get_car_ownership_as_owned_car(ve::partial_contiguous_tags<car_id> id) const noexcept {
 			return ve::apply([](car_ownership_id i){ return i; }, id);
 		}
-		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> get_car_ownership_from_car_as_owned_car(ve::tagged_vector<car_id> id) const noexcept {
+		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> car_get_car_ownership_as_owned_car(ve::tagged_vector<car_id> id) const noexcept {
 			return id;
 		}
+		#endif
 		DCON_RELEASE_INLINE void car_remove_car_ownership_as_owned_car(car_id id) noexcept {
 			if(is_valid_car_ownership(id)) {
 				delete_car_ownership(id);
 			}
 		}
 		
-		DCON_RELEASE_INLINE car_ownership_id get_car_ownership_from_car(car_id id) const noexcept {
+		DCON_RELEASE_INLINE car_ownership_id car_get_car_ownership(car_id id) const noexcept {
 			return id;
 		}
-		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> get_car_ownership_from_car(ve::contiguous_tags<car_id> id) const noexcept {
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> car_get_car_ownership(ve::contiguous_tags<car_id> id) const noexcept {
 			return ve::apply([](car_ownership_id i){ return i; }, id);
 		}
-		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> get_car_ownership_from_car(ve::partial_contiguous_tags<car_id> id) const noexcept {
+		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> car_get_car_ownership(ve::partial_contiguous_tags<car_id> id) const noexcept {
 			return ve::apply([](car_ownership_id i){ return i; }, id);
 		}
-		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> get_car_ownership_from_car(ve::tagged_vector<car_id> id) const noexcept {
+		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> car_get_car_ownership(ve::tagged_vector<car_id> id) const noexcept {
 			return id;
 		}
+		#endif
 		DCON_RELEASE_INLINE void car_remove_car_ownership(car_id id) noexcept {
 			if(is_valid_car_ownership(id)) {
 				delete_car_ownership(id);
@@ -518,10 +544,12 @@ namespace car_owner_basic {
 			for(auto pos = vref.begin(); pos != vref.end(); ++pos) {
 				if(car_ownership.m_ownership_date.vptr()[pos->index()] == target) return true;
 			}
+			return false;
 		}
 		int32_t car_get_ownership_date_from_car_ownership(car_id ref_id) const {
 			return car_ownership_get_ownership_date(ref_id);
 		}
+		#ifndef DCON_NO_VE
 		ve::value_to_vector_type<int32_t> car_get_ownership_date_from_car_ownership(ve::contiguous_tags<car_id> ref_id) const {
 			return car_ownership_get_ownership_date(ref_id);
 		}
@@ -531,12 +559,14 @@ namespace car_owner_basic {
 		ve::value_to_vector_type<int32_t> car_get_ownership_date_from_car_ownership(ve::tagged_vector<car_id> ref_id) const {
 			return car_ownership_get_ownership_date(ref_id);
 		}
+		#endif
 		void car_set_ownership_date_from_car_ownership(car_id ref_id, int32_t val) {
 			car_ownership_set_ownership_date(ref_id, val);
 		}
 		person_id car_get_owner_from_car_ownership(car_id ref_id) const {
 			return car_ownership_get_owner(ref_id);
 		}
+		#ifndef DCON_NO_VE
 		ve::value_to_vector_type<person_id> car_get_owner_from_car_ownership(ve::contiguous_tags<car_id> ref_id) const {
 			return car_ownership_get_owner(ref_id);
 		}
@@ -546,6 +576,7 @@ namespace car_owner_basic {
 		ve::value_to_vector_type<person_id> car_get_owner_from_car_ownership(ve::tagged_vector<car_id> ref_id) const {
 			return car_ownership_get_owner(ref_id);
 		}
+		#endif
 		void car_set_owner_from_car_ownership(car_id ref_id, person_id val) {
 			car_ownership_set_owner(ref_id, val);
 		}
@@ -560,6 +591,7 @@ namespace car_owner_basic {
 			for(auto pos = vref.begin(); pos != vref.end(); ++pos) {
 				if(*pos == target) return true;
 			}
+			return false;
 		}
 		
 		//
@@ -713,6 +745,30 @@ namespace car_owner_basic {
 			return new_id;
 		}
 		
+		template <typename T>
+		DCON_RELEASE_INLINE void for_each_car(T&& func) {
+			for(uint32_t i = 0; i < car.size_used; ++i) {
+				car_id tmp(car_id::value_base_t(i));
+				func(tmp);
+			}
+		}
+		
+		template <typename T>
+		DCON_RELEASE_INLINE void for_each_person(T&& func) {
+			for(uint32_t i = 0; i < person.size_used; ++i) {
+				person_id tmp(person_id::value_base_t(i));
+				func(tmp);
+			}
+		}
+		
+		template <typename T>
+		DCON_RELEASE_INLINE void for_each_car_ownership(T&& func) {
+			for(uint32_t i = 0; i < car_ownership.size_used; ++i) {
+				car_ownership_id tmp(car_ownership_id::value_base_t(i));
+				func(tmp);
+			}
+		}
+		
 
 
 		void reset() {
@@ -721,6 +777,7 @@ namespace car_owner_basic {
 			person_resize(0);
 		}
 
+		#ifndef DCON_NO_VE
 		ve::vectorizable_buffer<float, car_id> car_make_vectorizable_float_buffer() const noexcept {
 			return ve::vectorizable_buffer<float, car_id>(car.size_used);
 		}
@@ -769,6 +826,7 @@ namespace car_owner_basic {
 			ve::execute_parallel_exact(car_ownership.size_used, functor);
 		}
 #endif
+		#endif
 
 		load_record serialize_entire_container_record() const noexcept {
 			load_record result;
