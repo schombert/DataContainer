@@ -5,6 +5,9 @@
 #include <vector>
 #include <algorithm>
 #include <cassert>
+#include <memory>
+#include <cstring>
+#include "common_types.hpp"
 #ifndef DCON_NO_VE
 #include "ve.hpp"
 #endif
@@ -616,7 +619,7 @@ namespace ex1 {
 		//
 		// container pop_back for top
 		//
-		void top_pop_back() {
+		void pop_back_top() {
 			if(top.size_used == 0) return;
 			top_id id_removed(top_id::value_base_t(top.size_used - 1));
 			top_remove_all_lr_relation_as_left(id_removed);
@@ -663,7 +666,7 @@ namespace ex1 {
 		void delete_top(top_id id) {
 			top_id id_removed = id;
 			top_id last_id(top_id::value_base_t(top.size_used - 1));
-			if(id_removed == last_id) { top_pop_back(); return; }
+			if(id_removed == last_id) { pop_back_top(); return; }
 			top_remove_all_lr_relation_as_left(id_removed);
 			top_for_each_lr_relation_as_left(last_id, [t = this, id_removed](lr_relation_id i){ t->lr_relation.m_left.vptr()[i.index()] = id_removed; });
 			lr_relation.m_array_left.vptr()[id_removed.index()] = std::move(lr_relation.m_array_left.vptr()[last_id.index()]);
@@ -679,7 +682,7 @@ namespace ex1 {
 		//
 		// container pop_back for bottom
 		//
-		void bottom_pop_back() {
+		void pop_back_bottom() {
 			if(bottom.size_used == 0) return;
 			bottom_id id_removed(bottom_id::value_base_t(bottom.size_used - 1));
 			bottom_remove_all_lr_relation_as_right(id_removed);
@@ -929,36 +932,36 @@ namespace ex1 {
 		uint64_t serialize_size(load_record const& serialize_selection) const {
 			uint64_t total_size = 0;
 			if(serialize_selection.top) {
-				dcon::record_header header(sizeof(uint32_t), "uint32_t", "top", "$size");
+				dcon::record_header header(0, "uint32_t", "top", "$size");
 				total_size += header.serialize_size();
 				total_size += sizeof(uint32_t);
 			}
 			if(serialize_selection.top_wheels) {
-				dcon::record_header iheader(sizeof(int32_t) * top.size_used, "int32_t", "top", "wheels");
+				dcon::record_header iheader(0, "int32_t", "top", "wheels");
 				total_size += iheader.serialize_size();
 				total_size += sizeof(int32_t) * top.size_used;
 			}
 			if(serialize_selection.bottom) {
-				dcon::record_header header(sizeof(uint32_t), "uint32_t", "bottom", "$size");
+				dcon::record_header header(0, "uint32_t", "bottom", "$size");
 				total_size += header.serialize_size();
 				total_size += sizeof(uint32_t);
 			}
 			if(serialize_selection.bottom_legs) {
-				dcon::record_header iheader(sizeof(int32_t) * bottom.size_used, "int32_t", "bottom", "legs");
+				dcon::record_header iheader(0, "int32_t", "bottom", "legs");
 				total_size += iheader.serialize_size();
 				total_size += sizeof(int32_t) * bottom.size_used;
 			}
 			if(serialize_selection.lr_relation) {
-				dcon::record_header header(sizeof(uint32_t), "uint32_t", "lr_relation", "$size");
+				dcon::record_header header(0, "uint32_t", "lr_relation", "$size");
 				total_size += header.serialize_size();
 				total_size += sizeof(uint32_t);
 				if(serialize_selection.lr_relation_left) {
-					dcon::record_header iheader(sizeof(top_id) * lr_relation.size_used, "uint32_t", "lr_relation", "left");
+					dcon::record_header iheader(0, "uint32_t", "lr_relation", "left");
 					total_size += iheader.serialize_size();
 					total_size += sizeof(top_id) * lr_relation.size_used;
 				}
 				if(serialize_selection.lr_relation_right) {
-					dcon::record_header iheader(sizeof(bottom_id) * lr_relation.size_used, "uint32_t", "lr_relation", "right");
+					dcon::record_header iheader(0, "uint32_t", "lr_relation", "right");
 					total_size += iheader.serialize_size();
 					total_size += sizeof(bottom_id) * lr_relation.size_used;
 				}
@@ -966,12 +969,12 @@ namespace ex1 {
 				total_size += headerb.serialize_size();
 			}
 			if(serialize_selection.lr_relation__index) {
-				dcon::record_header iheader(sizeof(lr_relation_id) * lr_relation.size_used, "uint32_t", "lr_relation", "_index");
+				dcon::record_header iheader(0, "uint32_t", "lr_relation", "_index");
 				total_size += iheader.serialize_size();
 				total_size += sizeof(lr_relation_id) * lr_relation.size_used;
 			}
 			if(serialize_selection.lr_relation_thingies) {
-				dcon::record_header iheader(sizeof(int32_t) * lr_relation.size_used, "int32_t", "lr_relation", "thingies");
+				dcon::record_header iheader(0, "int32_t", "lr_relation", "thingies");
 				total_size += iheader.serialize_size();
 				total_size += sizeof(int32_t) * lr_relation.size_used;
 			}
@@ -991,7 +994,7 @@ namespace ex1 {
 			if(serialize_selection.top_wheels) {
 				dcon::record_header header(sizeof(int32_t) * top.size_used, "int32_t", "top", "wheels");
 				header.serialize(output_buffer);
-				memcpy(reinterpret_cast<int32_t*>(output_buffer), top.m_wheels.vptr(), sizeof(int32_t) * top.size_used);
+				std::memcpy(reinterpret_cast<int32_t*>(output_buffer), top.m_wheels.vptr(), sizeof(int32_t) * top.size_used);
 				output_buffer += sizeof(int32_t) * top.size_used;
 			}
 			if(serialize_selection.bottom) {
@@ -1003,7 +1006,7 @@ namespace ex1 {
 			if(serialize_selection.bottom_legs) {
 				dcon::record_header header(sizeof(int32_t) * bottom.size_used, "int32_t", "bottom", "legs");
 				header.serialize(output_buffer);
-				memcpy(reinterpret_cast<int32_t*>(output_buffer), bottom.m_legs.vptr(), sizeof(int32_t) * bottom.size_used);
+				std::memcpy(reinterpret_cast<int32_t*>(output_buffer), bottom.m_legs.vptr(), sizeof(int32_t) * bottom.size_used);
 				output_buffer += sizeof(int32_t) * bottom.size_used;
 			}
 			if(serialize_selection.lr_relation) {
@@ -1014,13 +1017,13 @@ namespace ex1 {
 				{
 					dcon::record_header iheader(sizeof(top_id) * lr_relation.size_used, "uint32_t", "lr_relation", "left");
 					iheader.serialize(output_buffer);
-					memcpy(reinterpret_cast<top_id*>(output_buffer), lr_relation.m_left.vptr(), sizeof(top_id) * lr_relation.size_used);
+					std::memcpy(reinterpret_cast<top_id*>(output_buffer), lr_relation.m_left.vptr(), sizeof(top_id) * lr_relation.size_used);
 					output_buffer += sizeof(top_id) * lr_relation.size_used;
 				}
 				{
 					dcon::record_header iheader(sizeof(bottom_id) * lr_relation.size_used, "uint32_t", "lr_relation", "right");
 					iheader.serialize(output_buffer);
-					memcpy(reinterpret_cast<bottom_id*>(output_buffer), lr_relation.m_right.vptr(), sizeof(bottom_id) * lr_relation.size_used);
+					std::memcpy(reinterpret_cast<bottom_id*>(output_buffer), lr_relation.m_right.vptr(), sizeof(bottom_id) * lr_relation.size_used);
 					output_buffer += sizeof(bottom_id) * lr_relation.size_used;
 				}
 				dcon::record_header headerb(0, "$", "lr_relation", "$index_end");
@@ -1029,13 +1032,13 @@ namespace ex1 {
 			if(serialize_selection.lr_relation__index) {
 				dcon::record_header header(sizeof(lr_relation_id) * lr_relation.size_used, "uint32_t", "lr_relation", "_index");
 				header.serialize(output_buffer);
-				memcpy(reinterpret_cast<lr_relation_id*>(output_buffer), lr_relation.m__index.vptr(), sizeof(lr_relation_id) * lr_relation.size_used);
+				std::memcpy(reinterpret_cast<lr_relation_id*>(output_buffer), lr_relation.m__index.vptr(), sizeof(lr_relation_id) * lr_relation.size_used);
 				output_buffer += sizeof(lr_relation_id) * lr_relation.size_used;
 			}
 			if(serialize_selection.lr_relation_thingies) {
 				dcon::record_header header(sizeof(int32_t) * lr_relation.size_used, "int32_t", "lr_relation", "thingies");
 				header.serialize(output_buffer);
-				memcpy(reinterpret_cast<int32_t*>(output_buffer), lr_relation.m_thingies.vptr(), sizeof(int32_t) * lr_relation.size_used);
+				std::memcpy(reinterpret_cast<int32_t*>(output_buffer), lr_relation.m_thingies.vptr(), sizeof(int32_t) * lr_relation.size_used);
 				output_buffer += sizeof(int32_t) * lr_relation.size_used;
 			}
 		}
@@ -1055,7 +1058,7 @@ namespace ex1 {
 						}
 						else if(header.is_property("wheels")) {
 							if(header.is_type("int32_t")) {
-								memcpy(top.m_wheels.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(top.size_used) * sizeof(int32_t), header.record_size));
+								std::memcpy(top.m_wheels.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(top.size_used) * sizeof(int32_t), header.record_size));
 								serialize_selection.top_wheels = true;
 							}
 							else if(header.is_type("int8_t")) {
@@ -1121,7 +1124,7 @@ namespace ex1 {
 						}
 						else if(header.is_property("legs")) {
 							if(header.is_type("int32_t")) {
-								memcpy(bottom.m_legs.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(bottom.size_used) * sizeof(int32_t), header.record_size));
+								std::memcpy(bottom.m_legs.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(bottom.size_used) * sizeof(int32_t), header.record_size));
 								serialize_selection.bottom_legs = true;
 							}
 							else if(header.is_type("int8_t")) {
@@ -1190,7 +1193,7 @@ namespace ex1 {
 						}
 						else if(header.is_property("__index")) {
 							if(header.is_type("uint32_t")) {
-								memcpy(lr_relation.m__index.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
+								std::memcpy(lr_relation.m__index.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
 								serialize_selection.lr_relation__index = true;
 							}
 							else if(header.is_type("uint8_t")) {
@@ -1220,7 +1223,7 @@ namespace ex1 {
 						}
 						else if(header.is_property("left")) {
 							if(header.is_type("uint32_t")) {
-								memcpy(lr_relation.m_left.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
+								std::memcpy(lr_relation.m_left.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
 								serialize_selection.lr_relation_left = true;
 							}
 							else if(header.is_type("uint8_t")) {
@@ -1238,7 +1241,7 @@ namespace ex1 {
 						}
 						else if(header.is_property("right")) {
 							if(header.is_type("uint32_t")) {
-								memcpy(lr_relation.m_right.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
+								std::memcpy(lr_relation.m_right.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
 								serialize_selection.lr_relation_right = true;
 							}
 							else if(header.is_type("uint8_t")) {
@@ -1272,7 +1275,7 @@ namespace ex1 {
 						}
 						else if(header.is_property("thingies")) {
 							if(header.is_type("int32_t")) {
-								memcpy(lr_relation.m_thingies.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(int32_t), header.record_size));
+								std::memcpy(lr_relation.m_thingies.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(int32_t), header.record_size));
 								serialize_selection.lr_relation_thingies = true;
 							}
 							else if(header.is_type("int8_t")) {
@@ -1351,7 +1354,7 @@ namespace ex1 {
 						}
 						else if(header.is_property("wheels") && mask.top_wheels) {
 							if(header.is_type("int32_t")) {
-								memcpy(top.m_wheels.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(top.size_used) * sizeof(int32_t), header.record_size));
+								std::memcpy(top.m_wheels.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(top.size_used) * sizeof(int32_t), header.record_size));
 								serialize_selection.top_wheels = true;
 							}
 							else if(header.is_type("int8_t")) {
@@ -1417,7 +1420,7 @@ namespace ex1 {
 						}
 						else if(header.is_property("legs") && mask.bottom_legs) {
 							if(header.is_type("int32_t")) {
-								memcpy(bottom.m_legs.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(bottom.size_used) * sizeof(int32_t), header.record_size));
+								std::memcpy(bottom.m_legs.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(bottom.size_used) * sizeof(int32_t), header.record_size));
 								serialize_selection.bottom_legs = true;
 							}
 							else if(header.is_type("int8_t")) {
@@ -1486,7 +1489,7 @@ namespace ex1 {
 						}
 						else if(header.is_property("__index") && mask.lr_relation__index) {
 							if(header.is_type("uint32_t")) {
-								memcpy(lr_relation.m__index.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
+								std::memcpy(lr_relation.m__index.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
 								serialize_selection.lr_relation__index = true;
 							}
 							else if(header.is_type("uint8_t")) {
@@ -1516,7 +1519,7 @@ namespace ex1 {
 						}
 						else if(header.is_property("left") && mask.lr_relation_left) {
 							if(header.is_type("uint32_t")) {
-								memcpy(lr_relation.m_left.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
+								std::memcpy(lr_relation.m_left.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
 								serialize_selection.lr_relation_left = true;
 							}
 							else if(header.is_type("uint8_t")) {
@@ -1534,7 +1537,7 @@ namespace ex1 {
 						}
 						else if(header.is_property("right") && mask.lr_relation_right) {
 							if(header.is_type("uint32_t")) {
-								memcpy(lr_relation.m_right.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
+								std::memcpy(lr_relation.m_right.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
 								serialize_selection.lr_relation_right = true;
 							}
 							else if(header.is_type("uint8_t")) {
@@ -1568,7 +1571,7 @@ namespace ex1 {
 						}
 						else if(header.is_property("thingies") && mask.lr_relation_thingies) {
 							if(header.is_type("int32_t")) {
-								memcpy(lr_relation.m_thingies.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(int32_t), header.record_size));
+								std::memcpy(lr_relation.m_thingies.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(int32_t), header.record_size));
 								serialize_selection.lr_relation_thingies = true;
 							}
 							else if(header.is_type("int8_t")) {

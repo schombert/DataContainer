@@ -49,6 +49,18 @@ basic_builder& make_special_array_getters(basic_builder& o, std::string const& o
 basic_builder& make_special_array_setters(basic_builder& o, std::string const& object_name, std::string const& property_name,
 	std::string const& type);
 
+basic_builder& make_object_array_getters(basic_builder& o, std::string const& object_name, std::string const& property_name,
+	std::string const& type, std::string const& index_type);
+basic_builder& make_object_array_setters(basic_builder& o, std::string const& object_name, std::string const& property_name,
+	std::string const& type, std::string const& index_type);
+basic_builder& make_bitfield_array_setters(basic_builder& o, std::string const& object_name, std::string const& property_name,
+	std::string const& index_type, bool is_expandable);
+basic_builder& make_bitfield_array_getters(basic_builder& o, std::string const& object_name, std::string const& property_name,
+	std::string const& index_type, bool is_expandable);
+basic_builder& make_vectorizable_type_array_getters(basic_builder& o, std::string const& object_name, std::string const& property_name,
+	std::string const& type, std::string const& index_type, bool is_expandable);
+basic_builder& make_vectorizable_type_array_setters(basic_builder& o, std::string const& object_name, std::string const& property_name,
+	std::string const& type, std::string const& index_type, bool is_expandable);
 
 basic_builder& make_relation_pk_getters_setters(basic_builder& o, std::string const& relation_name, std::string const& property_name,
 	bool is_expandable);

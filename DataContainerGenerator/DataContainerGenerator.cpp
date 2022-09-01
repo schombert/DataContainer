@@ -310,12 +310,12 @@ int main(int argc, char *argv[]) {
 						std::to_string(ob.size),
 						struct_padding::none, ob.is_expandable, "std::numeric_limits<dcon::stable_mk_2_tag>::max()").to_string(3);
 					
-					output += "\t\tdcon::stable_variable_vector_storage_mk_2<" + p.data_type + ", 16, " + std::to_string(p.special_pool_size) + " > " + p.name + "_storage;\n";
+					output += "\t\t\tdcon::stable_variable_vector_storage_mk_2<" + p.data_type + ", 16, " + std::to_string(p.special_pool_size) + " > " + p.name + "_storage;\n";
 				} else if(p.type == property_type::array_bitfield) {
 					output += make_array_member_container(o,
 						p.name, "dcon::bitfield_type", ob.size,
 						ob.is_expandable, true).to_string(3);
-				} else if(p.type == property_type::array_other) {
+				} else if(p.type == property_type::array_other || p.type == property_type::array_vectorizable) {
 					output += make_array_member_container(o,
 						p.name, p.data_type, ob.size,
 						ob.is_expandable, false).to_string(3);
@@ -362,7 +362,7 @@ int main(int argc, char *argv[]) {
 								struct_padding::none, i.related_to->is_expandable,
 								"std::numeric_limits<dcon::stable_mk_2_tag>::max()").to_string(3);
 
-							output += "\t\tdcon::stable_variable_vector_storage_mk_2<" + i.type_name + "_id, 16, " + std::to_string(ob.size * 2) + " > "
+							output += "\t\t\tdcon::stable_variable_vector_storage_mk_2<" + i.type_name + "_id, 16, " + std::to_string(ob.size * 2) + " > "
 								+ i.property_name + "_storage;\n";
 						} else {
 							error_to_file(output_file_name, std::string("Unable to estimate an upper bound on storage space for ") +
@@ -418,7 +418,7 @@ int main(int argc, char *argv[]) {
 			for(auto& p : ob.properties) {
 				// hook stubs
 				if(p.hook_get) {
-					if(p.type != property_type::array_bitfield && p.type != property_type::array_other) {
+					if(p.type != property_type::array_bitfield && p.type != property_type::array_other && p.type != property_type::array_vectorizable) {
 						output += make_hooked_getters(o, ob.name, p.name, p.data_type,
 							p.type == property_type::bitfield ? hook_type::bitfield :
 							(p.type == property_type::vectorizable ? hook_type::vectorizable : hook_type::other),
@@ -430,7 +430,7 @@ int main(int argc, char *argv[]) {
 					}
 				}
 				if(p.hook_set) {
-					if(p.type != property_type::array_bitfield && p.type != property_type::array_other) {
+					if(p.type != property_type::array_bitfield && p.type != property_type::array_other && p.type != property_type::array_vectorizable) {
 						output += make_hooked_setters(o, ob.name, p.name, p.data_type,
 							p.type == property_type::bitfield ? hook_type::bitfield :
 							(p.type == property_type::vectorizable ? hook_type::vectorizable : hook_type::other),
@@ -464,6 +464,21 @@ int main(int argc, char *argv[]) {
 						output += make_vectorizable_type_getters(o, ob.name, p.name, p.data_type, ob.is_expandable).to_string(2);
 					if(!p.hook_set)
 						output += make_vectorizable_type_setters(o, ob.name, p.name, p.data_type, ob.is_expandable).to_string(2);
+				} else if(p.type == property_type::array_vectorizable) {
+					if(!p.hook_get)
+						output += make_vectorizable_type_array_getters(o, ob.name, p.name, p.data_type, p.array_index_type, ob.is_expandable).to_string(2);
+					if(!p.hook_set)
+						output += make_vectorizable_type_array_setters(o, ob.name, p.name, p.data_type, p.array_index_type, ob.is_expandable).to_string(2);
+				} else if(p.type == property_type::array_other) {
+					if(!p.hook_get)
+						output += make_object_array_getters(o, ob.name, p.name, p.data_type, p.array_index_type).to_string(2);
+					if(!p.hook_set)
+						output += make_object_array_setters(o, ob.name, p.name, p.data_type, p.array_index_type).to_string(2);
+				} else if(p.type == property_type::array_bitfield) {
+					if(!p.hook_get)
+						output += make_bitfield_array_getters(o, ob.name, p.name, p.array_index_type, ob.is_expandable).to_string(2);
+					if(!p.hook_set)
+						output += make_bitfield_array_setters(o, ob.name, p.name, p.array_index_type, ob.is_expandable).to_string(2);
 				} else { // nonvectorizable data type w/o special handling
 					if(!p.hook_get)
 						output += make_object_getters(o, ob.name, p.name, p.data_type).to_string(2);

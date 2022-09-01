@@ -41,6 +41,62 @@ object{
 		name{pooled_v}
 		type{vector_pool{1000}{int16_t}}
 	}
+
+	property{
+		name{big_array}
+		type{array{int32_t}{float}}
+	}
+
+	property{
+		name{big_array_bf}
+		type{array{int32_t}{bitfield}}
+	}
+}
+
+object{
+	name{thingy2}
+	storage_type{compactable}
+	size{expandable}
+	
+	property{
+		name{some_value}
+		type{int32_t}
+	}
+
+	property{
+		name{bf_value}
+		type{bitfield}
+	}
+
+	property{
+		name{d_value}
+		type{derived{int32_t}}
+	}
+
+	property{
+		name{dbf_value}
+		type{derived{bitfield}}
+	}
+
+	property{
+		name{obj_value}
+		type{object{std::vector<float>}}
+	}
+
+	property{
+		name{pooled_v}
+		type{vector_pool{1000}{int16_t}}
+	}
+
+	property{
+		name{big_array}
+		type{array{int32_t}{float}}
+	}
+
+	property{
+		name{big_array_bf}
+		type{array{int32_t}{bitfield}}
+	}
 }
 
 global{int32_t counter = 0;}

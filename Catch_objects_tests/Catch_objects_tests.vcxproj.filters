@@ -23,11 +23,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="objects_def.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="objects_def.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="objects_def.txt" />
   </ItemGroup>
 </Project>

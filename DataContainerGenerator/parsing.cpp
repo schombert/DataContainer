@@ -319,17 +319,17 @@ property_def parse_property_def(char const * start, char const * end, char const
 						} else if(inner_extracted.values.size() == 2) {
 							result.array_index_type = inner_extracted.values[0].to_string();
 							if(inner_extracted.values[1].to_string() == "bitfield") {
-								result.type == property_type::array_bitfield;
+								result.type = property_type::array_bitfield;
 							} else {
-								result.type == property_type::array_other;
+								result.type = property_type::array_other;
 								result.data_type = inner_extracted.values[1].to_string();
 							}
 						} else {
 							result.array_index_type = "uint32_t";
 							if(inner_extracted.values[0].to_string() == "bitfield") {
-								result.type == property_type::array_bitfield;
+								result.type = property_type::array_bitfield;
 							} else {
-								result.type == property_type::array_other;
+								result.type = property_type::array_other;
 								result.data_type = inner_extracted.values[0].to_string();
 							}
 						}
