@@ -39,7 +39,9 @@ parsed_item extract_item(char const* input, char const* end, char const* global_
 
 
 enum class storage_type { contiguous, erasable, compactable };
-enum class property_type { vectorizable, other, object, special_vector, bitfield };
+enum class property_type { vectorizable, other, object, special_vector, bitfield,
+	array_vectorizable, array_bitfield, array_other
+};
 
 struct property_def {
 	std::string name;
@@ -49,6 +51,8 @@ struct property_def {
 
 	int special_pool_size = 1000;
 	std::string data_type;
+
+	std::string array_index_type;
 
 	bool hook_get = false;
 	bool hook_set = false;
@@ -181,7 +185,7 @@ inline std::string make_relationship_parameters(relationship_object_def const& o
 }
 
 inline bool is_vectorizable_type(file_def& def, std::string const& name) {
-	return name == "char" || name == "int" || name == "short" || name == "unsigned short" ||
+	return name == "char" || name == "bool" || name == "int" || name == "short" || name == "unsigned short" ||
 		name == "unsigned int" || name == "unsigned char" || name == "signed char" ||
 		name == "float" || name == "int8_t" || name == "uint8_t" ||
 		name == "int16_t" || name == "uint16_t" || name == "int32_t" || name == "uint32_t"
@@ -196,8 +200,8 @@ inline bool is_vectorizable_type(file_def& def, std::string const& name) {
 inline std::vector<std::string> common_types{ std::string("int8_t"), std::string("uint8_t"), std::string("int16_t"), std::string("uint16_t")
 	, std::string("int32_t"), std::string("uint32_t"), std::string("int64_t"), std::string("uint64_t"), std::string("float"), std::string("double") };
 
-inline std::string normalize_type(std::string in) {
-	if(in == "char" || in == "unsigned char")
+inline std::string normalize_type(std::string const& in) {
+	if(in == "char" || in == "unsigned char" || in == "bool")
 		return "uint8_t";
 	if(in == "signed char")
 		return "int8_t";
@@ -217,7 +221,7 @@ inline std::string normalize_type(std::string in) {
 		return in;
 }
 
-inline bool is_common_type(std::string in) {
+inline bool is_common_type(std::string const& in) {
 	return std::find(common_types.begin(), common_types.end(), normalize_type(in)) != common_types.end();
 }
 

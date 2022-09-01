@@ -11,6 +11,36 @@ object{
 		name{some_value}
 		type{int32_t}
 	}
+
+	property{
+		name{bf_value}
+		type{bitfield}
+	}
+
+	property{
+		name{bool_value}
+		type{bool}
+	}
+
+	property{
+		name{d_value}
+		type{derived{int32_t}}
+	}
+
+	property{
+		name{dbf_value}
+		type{derived{bitfield}}
+	}
+
+	property{
+		name{obj_value}
+		type{object{std::vector<float>}}
+	}
+
+	property{
+		name{pooled_v}
+		type{vector_pool{1000}{int16_t}}
+	}
 }
 
 global{int32_t counter = 0;}

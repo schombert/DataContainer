@@ -94,9 +94,7 @@ basic_builder& make_member_container(basic_builder& o,
 			+ "DCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }";
 		} else {
 			if(pad == struct_padding::fixed)
-				o + "uint8_t padding[64];";
-			else if(pad == struct_padding::calculated)
-				o + "uint8_t padding[(sizeof(@type@) + 63ui32) & ~63ui32];";
+				o + "uint8_t padding[(63 + sizeof(@type@)) & ~63ui64];";
 			o + "@type@ values[@size@];"
 			+ "DCON_RELEASE_INLINE auto vptr() const { return values; }"
 			+ "DCON_RELEASE_INLINE auto vptr() { return values; }";
@@ -117,6 +115,126 @@ basic_builder& make_member_container(basic_builder& o,
 			else
 				o + "dtype_@name@() { std::uninitialized_fill_n(values - 1, 1 + @size@, @fill@); }";
 		}
+	} +"m_@name@;" + line_break{};
+
+	return o;
+}
+
+basic_builder& make_array_member_container(basic_builder& o, 
+	std::string const& member_name, std::string const& type_name, size_t raw_size,
+	bool is_expandable, bool is_bitfield) {
+
+	std::string size = std::string("(sizeof(") + type_name + ") * " + std::to_string(raw_size) +
+		 " + 64ui64 - ((sizeof(" + type_name + ") * " + std::to_string(raw_size) + ") & ~63ui64)"
+		" + ((sizeof(" + type_name + ") + 63ui64) & ~63ui64))";
+	// = size of all values in bytes + number of bytes to get the end to a multiple of 64 + 64 * number of cachelines
+	// required to fit the type
+
+	o + substitute("type", type_name) + substitute("name", member_name) + substitute{ "size", size };
+	o + substitute{ "pad_value", std::string("((63ui64 + sizeof(") + type_name + ")) & ~63ui64)" };
+
+	o + heading{ "storage space for @name@ of type array of @type@" };
+	o + "struct dtype_@name@" + block{
+		if(is_expandable) {
+			o + "std::vector<std::vector<@type@>> values;";
+			o + "uint32_t size = 0;";
+
+			o + "DCON_RELEASE_INLINE auto vptr(int32_t i) const { return values[i].data() + 1; }";
+			o + "DCON_RELEASE_INLINE auto vptr(int32_t i) { return values[i].data() + 1; }";
+			o + "DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t container_size)" + block{
+				o + "values.resize(size);";
+				o + "for(uint32_t i = size; i < sz ++i) values[i].emplace_back();";
+				o + "size = sz;";
+			};
+			if(!is_bitfield) {
+				o + "DCON_RELEASE_INLINE void emplace_back_all(uint32_t newsz)" + block{
+					o + "for(auto& v : values) v.emplace_back();";
+				};
+				o + "DCON_RELEASE_INLINE void copy_value(int32_t dest, int32_t source)" + block{
+					o + "for(auto& v : values)" + block{
+						o + "v[1 + dest] = v[1 + source];";
+					};
+				};
+				o + "DCON_RELEASE_INLINE void pop_back_all(int32_t dest, uint32_t vsize)" + block{
+					o + "for(auto& v : values)" + block{
+						o + "v.pop_back();";
+					};
+				};
+				o + "DCON_RELEASE_INLINE void zero_at(int32_t dest)" + block{
+					o + "for(auto& v : values)" + block{
+						o + "v[1 + dest] = @type@{};";
+					};
+				};
+			} else {
+				o + "DCON_RELEASE_INLINE void emplace_back_all(uint32_t newsz)" + block{
+					o + "for(auto& v : values)" + block{
+						o + "v.resize(1 + (newsz + 7) / 8);";
+					};
+				};
+				o + "DCON_RELEASE_INLINE void copy_value(int32_t dest, int32_t source)" + block{
+					o + "for(int32_t i = 0; i < int32_t(size); ++i)" + block{
+						o + "dcon::bit_vector_set(vptr(i), dest, dcon::bit_vector_test(vptr(i), source));";
+					};
+				};
+				o + "DCON_RELEASE_INLINE void pop_back_all(uint32_t vsize)" + block{
+					o + "for(auto& v : values)" + block{
+						o + "v.resize(1 + (vsize + 6) / 8);";
+					};
+				};
+				o + "DCON_RELEASE_INLINE void zero_at(int32_t dest)" + block{
+					o + "for(int32_t i = 0; i < int32_t(size); ++i)" + block{
+						o + "dcon::bit_vector_set(vptr(i), dest, false);";
+					};
+				};
+			}
+		} else {
+			o + "std::byte* values = nullptr;";
+			o + "uint32_t size = 0;";
+
+			o + "DCON_RELEASE_INLINE auto vptr(int32_t i) const" + block{
+				o + "return reinterpret_cast<@type@ const*>(values + @pad_value@ + i * @size@);";
+			};
+			o + "DCON_RELEASE_INLINE auto vptr(int32_t i)" + block{
+				o + "return reinterpret_cast<@type@*>(values + @pad_value@ + i * @size@);";
+			};
+			o + +"DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t)" + block{
+				o + "std::byte* temp = (std::byte*)(::operator new(@pad_value@ + sz * @size@, std::align_val_t{ 64 }))";
+				o + "if(sz > size)" + block {
+					o + "std::memcpy(temp, values, @pad_value@ + size * @size@)";
+					o + "std::memset(temp + @pad_value@ + size * @size@, 0, (sz - size) * @size@)";
+				} +append{ "else" } +block{
+					o + "std::memcpy(temp, values, @pad_value@ + sz * @size@)";
+				};
+				o + "::operator delete(values, std::align_val_t{ 64 });";
+				o + "values = temp;";
+				o + "size = sz;";
+			};
+			o + "~dtype_@name@() { ::operator delete(values, std::align_val_t{ 64 }); }";
+			if(!is_bitfield) {
+				o + "DCON_RELEASE_INLINE void copy_value(int32_t dest, int32_t source)" + block{
+					o + "for(int32_t i = 0; i < int32_t(size); ++i)" + block{
+						o + "vptr(i)[dest] = vptr(i)[source]";
+					};
+				};
+				o + "DCON_RELEASE_INLINE void zero_at(int32_t dest)" + block{
+					o + "for(int32_t i = 0; i < int32_t(size); ++i)" + block{
+						o + "vptr(i)[dest] = @type@{};";
+					};
+				};
+			} else {
+				o + "DCON_RELEASE_INLINE void copy_value(int32_t dest, int32_t source)" + block{
+					o + "for(int32_t i = 0; i < int32_t(size); ++i)" + block{
+						o + "dcon::bit_vector_set(vptr(i), dest, dcon::bit_vector_test(vptr(i), source));";
+					};
+				};
+				o + "DCON_RELEASE_INLINE void zero_at(int32_t dest)" + block{
+					o + "for(int32_t i = 0; i < int32_t(size); ++i)" + block{
+						o + "dcon::bit_vector_set(vptr(i), dest, false);";
+					};
+				};
+			}
+		}
+		
 	} +"m_@name@;" + line_break{};
 
 	return o;
@@ -239,6 +357,108 @@ basic_builder& make_hooked_setters(basic_builder& o, std::string const& object_n
 	return o;
 }
 
+basic_builder& make_array_hooked_getters(basic_builder& o, std::string const& object_name, std::string const& property_name,
+	std::string const& property_type, std::string const& index_type, hook_type ht, bool is_expandable) {
+
+	o + substitute{ "obj", object_name } +substitute{ "prop", property_name } +substitute{ "type", property_type } +
+		substitute{ "vector_position", is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags" }
+		+substitute{ "index_type", index_type };
+
+	o + heading{ "getter array hooks for @obj@: @prop@" };
+
+	if(ht == hook_type::bitfield) {
+		o + "bool @obj@_get_@prop@(@obj@_id id, @index_type@ i) const;";
+		o + "#ifndef DCON_NO_VE";
+		o + "ve::vbitfield_type @obj@_get_@prop@(@vector_position@<@obj@_id> id, @index_type@ n) const" + block{
+			o + "ve::vbitfield_type r; r.v = 0;";
+			o + "for(int32_t i = 0; i < ve::vector_size; ++i)" + block{
+				o + "tr.v |= (@obj@_get_@prop@(@obj@_id(id.value + i), n)) << i;";
+			};
+			o + "return r;";
+		};
+		o + "ve::vbitfield_type @obj@_get_@prop@(ve::partial_contiguous_tags<@obj@_id> id, @index_type@ n) const" + block{
+			o + "ve::vbitfield_type r; r.v = 0;";
+			o + "for(int32_t i = 0; i < id.subcount; ++i)" + block{
+				o + "tr.v |= (@obj@_get_@prop@(@obj@_id(id.value + i), n)) << i;";
+			};
+			o + "return r;";
+		};
+		o + "ve::vbitfield_type @obj@_get_@prop@(ve::tagged_vector<@obj@ _id> id, @index_type@ n) const" + block{
+			o + "ve::vbitfield_type r; r.v = 0;";
+			o + "for(int32_t i = 0; i < ve::vector_size; ++i)" + block{
+				o + "tr.v |= (@obj@_get_@prop@(@obj@_id(id.value + i), n)) << i;";
+			};
+			o + "return r;";
+		};
+		o + "#endif";
+	} else if(ht == hook_type::vectorizable) {
+		o + "@type@ @obj@_get_@prop@(@obj@_id id, @index_type@ n) const;";
+		o + "#ifndef DCON_NO_VE";
+		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@(@vector_position@<@obj@_id> id, @index_type@ n) const" + block{
+			o + "return ve::apply([t = this](@obj@_id i){ return t->@obj@_get_@prop@(i, n); }, id);";
+		};
+		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@(ve::partial_contiguous_tags<@obj@_id> id, @index_type@ n) const" + block{
+			o + "return ve::apply([t = this](@obj@_id i){ return t->@obj@_get_@prop@(i, n); }, id);";
+		};
+		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@(ve::tagged_vector<@obj@_id> id, @index_type@ n) const" + block{
+			o + "return ve::apply([t = this](@obj@_id i){ return t->@obj@_get_@prop@(i, n); }, id);";
+		o + "#endif";
+		};
+	} else {
+		o + "@type@ @obj@_get_@prop@(@obj@_id id, @index_type@ n) const;";
+	}
+	o + line_break{};
+	return o;
+}
+
+basic_builder& make_array_hooked_setters(basic_builder& o, std::string const& object_name, std::string const& property_name,
+	std::string const& property_type, std::string const& index_type, hook_type ht, bool is_expandable) {
+
+	o + substitute{ "obj", object_name } +substitute{ "prop", property_name } +substitute{ "type", property_type } +
+		substitute{ "vector_position", is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags" }
+		+substitute{ "index_type", index_type };
+	o + heading{ "setter hooks for @obj@: @prop@" };
+
+	if(ht == hook_type::bitfield) {
+		o + "void @obj@_set_@prop@(@obj@_id id, @index_type@ n, bool value);";
+		o + "#ifndef DCON_NO_VE";
+		o + "void @obj@_set_@prop@(@vector_position@<@obj@_id> id, @index_type@ n, ve::vbitfield_type value)" + block{
+			o + "for(int32_t i = 0; i < ve::vector_size; ++i)" + block{
+				o + "@obj@_set_@prop@(@obj@_id(id.value + i), n, (value.v & uint8_t(1 << i)) != 0);";
+			};
+		};
+		o + "void @obj@_set_@prop@(partial_contiguous_tags<@obj@_id> id, @index_type@ n, ve::vbitfield_type value)" + block{
+			o + "for(int32_t i = 0; i < id.subcount; ++i)" + block{
+				o + "@obj@_set_@prop@(@obj@_id(id.value + i), n, (value.v & uint8_t(1 << i)) != 0);";
+			};
+		};
+		o + "void @obj@_set_@prop@(ve::tagged_vector<<@obj@_id> id, @index_type@ n, ve::vbitfield_type value)" + block{
+			o + "for(int32_t i = 0; i < ve::vector_size; ++i)" + block{
+				o + "@obj@_set_@prop@(id[i], n, (value.v & uint8_t(1 << i)) != 0);";
+			};
+		};
+		o + "#endif";
+	} else if(ht == hook_type::vectorizable) {
+		o + "void @obj@_set_@prop@(@obj@_id id, @index_type@ n, @type@ value);";
+		o + "#ifndef DCON_NO_VE";
+		o + "void @obj@_set_@prop@(@vector_position@<@obj@_id> id, @index_type@ n, ve::value_to_vector_type<@type@> value)" + block{
+			o + "ve::apply(value, [t = this, n](@obj@_id i, @type@ v){ t->@obj@_set_@prop@(i, n, v); }, id);";
+		};
+		o + "void @obj@_set_@prop@(partial_contiguous_tags<@obj@_id> id, @index_type@ n, ve::value_to_vector_type<@type@> value)" + block{
+			o + "ve::apply(value, [t = this, n](@obj@_id i, @type@ v){ t->@obj@_set_@prop@(i, n, v); }, id);";
+		};
+		o + "void @obj@_set_@prop@(ve::tagged_vector<@obj@_id> id, @index_type@ n, ve::value_to_vector_type<@type@> value)" + block{
+			o + "ve::apply(value, [t = this, n](@obj@_id i, @type@ v){ t->@obj@_set_@prop@(i, n, v); }, id);";
+		o + "#endif";
+		};
+	} else {
+		o + "void @obj@_set_@prop@(@obj@_id id, @index_type@ n, @type@ const& value);";
+	}
+
+	o + line_break{};
+	return o;
+}
+
 basic_builder& make_vectorizable_getters(basic_builder& o, std::string const& type, bool is_expandable) {
 	o + substitute{ "vector_position", is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags" }
 		+ substitute{"type", type};
@@ -276,6 +496,43 @@ basic_builder& make_vectorizable_setters(basic_builder& o, std::string const& ty
 	return o;
 }
 
+basic_builder& make_vectorizable_array_getters(basic_builder& o, std::string const& type, std::string const& index_type, bool is_expandable) {
+	o + substitute{ "vector_position", is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags" }
+	+substitute{ "type", type } +substitute{ "index_type", index_type };
+	o + "#ifndef DCON_NO_VE";
+	o + "DCON_RELEASE_INLINE @type@ @obj@_get_@prop@(@vector_position@<@obj@_id> id, @index_type@ n) const noexcept" + block{
+		o + "return ve::load(id, @obj@.m_@prop@.vptr(dcon::get_index(n)));";
+	};
+	o + "DCON_RELEASE_INLINE @type@ @obj@_get_@prop@(ve::partial_contiguous_tags<@obj@_id> id, @index_type@ n) const noexcept" + block{
+		o + "return ve::load(id, @obj@.m_@prop@.vptr(dcon::get_index(n)));";
+	};
+	o + "DCON_RELEASE_INLINE @type@ @obj@_get_@prop@(ve::tagged_vector<@obj@_id> id, @index_type@ n) const noexcept" + block{
+		o + "return ve::load(id, @obj@.m_@prop@.vptr(dcon::get_index(n)));";
+	};
+	o + "#endif";
+
+	return o;
+}
+
+basic_builder& make_vectorizable_array_setters(basic_builder& o, std::string const& type, std::string const& index_type, bool is_expandable) {
+	o + substitute{ "vector_position", is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags" }
+	+substitute{ "type", type } +substitute{ "index_type", index_type };
+
+	o + "#ifndef DCON_NO_VE";
+	o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(@vector_position@<@obj@_id> id, @index_type@ n, @type@ values) noexcept" + block{
+		o + "ve::store(id, @obj@.m_@prop@.vptr(dcon::get_index(n)), values);";
+	};
+	o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(ve::partial_contiguous_tags<@obj@_id> id, @index_type@ n, @type@ values) noexcept" + block{
+		o + "ve::store(id, @obj@.m_@prop@.vptr(dcon::get_index(n)), values);";
+	};
+	o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(ve::tagged_vector<@obj@_id> id, @index_type@ n, @type@ values) noexcept" + block{
+		o + "ve::store(id, @obj@.m_@prop@.vptr(dcon::get_index(n)), values);";
+	};
+	o + "#endif";
+
+	return o;
+}
+
 basic_builder& make_single_getter(basic_builder& o, std::string const& type, bool return_reference) {
 	o + substitute{ "type", type };
 	if(!return_reference) {
@@ -305,6 +562,29 @@ basic_builder& make_single_setter(basic_builder& o, std::string const& type, boo
 	}
 	return o;
 }
+basic_builder& make_single_array_getter(basic_builder& o, std::string const& type, std::string const& index_type) {
+	o + substitute{ "type", type }+substitute{ "index_type", index_type };
+	o + "DCON_RELEASE_INLINE @type@ const& @obj@_get_@prop@(@obj@_id id, @index_type@ n) const noexcept" + block{
+		o + "return @obj@.m_@prop@.vptr(dcon::get_index(n))[id.index()];";
+	};
+	o + "DCON_RELEASE_INLINE @type@& @obj@_get_@prop@(@obj@_id id) noexcept" + block{
+		o + "return @obj@.m_@prop@.vptr(dcon::get_index(n))[id.index()];";
+	};
+	return o;
+}
+basic_builder& make_single_array_setter(basic_builder& o, std::string const& type, std::string const& index_type, bool by_reference) {
+	o + substitute{ "type", type }+substitute{ "index_type", index_type };
+	if(by_reference) {
+		o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(@obj@_id id, @index_type@ n, @type@ const& value) noexcept" + block{
+			o + "@obj@.m_@prop@.vptr(dcon::get_index(n))[id.index()] = value;";
+		};
+	} else {
+		o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(@obj@_id id, @index_type@ n, @type@ value) noexcept" + block{
+			o + "@obj@.m_@prop@.vptr(dcon::get_index(n))[id.index()] = value;";
+		};
+	}
+	return o;
+}
 
 basic_builder& make_bitfield_getters(basic_builder& o, std::string const& object_name, std::string const& property_name,
 	bool is_expandable) {
@@ -313,7 +593,7 @@ basic_builder& make_bitfield_getters(basic_builder& o, std::string const& object
 	o + heading{ "getters for @obj@: @prop@" };
 
 	o + "DCON_RELEASE_INLINE bool @obj@_get_@prop@(@obj@_id id) const noexcept" + block{
-		o + "return dcon::bit_vector_test(@obj@.m_@prop@.vptr()[id.index()]);";
+		o + "return dcon::bit_vector_test(@obj@.m_@prop@.vptr(), id.index());";
 	};
 	make_vectorizable_getters(o, "ve::vbitfield_type", is_expandable);
 	o + line_break{};
@@ -331,6 +611,35 @@ basic_builder& make_bitfield_setters(basic_builder& o, std::string const& object
 	};
 
 	make_vectorizable_setters(o, "ve::vbitfield_type", is_expandable);
+	o + line_break{};
+	return o;
+}
+
+basic_builder& make_bitfield_array_getters(basic_builder& o, std::string const& object_name, std::string const& property_name,
+	std::string const& index_type, bool is_expandable) {
+
+	o + substitute{ "obj", object_name } +substitute{ "prop", property_name }+substitute{ "index_type", index_type };
+	o + heading{ "getters for @obj@: @prop@" };
+
+	o + "DCON_RELEASE_INLINE bool @obj@_get_@prop@(@obj@_id id, @index_type@ n) const noexcept" + block{
+		o + "return dcon::bit_vector_test(@obj@.m_@prop@.vptr(dcon::get_index(n)), id.index());";
+	};
+	make_vectorizable_array_getters(o, "ve::vbitfield_type", index_type, is_expandable);
+	o + line_break{};
+	return o;
+}
+
+basic_builder& make_bitfield_array_setters(basic_builder& o, std::string const& object_name, std::string const& property_name,
+	std::string const& index_type, bool is_expandable) {
+
+	o + substitute{ "obj", object_name } +substitute{ "prop", property_name }+substitute{ "index_type", index_type };
+	o + heading{ "setters for @obj@: @prop@" };
+
+	o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(@obj@_id id, @index_type@ n, bool value) noexcept" + block{
+		o + "dcon::bit_vector_set(@obj@.m_@prop@.vptr(dcon::get_index(n)), id.index(), value);";
+	};
+
+	make_vectorizable_array_setters(o, "ve::vbitfield_type", index_type, is_expandable);
 	o + line_break{};
 	return o;
 }
@@ -357,6 +666,28 @@ basic_builder& make_object_setters(basic_builder& o, std::string const& object_n
 	return o;
 }
 
+basic_builder& make_object_array_getters(basic_builder& o, std::string const& object_name, std::string const& property_name,
+	std::string const& type, std::string const& index_type) {
+
+	o + substitute{ "obj", object_name } +substitute{ "prop", property_name };
+	o + heading{ "getters for @obj@: @prop@" };
+
+	make_single_array_getter(o, type, index_type);
+	o + line_break{};
+	return o;
+}
+
+basic_builder& make_object_array_setters(basic_builder& o, std::string const& object_name, std::string const& property_name,
+	std::string const& type, std::string const& index_type) {
+
+	o + substitute{ "obj", object_name } +substitute{ "prop", property_name };
+	o + heading{ "setters for @obj@: @prop@" };
+
+	make_single_array_setter(o, type, index_type, true);
+	o + line_break{};
+	return o;
+}
+
 basic_builder& make_vectorizable_type_getters(basic_builder& o, std::string const& object_name, std::string const& property_name,
 	std::string const& type, bool is_expandable) {
 
@@ -377,6 +708,30 @@ basic_builder& make_vectorizable_type_setters(basic_builder& o, std::string cons
 
 	make_single_setter(o, type, false);
 	make_vectorizable_setters(o, std::string("ve::value_to_vector_type<") + type + ">", is_expandable);
+	o + line_break{};
+	return o;
+}
+
+basic_builder& make_vectorizable_type_array_getters(basic_builder& o, std::string const& object_name, std::string const& property_name,
+	std::string const& type, std::string const& index_type, bool is_expandable) {
+
+	o + substitute{ "obj", object_name } +substitute{ "prop", property_name };
+	o + heading{ "getters for @obj@: @prop@" };
+
+	make_single_array_getter(o, type, index_type);
+	make_vectorizable_array_getters(o, std::string("ve::value_to_vector_type<") + type + ">", index_type, is_expandable);
+	o + line_break{};
+	return o;
+}
+
+basic_builder& make_vectorizable_type_array_setters(basic_builder& o, std::string const& object_name, std::string const& property_name,
+	std::string const& type, std::string const& index_type, bool is_expandable) {
+
+	o + substitute{ "obj", object_name } +substitute{ "prop", property_name };
+	o + heading{ "setters for @obj@: @prop@" };
+
+	make_single_array_setter(o, type, index_type, false);
+	make_vectorizable_array_setters(o, std::string("ve::value_to_vector_type<") + type + ">", index_type, is_expandable);
 	o + line_break{};
 	return o;
 }
@@ -416,19 +771,25 @@ basic_builder& make_special_array_setters(basic_builder& o, std::string const& o
 	o + heading{ "setters for @obj@: @prop@ (special array)" };
 
 	o + "void @obj@_@prop@_push_back(@obj@_id id, @type@ obj) noexcept" + block{
-		o + "return dcon::push_back(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()], obj);";
+		o + "dcon::push_back(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()], obj);";
 	};
 
 	o + "void @obj@_@prop@_pop_back(@obj@_id id) noexcept" + block{
-		o + "return dcon::pop_back(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()]);";
+		o + "dcon::pop_back(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()]);";
 	};
 
-	o + "void @obj@_@prop@_add_unique(@obj@_id id, @prop@ obj) noexcept" + block{
-		o + "return dcon::add_unique_item(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()], obj);";
+	o + "void @obj@_@prop@_add_unique(@obj@_id id, @type@ obj) noexcept" + block{
+		o + "dcon::add_unique_item(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()], obj);";
 	};
 
-	o + "void @obj@_@prop@_remove_unique(@obj@_id id, @prop@ obj) noexcept" + block{
-		o + "return dcon::remove_unique_item(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()], obj);";
+	o + "void @obj@_@prop@_remove_unique(@obj@_id id, @type@ obj) noexcept" + block{
+		o + "dcon::remove_unique_item(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()], obj);";
+	};
+	o + "void @obj@_@prop@_clear(@obj@_id id) noexcept" + block{
+		o + "@obj@.@prop@_storage.release(@obj@.m_@prop@.vptr()[id.index()]);";
+	};
+	o + "void @obj@_@prop@_remove_at(@obj@_id id, uint32_t inner_index) noexcept" + block{
+			o + "dcon::remove_at(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()], inner_index);";
 	};
 	o + line_break{};
 	return o;
@@ -739,6 +1100,8 @@ basic_builder& clear_value(basic_builder& o, std::string const& object_name, std
 		o + "@t_obj@.@t_prop@_storage.release(@t_obj@.m_@t_prop@.vptr()[@t_at@.index()]);";
 	} else if(type == property_type::bitfield) {
 		o + "dcon::bit_vector_set(@t_obj@.m_@t_prop@.vptr(), @t_at@.index(), false);";
+	} else if(type == property_type::array_other || type == property_type::array_vectorizable || type == property_type::array_bitfield) {
+		o + "@t_obj@.m_@t_prop@.zero_at(@t_at@.index()};";
 	} else {
 		o + "@t_obj@.m_@t_prop@.vptr()[@t_at@.index()] = @t_type@{};";
 	}
@@ -762,6 +1125,8 @@ basic_builder& pop_value(basic_builder& o, std::string const& object_name, std::
 	} else if(type == property_type::bitfield) {
 		o + "dcon::bit_vector_set(@t_obj@.m_@t_prop@.vptr(), @t_at@.index(), false);";
 		o + "@t_obj@.m_@t_prop@.values.resize(1 + (@t_obj@.size_used + 6) / 8);";
+	} else if(type == property_type::array_other || type == property_type::array_vectorizable || type == property_type::array_bitfield) {
+		o + "@t_obj@.m_@t_prop@.pop_back_all(@t_obj@.size_used};";
 	} else {
 		o + "@t_obj@.m_@t_prop@.values.pop_back();";
 	}
@@ -889,6 +1254,17 @@ basic_builder& clear_value_range(basic_builder& o, std::string const& object_nam
 	} else if(type == property_type::object) {
 		o + "std::destroy_n(@t_obj@.m_@t_prop@.vptr() + @begin@, @count@);";
 		o + "std::uninitialized_default_construct_n(@t_obj@.m_@t_prop@.vptr() + @begin@, @count@);";
+	} else if(type == property_type::array_other || type == property_type::array_vectorizable) {
+		o + "for(int32_t s = 0; s < int32_t(@t_obj@.m_@t_prop@.size); ++s)" + block{
+			o + "std::fill_n(@t_obj@.m_@t_prop@.vptr(s) + @begin@, @count@, @t_type@{});";
+		};
+	} else if(type == property_type::array_bitfield) {
+		o + "for(int32_t s = 0; s < int32_t(@t_obj@.m_@t_prop@.size); ++s)" + block{
+			o + "for(uint32_t i = @begin@; i < 8 * (((@begin@ + 7) / 8)); ++i)" + block{
+				o + "dcon::bit_vector_set(@t_obj@.m_@t_prop@.vptr(s), i, false);";
+			};
+			o + "std::fill_n(@t_obj@.m_@t_prop@.vptr(s) + (@begin@ + 7) / 8, (@begin@ + @count@ + 7) / 8 - (@begin@ + 7) / 8, dcon::bitfield_type{0});";
+		};
 	} else {
 		o + "std::fill_n(@t_obj@.m_@t_prop@.vptr() + @begin@, @count@, @t_type@{});";
 	}
@@ -915,7 +1291,18 @@ basic_builder& shrink_value_range(basic_builder& o, std::string const& object_na
 			o + "dcon::bit_vector_set(@t_obj@.m_@t_prop@.vptr(), i, false);";
 		};
 		o + "@t_obj@.m_@t_prop@.values.resize(1 + (@begin@ + 7) / 8);";
-	} else {
+	} else if(type == property_type::array_other || type == property_type::array_vectorizable) {
+		o + "for(int32_t s = 0; s < int32_t(@t_obj@.m_@t_prop@.size); ++s)" + block{
+			o + "@t_obj@.m_@t_prop@.values[s].resize(1 + @begin@);";
+		};
+	} else if(type == property_type::array_bitfield) {
+		o + "for(int32_t s = 0; s < int32_t(@t_obj@.m_@t_prop@.size); ++s)" + block{
+			o + "for(uint32_t i = @begin@; i < 8 * (((@begin@ + 7) / 8)); ++i)" + block{
+				o + "dcon::bit_vector_set(@t_obj@.m_@t_prop@.vptr(s), i, false);";
+			};
+			o + "@t_obj@.m_@t_prop@.values[s].resize(1 + (@begin@ + 7) / 8);";
+		};
+	}  else {
 		o + "@t_obj@.m_@t_prop@.values.resize(1 + @begin@);";
 	}
 	return o;
@@ -934,6 +1321,14 @@ basic_builder& grow_value_range(basic_builder& o, std::string const& object_name
 		}
 	} else if(type == property_type::bitfield) {
 		o + "@t_obj@.m_@t_prop@.values.resize(1 + (@size@ + 7) / 8);";
+	} else if(type == property_type::array_other || type == property_type::array_vectorizable) {
+		o + "for(int32_t s = 0; s < int32_t(@t_obj@.m_@t_prop@.size); ++s)" + block{
+			o + "@t_obj@.m_@t_prop@.values[s].resize(1 + @size@);";
+		};
+	} else if(type == property_type::array_bitfield) {
+		o + "for(int32_t s = 0; s < int32_t(@t_obj@.m_@t_prop@.size); ++s)" + block{
+			o + "@t_obj@.m_@t_prop@.values[s].resize(1 + (@size@ + 7) / 8);";
+		};
 	} else {
 		o + "@t_obj@.m_@t_prop@.values.resize(1 + @size@);";
 	}
@@ -1202,6 +1597,22 @@ basic_builder& move_value_from_back(basic_builder& o, std::string const& object_
 	return o;
 }
 
+basic_builder& move_array_value_from_back(basic_builder& o, std::string const& object_name, std::string const& property_name,
+	std::string const& source, std::string const& destination, bool is_expandable) {
+
+	o + substitute{ "t_obj", object_name } +substitute{ "t_prop", property_name }
+	+substitute{ "t_source", source } +substitute{ "t_dest", destination };
+
+	o + "@t_obj@.m_@t_prop@.copy_value(@t_dest@.index(), @t_source@.index());";
+	if(is_expandable) {
+		o + "@t_obj@.m_@t_prop@.pop_back_all();";
+	} else {
+		o + "@t_obj@.m_@t_prop@.zero_at(@t_source@.index());";
+	}
+
+	return o;
+}
+
 basic_builder& move_value(basic_builder& o, std::string const& object_name, std::string const& property_name,
 	std::string const& source, std::string const& destination, std::string const& null_value) {
 
@@ -1212,6 +1623,18 @@ basic_builder& move_value(basic_builder& o, std::string const& object_name, std:
 	o + "@t_obj@.m_@t_prop@.vptr()[@t_dest@.index()] = std::move(@t_obj@.m_@t_prop@.vptr()[@t_source@.index()]);";
 	o + "@t_obj@.m_@t_prop@.vptr()[@t_source@.index()] = @t_null@;";
 	
+	return o;
+}
+
+basic_builder& move_array_value(basic_builder& o, std::string const& object_name, std::string const& property_name,
+	std::string const& source, std::string const& destination) {
+
+	o + substitute{ "t_obj", object_name } +substitute{ "t_prop", property_name }
+	+substitute{ "t_source", source } +substitute{ "t_dest", destination };
+
+	o + "@t_obj@.m_@t_prop@.copy_value(@t_dest@.index(), @t_source@.index());";
+	o + "@t_obj@.m_@t_prop@.zero_at(@t_source@.index());";
+
 	return o;
 }
 
@@ -1358,10 +1781,13 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 					"last_id", "id_removed", "std::numeric_limits<dcon::stable_mk_2_tag>::max()", cob.is_expandable);
 			} else if(cp.type == property_type::bitfield) {
 				o + "dcon::bit_vector_set(@obj@.m_@prop@.vptr(), id_removed.index(), "
-					"dcon::bit_vector_get(@obj@.m_@prop@.vptr(), last_id.index()));";
+					"dcon::bit_vector_test(@obj@.m_@prop@.vptr(), last_id.index()));";
 				o + "dcon::bit_vector_set(@obj@.m_@prop@.vptr(), last_id.index(), false);";
 				if(cob.is_expandable)
 					o + "@obj@.m_@prop@.values.resize(1 + (@obj@.size_used + 6) / 8);";
+			} else if(cp.type == property_type::array_bitfield || cp.type == property_type::array_other || cp.type == property_type::array_vectorizable) {
+				move_array_value_from_back(o, cob.name, cp.name,
+					"last_id", "id_removed", cob.is_expandable);
 			} else {
 				move_value_from_back(o, cob.name, cp.name,
 					"last_id", "id_removed", cp.data_type + "{}", cob.is_expandable);
@@ -1437,6 +1863,8 @@ basic_builder& expandable_push_back(basic_builder& o, relationship_object_def co
 			o + "@obj@.m_@prop@.values.resize(1 + (@obj@.size_used + 8) / 8);";
 		} else if(cp.type == property_type::special_vector) {
 			o + "@obj@.m_@prop@.values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());";
+		} else if(cp.type == property_type::array_bitfield || cp.type == property_type::array_other || cp.type == property_type::array_vectorizable) {
+			o + "@obj@.m_@prop@.emplace_back_all(@obj@.size_used + 1)";
 		} else {
 			o + "@obj@.m_@prop@.values.emplace_back();";
 		}
@@ -1679,8 +2107,11 @@ basic_builder& make_internal_move_relationship(basic_builder& o, relationship_ob
 					"last_id", "id_removed", "std::numeric_limits<dcon::stable_mk_2_tag>::max()");
 			} else if(cp.type == property_type::bitfield) {
 				o + "dcon::bit_vector_set(@obj@.m_@prop@.vptr(), id_removed.index(), "
-					"dcon::bit_vector_get(@obj@.m_@prop@.vptr(), last_id.index()));";
+					"dcon::bit_vector_test(@obj@.m_@prop@.vptr(), last_id.index()));";
 				o + "dcon::bit_vector_set(@obj@.m_@prop@.vptr(), last_id.index(), false);";
+			} else if(cp.type == property_type::array_bitfield || cp.type == property_type::array_other || cp.type == property_type::array_vectorizable) {
+				move_array_value(o, cob.name, cp.name,
+					"last_id", "id_removed");
 			} else {
 				move_value(o, cob.name, cp.name,
 					"last_id", "id_removed", cp.data_type + "{}");
@@ -1916,7 +2347,7 @@ basic_builder& make_serialize_size(basic_builder& o, file_def const& parsed_file
 			}
 
 			for(auto& prop : ob.properties) {
-				o + substitute{ "prop", prop.name } +substitute{ "type", prop.data_type };
+				o + substitute{ "prop", prop.name } +substitute{ "type", normalize_type(prop.data_type) };
 				if(prop.is_derived) {
 
 				} else if(prop.type == property_type::bitfield) {
@@ -1928,7 +2359,7 @@ basic_builder& make_serialize_size(basic_builder& o, file_def const& parsed_file
 				} else if(prop.type == property_type::special_vector) {
 					o + substitute{ "vtype_name_sz", std::to_string(prop.data_type.length() + 1) };
 					o + "if(serialize_selection.@obj@_@prop@)" + block{
-						o + "std::for_each(@obj@.m_@prop@.vptr(), @obj@.m_@prop@.vptr() @obj@.size_used, [t = this, &total_size](stable_mk_2_tag obj)" + block{
+						o + "std::for_each(@obj@.m_@prop@.vptr(), @obj@.m_@prop@.vptr() + @obj@.size_used, [t = this, &total_size](stable_mk_2_tag obj)" + block{
 							o + "auto rng = dcon::get_range(t->@obj@.@prop@_storage, obj);";
 							o + "total_size += sizeof(uint16_t);";
 							o + "total_size += sizeof(@type@) * (rng.second - rng.first);";
@@ -1942,7 +2373,7 @@ basic_builder& make_serialize_size(basic_builder& o, file_def const& parsed_file
 					};
 				} else if(prop.type == property_type::object) {
 					o + "if(serialize_selection.@obj@_@prop@)" + block{
-						o + "std::for_each(@obj@.m_@prop@.vptr(), @obj@.m_@prop@.vptr() @obj@.size_used, "
+						o + "std::for_each(@obj@.m_@prop@.vptr(), @obj@.m_@prop@.vptr() + @obj@.size_used, "
 						"[t = this, &total_size](@type@ const& obj){ total_size += t->serialize_size(obj); });";
 						o + "dcon::record_header iheader(total_size, \"@type@\", \"@obj@\", \"@prop@\");";
 						o + "total_size += iheader.serialize_size();";
@@ -1984,7 +2415,7 @@ basic_builder& make_serialize(basic_builder& o, file_def const& parsed_file) {
 						o + inline_block{
 							o + "dcon::record_header iheader(sizeof(@type@_id) * @obj@.size_used, \"@u_type@\", \"@obj@\", \"@prop@\");";
 							o + "iheader.serialize(output_buffer);";
-							o + "memcpy(reinterpret_cast<@type@_id*>(output_buffer), @obj@.m_@prop@.vptr(), sizeof(@type@_id) * @obj@.size_used);";
+							o + "std::memcpy(reinterpret_cast<@type@_id*>(output_buffer), @obj@.m_@prop@.vptr(), sizeof(@type@_id) * @obj@.size_used);";
 							o + "output_buffer += sizeof(@type@_id) * @obj@.size_used;";
 						};
 					}
@@ -2001,7 +2432,7 @@ basic_builder& make_serialize(basic_builder& o, file_def const& parsed_file) {
 				o + "if(serialize_selection.@obj@__index)" + block{
 					o + "dcon::record_header header(sizeof(@obj@_id) * @obj@.size_used, \"@u_type@\", \"@obj@\", \"_index\");";
 					o + "header.serialize(output_buffer);";
-					o + "memcpy(reinterpret_cast<@obj@_id*>(output_buffer), @obj@.m__index.vptr(), sizeof(@obj@_id) * @obj@.size_used);";
+					o + "std::memcpy(reinterpret_cast<@obj@_id*>(output_buffer), @obj@.m__index.vptr(), sizeof(@obj@_id) * @obj@.size_used);";
 					o + "output_buffer += sizeof(@obj@_id) * @obj@.size_used;";
 				};
 			}
@@ -2009,20 +2440,20 @@ basic_builder& make_serialize(basic_builder& o, file_def const& parsed_file) {
 			
 
 			for(auto& prop : ob.properties) {
-				o + substitute{ "prop", prop.name } +substitute{ "type", prop.data_type };
+				o + substitute{ "prop", prop.name } +substitute{ "type", normalize_type(prop.data_type) };
 				if(prop.is_derived) {
 
 				} else if(prop.type == property_type::bitfield) {
 					o + "if(serialize_selection.@obj@_@prop@)" + block{
 						o + "dcon::record_header header((@obj@.size_used + 7) / 8, \"bitfield\", \"@obj@\", \"@prop@\");";
 						o + "header.serialize(output_buffer);";
-						o + "memcpy(reinterpret_cast<bitfield_type*>(output_buffer), @obj@.m_@prop@.vptr(), (@obj@.size_used + 7) / 8);";
+						o + "std::memcpy(reinterpret_cast<bitfield_type*>(output_buffer), @obj@.m_@prop@.vptr(), (@obj@.size_used + 7) / 8);";
 						o + "output_buffer += (@obj@.size_used + 7) / 8;";
 					};
 				} else if(prop.type == property_type::special_vector) {
 					o + "if(serialize_selection.@obj@_@prop@)" + block{
 						o + "size_t total_size = 0;";
-						o + "std::for_each(@obj@.m_@prop@.vptr(), @obj@.m_@prop@.vptr() @obj@.size_used, [t = this, &total_size](stable_mk_2_tag obj)" + block{
+						o + "std::for_each(@obj@.m_@prop@.vptr(), @obj@.m_@prop@.vptr() + @obj@.size_used, [t = this, &total_size](stable_mk_2_tag obj)" + block{
 							o + "auto rng = dcon::get_range(t->@obj@.@prop@_storage, obj);";
 							o + "total_size += sizeof(uint16_t) + sizeof(@type@) * (rng.second - rng.first);";
 						} +append{");"};
@@ -2033,14 +2464,14 @@ basic_builder& make_serialize(basic_builder& o, file_def const& parsed_file) {
 						o + "dcon::record_header header(total_size, \"stable_mk_2_tag\", \"@obj@\", \"@prop@\");";
 						o + "header.serialize(output_buffer);";
 
-						o + "memcpy(reinterpret_cast<char*>(output_buffer), \"@type@\", @vname_sz@);";
+						o + "std::memcpy(reinterpret_cast<char*>(output_buffer), \"@type@\", @vname_sz@);";
 						o + "output_buffer += @vname_sz@;";
 
-						o + "std::for_each(@obj@.m_@prop@.vptr(), @obj@.m_@prop@.vptr() @obj@.size_used, [t = this, output_buffer](stable_mk_2_tag obj)" + block{
+						o + "std::for_each(@obj@.m_@prop@.vptr(), @obj@.m_@prop@.vptr() + @obj@.size_used, [t = this, &output_buffer](stable_mk_2_tag obj)" + block{
 							o + "auto rng = dcon::get_range(t->@obj@.@prop@_storage, obj);";
 							o + "*(reinterpret_cast<uint16_t*>(output_buffer)) = uint16_t(rng.second - rng.first);";
 							o + "output_buffer += sizeof(uint16_t);";
-							o + "memcpy(reinterpret_cast<@type@*>(output_buffer), rng.first, sizeof(@type@) * (rng.second - rng.first));";
+							o + "std::memcpy(reinterpret_cast<@type@*>(output_buffer), rng.first, sizeof(@type@) * (rng.second - rng.first));";
 							o + "output_buffer += sizeof(@type@) * (rng.second - rng.first);";
 						} +append{");"};
 					};
@@ -2048,7 +2479,7 @@ basic_builder& make_serialize(basic_builder& o, file_def const& parsed_file) {
 				} else if(prop.type == property_type::object) {
 					o + "if(serialize_selection.@obj@_@prop@)" + block{
 						o + "size_t total_size = 0;";
-						o + "std::for_each(@obj@.m_@prop@.vptr(), @obj@.m_@prop@.vptr() @obj@.size_used, [t = this, &total_size](@type@ const& obj)" + block{
+						o + "std::for_each(@obj@.m_@prop@.vptr(), @obj@.m_@prop@.vptr() + @obj@.size_used, [t = this, &total_size](@type@ const& obj)" + block{
 							o + "total_size += t->serialize_size(obj);";
 						} +append{");"};
 						o + "dcon::record_header header(total_size, \"@type@\", \"@obj@\", \"@prop@\");";
@@ -2060,7 +2491,7 @@ basic_builder& make_serialize(basic_builder& o, file_def const& parsed_file) {
 					o + "if(serialize_selection.@obj@_@prop@)" + block{
 						o + "dcon::record_header header(sizeof(@type@) * @obj@.size_used, \"@type@\", \"@obj@\", \"@prop@\");";
 						o + "header.serialize(output_buffer);";
-						o + "memcpy(reinterpret_cast<@type@*>(output_buffer), @obj@.m_@prop@.vptr(), sizeof(@type@) * @obj@.size_used);";
+						o + "std::memcpy(reinterpret_cast<@type@*>(output_buffer), @obj@.m_@prop@.vptr(), sizeof(@type@) * @obj@.size_used);";
 						o + "output_buffer += sizeof(@type@) * @obj@.size_used;";
 					};
 				}
@@ -2166,7 +2597,7 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 							o + substitute{ "mcon", with_mask ? std::string(" && mask.") + ob.name + "__index" : std::string() };
 							o + "else if(header.is_property(\"__index\")@mcon@)" + block{
 								o + "if(header.is_type(\"@u_type@\"))" + block{
-									o + "memcpy(@obj@.m__index.vptr(), reinterpret_cast<@u_type@ const*>(input_buffer), "
+									o + "std::memcpy(@obj@.m__index.vptr(), reinterpret_cast<@u_type@ const*>(input_buffer), "
 										"std::min(size_t(@obj@.size_used) * sizeof(@u_type@), header.record_size));";
 									o + "serialize_selection.@obj@__index = true;";
 								};
@@ -2204,7 +2635,7 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 
 								o + "else if(header.is_property(\"@prop@\")@mcon@)" + block{
 									o + "if(header.is_type(\"@u_type@\"))" + block{
-										o + "memcpy(@obj@.m_@prop@.vptr(), reinterpret_cast<@u_type@ const*>(input_buffer), "
+										o + "std::memcpy(@obj@.m_@prop@.vptr(), reinterpret_cast<@u_type@ const*>(input_buffer), "
 											"std::min(size_t(@obj@.size_used) * sizeof(@u_type@), header.record_size));";
 										o + "serialize_selection.@obj@_@prop@ = true;";
 									};
@@ -2240,14 +2671,14 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 						}
 
 						for(auto& prop : ob.properties) {
-							o + substitute{ "prop", prop.name } +substitute{ "type", prop.data_type };
+							o + substitute{ "prop", prop.name } +substitute{ "type", normalize_type(prop.data_type) };
 							o + substitute{ "mcon", with_mask ? std::string(" && mask.") + ob.name + "_" + prop.name : std::string() };
 							o + "else if(header.is_property(\"@prop@\")@mcon@)" + block{
 								if(prop.is_derived) {
 
 								} else if(prop.type == property_type::bitfield) {
 									o + "if(header.is_type(\"bitfield\"))" + block{
-										o + "memcpy(@obj@.m_@prop@.vptr(), reinterpret_cast<bitfield_type const*>(input_buffer)"
+										o + "std::memcpy(@obj@.m_@prop@.vptr(), reinterpret_cast<bitfield_type const*>(input_buffer)"
 											", std::min(size_t(@obj@.size_used + 7) / 8, header.record_size));";
 										o + "serialize_selection.@obj@_@prop@ = true;";
 									};
@@ -2256,7 +2687,7 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 									o + "if(header.is_type(\"stable_mk_2_tag\"))" + block{
 										o + "uint32_t ix = 0;";
 									//read internal data type
-									o + "std::byte const* zero_pos = std::find(input_buffer, input_buffer + header.record_size, 0);";
+									o + "std::byte const* zero_pos = std::find(input_buffer, input_buffer + header.record_size, std::byte(0));";
 
 									o + "if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), "
 										"reinterpret_cast<char const*>(zero_pos), \"@type@\"))" + block{ //correct type
@@ -2270,7 +2701,7 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 												o + "icpy += sizeof(uint16_t);";
 											};
 											o + "dcon::load_range(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[ix], "
-												"reinterpret_cast<@type@ const*>(icpy), reinterpret_cast<@type@ const*>(icpy) + sz)";
+												"reinterpret_cast<@type@ const*>(icpy), reinterpret_cast<@type@ const*>(icpy) + sz);";
 											o + "icpy += sz * sizeof(@type@);";
 											o + "++ix;";
 										};
@@ -2328,7 +2759,7 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 											}
 										}
 									} // end for each in conversion list
-									if(is_common_type(prop.data_type)) {
+									if(is_common_type(normalize_type(prop.data_type))) {
 										const auto normed_type = normalize_type(prop.data_type);
 										for(auto& basic_type : common_types) {
 											if(basic_type != normed_type) {
@@ -2346,7 +2777,7 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 
 														o + "dcon::resize(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[ix], sz);";
 														o + "for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii)" + block{
-															o + "dcon::get(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[ix], ii) = @type@(*(reinterpret_cast<@b_type@ const*>(icpy) + i));";
+															o + "dcon::get(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[ix], ii) = @type@(*(reinterpret_cast<@b_type@ const*>(icpy) + ii));";
 															o + "icpy += sizeof(@b_type@);";
 														};
 														o + "++ix;";
@@ -2369,12 +2800,12 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 									conversion_attempt(o, parsed_file, prop.data_type, false);
 								} else {
 									o + "if(header.is_type(\"@type@\"))" + block{
-										o + "memcpy(@obj@.m_@prop@.vptr(), reinterpret_cast<@type@ const*>(input_buffer)"
+										o + "std::memcpy(@obj@.m_@prop@.vptr(), reinterpret_cast<@type@ const*>(input_buffer)"
 											", std::min(size_t(@obj@.size_used) * sizeof(@type@), header.record_size));";
 										o + "serialize_selection.@obj@_@prop@ = true;";
 									};
 									conversion_attempt(o, parsed_file, prop.data_type, false);
-									if(is_common_type(prop.data_type)) {
+									if(is_common_type(normalize_type(prop.data_type))) {
 										const auto normed_type = normalize_type(prop.data_type);
 										for(auto& basic_type : common_types) {
 											if(basic_type != normed_type) {

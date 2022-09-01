@@ -187,6 +187,8 @@ int main(int argc, char *argv[]) {
 			for(auto& prop : ob.properties) {
 				if(prop.type == property_type::other && is_vectorizable_type(parsed_file, prop.data_type))
 					prop.type = property_type::vectorizable;
+				if(prop.type == property_type::array_other && is_vectorizable_type(parsed_file, prop.data_type))
+					prop.type = property_type::array_vectorizable;
 			}
 		}
 
@@ -203,6 +205,7 @@ int main(int argc, char *argv[]) {
 		output += "#include <algorithm>\n";
 		output += "#include <cassert>\n";
 		output += "#include <memory>\n";
+		output += "#include <cstring>\n";
 		output += "#include \"common_types.hpp\"\n";
 		output += "#ifndef DCON_NO_VE\n";
 		output += "#include \"ve.hpp\"\n";
@@ -308,10 +311,18 @@ int main(int argc, char *argv[]) {
 						struct_padding::none, ob.is_expandable, "std::numeric_limits<dcon::stable_mk_2_tag>::max()").to_string(3);
 					
 					output += "\t\tdcon::stable_variable_vector_storage_mk_2<" + p.data_type + ", 16, " + std::to_string(p.special_pool_size) + " > " + p.name + "_storage;\n";
+				} else if(p.type == property_type::array_bitfield) {
+					output += make_array_member_container(o,
+						p.name, "dcon::bitfield_type", ob.size,
+						ob.is_expandable, true).to_string(3);
+				} else if(p.type == property_type::array_other) {
+					output += make_array_member_container(o,
+						p.name, p.data_type, ob.size,
+						ob.is_expandable, false).to_string(3);
 				} else {
 					output += make_member_container(o, p.name, p.data_type,
 						expand_size_to_fill_cacheline_calculation(p.data_type, ob.size),
-						struct_padding::calculated, ob.is_expandable).to_string(3);
+						struct_padding::fixed, ob.is_expandable).to_string(3);
 				}
 			} //end non relationship members
 
@@ -322,7 +333,7 @@ int main(int argc, char *argv[]) {
 				} else {
 					output += make_member_container(o, i.property_name, i.type_name + "_id",
 						expand_size_to_fill_cacheline_calculation(i.type_name + "_id", ob.size),
-						struct_padding::calculated, ob.is_expandable).to_string(3);
+						struct_padding::fixed, ob.is_expandable).to_string(3);
 				}
 
 				if(i.index == index_type::many) {
@@ -334,7 +345,7 @@ int main(int argc, char *argv[]) {
 
 						output += make_member_container(o, std::string("head_back_") + i.property_name, ob.name + "_id",
 							expand_size_to_fill_cacheline_calculation(ob.name + "_id", i.related_to->size),
-							struct_padding::calculated, i.related_to->is_expandable).to_string(3);
+							struct_padding::fixed, i.related_to->is_expandable).to_string(3);
 
 					} else if(i.ltype == list_type::std_vector) {
 						//array of relation ids in object
@@ -365,7 +376,7 @@ int main(int argc, char *argv[]) {
 					} else {
 						output += make_member_container(o, std::string("link_back_") + i.property_name, ob.name + "_id",
 							expand_size_to_fill_cacheline_calculation(ob.name + "_id", i.related_to->size),
-							struct_padding::calculated, i.related_to->is_expandable).to_string(3);
+							struct_padding::fixed, i.related_to->is_expandable).to_string(3);
 					}
 				}
 			} // end relationship members
@@ -407,16 +418,28 @@ int main(int argc, char *argv[]) {
 			for(auto& p : ob.properties) {
 				// hook stubs
 				if(p.hook_get) {
-					output += make_hooked_getters(o, ob.name, p.name, p.data_type,
-						p.type == property_type::bitfield ? hook_type::bitfield :
-						(p.type == property_type::vectorizable ? hook_type::vectorizable : hook_type::other),
-						ob.is_expandable).to_string(2);
+					if(p.type != property_type::array_bitfield && p.type != property_type::array_other) {
+						output += make_hooked_getters(o, ob.name, p.name, p.data_type,
+							p.type == property_type::bitfield ? hook_type::bitfield :
+							(p.type == property_type::vectorizable ? hook_type::vectorizable : hook_type::other),
+							ob.is_expandable).to_string(2);
+					} else {
+						output += make_array_hooked_getters(o, ob.name, p.name, p.data_type, p.array_index_type,
+							p.type == property_type::bitfield ? hook_type::bitfield :  hook_type::vectorizable,
+							ob.is_expandable).to_string(2);
+					}
 				}
 				if(p.hook_set) {
-					output += make_hooked_setters(o, ob.name, p.name, p.data_type,
-						p.type == property_type::bitfield ? hook_type::bitfield :
-						(p.type == property_type::vectorizable ? hook_type::vectorizable : hook_type::other),
-						ob.is_expandable).to_string(2);
+					if(p.type != property_type::array_bitfield && p.type != property_type::array_other) {
+						output += make_hooked_setters(o, ob.name, p.name, p.data_type,
+							p.type == property_type::bitfield ? hook_type::bitfield :
+							(p.type == property_type::vectorizable ? hook_type::vectorizable : hook_type::other),
+							ob.is_expandable).to_string(2);
+					} else {
+						output += make_array_hooked_setters(o, ob.name, p.name, p.data_type, p.array_index_type,
+							p.type == property_type::bitfield ? hook_type::bitfield : hook_type::vectorizable,
+							ob.is_expandable).to_string(2);
+					}
 				}
 
 				if(p.is_derived) {

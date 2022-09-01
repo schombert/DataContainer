@@ -70,6 +70,12 @@ TEST_CASE("loaded_range", "[storage_tests]") {
 	REQUIRE(dcon::contains_item(*ptr, store, 1.0f) == true);
 	REQUIRE(dcon::contains_item(*ptr, store, 6.0f) == false);
 
+	auto old_back = dcon::get(*ptr, store, 4);
+	dcon::remove_at(*ptr, store, 2);
+
+	REQUIRE(dcon::get_size(*ptr, store) == 4);
+	REQUIRE(dcon::get(*ptr, store, 2) == old_back);
+
 	dcon::resize(*ptr, store, 2);
 	rng = dcon::get_range(*ptr, store);
 	REQUIRE(rng.second - rng.first == 2);

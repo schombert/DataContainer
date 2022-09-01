@@ -297,7 +297,10 @@ property_def parse_property_def(char const * start, char const * end, char const
 								+ std::to_string(calculate_line_from_position(start, extracted.key.start)));
 						} else {
 							result.is_derived = true;
-							result.type = property_type::other;
+							if(inner_extracted.values[0].to_string() == "bitfield")
+								result.type = property_type::bitfield;
+							else
+								result.type = property_type::other;
 							result.data_type = inner_extracted.values[0].to_string();
 						}
 					} else if(ikstr == "vector_pool") {
@@ -308,6 +311,27 @@ property_def parse_property_def(char const * start, char const * end, char const
 							result.type = property_type::special_vector;
 							result.special_pool_size = std::stoi(inner_extracted.values[0].to_string());
 							result.data_type = inner_extracted.values[1].to_string();
+						}
+					} else if(ikstr == "array") {
+						if(inner_extracted.values.size() > 2) {
+							err_out.add(std::string("wrong number of parameters for \"array\" on line ")
+								+ std::to_string(calculate_line_from_position(start, extracted.key.start)));
+						} else if(inner_extracted.values.size() == 2) {
+							result.array_index_type = inner_extracted.values[0].to_string();
+							if(inner_extracted.values[1].to_string() == "bitfield") {
+								result.type == property_type::array_bitfield;
+							} else {
+								result.type == property_type::array_other;
+								result.data_type = inner_extracted.values[1].to_string();
+							}
+						} else {
+							result.array_index_type = "uint32_t";
+							if(inner_extracted.values[0].to_string() == "bitfield") {
+								result.type == property_type::array_bitfield;
+							} else {
+								result.type == property_type::array_other;
+								result.data_type = inner_extracted.values[0].to_string();
+							}
 						}
 					} else {
 						if(inner_extracted.values.size() != 0) {

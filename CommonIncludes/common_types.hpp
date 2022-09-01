@@ -65,7 +65,7 @@ namespace dcon {
 	}
 
 	template<typename T>
-	int32_t get_index(T id) {
+	COM_RELEASE_INLINE int32_t get_index(T id) {
 		if constexpr(detail::has_index_fn<T>(0)) {
 			return static_cast<int32_t>(id.index());
 		} else {
@@ -489,6 +489,16 @@ namespace dcon {
 	template<typename object_type, uint32_t minimum_size, size_t memory_size>
 	void pop_back(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag i) {
 		detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
+		if(header->size != 0)
+			--header->size;
+	}
+
+	template<typename object_type, uint32_t minimum_size, size_t memory_size>
+	void remove_at(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag i, uint32_t inner_index) {
+		detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
+
+		*(detail::to_data<object_type>(header) + inner_index) = *(detail::to_data<object_type>(header) + header->size - 1);
+
 		if(header->size != 0)
 			--header->size;
 	}
