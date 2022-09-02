@@ -79,7 +79,7 @@ struct in_relation_information {
 	bool as_primary_key;
 	index_type indexed_as;
 	list_type listed_as;
-	relationship_object_def* rel_ptr;
+	relationship_object_def const* rel_ptr;
 };
 
 struct composite_index_def {
@@ -89,7 +89,7 @@ struct composite_index_def {
 
 struct primary_key_type {
 	std::string property_name;
-	relationship_object_def* points_to = nullptr;
+	relationship_object_def const* points_to = nullptr;
 
 	bool operator==(related_object const& other) const {
 		return points_to == other.related_to && other.property_name == property_name;
@@ -165,6 +165,15 @@ conversion_def parse_conversion_def(char const* start, char const* end, char con
 file_def parse_file(char const* start, char const* end, error_record& err_out);
 load_save_def parse_load_save_def(char const* start, char const* end, char const* global_start, error_record& err_out);
 
+inline relationship_object_def const* find_by_name(file_def const& def, std::string const& name) {
+	if(auto r = std::find_if(
+		def.relationship_objects.begin(), def.relationship_objects.end(),
+		[&name](relationship_object_def const& o) { return o.name == name; }); r != def.relationship_objects.end()) {
+		return &(*r);
+	}
+	return nullptr;
+}
+
 inline relationship_object_def* find_by_name(file_def& def, std::string const& name) {
 	if(auto r = std::find_if(
 		def.relationship_objects.begin(), def.relationship_objects.end(),
@@ -184,7 +193,7 @@ inline std::string make_relationship_parameters(relationship_object_def const& o
 	return result;
 }
 
-inline bool is_vectorizable_type(file_def& def, std::string const& name) {
+inline bool is_vectorizable_type(file_def const& def, std::string const& name) {
 	return name == "char" || name == "bool" || name == "int" || name == "short" || name == "unsigned short" ||
 		name == "unsigned int" || name == "unsigned char" || name == "signed char" ||
 		name == "float" || name == "int8_t" || name == "uint8_t" ||

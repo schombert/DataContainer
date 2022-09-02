@@ -82,18 +82,18 @@ TEST_CASE("basic relationship functions", "[core_datacontainer_tests]") {
 
 	int32_t count = 0;
 	bool found_car = false;
-	ptr->person_for_each_car_ownership_as_owner(personb, [&](car_owner_basic::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(personb, [&](car_owner_basic::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
 	REQUIRE(count == 0);
 	REQUIRE(found_car == false);
 
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](car_owner_basic::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](car_owner_basic::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
@@ -108,9 +108,9 @@ TEST_CASE("basic relationship functions", "[core_datacontainer_tests]") {
 
 	auto r3 = ptr->try_create_car_ownership(persona, cara);
 
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](car_owner_basic::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](car_owner_basic::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
@@ -122,9 +122,9 @@ TEST_CASE("basic relationship functions", "[core_datacontainer_tests]") {
 
 	ptr->car_ownership_set_owner(r1, car_owner_basic::person_id());
 
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](car_owner_basic::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](car_owner_basic::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
@@ -137,18 +137,18 @@ TEST_CASE("basic relationship functions", "[core_datacontainer_tests]") {
 	count = 0;
 	found_car = false;
 
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](car_owner_basic::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](car_owner_basic::car_ownership_id i) {
 		++count;
-		if(i == cara)
+		if(i.index() == cara.index())
 			found_car = true;
 	});
 
 	REQUIRE(count == 0);
 	REQUIRE(found_car == false);
 
-	ptr->person_for_each_car_ownership_as_owner(personb, [&](car_owner_basic::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(personb, [&](car_owner_basic::car_ownership_id i) {
 		++count;
-		if(i == cara)
+		if(i.index() == cara.index())
 			found_car = true;
 	});
 
@@ -183,9 +183,9 @@ TEST_CASE("remove in the other direction", "[core_datacontainer_tests]") {
 	int32_t count = 0;
 	bool found_car = false;
 
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](car_owner_basic::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](car_owner_basic::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
@@ -195,12 +195,13 @@ TEST_CASE("remove in the other direction", "[core_datacontainer_tests]") {
 	count = 0;
 	found_car = false;
 
-	ptr->car_remove_car_ownership_as_owned_car(carb);
+	ptr->car_remove_car_ownership_as_owned_car(
+		carb);
 
 	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == car_owner_basic::person_id());
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](car_owner_basic::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](car_owner_basic::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
@@ -225,9 +226,9 @@ TEST_CASE("remove in the other direction", "[core_datacontainer_tests]") {
 	found_car = false;
 
 
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](car_owner_basic::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](car_owner_basic::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
@@ -240,7 +241,7 @@ TEST_CASE("remove in the other direction", "[core_datacontainer_tests]") {
 	REQUIRE(ptr->person_has_owned_car_from_car_ownership(persona, carb) == true);
 	REQUIRE(ptr->person_has_owned_car_from_car_ownership(persona, cara) == false);
 
-	ptr->person_for_each_owned_car_from_car_ownership(persona, [&](car_owner_basic::car_id ) { ++count; });
+	ptr->person_for_each_owned_car_from_car_ownership(persona, [&](car_owner_basic::car_id) { ++count; });
 
 	REQUIRE(count == 2);
 
@@ -252,9 +253,9 @@ TEST_CASE("remove in the other direction", "[core_datacontainer_tests]") {
 	count = 0;
 	found_car = false;
 
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](car_owner_basic::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](car_owner_basic::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
@@ -286,18 +287,18 @@ TEST_CASE("for compatactable basic relationship functions", "[core_datacontainer
 
 	int32_t count = 0;
 	bool found_car = false;
-	ptr->person_for_each_car_ownership_as_owner(personb, [&](cob2::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(personb, [&](cob2::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
 	REQUIRE(count == 0);
 	REQUIRE(found_car == false);
 
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
@@ -312,9 +313,9 @@ TEST_CASE("for compatactable basic relationship functions", "[core_datacontainer
 
 	auto r3 = ptr->try_create_car_ownership(persona, cara);
 
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
@@ -326,9 +327,9 @@ TEST_CASE("for compatactable basic relationship functions", "[core_datacontainer
 
 	ptr->car_ownership_set_owner(r1, cob2::person_id());
 
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
@@ -341,18 +342,18 @@ TEST_CASE("for compatactable basic relationship functions", "[core_datacontainer
 	count = 0;
 	found_car = false;
 
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_ownership_id i) {
 		++count;
-		if(i == cara)
+		if(i.index() == cara.index())
 			found_car = true;
 	});
 
 	REQUIRE(count == 0);
 	REQUIRE(found_car == false);
 
-	ptr->person_for_each_car_ownership_as_owner(personb, [&](cob2::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(personb, [&](cob2::car_ownership_id i) {
 		++count;
-		if(i == cara)
+		if(i.index() == cara.index())
 			found_car = true;
 	});
 
@@ -387,9 +388,9 @@ TEST_CASE("for compatactable remove in the other direction", "[core_datacontaine
 	int32_t count = 0;
 	bool found_car = false;
 
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
@@ -402,9 +403,9 @@ TEST_CASE("for compatactable remove in the other direction", "[core_datacontaine
 	ptr->car_remove_car_ownership_as_owned_car(carb);
 
 	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == cob2::person_id());
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
@@ -429,9 +430,9 @@ TEST_CASE("for compatactable remove in the other direction", "[core_datacontaine
 	found_car = false;
 
 
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
@@ -444,7 +445,7 @@ TEST_CASE("for compatactable remove in the other direction", "[core_datacontaine
 	REQUIRE(ptr->person_has_owned_car_from_car_ownership(persona, carb) == true);
 	REQUIRE(ptr->person_has_owned_car_from_car_ownership(persona, cara) == false);
 
-	ptr->person_for_each_owned_car_from_car_ownership(persona, [&](cob2::car_id ) { ++count; });
+	ptr->person_for_each_owned_car_from_car_ownership(persona, [&](cob2::car_id) { ++count; });
 
 	REQUIRE(count == 2);
 
@@ -456,9 +457,9 @@ TEST_CASE("for compatactable remove in the other direction", "[core_datacontaine
 	count = 0;
 	found_car = false;
 
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob2::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
@@ -492,18 +493,18 @@ TEST_CASE("for erasable basic relationship functions", "[core_datacontainer_test
 
 	int32_t count = 0;
 	bool found_car = false;
-	ptr->person_for_each_car_ownership_as_owner(personb, [&](cob3::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(personb, [&](cob3::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
 	REQUIRE(count == 0);
 	REQUIRE(found_car == false);
 
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
@@ -518,9 +519,9 @@ TEST_CASE("for erasable basic relationship functions", "[core_datacontainer_test
 
 	auto r3 = ptr->try_create_car_ownership(persona, cara);
 
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
@@ -532,9 +533,9 @@ TEST_CASE("for erasable basic relationship functions", "[core_datacontainer_test
 
 	ptr->car_ownership_set_owner(r1, cob3::person_id());
 
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
@@ -547,18 +548,18 @@ TEST_CASE("for erasable basic relationship functions", "[core_datacontainer_test
 	count = 0;
 	found_car = false;
 
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_ownership_id i) {
 		++count;
-		if(i == cara)
+		if(i.index() == cara.index())
 			found_car = true;
 	});
 
 	REQUIRE(count == 0);
 	REQUIRE(found_car == false);
 
-	ptr->person_for_each_car_ownership_as_owner(personb, [&](cob3::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(personb, [&](cob3::car_ownership_id i) {
 		++count;
-		if(i == cara)
+		if(i.index() == cara.index())
 			found_car = true;
 	});
 
@@ -593,9 +594,9 @@ TEST_CASE("for erasable remove in the other direction", "[core_datacontainer_tes
 	int32_t count = 0;
 	bool found_car = false;
 
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
@@ -608,9 +609,9 @@ TEST_CASE("for erasable remove in the other direction", "[core_datacontainer_tes
 	ptr->car_remove_car_ownership_as_owned_car(carb);
 
 	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == cob3::person_id());
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
@@ -635,9 +636,9 @@ TEST_CASE("for erasable remove in the other direction", "[core_datacontainer_tes
 	found_car = false;
 
 
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 
@@ -650,7 +651,7 @@ TEST_CASE("for erasable remove in the other direction", "[core_datacontainer_tes
 	REQUIRE(ptr->person_has_owned_car_from_car_ownership(persona, carb) == true);
 	REQUIRE(ptr->person_has_owned_car_from_car_ownership(persona, cara) == false);
 
-	ptr->person_for_each_owned_car_from_car_ownership(persona, [&](cob3::car_id ) { ++count; });
+	ptr->person_for_each_owned_car_from_car_ownership(persona, [&](cob3::car_id) { ++count; });
 
 	REQUIRE(count == 2);
 
@@ -662,9 +663,9 @@ TEST_CASE("for erasable remove in the other direction", "[core_datacontainer_tes
 	count = 0;
 	found_car = false;
 
-	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_id i) {
+	ptr->person_for_each_car_ownership_as_owner(persona, [&](cob3::car_ownership_id i) {
 		++count;
-		if(i == carb)
+		if(i.index() == carb.index())
 			found_car = true;
 	});
 

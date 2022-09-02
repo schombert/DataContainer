@@ -111,8 +111,38 @@ namespace cob2 {
 	
 	DCON_RELEASE_INLINE bool is_valid_index(person_id id) { return bool(id); }
 	
-	using car_ownership_id = car_id;
-
+	//
+	// definition of strongly typed index for car_ownership_id
+	//
+	class car_ownership_id {
+		public:
+		using value_base_t = uint16_t;
+		using zero_is_null_t = std::true_type;
+	
+		uint16_t value;
+	
+		explicit constexpr car_ownership_id(uint16_t v) noexcept : value(v + 1) {}
+		constexpr car_ownership_id(car_ownership_id const& v) noexcept = default;
+		constexpr car_ownership_id(car_ownership_id&& v) noexcept = default;
+		constexpr car_ownership_id() noexcept : value(uint16_t(0)) {}
+	
+		car_ownership_id& operator=(car_ownership_id v) noexcept { value = v.value; return *this; }
+		constexpr bool operator==(car_ownership_id v) const noexcept { return value == v.value; }
+		constexpr bool operator!=(car_ownership_id v) const noexcept { return value != v.value; }
+		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
+		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
+			return int32_t(value) - 1;
+		}
+	};
+	
+	class car_ownership_id_pair {
+		public:
+		car_ownership_id left;
+		car_ownership_id right;
+	};
+	
+	DCON_RELEASE_INLINE bool is_valid_index(car_ownership_id id) { return bool(id); }
+	
 }
 
 #ifndef DCON_NO_VE
@@ -125,6 +155,11 @@ namespace ve {
 	template<>
 	struct value_to_vector_type_s<cob2::person_id> {
 		using type = tagged_vector<cob2::person_id>;
+	};
+	
+	template<>
+	struct value_to_vector_type_s<cob2::car_ownership_id> {
+		using type = tagged_vector<cob2::car_ownership_id>;
 	};
 	
 }
@@ -475,32 +510,32 @@ namespace cob2 {
 		//
 		// primary key getters and setters for car_ownership: owned_car
 		//
-		DCON_RELEASE_INLINE car_ownership_id car_ownership_get_owned_car(car_ownership_id id) const noexcept {
-			return id;
+		DCON_RELEASE_INLINE car_id car_ownership_get_owned_car(car_ownership_id id) const noexcept {
+			return car_id(car_id::value_base_t(id.index()));
 		}
 		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> car_ownership_get_owned_car(ve::contiguous_tags<car_ownership_id> id) const noexcept {
-			return ve::apply([](car_ownership_id i){ return i; }, id);
+		DCON_RELEASE_INLINE ve::contiguous_tags<car_id> car_ownership_get_owned_car(ve::contiguous_tags<car_ownership_id> id) const noexcept {
+			return ve::contiguous_tags<car_id>(id.value);
 		}
-		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> car_ownership_get_owned_car(ve::partial_contiguous_tags<car_ownership_id> id) const noexcept {
-			return ve::apply([](car_ownership_id i){ return i; }, id);
+		DCON_RELEASE_INLINE ve::partial_contiguous_tags<car_id> car_ownership_get_owned_car(ve::partial_contiguous_tags<car_ownership_id> id) const noexcept {
+			return ve::partial_contiguous_tags<car_id>(id.value, id.subcount);
 		}
-		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> car_ownership_get_owned_car(ve::tagged_vector<car_ownership_id> id) const noexcept {
-			return id;
+		DCON_RELEASE_INLINE ve::tagged_vector<car_id> car_ownership_get_owned_car(ve::tagged_vector<car_ownership_id> id) const noexcept {
+			return ve::tagged_vector<car_id>(id, std::true_type{});
 		}
 		#endif
-		void car_ownership_set_owned_car(car_ownership_id id, car_ownership_id value) noexcept {
+		void car_ownership_set_owned_car(car_ownership_id id, car_id value) noexcept {
 			if(bool(value)) {
-				delete_car_ownership(value);
-				internal_move_relationship_car_ownership(id, value);
+				delete_car_ownership( car_ownership_id(car_ownership_id::value_base_t(value.index())) );
+				internal_move_relationship_car_ownership(id, car_ownership_id(car_ownership_id::value_base_t(value.index())) );
 			} else {
 				delete_car_ownership(id);
 			}
 		}
-		bool car_ownership_try_set_owned_car(car_ownership_id id, car_ownership_id value) noexcept {
+		bool car_ownership_try_set_owned_car(car_ownership_id id, car_id value) noexcept {
 			if(bool(value)) {
-				if(is_valid_car_ownership(value)) return false;
-				internal_move_relationship_car_ownership(id, value);
+				if(is_valid_car_ownership( car_ownership_id(car_ownership_id::value_base_t(value.index())) )) return false;
+				internal_move_relationship_car_ownership(id, car_ownership_id(car_ownership_id::value_base_t(value.index())) );
 			} else {
 				delete_car_ownership(id);
 			}
@@ -508,42 +543,42 @@ namespace cob2 {
 		}
 		
 		DCON_RELEASE_INLINE car_ownership_id car_get_car_ownership_as_owned_car(car_id id) const noexcept {
-			return id;
+			return car_ownership_id(car_ownership_id::value_base_t(id.index()));
 		}
 		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> car_get_car_ownership_as_owned_car(ve::contiguous_tags<car_id> id) const noexcept {
-			return ve::apply([](car_ownership_id i){ return i; }, id);
+		DCON_RELEASE_INLINE ve::contiguous_tags<car_ownership_id> car_get_car_ownership_as_owned_car(ve::contiguous_tags<car_id> id) const noexcept {
+			return ve::contiguous_tags<car_ownership_id>(id.value);
 		}
-		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> car_get_car_ownership_as_owned_car(ve::partial_contiguous_tags<car_id> id) const noexcept {
-			return ve::apply([](car_ownership_id i){ return i; }, id);
+		DCON_RELEASE_INLINE ve::partial_contiguous_tags<car_ownership_id> car_get_car_ownership_as_owned_car(ve::partial_contiguous_tags<car_id> id) const noexcept {
+			return ve::partial_contiguous_tags<car_ownership_id>(id.value, id.subcount);
 		}
 		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> car_get_car_ownership_as_owned_car(ve::tagged_vector<car_id> id) const noexcept {
-			return id;
+			return ve::tagged_vector<car_ownership_id>(id, std::true_type{});
 		}
 		#endif
 		DCON_RELEASE_INLINE void car_remove_car_ownership_as_owned_car(car_id id) noexcept {
-			if(is_valid_car_ownership(id)) {
-				delete_car_ownership(id);
+			if(is_valid_car_ownership(car_ownership_id(car_ownership_id::value_base_t(id.index())))) {
+				delete_car_ownership(car_ownership_id(car_ownership_id::value_base_t(id.index())));
 			}
 		}
 		
 		DCON_RELEASE_INLINE car_ownership_id car_get_car_ownership(car_id id) const noexcept {
-			return id;
+			return car_ownership_id(car_ownership_id::value_base_t(id.index()));
 		}
 		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> car_get_car_ownership(ve::contiguous_tags<car_id> id) const noexcept {
-			return ve::apply([](car_ownership_id i){ return i; }, id);
+		DCON_RELEASE_INLINE ve::contiguous_tags<car_ownership_id> car_get_car_ownership(ve::contiguous_tags<car_id> id) const noexcept {
+			return ve::contiguous_tags<car_ownership_id>(id.value);
 		}
-		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> car_get_car_ownership(ve::partial_contiguous_tags<car_id> id) const noexcept {
-			return ve::apply([](car_ownership_id i){ return i; }, id);
+		DCON_RELEASE_INLINE ve::partial_contiguous_tags<car_ownership_id> car_get_car_ownership(ve::partial_contiguous_tags<car_id> id) const noexcept {
+			return ve::partial_contiguous_tags<car_ownership_id>(id.value, id.subcount);
 		}
 		DCON_RELEASE_INLINE ve::tagged_vector<car_ownership_id> car_get_car_ownership(ve::tagged_vector<car_id> id) const noexcept {
-			return id;
+			return ve::tagged_vector<car_ownership_id>(id, std::true_type{});
 		}
 		#endif
 		DCON_RELEASE_INLINE void car_remove_car_ownership(car_id id) noexcept {
-			if(is_valid_car_ownership(id)) {
-				delete_car_ownership(id);
+			if(is_valid_car_ownership(car_ownership_id(car_ownership_id::value_base_t(id.index())))) {
+				delete_car_ownership(car_ownership_id(car_ownership_id::value_base_t(id.index())));
 			}
 		}
 		
@@ -565,38 +600,38 @@ namespace cob2 {
 			return false;
 		}
 		int32_t car_get_ownership_date_from_car_ownership(car_id ref_id) const {
-			return car_ownership_get_ownership_date(ref_id);
+			return car_ownership_get_ownership_date(car_ownership_id(car_ownership_id::value_base_t(ref_id.index())));
 		}
 		#ifndef DCON_NO_VE
 		ve::value_to_vector_type<int32_t> car_get_ownership_date_from_car_ownership(ve::contiguous_tags<car_id> ref_id) const {
-			return car_ownership_get_ownership_date(ref_id);
+			return car_ownership_get_ownership_date(ve::contiguous_tags<car_ownership_id>(ref_id.value));
 		}
 		ve::value_to_vector_type<int32_t> car_get_ownership_date_from_car_ownership(ve::partial_contiguous_tags<car_id> ref_id) const {
-			return car_ownership_get_ownership_date(ref_id);
+			return car_ownership_get_ownership_date(ve::partial_contiguous_tags<car_ownership_id>(ref_id.value, ref_id.subcount));
 		}
 		ve::value_to_vector_type<int32_t> car_get_ownership_date_from_car_ownership(ve::tagged_vector<car_id> ref_id) const {
-			return car_ownership_get_ownership_date(ref_id);
+			return car_ownership_get_ownership_date(ve::tagged_vector<car_ownership_id>(ref_id, std::true_type{}));
 		}
 		#endif
 		void car_set_ownership_date_from_car_ownership(car_id ref_id, int32_t val) {
-			car_ownership_set_ownership_date(ref_id, val);
+			car_ownership_set_ownership_date(car_ownership_id(car_ownership_id::value_base_t(ref_id.index())), val);
 		}
 		person_id car_get_owner_from_car_ownership(car_id ref_id) const {
-			return car_ownership_get_owner(ref_id);
+			return car_ownership_get_owner(car_ownership_id(car_ownership_id::value_base_t(ref_id.index())));
 		}
 		#ifndef DCON_NO_VE
 		ve::value_to_vector_type<person_id> car_get_owner_from_car_ownership(ve::contiguous_tags<car_id> ref_id) const {
-			return car_ownership_get_owner(ref_id);
+			return car_ownership_get_owner(ve::contiguous_tags<car_ownership_id>(ref_id.value));
 		}
 		ve::value_to_vector_type<person_id> car_get_owner_from_car_ownership(ve::partial_contiguous_tags<car_id> ref_id) const {
-			return car_ownership_get_owner(ref_id);
+			return car_ownership_get_owner(ve::partial_contiguous_tags<car_ownership_id>(ref_id.value, ref_id.subcount));
 		}
 		ve::value_to_vector_type<person_id> car_get_owner_from_car_ownership(ve::tagged_vector<car_id> ref_id) const {
-			return car_ownership_get_owner(ref_id);
+			return car_ownership_get_owner(ve::tagged_vector<car_ownership_id>(ref_id, std::true_type{}));
 		}
 		#endif
 		void car_set_owner_from_car_ownership(car_id ref_id, person_id val) {
-			car_ownership_set_owner(ref_id, val);
+			car_ownership_set_owner(car_ownership_id(car_ownership_id::value_base_t(ref_id.index())), val);
 		}
 		template<typename T>
 		void person_for_each_owned_car_from_car_ownership(person_id id, T&& func) const {
@@ -607,7 +642,7 @@ namespace cob2 {
 		bool person_has_owned_car_from_car_ownership(person_id id, car_id const& target) const {
 			auto& vref = car_ownership.m_array_owner.vptr()[id.index()];
 			for(auto pos = vref.begin(); pos != vref.end(); ++pos) {
-				if(*pos == target) return true;
+				if(pos->index() == target.index()) return true;
 			}
 			return false;
 		}
@@ -618,7 +653,7 @@ namespace cob2 {
 		void pop_back_car() {
 			if(car.size_used == 0) return;
 			car_id id_removed(car_id::value_base_t(car.size_used - 1));
-			delete_car_ownership(id_removed);
+			delete_car_ownership(car_ownership_id(car_ownership_id::value_base_t(id_removed.index())));
 			car_ownership.size_used = car.size_used - 1;
 			car_ownership.m_ownership_date.vptr()[id_removed.index()] = int32_t{};
 			car.m_wheels.vptr()[id_removed.index()] = int32_t{};
@@ -668,8 +703,8 @@ namespace cob2 {
 			car_id id_removed = id;
 			car_id last_id(car_id::value_base_t(car.size_used - 1));
 			if(id_removed == last_id) { pop_back_car(); return; }
-			delete_car_ownership(id_removed);
-			internal_move_relationship_car_ownership(last_id, id_removed);
+			delete_car_ownership(car_ownership_id(car_ownership_id::value_base_t(id_removed.index())));
+			internal_move_relationship_car_ownership(car_ownership_id(car_ownership_id::value_base_t(last_id.index())), car_ownership_id(car_ownership_id::value_base_t(id_removed.index())));
 			car_ownership.size_used = car.size_used - 1;
 			car.m_wheels.vptr()[id_removed.index()] = std::move(car.m_wheels.vptr()[last_id.index()]);
 			car.m_wheels.vptr()[last_id.index()] = int32_t{};
@@ -776,7 +811,7 @@ namespace cob2 {
 		}
 		
 		bool is_valid_car_ownership(car_ownership_id id) const {
-			return bool(id) && uint32_t(id.index()) < car_ownership.size_used && is_valid_car(id) && (bool(car_ownership.m_owner.vptr()[id.index()]) || false);
+			return bool(id) && uint32_t(id.index()) < car_ownership.size_used && is_valid_car(car_id(car_id::value_base_t(id.index()))) && (bool(car_ownership.m_owner.vptr()[id.index()]) || false);
 		}
 		private:
 		//
@@ -801,8 +836,8 @@ namespace cob2 {
 		// container try create relationship for car_ownership
 		//
 		car_ownership_id try_create_car_ownership(person_id owner_p, car_id owned_car_p) {
-			if(is_valid_car_ownership(owned_car_p)) return car_ownership_id();
-			car_ownership_id new_id = owned_car_p;
+			if(is_valid_car_ownership(car_ownership_id(car_ownership_id::value_base_t(owned_car_p.index())))) return car_ownership_id();
+			car_ownership_id new_id(car_ownership_id::value_base_t(owned_car_p.index()));
 			car_ownership_set_owner(new_id, owner_p);
 			return new_id;
 		}
@@ -811,7 +846,7 @@ namespace cob2 {
 		// container force create relationship for car_ownership
 		//
 		car_ownership_id force_create_car_ownership(person_id owner_p, car_id owned_car_p) {
-			car_ownership_id new_id = owned_car_p;
+			car_ownership_id new_id(car_ownership_id::value_base_t(owned_car_p.index()));
 			car_ownership_set_owner(new_id, owner_p);
 			return new_id;
 		}
@@ -1624,6 +1659,465 @@ namespace cob2 {
 
 	};
 
+	class car_const_fat_id;
+	class car_fat_id;
+	class person_const_fat_id;
+	class person_fat_id;
+	class car_ownership_const_fat_id;
+	class car_ownership_fat_id;
+	class car_fat_id {
+		public:
+		data_container& container;
+		car_id id;
+		car_fat_id(data_container& c, car_id i) noexcept : container(c), id(i) {}
+		car_fat_id(car_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator car_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE car_fat_id& operator=(car_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE car_fat_id& operator=(car_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(car_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(car_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(car_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(car_id other) const noexcept {
+			return id != other;
+		}
+		explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE int32_t& get_wheels() const noexcept;
+		DCON_RELEASE_INLINE void set_wheels(int32_t v) const noexcept;
+		DCON_RELEASE_INLINE float& get_resale_value() const noexcept;
+		DCON_RELEASE_INLINE void set_resale_value(float v) const noexcept;
+		DCON_RELEASE_INLINE car_ownership_fat_id get_car_ownership_as_owned_car() const noexcept;
+		DCON_RELEASE_INLINE void remove_car_ownership_as_owned_car() const noexcept;
+		DCON_RELEASE_INLINE car_ownership_fat_id get_car_ownership() const noexcept;
+		DCON_RELEASE_INLINE void remove_car_ownership() const noexcept;
+		DCON_RELEASE_INLINE person_fat_id get_owner_from_car_ownership() const noexcept;
+		DCON_RELEASE_INLINE int32_t get_ownership_date_from_car_ownership() const noexcept;
+		DCON_RELEASE_INLINE void set_ownership_date_from_car_ownership(int32_t v) const noexcept;
+	};
+	
+	class car_const_fat_id {
+		public:
+		data_container const& container;
+		car_id id;
+		car_const_fat_id(data_container const& c, car_id i) noexcept : container(c), id(i) {}
+		car_const_fat_id(car_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		car_const_fat_id(car_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator car_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE car_const_fat_id& operator=(car_const_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE car_const_fat_id& operator=(car_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE car_const_fat_id& operator=(car_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(car_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(car_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(car_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(car_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(car_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(car_id other) const noexcept {
+			return id != other;
+		}
+		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE int32_t const& get_wheels() const noexcept;
+		DCON_RELEASE_INLINE float const& get_resale_value() const noexcept;
+		DCON_RELEASE_INLINE car_ownership_const_fat_id get_car_ownership_as_owned_car() const noexcept;
+		DCON_RELEASE_INLINE car_ownership_const_fat_id get_car_ownership() const noexcept;
+		DCON_RELEASE_INLINE person_const_fat_id get_owner_from_car_ownership() const noexcept;
+		DCON_RELEASE_INLINE int32_t get_ownership_date_from_car_ownership() const noexcept;
+	};
+	DCON_RELEASE_INLINE bool operator==(car_fat_id const& l, car_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id == other.id;
+	}
+	DCON_RELEASE_INLINE bool operator!=(car_fat_id const& l, car_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id != other.id;
+	}
+	DCON_RELEASE_INLINE car_const_fat_id fatten(data_container const& c, car_id id) noexcept {
+		return car_const_fat_id(c, id);
+	}
+	
+	class person_fat_id {
+		public:
+		data_container& container;
+		person_id id;
+		person_fat_id(data_container& c, person_id i) noexcept : container(c), id(i) {}
+		person_fat_id(person_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator person_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE person_fat_id& operator=(person_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE person_fat_id& operator=(person_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(person_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(person_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(person_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(person_id other) const noexcept {
+			return id != other;
+		}
+		explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE int32_t& get_age() const noexcept;
+		DCON_RELEASE_INLINE void set_age(int32_t v) const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_car_ownership_as_owner(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> range_of_car_ownership_as_owner() const;
+		DCON_RELEASE_INLINE void remove_all_car_ownership_as_owner() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_car_ownership(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> range_of_car_ownership() const;
+		DCON_RELEASE_INLINE void remove_all_car_ownership() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_owned_car_from_car_ownership(T&& func) const;
+		DCON_RELEASE_INLINE bool has_owned_car_from_car_ownership(car_id target) const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_ownership_date_from_car_ownership(T&& func) const;
+		DCON_RELEASE_INLINE bool has_ownership_date_from_car_ownership(int32_t target) const;
+	};
+	
+	class person_const_fat_id {
+		public:
+		data_container const& container;
+		person_id id;
+		person_const_fat_id(data_container const& c, person_id i) noexcept : container(c), id(i) {}
+		person_const_fat_id(person_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		person_const_fat_id(person_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator person_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE person_const_fat_id& operator=(person_const_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE person_const_fat_id& operator=(person_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE person_const_fat_id& operator=(person_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(person_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(person_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(person_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(person_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(person_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(person_id other) const noexcept {
+			return id != other;
+		}
+		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE int32_t const& get_age() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_car_ownership_as_owner(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> range_of_car_ownership_as_owner() const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_car_ownership(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> range_of_car_ownership() const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_owned_car_from_car_ownership(T&& func) const;
+		DCON_RELEASE_INLINE bool has_owned_car_from_car_ownership(car_id target) const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_ownership_date_from_car_ownership(T&& func) const;
+		DCON_RELEASE_INLINE bool has_ownership_date_from_car_ownership(int32_t target) const;
+	};
+	DCON_RELEASE_INLINE bool operator==(person_fat_id const& l, person_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id == other.id;
+	}
+	DCON_RELEASE_INLINE bool operator!=(person_fat_id const& l, person_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id != other.id;
+	}
+	DCON_RELEASE_INLINE person_const_fat_id fatten(data_container const& c, person_id id) noexcept {
+		return person_const_fat_id(c, id);
+	}
+	
+	class car_ownership_fat_id {
+		public:
+		data_container& container;
+		car_ownership_id id;
+		car_ownership_fat_id(data_container& c, car_ownership_id i) noexcept : container(c), id(i) {}
+		car_ownership_fat_id(car_ownership_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator car_ownership_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE car_ownership_fat_id& operator=(car_ownership_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE car_ownership_fat_id& operator=(car_ownership_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(car_ownership_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(car_ownership_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(car_ownership_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(car_ownership_id other) const noexcept {
+			return id != other;
+		}
+		explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE int32_t& get_ownership_date() const noexcept;
+		DCON_RELEASE_INLINE void set_ownership_date(int32_t v) const noexcept;
+		DCON_RELEASE_INLINE person_fat_id get_owner() const noexcept;
+		DCON_RELEASE_INLINE void set_owner(person_id val) const noexcept;
+		DCON_RELEASE_INLINE car_fat_id get_owned_car() const noexcept;
+		DCON_RELEASE_INLINE void set_owned_car(car_id val) const noexcept;
+	};
+	
+	class car_ownership_const_fat_id {
+		public:
+		data_container const& container;
+		car_ownership_id id;
+		car_ownership_const_fat_id(data_container const& c, car_ownership_id i) noexcept : container(c), id(i) {}
+		car_ownership_const_fat_id(car_ownership_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		car_ownership_const_fat_id(car_ownership_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator car_ownership_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE car_ownership_const_fat_id& operator=(car_ownership_const_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE car_ownership_const_fat_id& operator=(car_ownership_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE car_ownership_const_fat_id& operator=(car_ownership_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(car_ownership_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(car_ownership_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(car_ownership_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(car_ownership_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(car_ownership_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(car_ownership_id other) const noexcept {
+			return id != other;
+		}
+		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE int32_t const& get_ownership_date() const noexcept;
+		DCON_RELEASE_INLINE person_const_fat_id get_owner() const noexcept;
+		DCON_RELEASE_INLINE car_const_fat_id get_owned_car() const noexcept;
+	};
+	DCON_RELEASE_INLINE bool operator==(car_ownership_fat_id const& l, car_ownership_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id == other.id;
+	}
+	DCON_RELEASE_INLINE bool operator!=(car_ownership_fat_id const& l, car_ownership_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id != other.id;
+	}
+	DCON_RELEASE_INLINE car_ownership_const_fat_id fatten(data_container const& c, car_ownership_id id) noexcept {
+		return car_ownership_const_fat_id(c, id);
+	}
+	
+	DCON_RELEASE_INLINE int32_t& car_fat_id::get_wheels() const noexcept { return container.car_get_wheels(id); }
+	DCON_RELEASE_INLINE void car_fat_id::set_wheels(int32_t v) const noexcept { container.car_set_wheels(id, v); }
+	DCON_RELEASE_INLINE float& car_fat_id::get_resale_value() const noexcept { return container.car_get_resale_value(id); }
+	DCON_RELEASE_INLINE void car_fat_id::set_resale_value(float v) const noexcept { container.car_set_resale_value(id, v); }
+	DCON_RELEASE_INLINE car_ownership_fat_id car_fat_id::get_car_ownership_as_owned_car() const noexcept {
+		return car_ownership_fat_id(container, container.car_get_car_ownership_as_owned_car(id));
+	}
+	DCON_RELEASE_INLINE void car_fat_id::remove_car_ownership_as_owned_car() const noexcept {
+		container.car_remove_car_ownership_as_owned_car(id);
+	}
+	DCON_RELEASE_INLINE car_ownership_fat_id car_fat_id::get_car_ownership() const noexcept {
+		return car_ownership_fat_id(container, container.car_get_car_ownership(id));
+	}
+	DCON_RELEASE_INLINE void car_fat_id::remove_car_ownership() const noexcept {
+		container.car_remove_car_ownership(id);
+	}
+	DCON_RELEASE_INLINE person_fat_id car_fat_id::get_owner_from_car_ownership() const noexcept {
+		return person_fat_id(container, container.car_get_owner_from_car_ownership(id));
+	}
+	DCON_RELEASE_INLINE int32_t car_fat_id::get_ownership_date_from_car_ownership() const noexcept { return container.car_get_ownership_date_from_car_ownership(id); }
+	DCON_RELEASE_INLINE void car_fat_id::set_ownership_date_from_car_ownership(int32_t v) const noexcept { container.car_set_ownership_date_from_car_ownership(id, v); }
+	
+	DCON_RELEASE_INLINE int32_t const& car_const_fat_id::get_wheels() const noexcept { return container.car_get_wheels(id); }
+	DCON_RELEASE_INLINE float const& car_const_fat_id::get_resale_value() const noexcept { return container.car_get_resale_value(id); }
+	DCON_RELEASE_INLINE car_ownership_const_fat_id car_const_fat_id::get_car_ownership_as_owned_car() const noexcept {
+		return car_ownership_const_fat_id(container, container.car_get_car_ownership_as_owned_car(id));
+	}
+	DCON_RELEASE_INLINE car_ownership_const_fat_id car_const_fat_id::get_car_ownership() const noexcept {
+		return car_ownership_const_fat_id(container, container.car_get_car_ownership(id));
+	}
+	DCON_RELEASE_INLINE person_const_fat_id car_const_fat_id::get_owner_from_car_ownership() const noexcept {
+		return person_const_fat_id(container, container.car_get_owner_from_car_ownership(id));
+	}
+	DCON_RELEASE_INLINE int32_t car_const_fat_id::get_ownership_date_from_car_ownership() const noexcept { return container.car_get_ownership_date_from_car_ownership(id); }
+	
+	DCON_RELEASE_INLINE int32_t& person_fat_id::get_age() const noexcept { return container.person_get_age(id); }
+	DCON_RELEASE_INLINE void person_fat_id::set_age(int32_t v) const noexcept { container.person_set_age(id, v); }
+	template<typename T>
+	DCON_RELEASE_INLINE void person_fat_id::for_each_car_ownership_as_owner(T&& func) const {
+		container.person_for_each_car_ownership_as_owner(id, func);
+	}
+	DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> person_fat_id::range_of_car_ownership_as_owner() const {
+		return container.person_range_of_car_ownership_as_owner(id);
+	}
+	DCON_RELEASE_INLINE void person_fat_id::remove_all_car_ownership_as_owner() const noexcept {
+		container.person_remove_all_car_ownership_as_owner(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void person_fat_id::for_each_car_ownership(T&& func) const {
+		container.person_for_each_car_ownership(id, func);
+	}
+	DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> person_fat_id::range_of_car_ownership() const {
+		return container.person_range_of_car_ownership(id);
+	}
+	DCON_RELEASE_INLINE void person_fat_id::remove_all_car_ownership() const noexcept {
+		container.person_remove_all_car_ownership(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void person_fat_id::for_each_owned_car_from_car_ownership(T&& func) const {
+		container.person_for_each_owned_car_from_car_ownership(id, func);
+	}
+	DCON_RELEASE_INLINE bool person_fat_id::has_owned_car_from_car_ownership(car_id target) const {
+		return container.person_has_owned_car_from_car_ownership(id, target);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void person_fat_id::for_each_ownership_date_from_car_ownership(T&& func) const {
+		container.person_for_each_ownership_date_from_car_ownership(id, func);
+	}
+	DCON_RELEASE_INLINE bool person_fat_id::has_ownership_date_from_car_ownership(int32_t target) const {
+		return container.person_has_ownership_date_from_car_ownership(id, target);
+	}
+	
+	DCON_RELEASE_INLINE int32_t const& person_const_fat_id::get_age() const noexcept { return container.person_get_age(id); }
+	template<typename T>
+	DCON_RELEASE_INLINE void person_const_fat_id::for_each_car_ownership_as_owner(T&& func) const {
+		container.person_for_each_car_ownership_as_owner(id, func);
+	}
+	DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> person_const_fat_id::range_of_car_ownership_as_owner() const {
+		return container.person_range_of_car_ownership_as_owner(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void person_const_fat_id::for_each_car_ownership(T&& func) const {
+		container.person_for_each_car_ownership(id, func);
+	}
+	DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> person_const_fat_id::range_of_car_ownership() const {
+		return container.person_range_of_car_ownership(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void person_const_fat_id::for_each_owned_car_from_car_ownership(T&& func) const {
+		container.person_for_each_owned_car_from_car_ownership(id, func);
+	}
+	DCON_RELEASE_INLINE bool person_const_fat_id::has_owned_car_from_car_ownership(car_id target) const {
+		return container.person_has_owned_car_from_car_ownership(id, target);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void person_const_fat_id::for_each_ownership_date_from_car_ownership(T&& func) const {
+		container.person_for_each_ownership_date_from_car_ownership(id, func);
+	}
+	DCON_RELEASE_INLINE bool person_const_fat_id::has_ownership_date_from_car_ownership(int32_t target) const {
+		return container.person_has_ownership_date_from_car_ownership(id, target);
+	}
+	
+	DCON_RELEASE_INLINE int32_t& car_ownership_fat_id::get_ownership_date() const noexcept { return container.car_ownership_get_ownership_date(id); }
+	DCON_RELEASE_INLINE void car_ownership_fat_id::set_ownership_date(int32_t v) const noexcept { container.car_ownership_set_ownership_date(id, v); }
+	DCON_RELEASE_INLINE person_fat_id car_ownership_fat_id::get_owner() const noexcept {
+		return person_fat_id(container, container.car_ownership_get_owner(id));
+	}
+	DCON_RELEASE_INLINE void car_ownership_fat_id::set_owner(person_id val) const noexcept {
+		container.car_ownership_set_owner(id, val);
+	}
+	DCON_RELEASE_INLINE car_fat_id car_ownership_fat_id::get_owned_car() const noexcept {
+		return car_fat_id(container, container.car_ownership_get_owned_car(id));
+	}
+	DCON_RELEASE_INLINE void car_ownership_fat_id::set_owned_car(car_id val) const noexcept {
+		container.car_ownership_set_owned_car(id, val);
+	}
+	
+	DCON_RELEASE_INLINE int32_t const& car_ownership_const_fat_id::get_ownership_date() const noexcept { return container.car_ownership_get_ownership_date(id); }
+	DCON_RELEASE_INLINE person_const_fat_id car_ownership_const_fat_id::get_owner() const noexcept {
+		return person_const_fat_id(container, container.car_ownership_get_owner(id));
+	}
+	DCON_RELEASE_INLINE car_const_fat_id car_ownership_const_fat_id::get_owned_car() const noexcept {
+		return car_const_fat_id(container, container.car_ownership_get_owned_car(id));
+	}
+	
 }
 
 #undef DCON_RELEASE_INLINE

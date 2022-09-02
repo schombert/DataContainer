@@ -24,7 +24,7 @@
 	std::abort();
 }
 
-relationship_object_def* better_primary_key(relationship_object_def* oldr, relationship_object_def* newr) {
+relationship_object_def const* better_primary_key(relationship_object_def const* oldr, relationship_object_def const* newr) {
 	if(oldr == nullptr) {
 		return newr;
 	}
@@ -240,13 +240,9 @@ int main(int argc, char *argv[]) {
 
 		//id types definitions
 		for(auto& ob : parsed_file.relationship_objects) {
-			if(ob.primary_key.points_to == nullptr) {
-				const auto underlying_type = ob.is_expandable ? std::string("uint32_t") : size_to_tag_type(ob.size);
-				//id class begin
-				output += make_id_definition(o, ob.name + "_id", underlying_type).to_string(1);
-			} else {
-				output += "\tusing " + ob.name + "_id = " + ob.primary_key.points_to->name + "_id;\n\n";
-			}
+			const auto underlying_type = ob.is_expandable ? std::string("uint32_t") : size_to_tag_type(ob.size);
+			//id class begin
+			output += make_id_definition(o, ob.name + "_id", underlying_type).to_string(1);
 		}
 		for(auto& mi : parsed_file.extra_ids) {
 			output += make_id_definition(o, mi.name, mi.base_type).to_string(1);
@@ -259,9 +255,7 @@ int main(int argc, char *argv[]) {
 		output += "#ifndef DCON_NO_VE\n";
 		output += "namespace ve {\n";
 		for(auto& ob : parsed_file.relationship_objects) {
-			if(ob.primary_key.points_to == nullptr) {
-				output += make_value_to_vector_type(o, parsed_file.namspace + "::" + ob.name + "_id").to_string(1);
-			}
+			output += make_value_to_vector_type(o, parsed_file.namspace + "::" + ob.name + "_id").to_string(1);
 		}
 		for(auto& mi : parsed_file.extra_ids) {
 			output += make_value_to_vector_type(o, parsed_file.namspace + "::" + mi.name).to_string(1);
@@ -535,7 +529,7 @@ int main(int argc, char *argv[]) {
 
 			for(auto& i : r.indexed_objects) {
 				if(i.index == index_type::at_most_one && r.primary_key == i) {
-					output += make_relation_pk_getters_setters(o, r.name, i.property_name, r.is_expandable).to_string(2);
+					output += make_relation_pk_getters_setters(o, r.name, i.property_name, i.type_name, r.is_expandable).to_string(2);
 					output += make_relation_pk_reverse_getters_setters(o, r.name, i.property_name, i.type_name,
 						i.related_to->is_expandable, false).to_string(2);
 
@@ -629,7 +623,8 @@ int main(int argc, char *argv[]) {
 				
 				output += "\t\tbool is_valid_" + cob.name + "(" + id_name + " id) const {\n";
 				output += "\t\t\treturn bool(id) && uint32_t(id.index()) < " + cob.name + ".size_used && " + 
-					"is_valid_" + cob.primary_key.points_to->name + "(id) && (";
+					"is_valid_" + cob.primary_key.points_to->name + "(" + cob.primary_key.points_to->name + 
+					"_id(" + cob.primary_key.points_to->name  + "_id::value_base_t(id.index()))) && (";
 				for(auto& iob : cob.indexed_objects) {
 					if(cob.primary_key != iob) {
 						output += "bool(" + cob.name + ".m_" + iob.property_name + ".vptr()[id.index()]) || ";
@@ -769,6 +764,20 @@ int main(int argc, char *argv[]) {
 
 		//class data_container end
 		output += "\t};\n\n";
+
+		for(auto& obj : parsed_file.relationship_objects) {
+			output += "\tclass " + obj.name + "_const_fat_id;\n";
+			output += "\tclass " + obj.name + "_fat_id;\n";
+
+		}
+		for(auto& obj : parsed_file.relationship_objects) {
+			output += make_fat_id(o, obj, parsed_file).to_string(1);
+			output += make_const_fat_id(o, obj, parsed_file).to_string(1);	
+		}
+		for(auto& obj : parsed_file.relationship_objects) {
+			output += make_fat_id_impl(o, obj, parsed_file).to_string(1);
+			output += make_const_fat_id_impl(o, obj, parsed_file).to_string(1);
+		}
 
 		//close new namespace
 		output += "}\n";
