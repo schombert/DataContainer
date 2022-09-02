@@ -336,7 +336,7 @@ int main(int argc, char *argv[]) {
 				if(i.index == index_type::many) {
 					if(i.ltype == list_type::list) {
 						// list intrusive links
-						output += make_member_container(o, std::string("link_") + i.property_name, i.type_name + "_id",
+						output += make_member_container(o, std::string("link_") + i.property_name, ob.name + "_id_pair",
 							std::to_string(ob.size),
 							struct_padding::none, ob.is_expandable).to_string(3);
 
@@ -354,12 +354,12 @@ int main(int argc, char *argv[]) {
 						//array of relation ids in object
 						if(!i.related_to->is_expandable) {
 							output += make_member_container(o, std::string("array_") + i.property_name,
-								"dcon::stable_mk_2_tag values",
+								"dcon::stable_mk_2_tag",
 								std::to_string(i.related_to->size),
 								struct_padding::none, i.related_to->is_expandable,
 								"std::numeric_limits<dcon::stable_mk_2_tag>::max()").to_string(3);
 
-							output += "\t\t\tdcon::stable_variable_vector_storage_mk_2<" + i.type_name + "_id, 16, " + std::to_string(ob.size * 2) + " > "
+							output += "\t\t\tdcon::stable_variable_vector_storage_mk_2<" + ob.name + "_id, 16, " + std::to_string(ob.size * 2) + " > "
 								+ i.property_name + "_storage;\n";
 						} else {
 							error_to_file(output_file_name, std::string("Unable to estimate an upper bound on storage space for ") +

@@ -997,14 +997,14 @@ basic_builder& make_relation_many_getters_setters(basic_builder& o, std::string 
 				o + "if(auto old_left = @obj@.m_link_@prop@.vptr()[id.index()].left; bool(old_left))" + block{
 					o + "@obj@.m_link_@prop@.vptr()[old_left.index()].right = @obj@.m_link_@prop@.vptr()[id.index()].right;";
 				} +append{"else"} +block{ // else: was the current head of the existing list
-					o + "@obj@.m_head_back_@prop@.vptr()[old_value.index()] = m_link_@prop@.vptr()[id.index()].right;";
+					o + "@obj@.m_head_back_@prop@.vptr()[old_value.index()] = @obj@.m_link_@prop@.vptr()[id.index()].right;";
 				};
 				o + "if(auto old_right = @obj@.m_link_@prop@.vptr()[id.index()].right; bool(old_right))" + block{
 					o + "@obj@.m_link_@prop@.vptr()[old_right.index()].left = @obj@.m_link_@prop@.vptr()[id.index()].left;";
 				};
 			};
 			o + "if(bool(value))" + block{
-				o + "if(auto existing_list = @obj@.m_head_back_@prop@.vptr()[value.index()]]; bool(existing_list))" + block{
+				o + "if(auto existing_list = @obj@.m_head_back_@prop@.vptr()[value.index()]; bool(existing_list))" + block{
 					o + "@obj@.m_link_@prop@.vptr()[id.index()].left = existing_list;";
 					o + "if(auto r = @obj@.m_link_@prop@.vptr()[existing_list.index()].right; bool(r))" + block{
 						o + "@obj@.m_link_@prop@.vptr()[id.index()].right = r;";
@@ -1013,9 +1013,9 @@ basic_builder& make_relation_many_getters_setters(basic_builder& o, std::string 
 						o + "@obj@.m_link_@prop@.vptr()[id.index()].right = @obj@_id();";
 					};
 					o + "@obj@.m_link_@prop@.vptr()[existing_list.index()].right = id;";
-					o + "@obj@.m_head_back_@prop@.vptr()[value.index()]] = existing_list;";
+					o + "@obj@.m_head_back_@prop@.vptr()[value.index()] = existing_list;";
 				} +append{"else"} +block{
-					o + "@obj@.m_head_back_@prop@.vptr()[value.index()]] = id;";
+					o + "@obj@.m_head_back_@prop@.vptr()[value.index()] = id;";
 					o + "@obj@.m_link_@prop@.vptr()[id.index()].right = @obj@_id();";
 					o + "@obj@.m_link_@prop@.vptr()[id.index()].left = @obj@_id();";
 				};

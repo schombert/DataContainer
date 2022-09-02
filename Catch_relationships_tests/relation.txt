@@ -1,0 +1,67 @@
+object{
+	name{thingyA}
+	storage_type{compactable}
+	size{1200}
+	
+	property{
+		name{some_value}
+		type{int32_t}
+	}
+}
+
+object{
+	name{thingyB}
+	storage_type{erasable}
+	size{1200}
+	
+	property{
+		name{some_value}
+		type{int32_t}
+	}
+}
+
+relationship{
+	name{relate_same}
+
+	link{
+		object{thingyA}
+		name{left}
+		type{unique}
+	}
+	link{
+		object{thingyA}
+		name{right}
+		type{unindexed}
+	}
+}
+
+relationship{
+	name{relate_in_array}
+
+	link{
+		object{thingyA}
+		name{left}
+		type{unique}
+	}
+	link{
+		object{thingyA}
+		name{right}
+		type{many}
+		index_storage{array}
+	}
+}
+relationship{
+	name{relate_in_list}
+
+	link{
+		object{thingyA}
+		name{left}
+		type{unique}
+	}
+	link{
+		object{thingyA}
+		name{right}
+		type{many}
+		index_storage{list}
+	}
+}
