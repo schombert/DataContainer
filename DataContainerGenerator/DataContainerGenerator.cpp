@@ -31,6 +31,8 @@ relationship_object_def const* better_primary_key(relationship_object_def const*
 
 	if(oldr->is_expandable && !newr->is_expandable)
 		return newr;
+	if(!oldr->is_expandable && newr->is_expandable)
+		return oldr;
 
 	switch(oldr->store_type) {
 		case storage_type::contiguous:
@@ -116,7 +118,8 @@ int main(int argc, char *argv[]) {
 					}
 					if(l.index == index_type::at_most_one) {
 						r.primary_key.points_to = better_primary_key(r.primary_key.points_to, l.related_to);
-						r.primary_key.property_name = l.property_name;
+						if(r.primary_key.points_to == l.related_to)
+							r.primary_key.property_name = l.property_name;
 					}
 				}
 
@@ -604,7 +607,7 @@ int main(int argc, char *argv[]) {
 						output += make_compactable_delete(o, cob).to_string(2);
 					}
 
-					output += "\t\tbool is_valid_" + cob.name + "(" + id_name + " id) const {\n";
+					output += "\t\tbool " + cob.name + "_is_valid(" + id_name + " id) const {\n";
 					output += "\t\t\treturn bool(id) && uint32_t(id.index()) < " + cob.name + ".size_used;\n";
 					output += "\t\t}\n";
 				} else if(cob.store_type == storage_type::erasable) {
@@ -612,7 +615,7 @@ int main(int argc, char *argv[]) {
 					output += make_erasable_create(o, cob).to_string(2);
 					output += make_object_resize(o, cob).to_string(2);
 
-					output += "\t\tbool is_valid_" + cob.name + "(" + id_name + " id) const {\n";
+					output += "\t\tbool " + cob.name + "_is_valid(" + id_name + " id) const {\n";
 					output += "\t\t\treturn bool(id) && uint32_t(id.index()) < " + cob.name + ".size_used && "
 						+ cob.name + ".m__index.vptr()[id.index()] == id;\n";
 					output += "\t\t}\n";
@@ -620,10 +623,11 @@ int main(int argc, char *argv[]) {
 			} else if(cob.primary_key.points_to) { // primary key relationship
 				output += make_object_resize(o, cob).to_string(2);
 				output += make_clearing_delete(o, cob).to_string(2);
-				
-				output += "\t\tbool is_valid_" + cob.name + "(" + id_name + " id) const {\n";
+				output += make_pop_back(o, cob).to_string(2);
+
+				output += "\t\tbool " + cob.name + "_is_valid(" + id_name + " id) const {\n";
 				output += "\t\t\treturn bool(id) && uint32_t(id.index()) < " + cob.name + ".size_used && " + 
-					"is_valid_" + cob.primary_key.points_to->name + "(" + cob.primary_key.points_to->name + 
+					"" + cob.primary_key.points_to->name + "_is_valid(" + cob.primary_key.points_to->name + 
 					"_id(" + cob.primary_key.points_to->name  + "_id::value_base_t(id.index()))) && (";
 				for(auto& iob : cob.indexed_objects) {
 					if(cob.primary_key != iob) {
@@ -651,7 +655,7 @@ int main(int argc, char *argv[]) {
 					output += make_relation_try_create(o, cob).to_string(2);
 					output += make_relation_force_create(o, cob).to_string(2);
 
-					output += "\t\tbool is_valid_" + cob.name + "(" + id_name + " id) const {\n";
+					output += "\t\tbool " + cob.name + "_is_valid(" + id_name + " id) const {\n";
 					output += "\t\t\treturn bool(id) && uint32_t(id.index()) < " + cob.name + ".size_used;\n";
 					output += "\t\t}\n";
 				} else if(cob.store_type == storage_type::erasable) {
@@ -661,7 +665,7 @@ int main(int argc, char *argv[]) {
 					output += make_relation_try_create(o, cob).to_string(2);
 					output += make_relation_force_create(o, cob).to_string(2);
 
-					output += "\t\tbool is_valid_" + cob.name + "(" + id_name + " id) const {\n";
+					output += "\t\tbool " + cob.name + "_is_valid(" + id_name + " id) const {\n";
 					output += "\t\t\treturn bool(id) && uint32_t(id.index()) < " + cob.name + ".size_used && "
 						+ cob.name + ".m__index.vptr()[id.index()] == id;\n";
 					output += "\t\t}\n";

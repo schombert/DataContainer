@@ -283,21 +283,21 @@ basic_builder& make_hooked_getters(basic_builder& o, std::string const& object_n
 		o + "ve::vbitfield_type @obj@_get_@prop@(@vector_position@<@obj@_id> id) const" + block{
 			o + "ve::vbitfield_type r; r.v = 0;";
 			o + "for(int32_t i = 0; i < ve::vector_size; ++i)" + block{
-				o + "tr.v |= (@obj@_get_@prop@(@obj@_id(id.value + i))) << i;";
+				o + "tr.v |= (@obj@_get_@prop@(@obj@_id(@obj@_id::value_base_t(id.value + i)))) << i;";
 			};
 			o + "return r;";
 		};
 		o + "ve::vbitfield_type @obj@_get_@prop@(ve::partial_contiguous_tags<@obj@_id> id) const" + block{
 			o + "ve::vbitfield_type r; r.v = 0;";
-			o + "for(int32_t i = 0; i < id.subcount; ++i)" + block{
-				o + "tr.v |= (@obj@_get_@prop@(@obj@_id(id.value + i))) << i;";
+			o + "for(int32_t i = 0; i < int32_t(id.subcount); ++i)" + block{
+				o + "tr.v |= (@obj@_get_@prop@(@obj@_id(@obj@_id::value_base_t(id.value + i)))) << i;";
 			};
 			o + "return r;";
 		};
 		o + "ve::vbitfield_type @obj@_get_@prop@(ve::tagged_vector<@obj@ _id> id) const" + block{
 			o + "ve::vbitfield_type r; r.v = 0;";
 			o + "for(int32_t i = 0; i < ve::vector_size; ++i)" + block{
-				o + "tr.v |= (@obj@_get_@prop@(@obj@_id(id.value + i))) << i;";
+				o + "tr.v |= (@obj@_get_@prop@(@obj@_id(@obj@_id::value_base_t(id.value + i)))) << i;";
 			};
 			o + "return r;";
 		};
@@ -313,8 +313,8 @@ basic_builder& make_hooked_getters(basic_builder& o, std::string const& object_n
 		};
 		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@(ve::tagged_vector<@obj@_id> id) const" + block{
 			o + "return ve::apply([t = this](@obj@_id i){ return t->@obj@_get_@prop@(i); }, id);";
-		o + "#endif";
 		};
+		o + "#endif";
 	} else {
 		o + "@type@ @obj@_get_@prop@(@obj@_id id) const;";
 	}
@@ -334,15 +334,15 @@ basic_builder& make_hooked_setters(basic_builder& o, std::string const& object_n
 		o + "#ifndef DCON_NO_VE";
 		o + "void @obj@_set_@prop@(@vector_position@<@obj@_id> id, ve::vbitfield_type value)" + block{
 			o + "for(int32_t i = 0; i < ve::vector_size; ++i)" + block{
-				o + "@obj@_set_@prop@(@obj@_id(id.value + i), (value.v & uint8_t(1 << i)) != 0);";
+				o + "@obj@_set_@prop@(@obj@_id(@obj@_id::value_base_t(id.value + i)), (value.v & uint8_t(1 << i)) != 0);";
 			};
 		};
-		o + "void @obj@_set_@prop@(partial_contiguous_tags<@obj@_id> id, ve::vbitfield_type value)" + block{
-			o + "for(int32_t i = 0; i < id.subcount; ++i)" + block{
-				o + "@obj@_set_@prop@(@obj@_id(id.value + i), (value.v & uint8_t(1 << i)) != 0);";
+		o + "void @obj@_set_@prop@(ve::partial_contiguous_tags<@obj@_id> id, ve::vbitfield_type value)" + block{
+			o + "for(int32_t i = 0; i < int32_t(id.subcount); ++i)" + block{
+				o + "@obj@_set_@prop@(@obj@_id(@obj@_id::value_base_t(id.value + i)), (value.v & uint8_t(1 << i)) != 0);";
 			};
 		};
-		o + "void @obj@_set_@prop@(ve::tagged_vector<<@obj@_id> id, ve::vbitfield_type value)" + block{
+		o + "void @obj@_set_@prop@(ve::tagged_vector<@obj@_id> id, ve::vbitfield_type value)" + block{
 			o + "for(int32_t i = 0; i < ve::vector_size; ++i)" + block{
 				o + "@obj@_set_@prop@(id[i], (value.v & uint8_t(1 << i)) != 0);";
 			};
@@ -354,13 +354,13 @@ basic_builder& make_hooked_setters(basic_builder& o, std::string const& object_n
 		o + "void @obj@_set_@prop@(@vector_position@<@obj@_id> id, ve::value_to_vector_type<@type@> value)" + block{
 			o + "ve::apply(value, [t = this](@obj@_id i, @type@ v){ t->@obj@_set_@prop@(i, v); }, id);";
 		};
-		o + "void @obj@_set_@prop@(partial_contiguous_tags<@obj@_id> id, ve::value_to_vector_type<@type@> value)" + block{
+		o + "void @obj@_set_@prop@(ve::partial_contiguous_tags<@obj@_id> id, ve::value_to_vector_type<@type@> value)" + block{
 			o + "ve::apply(value, [t = this](@obj@_id i, @type@ v){ t->@obj@_set_@prop@(i, v); }, id);";
 		};
 		o + "void @obj@_set_@prop@(ve::tagged_vector<@obj@_id> id, ve::value_to_vector_type<@type@> value)" + block{
 			o + "ve::apply(value, [t = this](@obj@_id i, @type@ v){ t->@obj@_set_@prop@(i, v); }, id);";
-		o + "#endif";
 		};
+		o + "#endif";
 	} else {
 		o + "void @obj@_set_@prop@(@obj@_id id, @type@ const& value);";
 	}
@@ -384,21 +384,21 @@ basic_builder& make_array_hooked_getters(basic_builder& o, std::string const& ob
 		o + "ve::vbitfield_type @obj@_get_@prop@(@vector_position@<@obj@_id> id, @index_type@ n) const" + block{
 			o + "ve::vbitfield_type r; r.v = 0;";
 			o + "for(int32_t i = 0; i < ve::vector_size; ++i)" + block{
-				o + "tr.v |= (@obj@_get_@prop@(@obj@_id(id.value + i), n)) << i;";
+				o + "tr.v |= (@obj@_get_@prop@(@obj@_id(@obj@_id::value_base_t(id.value + i)), n)) << i;";
 			};
 			o + "return r;";
 		};
 		o + "ve::vbitfield_type @obj@_get_@prop@(ve::partial_contiguous_tags<@obj@_id> id, @index_type@ n) const" + block{
 			o + "ve::vbitfield_type r; r.v = 0;";
-			o + "for(int32_t i = 0; i < id.subcount; ++i)" + block{
-				o + "tr.v |= (@obj@_get_@prop@(@obj@_id(id.value + i), n)) << i;";
+			o + "for(int32_t i = 0; i < int32_t(id.subcount); ++i)" + block{
+				o + "tr.v |= (@obj@_get_@prop@(@obj@_id(@obj@_id::value_base_t(id.value + i)), n)) << i;";
 			};
 			o + "return r;";
 		};
 		o + "ve::vbitfield_type @obj@_get_@prop@(ve::tagged_vector<@obj@ _id> id, @index_type@ n) const" + block{
 			o + "ve::vbitfield_type r; r.v = 0;";
 			o + "for(int32_t i = 0; i < ve::vector_size; ++i)" + block{
-				o + "tr.v |= (@obj@_get_@prop@(@obj@_id(id.value + i), n)) << i;";
+				o + "tr.v |= (@obj@_get_@prop@(@obj@_id(@obj@_id::value_base_t(id.value + i)), n)) << i;";
 			};
 			o + "return r;";
 		};
@@ -414,8 +414,8 @@ basic_builder& make_array_hooked_getters(basic_builder& o, std::string const& ob
 		};
 		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@(ve::tagged_vector<@obj@_id> id, @index_type@ n) const" + block{
 			o + "return ve::apply([t = this](@obj@_id i){ return t->@obj@_get_@prop@(i, n); }, id);";
-		o + "#endif";
 		};
+		o + "#endif";
 	} else {
 		o + "@type@ @obj@_get_@prop@(@obj@_id id, @index_type@ n) const;";
 	}
@@ -436,12 +436,12 @@ basic_builder& make_array_hooked_setters(basic_builder& o, std::string const& ob
 		o + "#ifndef DCON_NO_VE";
 		o + "void @obj@_set_@prop@(@vector_position@<@obj@_id> id, @index_type@ n, ve::vbitfield_type value)" + block{
 			o + "for(int32_t i = 0; i < ve::vector_size; ++i)" + block{
-				o + "@obj@_set_@prop@(@obj@_id(id.value + i), n, (value.v & uint8_t(1 << i)) != 0);";
+				o + "@obj@_set_@prop@(@obj@_id(@obj@_id::value_base_t(id.value + i)), n, (value.v & uint8_t(1 << i)) != 0);";
 			};
 		};
-		o + "void @obj@_set_@prop@(partial_contiguous_tags<@obj@_id> id, @index_type@ n, ve::vbitfield_type value)" + block{
-			o + "for(int32_t i = 0; i < id.subcount; ++i)" + block{
-				o + "@obj@_set_@prop@(@obj@_id(id.value + i), n, (value.v & uint8_t(1 << i)) != 0);";
+		o + "void @obj@_set_@prop@(ve::partial_contiguous_tags<@obj@_id> id, @index_type@ n, ve::vbitfield_type value)" + block{
+			o + "for(int32_t i = 0; i < int32_t(id.subcount); ++i)" + block{
+				o + "@obj@_set_@prop@(@obj@_id(@obj@_id::value_base_t(id.value + i)), n, (value.v & uint8_t(1 << i)) != 0);";
 			};
 		};
 		o + "void @obj@_set_@prop@(ve::tagged_vector<<@obj@_id> id, @index_type@ n, ve::vbitfield_type value)" + block{
@@ -456,13 +456,13 @@ basic_builder& make_array_hooked_setters(basic_builder& o, std::string const& ob
 		o + "void @obj@_set_@prop@(@vector_position@<@obj@_id> id, @index_type@ n, ve::value_to_vector_type<@type@> value)" + block{
 			o + "ve::apply(value, [t = this, n](@obj@_id i, @type@ v){ t->@obj@_set_@prop@(i, n, v); }, id);";
 		};
-		o + "void @obj@_set_@prop@(partial_contiguous_tags<@obj@_id> id, @index_type@ n, ve::value_to_vector_type<@type@> value)" + block{
+		o + "void @obj@_set_@prop@(ve::partial_contiguous_tags<@obj@_id> id, @index_type@ n, ve::value_to_vector_type<@type@> value)" + block{
 			o + "ve::apply(value, [t = this, n](@obj@_id i, @type@ v){ t->@obj@_set_@prop@(i, n, v); }, id);";
 		};
 		o + "void @obj@_set_@prop@(ve::tagged_vector<@obj@_id> id, @index_type@ n, ve::value_to_vector_type<@type@> value)" + block{
 			o + "ve::apply(value, [t = this, n](@obj@_id i, @type@ v){ t->@obj@_set_@prop@(i, n, v); }, id);";
-		o + "#endif";
 		};
+		o + "#endif";
 	} else {
 		o + "void @obj@_set_@prop@(@obj@_id id, @index_type@ n, @type@ const& value);";
 	}
@@ -661,7 +661,7 @@ basic_builder& make_bitfield_array_setters(basic_builder& o, std::string const& 
 		o + "dcon::bit_vector_set(@obj@.m_@prop@.vptr(dcon::get_index(n)), id.index(), value);";
 	};
 	o + "DCON_RELEASE_INLINE void @obj@_resize_@prop@(uint32_t size) noexcept" + block{
-		o + "return @obj@.m_@prop@.resize(size, @obj@.size_used);";
+		o + "@obj@.m_@prop@.resize(size, @obj@.size_used);";
 	};
 
 	make_vectorizable_array_setters(o, "ve::vbitfield_type", index_type, is_expandable);
@@ -855,7 +855,7 @@ basic_builder& make_relation_pk_getters_setters(basic_builder& o, std::string co
 
 	o + "bool @rel@_try_set_@prop@(@rel@_id id, @prop_type@_id value) noexcept" + block{
 		o + "if(bool(value))" + block{
-			o + "if(is_valid_@rel@( @rel@_id(@rel@_id::value_base_t(value.index())) )) return false;";
+			o + "if(@rel@_is_valid( @rel@_id(@rel@_id::value_base_t(value.index())) )) return false;";
 			o + "internal_move_relationship_@rel@(id, @rel@_id(@rel@_id::value_base_t(value.index())) );";
 		} +append{"else"} +block{
 			o + "delete_@rel@(id);";
@@ -894,7 +894,7 @@ basic_builder& make_relation_pk_reverse_getters_setters(basic_builder& o, std::s
 	o + "#endif";
 
 	o + "DCON_RELEASE_INLINE void @prop_type@_remove_@rel@@as_suffix@(@prop_type@_id id) noexcept" + block{
-		o + "if(is_valid_@rel@(@rel@_id(@rel@_id::value_base_t(id.index()))))" + block{
+		o + "if(@rel@_is_valid(@rel@_id(@rel@_id::value_base_t(id.index()))))" + block{
 			o + "delete_@rel@(@rel@_id(@rel@_id::value_base_t(id.index())));";
 		};
 	};
@@ -916,10 +916,10 @@ basic_builder& make_relation_unique_non_pk_getters_setters(basic_builder& o, std
 
 	o + "void @obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
 		o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()]; bool(old_value))" + block{
-			o + "@obj@.m_link_back_@prop@.vptr()[old_value].index()] = @rel@_id();";
+			o + "@obj@.m_link_back_@prop@.vptr()[old_value.index()] = @obj@_id();";
 		};
 		o + "if(bool(value))" + block{
-			o + "if(auto old_rel = @rel@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
+			o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
 				o + "delete_@obj@(old_rel);";
 			};
 			o + "@obj@.m_link_back_@prop@.vptr()[value.index()] = id;";
@@ -928,13 +928,13 @@ basic_builder& make_relation_unique_non_pk_getters_setters(basic_builder& o, std
 
 	o + "bool @obj@_try_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
 		o + "if(bool(value))" + block{
-			o + "if(auto old_rel = @rel@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
+			o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
 				o + "return false;";
 			};
 			o + "@obj@.m_link_back_@prop@.vptr()[value.index()] = id;";
 		};
 		o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()]; bool(old_value))" + block{
-				o + "@obj@.m_link_back_@prop@.vptr()[old_value].index()] = @rel@_id();";
+				o + "@obj@.m_link_back_@prop@.vptr()[old_value.index()] = @obj@_id();";
 		};
 		o + "return true;";
 	};
@@ -960,19 +960,21 @@ basic_builder& make_relation_unique_non_pk_reverse_getters_setters(basic_builder
 		o + "return ve::load(id, @obj@.m_link_back_@prop@.vptr());";
 	};
 	o + "DCON_RELEASE_INLINE ve::tagged_vector<@obj@_id> @type@_get_@obj@@as_suffix@"
-		"(partial_contiguous_tags<@type@_id> id) const noexcept" + block{
+		"(ve::partial_contiguous_tags<@type@_id> id) const noexcept" + block{
 		o + "return ve::load(id, @obj@.m_link_back_@prop@.vptr());";
 	};
 	o + "DCON_RELEASE_INLINE ve::tagged_vector<@obj@_id> @type@_get_@obj@@as_suffix@"
-		"(tagged_vector<@type@_id> id) const noexcept" + block{
+		"(ve::tagged_vector<@type@_id> id) const noexcept" + block{
 		o + "return ve::load(id, @obj@.m_link_back_@prop@.vptr());";
 	};
+	o + "#endif";
+
 	o + "DCON_RELEASE_INLINE void @type@_remove_@obj@@as_suffix@(@type@_id id) noexcept" + block{
-		o + "if(auto backid = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(backid))" + block{
+		o + "if(auto backid = @obj@.m_link_back_@prop@.vptr()[id.index()]; bool(backid))" + block{
 			o + "delete_@obj@(backid);";
 		};
 	};
-	o + "#endif";
+	
 
 	o + line_break{};
 	return o;
@@ -1008,7 +1010,7 @@ basic_builder& make_relation_many_getters_setters(basic_builder& o, std::string 
 						o + "@obj@.m_link_@prop@.vptr()[id.index()].right = r;";
 						o + "@obj@.m_link_@prop@.vptr()[r.index()].left = id;";
 					} +append{ "else" } +block{
-						o + "@obj@.m_link_@prop@.vptr()[id.index()].right = @obj@_id()";
+						o + "@obj@.m_link_@prop@.vptr()[id.index()].right = @obj@_id();";
 					};
 					o + "@obj@.m_link_@prop@.vptr()[existing_list.index()].right = id;";
 					o + "@obj@.m_head_back_@prop@.vptr()[value.index()]] = existing_list;";
@@ -1025,7 +1027,7 @@ basic_builder& make_relation_many_getters_setters(basic_builder& o, std::string 
 		} else if(ltype == list_type::array) {
 			o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()]; bool(old_value))" + block{
 				o + "auto& vref = @obj@.m_array_@prop@.vptr()[old_value.index()];";
-				o + "dcon::remove_unique_item(@obj@.@prop@_storage, vref, id)";
+				o + "dcon::remove_unique_item(@obj@.@prop@_storage, vref, id);";
 			};
 			o + "if(bool(value))" + block{
 				o + "dcon::push_back(@obj@.@prop@_storage, @obj@.m_array_@prop@.vptr()[value.index()], id);";
@@ -1173,11 +1175,13 @@ basic_builder& make_pop_back(basic_builder& o, relationship_object_def const& co
 
 		for(auto& iob : cob.indexed_objects) {
 			o + substitute{ "i_prop_name", iob.property_name } +substitute{ "i_type_name", iob.type_name };
-			o + "@obj@_set_@i_prop_name@(id_removed, @i_type_name@_id());";
-			if(cob.is_expandable) {
-				o + "@obj@.m_@i_prop_name@.values.pop_back();";
-				if(iob.ltype == list_type::list)
-					o + "@obj@.m_link_@i_prop_name@.values.pop_back();";
+			if(cob.primary_key != iob) {
+				o + "@obj@_set_@i_prop_name@(id_removed, @i_type_name@_id());";
+				if(cob.is_expandable) {
+					o + "@obj@.m_@i_prop_name@.values.pop_back();";
+					if(iob.ltype == list_type::list)
+						o + "@obj@.m_link_@i_prop_name@.values.pop_back();";
+				}
 			}
 		}
 
@@ -1190,31 +1194,8 @@ basic_builder& make_pop_back(basic_builder& o, relationship_object_def const& co
 					o + "delete_@rel_name@(@rel_name@_id(@rel_name@_id::value_base_t(id_removed.index())));";
 					o + "@rel_name@.size_used = @obj@.size_used - 1;";
 				}
-				if(cob.is_expandable) {
-					for(auto& rp : cr.rel_ptr->properties) {
-						if(!rp.is_derived) {
-							pop_value(o, cr.relation_name, rp.name, rp.type, "id_removed");
-						}
-					}
-					for(auto& ri : cr.rel_ptr->indexed_objects) {
-						if(cr.rel_ptr->primary_key == ri) {
-						} else {
-							pop_value(o, cr.relation_name, ri.property_name, property_type::other, "id_removed");
-						}
-						if(ri.ltype == list_type::list && ri.index == index_type::many) {
-							pop_value(o, cr.relation_name, std::string("link_") + ri.property_name,
-								property_type::other, "id_removed");
-						}
-					}
-				} else {
-					for(auto& rp : cr.rel_ptr->properties) {
-						if(!rp.is_derived) {
-							clear_value(o, cr.relation_name, rp.name, rp.data_type, rp.type, "id_removed");
-						}
-					}
-				}
 			} else if(cr.indexed_as == index_type::at_most_one) {
-				o + "@obj@_remove_@rel_name@_as_@rel_prop_name@(id_removed));";
+				o + "@obj@_remove_@rel_name@_as_@rel_prop_name@(id_removed);";
 				if(cob.is_expandable) {
 					pop_value(o, cr.relation_name, std::string("link_back_") + cr.property_name,
 						property_type::other, "id_removed");
@@ -1729,7 +1710,7 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 					o + "@rel@.size_used = @obj@.size_used - 1;";
 				}
 			} else if(cr.indexed_as == index_type::at_most_one) {
-				o + "@obj@_remove_@rel@_as_@r_prop@(id_removed));";
+				o + "@obj@_remove_@rel@_as_@r_prop@(id_removed);";
 				o + "if(auto bk = @rel@.m_link_back_@r_prop@.vptr()[last_id.index()]; bool(bk))" + block{
 					o + "@rel@.m_@r_prop@.vptr()[bk.index()] = id_removed;"; 
 				};
@@ -1980,7 +1961,7 @@ basic_builder& make_erasable_delete(basic_builder& o, relationship_object_def co
 	o + heading{ "container delete for @obj@" };
 
 	o + "void delete_@obj@(@obj@_id id_removed)" + block{
-		o + "if(!is_valid_@obj@(id_removed)) return;";
+		o + "if(!@obj@_is_valid(id_removed)) return;";
 		if(cob.hook_delete)
 			o + "on_delete_@obj@(id_removed);";
 
@@ -2159,10 +2140,10 @@ basic_builder& make_relation_try_create(basic_builder& o, relationship_object_de
 			o + substitute{ "prop", iob.property_name };
 			if(cob.primary_key != iob) {
 				if(iob.index == index_type::at_most_one) {
-					o + "if(bool(@prop@_p) && bool(@obj@.m_link_@prop@.vptr()[@prop@_p.index()])) return @obj@_id();";
+					o + "if(bool(@prop@_p) && bool(@obj@.m_@prop@.vptr()[@prop@_p.index()])) return @obj@_id();";
 				}
 			} else {
-				o + "if(is_valid_@obj@(@obj@_id(@obj@_id::value_base_t(@prop@_p.index())))) return @obj@_id();";
+				o + "if(@obj@_is_valid(@obj@_id(@obj@_id::value_base_t(@prop@_p.index())))) return @obj@_id();";
 			}
 		}
 
@@ -2950,56 +2931,58 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 }
 
 
-
 basic_builder& make_relation_many_join_getters_setters(basic_builder& o, std::string const& property_name,
 	std::string const& property_type, std::string const& containter_type, std::string const& relation_name,
-	std::string const& name_in_relation, list_type indexed_as, bool property_is_pk) {
+	std::string const& name_in_relation, list_type indexed_as, bool property_is_pk,
+	bool make_getter = true, bool make_setter = true) {
 
 	o + substitute{ "obj", containter_type } +substitute{ "rel", relation_name }+substitute{ "p_type", property_type }
 	+substitute{ "prop", property_name } +substitute{ "as_name", name_in_relation };
 
-	o + "template<typename T>";
-	o + "void @obj@_for_each_@prop@_from_@rel@(@obj@_id id, T&& func) const" + block{
-		o + "@obj@_for_each_@rel@_as_@as_name@(id, [&](@rel@_id i)" + block{
-			o + "func(@rel@_get_@prop@(i));";
-		} +append{");"};
-	};
+	if(make_getter) {
+		o + "template<typename T>";
+		o + "void @obj@_for_each_@prop@_from_@rel@(@obj@_id id, T&& func) const" + block{
+			o + "@obj@_for_each_@rel@_as_@as_name@(id, [&](@rel@_id i)" + block{
+				o + "func(@rel@_get_@prop@(i));";
+			} +append{");"};
+		};
 
-	o + substitute{ "ref", is_common_type(property_type) ? "" : " const&" };
+		o + substitute{ "ref", is_common_type(property_type) ? "" : " const&" };
 
-	o + "bool @obj@_has_@prop@_from_@rel@(@obj@_id id, @p_type@@ref@ target) const" + block{
-		if(indexed_as == list_type::list) {
-			o + "for(auto list_pos = @rel@.m_head_back_@as_name@.vptr()[id.index()]; "
-				"bool(list_pos); list_pos = @rel@.m_link_@as_name@.vptr()[list_pos.index()].right)" + block{
-				if(!property_is_pk) {
-					o + "if(@rel@.m_@prop@.vptr()[list_pos.index()] == target) return true;";
-				} else {
-					o + "if(list_pos.index() == target.index()) return true;";
-				}
-			};
-			o + "return false;";
-		} else if(indexed_as == list_type::array) {
-			o + "auto vrange = dcon::get_range(@rel@.@as_name@_storage, @rel@.m_array_@as_name@.vptr()[id.index()]);";
-			o + "for(auto pos = vrange.first; pos != vrange.second; ++pos)" + block{
-				if(!property_is_pk) {
-					o + "if(@rel@.m_@prop@.vptr()[pos->index()] == target) return true;";
-				} else {
-					o + "if(pos->index() == target.index()) return true;";
-				}
-			};
-			o + "return false;";
-		} else if(indexed_as == list_type::std_vector) {
-			o + "auto& vref = @rel@.m_array_@as_name@.vptr()[id.index()];";
-			o + "for(auto pos = vref.begin(); pos != vref.end(); ++pos)" + block{
-				if(!property_is_pk) {
-					o + "if(@rel@.m_@prop@.vptr()[pos->index()] == target) return true;";
-				} else {
-					o + "if(pos->index() == target.index()) return true;";
-				}
-			};
-			o + "return false;";
-		}
-	};
+		o + "bool @obj@_has_@prop@_from_@rel@(@obj@_id id, @p_type@@ref@ target) const" + block{
+			if(indexed_as == list_type::list) {
+				o + "for(auto list_pos = @rel@.m_head_back_@as_name@.vptr()[id.index()]; "
+					"bool(list_pos); list_pos = @rel@.m_link_@as_name@.vptr()[list_pos.index()].right)" + block{
+					if(!property_is_pk) {
+						o + "if(@rel@.m_@prop@.vptr()[list_pos.index()] == target) return true;";
+					} else {
+						o + "if(list_pos.index() == target.index()) return true;";
+					}
+				};
+				o + "return false;";
+			} else if(indexed_as == list_type::array) {
+				o + "auto vrange = dcon::get_range(@rel@.@as_name@_storage, @rel@.m_array_@as_name@.vptr()[id.index()]);";
+				o + "for(auto pos = vrange.first; pos != vrange.second; ++pos)" + block{
+					if(!property_is_pk) {
+						o + "if(@rel@.m_@prop@.vptr()[pos->index()] == target) return true;";
+					} else {
+						o + "if(pos->index() == target.index()) return true;";
+					}
+				};
+				o + "return false;";
+			} else if(indexed_as == list_type::std_vector) {
+				o + "auto& vref = @rel@.m_array_@as_name@.vptr()[id.index()];";
+				o + "for(auto pos = vref.begin(); pos != vref.end(); ++pos)" + block{
+					if(!property_is_pk) {
+						o + "if(@rel@.m_@prop@.vptr()[pos->index()] == target) return true;";
+					} else {
+						o + "if(pos->index() == target.index()) return true;";
+					}
+				};
+				o + "return false;";
+			}
+		};
+	}
 	
 
 	return o;
@@ -3007,7 +2990,8 @@ basic_builder& make_relation_many_join_getters_setters(basic_builder& o, std::st
 
 basic_builder& make_relation_unique_non_pk_join_getters_setters(basic_builder& o, std::string const& property_name,
 	std::string const& data_type, std::string const& containter_type, std::string const& relation_name,
-	std::string const& name_in_relation, property_type ptype, bool relation_is_expandable, std::string const& index_type) {
+	std::string const& name_in_relation, property_type ptype, bool relation_is_expandable, std::string const& index_type,
+	bool make_getter = true, bool make_setter = true) {
 	
 	o + substitute{"obj", containter_type } +substitute{ "rel", relation_name }
 	+substitute{ "prop", property_name } +substitute{ "type", data_type } +substitute{ "as_name", name_in_relation };
@@ -3015,126 +2999,138 @@ basic_builder& make_relation_unique_non_pk_join_getters_setters(basic_builder& o
 	o + substitute{ "i_type", index_type };
 
 	if(ptype == property_type::bitfield) {
-		o + "bool @obj@_get_@prop@_from_@rel@(@obj@_id id) const" + block{
-			o + "if(auto ref_id = @rel@.m_link_@as_name@.vptr()[id.index]; bool(ref_id))" + block{
+		if(make_getter) {
+			o + "bool @obj@_get_@prop@_from_@rel@(@obj@_id id) const" + block{
+				o + "if(auto ref_id = @rel@.m_link_back_@as_name@.vptr()[id.index()]; bool(ref_id))" + block{
+					o + "return @rel@_get_@prop@(ref_id);";
+				} +append{ "else" } +block{
+					o + "return false;";
+				};
+			};
+
+			o + "#ifndef DCON_NO_VE";
+			o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> id) const" + block{
+				o + "auto ref_id = ve::load(id, @rel@.m_link_back_@as_name@.vptr());";
 				o + "return @rel@_get_@prop@(ref_id);";
-			} +append{ "else" } +block{
-				o + "return false;";
 			};
-		};
-
-		o + "#ifndef DCON_NO_VE";
-		o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> id) const" + block{
-			o + "auto ref_id = ve::load(id, @rel@.m_link_@as_name@.vptr())";
-			o + "return @rel@_get_@prop@(ref_id);";
-		};
-		o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> id) const" + block{
-			o + "auto ref_id = ve::load(id, @rel@.m_link_@as_name@.vptr())";
-			o + "return @rel@_get_@prop@(ref_id);";
-		};
-		o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> id) const" + block{
-			o + "auto ref_id = ve::load(id, @rel@.m_link_@as_name@.vptr())";
-			o + "return @rel@_get_@prop@(ref_id);";
-		};
-		o + "#endif";
-
-		o + "void @obj@_set_@prop@_from_@rel@(@obj@_id id, bool val)" + block{
-			o + "if(auto ref_id = @rel@.m_link_@as_name@.vptr()[id.index]; bool(ref_id))" + block{
-				o + "@rel@_set_@prop@(ref_id, val);";
+			o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> id) const" + block{
+				o + "auto ref_id = ve::load(id, @rel@.m_link_back_@as_name@.vptr());";
+				o + "return @rel@_get_@prop@(ref_id);";
 			};
-		};
+			o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> id) const" + block{
+				o + "auto ref_id = ve::load(id, @rel@.m_link_back_@as_name@.vptr());";
+				o + "return @rel@_get_@prop@(ref_id);";
+			};
+			o + "#endif";
+		}
+		if(make_setter) {
+			o + "void @obj@_set_@prop@_from_@rel@(@obj@_id id, bool val)" + block{
+				o + "if(auto ref_id = @rel@.m_link_back_@as_name@.vptr()[id.index()]; bool(ref_id))" + block{
+					o + "@rel@_set_@prop@(ref_id, val);";
+				};
+			};
+		}
 	} else if(ptype == property_type::object) {
 		
 	} else if(ptype == property_type::special_vector) {
 
 	} else if(ptype == property_type::vectorizable) {
-		o + "@type@ @obj@_get_@prop@_from_@rel@(@obj@_id id) const" + block{
-			o + "if(auto ref_id = @rel@.m_link_@as_name@.vptr()[id.index]; bool(ref_id))" + block{
+		if(make_getter) {
+			o + "@type@ @obj@_get_@prop@_from_@rel@(@obj@_id id) const" + block{
+				o + "if(auto ref_id = @rel@.m_link_back_@as_name@.vptr()[id.index()]; bool(ref_id))" + block{
+					o + "return @rel@_get_@prop@(ref_id);";
+				} +append{ "else" } +block{
+					o + "return @type@{};";
+				};
+			};
+
+			o + "#ifndef DCON_NO_VE";
+			o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> id) const" + block{
+				o + "auto ref_id = ve::load(id, @rel@.m_link_back_@as_name@.vptr());";
 				o + "return @rel@_get_@prop@(ref_id);";
-			} +append{ "else" } +block{
-				o + "return @type@{};";
 			};
-		};
-
-		o + "#ifndef DCON_NO_VE";
-		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> id) const" + block{
-			o + "auto ref_id = ve::load(id, @rel@.m_link_@as_name@.vptr())";
-			o + "return @rel@_get_@prop@(ref_id);";
-		};
-		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> id) const" + block{
-			o + "auto ref_id = ve::load(id, @rel@.m_link_@as_name@.vptr())";
-			o + "return @rel@_get_@prop@(ref_id);";
-		};
-		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> id) const" + block{
-			o + "auto ref_id = ve::load(id, @rel@.m_link_@as_name@.vptr())";
-			o + "return @rel@_get_@prop@(ref_id);";
-		};
-		o + "#endif";
-
-		o + "void @obj@_set_@prop@_from_@rel@(@obj@_id id, @type@ val)" + block{
-			o + "if(auto ref_id = @rel@.m_link_@as_name@.vptr()[id.index]; bool(ref_id))" + block{
-				o + "@rel@_set_@prop@(ref_id, val);";
+			o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> id) const" + block{
+				o + "auto ref_id = ve::load(id, @rel@.m_link_back_@as_name@.vptr());";
+				o + "return @rel@_get_@prop@(ref_id);";
 			};
-		};
+			o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> id) const" + block{
+				o + "auto ref_id = ve::load(id, @rel@.m_link_back_@as_name@.vptr());";
+				o + "return @rel@_get_@prop@(ref_id);";
+			};
+			o + "#endif";
+		}
+		if(make_setter) {
+			o + "void @obj@_set_@prop@_from_@rel@(@obj@_id id, @type@ val)" + block{
+				o + "if(auto ref_id = @rel@.m_link_back_@as_name@.vptr()[id.index()]; bool(ref_id))" + block{
+					o + "@rel@_set_@prop@(ref_id, val);";
+				};
+			};
+		}
 	} else if(ptype == property_type::other) {
 	} else if(ptype == property_type::array_bitfield) {
-		o + "bool @obj@_get_@prop@_from_@rel@(@obj@_id id, @i_type@ i) const" + block{
-			o + "if(auto ref_id = @rel@.m_link_@as_name@.vptr()[id.index]; bool(ref_id))" + block{
+		if(make_getter) {
+			o + "bool @obj@_get_@prop@_from_@rel@(@obj@_id id, @i_type@ i) const" + block{
+				o + "if(auto ref_id = @rel@.m_link_back_@as_name@.vptr()[id.index()]; bool(ref_id))" + block{
+					o + "return @rel@_get_@prop@(ref_id, i);";
+				} +append{ "else" } +block{
+					o + "return false;";
+				};
+			};
+
+			o + "#ifndef DCON_NO_VE";
+			o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> id, @i_type@ i) const" + block{
+				o + "auto ref_id = ve::load(id, @rel@.m_link_back_@as_name@.vptr());";
 				o + "return @rel@_get_@prop@(ref_id, i);";
-			} +append{ "else" } +block{
-				o + "return false;";
 			};
-		};
-
-		o + "#ifndef DCON_NO_VE";
-		o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> id, @i_type@ i) const" + block{
-			o + "auto ref_id = ve::load(id, @rel@.m_link_@as_name@.vptr())";
-			o + "return @rel@_get_@prop@(ref_id, i);";
-		};
-		o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> id, @i_type@ i) const" + block{
-			o + "auto ref_id = ve::load(id, @rel@.m_link_@as_name@.vptr())";
-			o + "return @rel@_get_@prop@(ref_id, i);";
-		};
-		o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> id, @i_type@ i) const" + block{
-			o + "auto ref_id = ve::load(id, @rel@.m_link_@as_name@.vptr())";
-			o + "return @rel@_get_@prop@(ref_id, i);";
-		};
-		o + "#endif";
-
-		o + "void @obj@_set_@prop@_from_@rel@(@obj@_id id, @i_type@ i, bool val)" + block{
-			o + "if(auto ref_id = @rel@.m_link_@as_name@.vptr()[id.index]; bool(ref_id))" + block{
-				o + "@rel@_set_@prop@(ref_id, i, val);";
+			o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> id, @i_type@ i) const" + block{
+				o + "auto ref_id = ve::load(id, @rel@.m_link_back_@as_name@.vptr());";
+				o + "return @rel@_get_@prop@(ref_id, i);";
 			};
-		};
+			o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> id, @i_type@ i) const" + block{
+				o + "auto ref_id = ve::load(id, @rel@.m_link_back_@as_name@.vptr());";
+				o + "return @rel@_get_@prop@(ref_id, i);";
+			};
+			o + "#endif";
+		}
+		if(make_setter) {
+			o + "void @obj@_set_@prop@_from_@rel@(@obj@_id id, @i_type@ i, bool val)" + block{
+				o + "if(auto ref_id = @rel@.m_link_back_@as_name@.vptr()[id.index()]; bool(ref_id))" + block{
+					o + "@rel@_set_@prop@(ref_id, i, val);";
+				};
+			};
+		}
 	} else if(ptype == property_type::array_vectorizable) {
-		o + "@type@ @obj@_get_@prop@_from_@rel@(@obj@_id id, @i_type@ i) const" + block{
-			o + "if(auto ref_id = @rel@.m_link_@as_name@.vptr()[id.index]; bool(ref_id))" + block{
+		if(make_getter) {
+			o + "@type@ @obj@_get_@prop@_from_@rel@(@obj@_id id, @i_type@ i) const" + block{
+				o + "if(auto ref_id = @rel@.m_link_back_@as_name@.vptr()[id.index()]; bool(ref_id))" + block{
+					o + "return @rel@_get_@prop@(ref_id, i);";
+				} +append{ "else" } +block{
+					o + "return @type@{};";
+				};
+			};
+
+			o + "#ifndef DCON_NO_VE";
+			o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> id, @i_type@ i) const" + block{
+				o + "auto ref_id = ve::load(id, @rel@.m_link_back_@as_name@.vptr());";
 				o + "return @rel@_get_@prop@(ref_id, i);";
-			} +append{ "else" } +block{
-				o + "return @type@{};";
 			};
-		};
-
-		o + "#ifndef DCON_NO_VE";
-		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> id, @i_type@ i) const" + block{
-			o + "auto ref_id = ve::load(id, @rel@.m_link_@as_name@.vptr())";
-			o + "return @rel@_get_@prop@(ref_id, i);";
-		};
-		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> id, @i_type@ i) const" + block{
-			o + "auto ref_id = ve::load(id, @rel@.m_link_@as_name@.vptr())";
-			o + "return @rel@_get_@prop@(ref_id, i);";
-		};
-		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> id, @i_type@ i) const" + block{
-			o + "auto ref_id = ve::load(id, @rel@.m_link_@as_name@.vptr())";
-			o + "return @rel@_get_@prop@(ref_id, i);";
-		};
-		o + "#endif";
-
-		o + "void @obj@_set_@prop@_from_@rel@(@obj@_id id, @i_type@ i, @type@ val)" + block{
-			o + "if(auto ref_id = @rel@.m_link_@as_name@.vptr()[id.index]; bool(ref_id))" + block{
-				o + "@rel@_set_@prop@(ref_id, i, val);";
+			o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> id, @i_type@ i) const" + block{
+				o + "auto ref_id = ve::load(id, @rel@.m_link_back_@as_name@.vptr());";
+				o + "return @rel@_get_@prop@(ref_id, i);";
 			};
-		};
+			o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> id, @i_type@ i) const" + block{
+				o + "auto ref_id = ve::load(id, @rel@.m_link_back_@as_name@.vptr());";
+				o + "return @rel@_get_@prop@(ref_id, i);";
+			};
+			o + "#endif";
+		}
+		if(make_setter) {
+			o + "void @obj@_set_@prop@_from_@rel@(@obj@_id id, @i_type@ i, @type@ val)" + block{
+				o + "if(auto ref_id = @rel@.m_link_back_@as_name@.vptr()[id.index()]; bool(ref_id))" + block{
+					o + "@rel@_set_@prop@(ref_id, i, val);";
+				};
+			};
+		}
 	} else if(ptype == property_type::array_other) {
 	}
 
@@ -3143,7 +3139,8 @@ basic_builder& make_relation_unique_non_pk_join_getters_setters(basic_builder& o
 
 basic_builder& make_relation_unique_pk_join_getters_setters(basic_builder& o, std::string const& property_name,
 	std::string const& data_type, std::string const& containter_type, std::string const& relation_name,
-	std::string const& name_in_relation, property_type ptype, bool relation_is_expandable, std::string const& index_type) {
+	std::string const& name_in_relation, property_type ptype, bool relation_is_expandable, std::string const& index_type,
+	bool make_getter = true, bool make_setter = true) {
 
 	o + substitute{ "obj", containter_type } +substitute{ "rel", relation_name }
 	+substitute{ "prop", property_name } +substitute{ "type", data_type } +substitute{ "as_name", name_in_relation };
@@ -3151,84 +3148,98 @@ basic_builder& make_relation_unique_pk_join_getters_setters(basic_builder& o, st
 	o + substitute{ "i_type", index_type };
 
 	if(ptype == property_type::bitfield) {
-		o + "bool @obj@_get_@prop@_from_@rel@(@obj@_id ref_id) const" + block{
-			o + "return @rel@_get_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())));";
-		};
-		o + "#ifndef DCON_NO_VE";
-		o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> ref_id) const" + block{
-			o + "return @rel@_get_@prop@(@vector_position@<@rel@_id>(ref_id.value));";
-		};
-		o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> ref_id) const" + block{
-			o + "return @rel@_get_@prop@(ve::partial_contiguous_tags<@rel@_id>(ref_id.value, ref_id.subcount));";
-		};
-		o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> ref_id) const" + block{
-			o + "return @rel@_get_@prop@(ve::tagged_vector<@rel@_id>(ref_id, std::true_type{}));";
-		};
-		o + "#endif";
-		o + "void @obj@_set_@prop@_from_@rel@(@obj@_id ref_id, bool val)" + block{
-			o + "@rel@_set_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())), val);";
-		};
+		if(make_getter) {
+			o + "bool @obj@_get_@prop@_from_@rel@(@obj@_id ref_id) const" + block{
+				o + "return @rel@_get_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())));";
+			};
+			o + "#ifndef DCON_NO_VE";
+			o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> ref_id) const" + block{
+				o + "return @rel@_get_@prop@(@vector_position@<@rel@_id>(ref_id.value));";
+			};
+			o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> ref_id) const" + block{
+				o + "return @rel@_get_@prop@(ve::partial_contiguous_tags<@rel@_id>(ref_id.value, ref_id.subcount));";
+			};
+			o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> ref_id) const" + block{
+				o + "return @rel@_get_@prop@(ve::tagged_vector<@rel@_id>(ref_id, std::true_type{}));";
+			};
+			o + "#endif";
+		}
+		if(make_setter) {
+			o + "void @obj@_set_@prop@_from_@rel@(@obj@_id ref_id, bool val)" + block{
+				o + "@rel@_set_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())), val);";
+			};
+		}
 	} else if(ptype == property_type::object) {
 
 	} else if(ptype == property_type::special_vector) {
 
 	} else if(ptype == property_type::vectorizable) {
-		o + "@type@ @obj@_get_@prop@_from_@rel@(@obj@_id ref_id) const" + block{
-			o + "return @rel@_get_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())));";
-		};
-		o + "#ifndef DCON_NO_VE";
-		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> ref_id) const" + block{
-			o + "return @rel@_get_@prop@(@vector_position@<@rel@_id>(ref_id.value));";
-		};
-		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> ref_id) const" + block{
-			o + "return @rel@_get_@prop@(ve::partial_contiguous_tags<@rel@_id>(ref_id.value, ref_id.subcount));";
-		};
-		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> ref_id) const" + block{
-			o + "return @rel@_get_@prop@(ve::tagged_vector<@rel@_id>(ref_id, std::true_type{}));";
-		};
-		o + "#endif";
-
-		o + "void @obj@_set_@prop@_from_@rel@(@obj@_id ref_id, @type@ val)" + block{
-			o + "@rel@_set_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())), val);";
-		};
+		if(make_getter) {
+			o + "@type@ @obj@_get_@prop@_from_@rel@(@obj@_id ref_id) const" + block{
+				o + "return @rel@_get_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())));";
+			};
+			o + "#ifndef DCON_NO_VE";
+			o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> ref_id) const" + block{
+				o + "return @rel@_get_@prop@(@vector_position@<@rel@_id>(ref_id.value));";
+			};
+			o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> ref_id) const" + block{
+				o + "return @rel@_get_@prop@(ve::partial_contiguous_tags<@rel@_id>(ref_id.value, ref_id.subcount));";
+			};
+			o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> ref_id) const" + block{
+				o + "return @rel@_get_@prop@(ve::tagged_vector<@rel@_id>(ref_id, std::true_type{}));";
+			};
+			o + "#endif";
+		}
+		if(make_setter) {
+			o + "void @obj@_set_@prop@_from_@rel@(@obj@_id ref_id, @type@ val)" + block{
+				o + "@rel@_set_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())), val);";
+			};
+		}
 	} else if(ptype == property_type::other) {
 	} else if(ptype == property_type::array_bitfield) {
-		o + "bool @obj@_get_@prop@_from_@rel@(@obj@_id ref_id, @i_type@ i) const" + block{
-			o + "return @rel@_get_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())), i);";
-		};
-		o + "#ifndef DCON_NO_VE";
-		o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> ref_id, @i_type@ i) const" + block{
-			o + "return @rel@_get_@prop@(@vector_position@<@rel@_id>(ref_id.value), i);";
-		};
-		o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> ref_id, @i_type@ i) const" + block{
-			o + "return @rel@_get_@prop@(ve::partial_contiguous_tags<@rel@_id>(ref_id.value, ref_id.subcount), i);";
-		};
-		o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> ref_id, @i_type@ i) const" + block{
-			o + "return @rel@_get_@prop@(ve::tagged_vector<@rel@_id>(ref_id, std::true_type{}), i);";
-		};
-		o + "#endif";
-		o + "void @obj@_set_@prop@_from_@rel@(@obj@_id ref_id, @i_type@ i, bool val)" + block{
-			o + "@rel@_set_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())), i, val);";
-		};
+		if(make_getter) {
+			o + "bool @obj@_get_@prop@_from_@rel@(@obj@_id ref_id, @i_type@ i) const" + block{
+				o + "return @rel@_get_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())), i);";
+			};
+			o + "#ifndef DCON_NO_VE";
+			o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> ref_id, @i_type@ i) const" + block{
+				o + "return @rel@_get_@prop@(@vector_position@<@rel@_id>(ref_id.value), i);";
+			};
+			o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> ref_id, @i_type@ i) const" + block{
+				o + "return @rel@_get_@prop@(ve::partial_contiguous_tags<@rel@_id>(ref_id.value, ref_id.subcount), i);";
+			};
+			o + "ve::vbitfield_type @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> ref_id, @i_type@ i) const" + block{
+				o + "return @rel@_get_@prop@(ve::tagged_vector<@rel@_id>(ref_id, std::true_type{}), i);";
+			};
+			o + "#endif";
+		}
+		if(make_setter) {
+			o + "void @obj@_set_@prop@_from_@rel@(@obj@_id ref_id, @i_type@ i, bool val)" + block{
+				o + "@rel@_set_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())), i, val);";
+			};
+		}
 	} else if(ptype == property_type::array_vectorizable) {
-		o + "@type@ @obj@_get_@prop@_from_@rel@(@obj@_id ref_id, @i_type@ i) const" + block{
-			o + "return @rel@_get_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())), i);";
-		};
-		o + "#ifndef DCON_NO_VE";
-		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> ref_id, @i_type@ i) const" + block{
-			o + "return @rel@_get_@prop@(@vector_position@<@rel@_id>(ref_id.value), i);";
-		};
-		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> ref_id, @i_type@ i) const" + block{
-			o + "return @rel@_get_@prop@(ve::partial_contiguous_tags<@rel@_id>(ref_id.value, ref_id.subcount), i);";
-		};
-		o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> ref_id, @i_type@ i) const" + block{
-			o + "return @rel@_get_@prop@(ve::tagged_vector<@rel@_id>(ref_id, std::true_type{}), i);";
-		};
-		o + "#endif";
-
-		o + "void @obj@_set_@prop@_from_@rel@(@obj@_id ref_id, @i_type@ i, @type@ val)" + block{
-			o + "@rel@_set_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())), i, val);";
-		};
+		if(make_getter) {
+			o + "@type@ @obj@_get_@prop@_from_@rel@(@obj@_id ref_id, @i_type@ i) const" + block{
+				o + "return @rel@_get_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())), i);";
+			};
+			o + "#ifndef DCON_NO_VE";
+			o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> ref_id, @i_type@ i) const" + block{
+				o + "return @rel@_get_@prop@(@vector_position@<@rel@_id>(ref_id.value), i);";
+			};
+			o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> ref_id, @i_type@ i) const" + block{
+				o + "return @rel@_get_@prop@(ve::partial_contiguous_tags<@rel@_id>(ref_id.value, ref_id.subcount), i);";
+			};
+			o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> ref_id, @i_type@ i) const" + block{
+				o + "return @rel@_get_@prop@(ve::tagged_vector<@rel@_id>(ref_id, std::true_type{}), i);";
+			};
+			o + "#endif";
+		}
+		if(make_setter) {
+			o + "void @obj@_set_@prop@_from_@rel@(@obj@_id ref_id, @i_type@ i, @type@ val)" + block{
+				o + "@rel@_set_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())), i, val);";
+			};
+		}
 	} else if(ptype == property_type::array_other) {
 	}
 
@@ -3248,14 +3259,18 @@ basic_builder& make_join_getters_setters(basic_builder& o, relationship_object_d
 			}
 			if(is_only_of_type) {
 				if(obj.primary_key == io) {
+					
 					make_relation_unique_pk_join_getters_setters(o, inner_rprop.name, inner_rprop.data_type,
-						io.type_name, obj.name, io.property_name, inner_rprop.type, obj.is_expandable, inner_rprop.array_index_type);
+						io.type_name, obj.name, io.property_name, inner_rprop.type, obj.is_expandable, inner_rprop.array_index_type,
+						!inner_rprop.is_derived || inner_rprop.hook_get, !inner_rprop.is_derived || inner_rprop.hook_set);
 				} else if(io.index == index_type::at_most_one) {
 					make_relation_unique_non_pk_join_getters_setters(o, inner_rprop.name, inner_rprop.data_type,
-						io.type_name, obj.name, io.property_name, inner_rprop.type, obj.is_expandable, inner_rprop.array_index_type);
+						io.type_name, obj.name, io.property_name, inner_rprop.type, obj.is_expandable, inner_rprop.array_index_type,
+						!inner_rprop.is_derived || inner_rprop.hook_get, !inner_rprop.is_derived || inner_rprop.hook_set);
 				} else if(io.index == index_type::many) {
 					make_relation_many_join_getters_setters(o, inner_rprop.name, inner_rprop.data_type,
-						io.type_name, obj.name, io.property_name, io.ltype, false);
+						io.type_name, obj.name, io.property_name, io.ltype, false,
+						!inner_rprop.is_derived || inner_rprop.hook_get, !inner_rprop.is_derived || inner_rprop.hook_set);
 				}
 			}
 		}
@@ -3364,7 +3379,9 @@ basic_builder& make_const_fat_id(basic_builder& o, relationship_object_def const
 			o + "return id != other;";
 		};
 		o + "DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }";
-
+		o + "DCON_RELEASE_INLINE bool is_valid() const noexcept" + block{
+			o + "return container.@obj@_is_valid(id);";
+		};
 		for(auto& p : obj.properties) {
 			auto upresult = to_fat_index_type(parsed_file, p.data_type, true);
 			o + substitute{ "type", upresult.has_value() ? *upresult : p.data_type } + substitute{ "prop", p.name };
@@ -3408,6 +3425,7 @@ basic_builder& make_const_fat_id(basic_builder& o, relationship_object_def const
 						break;
 					case property_type::array_bitfield:
 						o + "DCON_RELEASE_INLINE bool get_@prop@(@index_type@ i) const noexcept;";
+						o + "DCON_RELEASE_INLINE uint32_t get_@prop@_size() const noexcept;";
 						break;
 					case property_type::array_other:
 					case property_type::array_vectorizable:
@@ -3415,6 +3433,7 @@ basic_builder& make_const_fat_id(basic_builder& o, relationship_object_def const
 							o + "DCON_RELEASE_INLINE @type@ get_@prop@(@index_type@ i) const noexcept;";
 						else
 							o + "DCON_RELEASE_INLINE @type@ const& get_@prop@(@index_type@ i) const noexcept;";
+						o + "DCON_RELEASE_INLINE uint32_t get_@prop@_size() const noexcept;";
 						break;
 					case property_type::special_vector:
 						o + "DCON_RELEASE_INLINE std::pair<@type@*, @type@*> get_@prop@_range() const noexcept;";
@@ -3424,7 +3443,7 @@ basic_builder& make_const_fat_id(basic_builder& o, relationship_object_def const
 							o + "DCON_RELEASE_INLINE @type@ const& get_@prop@_at(uint32_t inner_index) const noexcept;";
 						o + "DCON_RELEASE_INLINE uint32_t get_@prop@_capacity() const noexcept;";
 						o + "DCON_RELEASE_INLINE uint32_t get_@prop@_size() const noexcept;";
-						o + "DCON_RELEASE_INLINE bool @prop@_contains() const noexcept;";
+						o + "DCON_RELEASE_INLINE bool @prop@_contains(@type@ v) const noexcept;";
 						break;
 				}
 			}
@@ -3459,34 +3478,36 @@ basic_builder& make_const_fat_id(basic_builder& o, relationship_object_def const
 						}
 					}
 					for(auto& ip : ri.rel_ptr->properties) {
-						auto upresult = to_fat_index_type(parsed_file, ip.data_type, true);
-						o + substitute{ "type", upresult.has_value() ? *upresult : ip.data_type } +substitute{ "prop", ip.name };
-						o + substitute{ "index_type", ip.array_index_type };
-						switch(ip.type) {
-							case property_type::bitfield:
-								o + "DCON_RELEASE_INLINE bool get_@prop@_from_@rel@() const noexcept;";
-								break;
-							case property_type::vectorizable:
-								if(upresult.has_value())
-									o + "DCON_RELEASE_INLINE @type@ get_@prop@_from_@rel@() const noexcept;";
-								else
-									o + "DCON_RELEASE_INLINE @type@ get_@prop@_from_@rel@() const noexcept;";
-								break;
-							case property_type::other:
-								break;
-							case property_type::array_bitfield:
-								o + "DCON_RELEASE_INLINE bool get_@prop@_from_@rel@(@index_type@ i) const noexcept;";
-								break;
-							case property_type::array_other:
-								break;
-							case property_type::array_vectorizable:
-								if(upresult.has_value())
-									o + "DCON_RELEASE_INLINE @type@ get_@prop@_from_@rel@(@index_type@ i) const noexcept;";
-								else
-									o + "DCON_RELEASE_INLINE @type@ get_@prop@_from_@rel@(@index_type@ i) const noexcept;";
-								break;
-							case property_type::special_vector:
-								break;
+						if(!ip.is_derived || ip.hook_get) {
+							auto upresult = to_fat_index_type(parsed_file, ip.data_type, true);
+							o + substitute{ "type", upresult.has_value() ? *upresult : ip.data_type } +substitute{ "prop", ip.name };
+							o + substitute{ "index_type", ip.array_index_type };
+							switch(ip.type) {
+								case property_type::bitfield:
+									o + "DCON_RELEASE_INLINE bool get_@prop@_from_@rel@() const noexcept;";
+									break;
+								case property_type::vectorizable:
+									if(upresult.has_value())
+										o + "DCON_RELEASE_INLINE @type@ get_@prop@_from_@rel@() const noexcept;";
+									else
+										o + "DCON_RELEASE_INLINE @type@ get_@prop@_from_@rel@() const noexcept;";
+									break;
+								case property_type::other:
+									break;
+								case property_type::array_bitfield:
+									o + "DCON_RELEASE_INLINE bool get_@prop@_from_@rel@(@index_type@ i) const noexcept;";
+									break;
+								case property_type::array_other:
+									break;
+								case property_type::array_vectorizable:
+									if(upresult.has_value())
+										o + "DCON_RELEASE_INLINE @type@ get_@prop@_from_@rel@(@index_type@ i) const noexcept;";
+									else
+										o + "DCON_RELEASE_INLINE @type@ get_@prop@_from_@rel@(@index_type@ i) const noexcept;";
+									break;
+								case property_type::special_vector:
+									break;
+							}
 						}
 					}
 				}
@@ -3520,14 +3541,16 @@ basic_builder& make_const_fat_id(basic_builder& o, relationship_object_def const
 						}
 					}
 					for(auto& ip : ri.rel_ptr->properties) {
-						o + substitute{ "p_type", ip.data_type };
-						o + substitute{ "prop", ip.name };
+						if(!ip.is_derived || ip.hook_get) {
+							o + substitute{ "p_type", ip.data_type };
+							o + substitute{ "prop", ip.name };
 
-						o + "template<typename T>";
-						o + "DCON_RELEASE_INLINE void for_each_@prop@_from_@rel@(T&& func) const;";
-						o + substitute{ "ref", is_vectorizable_type(parsed_file, ip.data_type) ? "" : " const&" };
+							o + "template<typename T>";
+							o + "DCON_RELEASE_INLINE void for_each_@prop@_from_@rel@(T&& func) const;";
+							o + substitute{ "ref", is_vectorizable_type(parsed_file, ip.data_type) ? "" : " const&" };
 
-						o + "DCON_RELEASE_INLINE bool has_@prop@_from_@rel@(@p_type@@ref@ target) const;";
+							o + "DCON_RELEASE_INLINE bool has_@prop@_from_@rel@(@p_type@@ref@ target) const;";
+						}
 					}
 				}
 			}
@@ -3584,7 +3607,9 @@ basic_builder& make_fat_id(basic_builder& o, relationship_object_def const& obj,
 			o + "return id != other;";
 		};
 		o + "explicit operator bool() const noexcept { return bool(id); }";
-
+		o + "DCON_RELEASE_INLINE bool is_valid() const noexcept" + block{
+			o + "return container.@obj@_is_valid(id);";
+		};
 		for(auto& p : obj.properties) {
 			auto upresult = to_fat_index_type(parsed_file, p.data_type, false);
 			o + substitute{ "type", upresult.has_value() ? *upresult : p.data_type } +substitute{ "prop", p.name };
@@ -3628,6 +3653,7 @@ basic_builder& make_fat_id(basic_builder& o, relationship_object_def const& obj,
 						break;
 					case property_type::array_bitfield:
 						o + "DCON_RELEASE_INLINE bool get_@prop@(@index_type@ i) const noexcept;";
+						o + "DCON_RELEASE_INLINE uint32_t get_@prop@_size() const noexcept;";
 						break;
 					case property_type::array_other:
 					case property_type::array_vectorizable:
@@ -3635,6 +3661,7 @@ basic_builder& make_fat_id(basic_builder& o, relationship_object_def const& obj,
 							o + "DCON_RELEASE_INLINE @type@ get_@prop@(@index_type@ i) const noexcept;";
 						else
 							o + "DCON_RELEASE_INLINE @type@& get_@prop@(@index_type@ i) const noexcept;";
+						o + "DCON_RELEASE_INLINE uint32_t get_@prop@_size() const noexcept;";
 						break;
 					case property_type::special_vector:
 						o + "DCON_RELEASE_INLINE std::pair<@type@*, @type@*> get_@prop@_range() const noexcept;";
@@ -3644,38 +3671,42 @@ basic_builder& make_fat_id(basic_builder& o, relationship_object_def const& obj,
 							o + "DCON_RELEASE_INLINE @type@& get_@prop@_at(uint32_t inner_index) const noexcept;";
 						o + "DCON_RELEASE_INLINE uint32_t get_@prop@_capacity() const noexcept;";
 						o + "DCON_RELEASE_INLINE uint32_t get_@prop@_size() const noexcept;";
-						o + "DCON_RELEASE_INLINE bool @prop@_contains() const noexcept;";
+						o + "DCON_RELEASE_INLINE bool @prop@_contains(@type@ v) const noexcept;";
 						break;
 				}
 			}
-			
-			switch(p.type) {
-				case property_type::bitfield:
-					o + "DCON_RELEASE_INLINE void set_@prop@(bool v) const noexcept;";
-					break;
-				case property_type::vectorizable:
-					o + "DCON_RELEASE_INLINE void set_@prop@(@type@ v) const noexcept;";
-					break;
-				case property_type::other:
-					o + "DCON_RELEASE_INLINE void set_@prop@(@type@ const& v) const noexcept;";
-					break;
-				case property_type::array_bitfield:
-					o + "DCON_RELEASE_INLINE void set_@prop@(@index_type@ i, bool v) const noexcept;";
-					break;
-				case property_type::array_other:
-					o + "DCON_RELEASE_INLINE void set_@prop@(@index_type@ i, @type@ const& v) const noexcept;";
-					break;
-				case property_type::array_vectorizable:
-					o + "DCON_RELEASE_INLINE void set_@prop@(@index_type@ i, @type@ v) const noexcept;";
-					break;
-				case property_type::special_vector:
-					o + "DCON_RELEASE_INLINE void @prop@_push_back(@type@ obj) const noexcept;";
-					o + "DCON_RELEASE_INLINE void @prop@_pop_back() const noexcept;";
-					o + "DCON_RELEASE_INLINE void @prop@_add_unique(@type@ obj) const noexcept;";
-					o + "DCON_RELEASE_INLINE void @prop@_remove_unique(@type@ obj) const noexcept;";
-					o + "DCON_RELEASE_INLINE void @prop@_clear() const noexcept;";
-					o + "DCON_RELEASE_INLINE void @prop@_remove_at(uint32_t inner_index) const noexcept;";
-					break;
+			if(!p.is_derived || p.hook_set) {
+				switch(p.type) {
+					case property_type::bitfield:
+						o + "DCON_RELEASE_INLINE void set_@prop@(bool v) const noexcept;";
+						break;
+					case property_type::vectorizable:
+						o + "DCON_RELEASE_INLINE void set_@prop@(@type@ v) const noexcept;";
+						break;
+					case property_type::other:
+						o + "DCON_RELEASE_INLINE void set_@prop@(@type@ const& v) const noexcept;";
+						break;
+					case property_type::array_bitfield:
+						o + "DCON_RELEASE_INLINE void set_@prop@(@index_type@ i, bool v) const noexcept;";
+						o + "DCON_RELEASE_INLINE void resize_@prop@(uint32_t sz) const noexcept;";
+						break;
+					case property_type::array_other:
+						o + "DCON_RELEASE_INLINE void set_@prop@(@index_type@ i, @type@ const& v) const noexcept;";
+						o + "DCON_RELEASE_INLINE void resize_@prop@(uint32_t sz) const noexcept;";
+						break;
+					case property_type::array_vectorizable:
+						o + "DCON_RELEASE_INLINE void set_@prop@(@index_type@ i, @type@ v) const noexcept;";
+						o + "DCON_RELEASE_INLINE void resize_@prop@(uint32_t sz) const noexcept;";
+						break;
+					case property_type::special_vector:
+						o + "DCON_RELEASE_INLINE void @prop@_push_back(@type@ obj) const noexcept;";
+						o + "DCON_RELEASE_INLINE void @prop@_pop_back() const noexcept;";
+						o + "DCON_RELEASE_INLINE void @prop@_add_unique(@type@ obj) const noexcept;";
+						o + "DCON_RELEASE_INLINE void @prop@_remove_unique(@type@ obj) const noexcept;";
+						o + "DCON_RELEASE_INLINE void @prop@_clear() const noexcept;";
+						o + "DCON_RELEASE_INLINE void @prop@_remove_at(uint32_t inner_index) const noexcept;";
+						break;
+				}
 			}
 			
 		} // end loop over properties
@@ -3715,35 +3746,55 @@ basic_builder& make_fat_id(basic_builder& o, relationship_object_def const& obj,
 						auto upresult = to_fat_index_type(parsed_file, ip.data_type, true);
 						o + substitute{ "type", upresult.has_value() ? *upresult : ip.data_type } +substitute{ "prop", ip.name };
 						o + substitute{ "index_type", ip.array_index_type };
-						switch(ip.type) {
-							case property_type::bitfield:
-								o + "DCON_RELEASE_INLINE bool get_@prop@_from_@rel@() const noexcept;";
-								o + "DCON_RELEASE_INLINE void set_@prop@_from_@rel@( bool v) const noexcept;";
-								break;
-							case property_type::vectorizable:
-								if(upresult.has_value())
-									o + "DCON_RELEASE_INLINE @type@ get_@prop@_from_@rel@() const noexcept;";
-								else
-									o + "DCON_RELEASE_INLINE @type@ get_@prop@_from_@rel@() const noexcept;";
-								o + "DCON_RELEASE_INLINE void set_@prop@_from_@rel@(@type@ v) const noexcept;";
-								break;
-							case property_type::other:
-								break;
-							case property_type::array_bitfield:
-								o + "DCON_RELEASE_INLINE bool get_@prop@_from_@rel@(@index_type@ i) const noexcept;";
-								o + "DCON_RELEASE_INLINE void set_@prop@_from_@rel@(@index_type@ i, bool v) const noexcept;";
-								break;
-							case property_type::array_other:
-								break;
-							case property_type::array_vectorizable:
-								if(upresult.has_value())
-									o + "DCON_RELEASE_INLINE @type@ get_@prop@_from_@rel@(@index_type@ i) const noexcept;";
-								else
-									o + "DCON_RELEASE_INLINE @type@ get_@prop@_from_@rel@(@index_type@ i) const noexcept;";
-								o + "DCON_RELEASE_INLINE void set_@prop@_from_@rel@(@index_type@ i, @type@ v) const noexcept;";
-								break;
-							case property_type::special_vector:
-								break;
+						if(!ip.is_derived || ip.hook_get) {
+							switch(ip.type) {
+								case property_type::bitfield:
+									o + "DCON_RELEASE_INLINE bool get_@prop@_from_@rel@() const noexcept;";
+									break;
+								case property_type::vectorizable:
+									if(upresult.has_value())
+										o + "DCON_RELEASE_INLINE @type@ get_@prop@_from_@rel@() const noexcept;";
+									else
+										o + "DCON_RELEASE_INLINE @type@ get_@prop@_from_@rel@() const noexcept;";
+									break;
+								case property_type::other:
+									break;
+								case property_type::array_bitfield:
+									o + "DCON_RELEASE_INLINE bool get_@prop@_from_@rel@(@index_type@ i) const noexcept;";
+									break;
+								case property_type::array_other:
+									break;
+								case property_type::array_vectorizable:
+									if(upresult.has_value())
+										o + "DCON_RELEASE_INLINE @type@ get_@prop@_from_@rel@(@index_type@ i) const noexcept;";
+									else
+										o + "DCON_RELEASE_INLINE @type@ get_@prop@_from_@rel@(@index_type@ i) const noexcept;";
+									break;
+								case property_type::special_vector:
+									break;
+							}
+						}
+						if(!ip.is_derived || ip.hook_set) {
+							switch(ip.type) {
+								case property_type::bitfield:
+									o + "DCON_RELEASE_INLINE void set_@prop@_from_@rel@( bool v) const noexcept;";
+									break;
+								case property_type::vectorizable:
+									o + "DCON_RELEASE_INLINE void set_@prop@_from_@rel@(@type@ v) const noexcept;";
+									break;
+								case property_type::other:
+									break;
+								case property_type::array_bitfield:
+									o + "DCON_RELEASE_INLINE void set_@prop@_from_@rel@(@index_type@ i, bool v) const noexcept;";
+									break;
+								case property_type::array_other:
+									break;
+								case property_type::array_vectorizable:
+									o + "DCON_RELEASE_INLINE void set_@prop@_from_@rel@(@index_type@ i, @type@ v) const noexcept;";
+									break;
+								case property_type::special_vector:
+									break;
+							}
 						}
 					}
 				}
@@ -3779,18 +3830,24 @@ basic_builder& make_fat_id(basic_builder& o, relationship_object_def const& obj,
 						}
 					}
 					for(auto& ip : ri.rel_ptr->properties) {
-						o + substitute{ "p_type", ip.data_type };
-						o + substitute{ "prop", ip.name };
+						if(!ip.is_derived || ip.hook_get) {
+							o + substitute{ "p_type", ip.data_type };
+							o + substitute{ "prop", ip.name };
 
-						o + "template<typename T>";
-						o + "DCON_RELEASE_INLINE void for_each_@prop@_from_@rel@(T&& func) const;";
-						o + substitute{ "ref", is_vectorizable_type(parsed_file, ip.data_type) ? "" : " const&" };
+							o + "template<typename T>";
+							o + "DCON_RELEASE_INLINE void for_each_@prop@_from_@rel@(T&& func) const;";
+							o + substitute{ "ref", is_vectorizable_type(parsed_file, ip.data_type) ? "" : " const&" };
 
-						o + "DCON_RELEASE_INLINE bool has_@prop@_from_@rel@(@p_type@@ref@ target) const;";
+							o + "DCON_RELEASE_INLINE bool has_@prop@_from_@rel@(@p_type@@ref@ target) const;";
+						}
 					}
 				}
 			}
 		} // end loop over relationships involved in
+	};
+
+	o + "DCON_RELEASE_INLINE @obj@_fat_id fatten(data_container& c, @obj@_id id) noexcept" + block{
+		o + "return @obj@_fat_id(c, id);";
 	};
 
 	o + line_break{};
@@ -3844,6 +3901,7 @@ basic_builder& make_const_fat_id_impl(basic_builder& o, relationship_object_def 
 						break;
 					case property_type::array_bitfield:
 						o + "DCON_RELEASE_INLINE bool @obj@_const_fat_id::get_@prop@(@index_type@ i) const noexcept { return container.@obj@_get_@prop@(id, i); }";
+						o + "DCON_RELEASE_INLINE uint32_t @obj@_const_fat_id::get_@prop@_size() const noexcept {return container.@obj@_get_@prop@_size();}";
 						break;
 					case property_type::array_other:
 					case property_type::array_vectorizable:
@@ -3851,16 +3909,17 @@ basic_builder& make_const_fat_id_impl(basic_builder& o, relationship_object_def 
 							o + "DCON_RELEASE_INLINE @type@ @obj@_const_fat_id::get_@prop@(@index_type@ i) const noexcept { return @type@(container, container.@obj@_get_@prop@(id, i)); }";
 						else
 							o + "DCON_RELEASE_INLINE @type@ const& @obj@_const_fat_id::get_@prop@(@index_type@ i) const noexcept { return container.@obj@_get_@prop@(id, i); }";
+							o + "DCON_RELEASE_INLINE uint32_t @obj@_const_fat_id::get_@prop@_size() const noexcept {return container.@obj@_get_@prop@_size();}";
 						break;
 					case property_type::special_vector:
-						o + "DCON_RELEASE_INLINE std::pair<@type@*, @type@*> @obj@_const_fat_id::get_@prop@_range() const noexcept { return container.get_@prop@_range(id); }";
+						o + "DCON_RELEASE_INLINE std::pair<@type@*, @type@*> @obj@_const_fat_id::get_@prop@_range() const noexcept { return container.@obj@_get_@prop@_range(id); }";
 						if(upresult.has_value())
 							o + "DCON_RELEASE_INLINE @type@ @obj@_const_fat_id::get_@prop@_at(uint32_t inner_index) const noexcept { return @type@(container.@obj@_get_@prop@_at(id, inner_index), container); }";
 						else
-							o + "DCON_RELEASE_INLINE @type@ const& @obj@_const_fat_id::get_@prop@_at(uint32_t inner_index) const noexcept { return container.get_@prop@_at(id, inner_index); }";
-						o + "DCON_RELEASE_INLINE uint32_t @obj@_const_fat_id::get_@prop@_capacity() const noexcept { return container.get_@prop@_capacity(id); }";
-						o + "DCON_RELEASE_INLINE uint32_t @obj@_const_fat_id::get_@prop@_size() const noexcept { return container.get_@prop@_size(id); }";
-						o + "DCON_RELEASE_INLINE bool @obj@_const_fat_id::@prop@_contains() const noexcept { return container.@prop@_contains(id); }";
+							o + "DCON_RELEASE_INLINE @type@ const& @obj@_const_fat_id::get_@prop@_at(uint32_t inner_index) const noexcept { return container.@obj@_get_@prop@_at(id, inner_index); }";
+						o + "DCON_RELEASE_INLINE uint32_t @obj@_const_fat_id::get_@prop@_capacity() const noexcept { return container.@obj@_get_@prop@_capacity(id); }";
+						o + "DCON_RELEASE_INLINE uint32_t @obj@_const_fat_id::get_@prop@_size() const noexcept { return container.@obj@_get_@prop@_size(id); }";
+						o + "DCON_RELEASE_INLINE bool @obj@_const_fat_id::@prop@_contains(@type@ v) const noexcept { return container.@obj@_@prop@_contains(id, v); }";
 						break;
 				}
 			}
@@ -3903,42 +3962,45 @@ basic_builder& make_const_fat_id_impl(basic_builder& o, relationship_object_def 
 						}
 					}
 					for(auto& ip : ri.rel_ptr->properties) {
-						auto upresult = to_fat_index_type(parsed_file, ip.data_type, true);
-						o + substitute{ "type", upresult.has_value() ? *upresult : ip.data_type } +substitute{ "prop", ip.name };
-						o + substitute{ "index_type", ip.array_index_type };
-						switch(ip.type) {
-							case property_type::bitfield:
-								o + "DCON_RELEASE_INLINE bool @obj@_const_fat_id::get_@prop@_from_@rel@() const noexcept { return container.@obj@_get_@prop@_from_@rel@(id); }";
-								break;
-							case property_type::vectorizable:
-								if(upresult.has_value())
-									o + "DCON_RELEASE_INLINE @type@ @obj@_const_fat_id::get_@prop@_from_@rel@() const noexcept { return @type@(container, container.@obj@_get_@prop@_from_@rel@(id)); }";
-								else
-									o + "DCON_RELEASE_INLINE @type@ @obj@_const_fat_id::get_@prop@_from_@rel@() const noexcept { return container.@obj@_get_@prop@_from_@rel@(id); }";
-								break;
-							case property_type::other:
-								break;
-							case property_type::array_bitfield:
-								o + "DCON_RELEASE_INLINE bool @obj@_const_fat_id::get_@prop@_from_@rel@(@index_type@ i) const noexcept { return container.@obj@_get_@prop@_from_@rel@(id, i); }";
-								break;
-							case property_type::array_other:
-								break;
-							case property_type::array_vectorizable:
-								if(upresult.has_value())
-									o + "DCON_RELEASE_INLINE @type@ @obj@_const_fat_id::get_@prop@_from_@rel@(@index_type@ i) const noexcept { return @type@(container, container.@obj@_get_@prop@_from_@rel@(id, i)); }";
-								else
-									o + "DCON_RELEASE_INLINE @type@ @obj@_const_fat_id::get_@prop@_from_@rel@(@index_type@ i) const noexcept { return container.@obj@_get_@prop@_from_@rel@(id, i); }";
-								break;
-							case property_type::special_vector:
-								break;
+						if(!ip.is_derived || ip.hook_get) {
+							auto upresult = to_fat_index_type(parsed_file, ip.data_type, true);
+							o + substitute{ "type", upresult.has_value() ? *upresult : ip.data_type } +substitute{ "prop", ip.name };
+							o + substitute{ "index_type", ip.array_index_type };
+							switch(ip.type) {
+								case property_type::bitfield:
+									o + "DCON_RELEASE_INLINE bool @obj@_const_fat_id::get_@prop@_from_@rel@() const noexcept { return container.@obj@_get_@prop@_from_@rel@(id); }";
+									break;
+								case property_type::vectorizable:
+									if(upresult.has_value())
+										o + "DCON_RELEASE_INLINE @type@ @obj@_const_fat_id::get_@prop@_from_@rel@() const noexcept { return @type@(container, container.@obj@_get_@prop@_from_@rel@(id)); }";
+									else
+										o + "DCON_RELEASE_INLINE @type@ @obj@_const_fat_id::get_@prop@_from_@rel@() const noexcept { return container.@obj@_get_@prop@_from_@rel@(id); }";
+									break;
+								case property_type::other:
+									break;
+								case property_type::array_bitfield:
+									o + "DCON_RELEASE_INLINE bool @obj@_const_fat_id::get_@prop@_from_@rel@(@index_type@ i) const noexcept { return container.@obj@_get_@prop@_from_@rel@(id, i); }";
+									break;
+								case property_type::array_other:
+									break;
+								case property_type::array_vectorizable:
+									if(upresult.has_value())
+										o + "DCON_RELEASE_INLINE @type@ @obj@_const_fat_id::get_@prop@_from_@rel@(@index_type@ i) const noexcept { return @type@(container, container.@obj@_get_@prop@_from_@rel@(id, i)); }";
+									else
+										o + "DCON_RELEASE_INLINE @type@ @obj@_const_fat_id::get_@prop@_from_@rel@(@index_type@ i) const noexcept { return container.@obj@_get_@prop@_from_@rel@(id, i); }";
+									break;
+								case property_type::special_vector:
+									break;
+							}
 						}
 					}
 				}
 			} else if(ri.indexed_as == index_type::many) {
 				o + "template<typename T>";
 				o + "DCON_RELEASE_INLINE void @obj@_const_fat_id::for_each_@rel@_as_@rel_prop@(T&& func) const" + block{
-					o + "container.@obj@_for_each_@rel@_as_@rel_prop@(id, func);";
+					o + "container.@obj@_for_each_@rel@_as_@rel_prop@(id, [&, t = this](@rel@_id i){func(fatten(t->container, i));});";
 				};
+				
 				if(ri.listed_as == list_type::array || ri.listed_as == list_type::std_vector) {
 					o + "DCON_RELEASE_INLINE std::pair<@rel@_id const*, @rel@_id const*> @obj@_const_fat_id::range_of_@rel@_as_@rel_prop@() const" + block{
 						o + "return container.@obj@_range_of_@rel@_as_@rel_prop@(id);";
@@ -3950,10 +4012,12 @@ basic_builder& make_const_fat_id_impl(basic_builder& o, relationship_object_def 
 						is_only_of_type = false;
 				}
 				if(is_only_of_type) {
+					
 					o + "template<typename T>";
 					o + "DCON_RELEASE_INLINE void @obj@_const_fat_id::for_each_@rel@(T&& func) const" + block{
-						o + "container.@obj@_for_each_@rel@(id, func);";
+						o + "container.@obj@_for_each_@rel@(id, [&, t = this](@rel@_id i){func(fatten(t->container, i));});";
 					};
+					
 					if(ri.listed_as == list_type::array || ri.listed_as == list_type::std_vector) {
 						o + "DCON_RELEASE_INLINE std::pair<@rel@_id const*, @rel@_id const*> @obj@_const_fat_id::range_of_@rel@() const" + block{
 							o + "return container.@obj@_range_of_@rel@(id);";
@@ -3968,7 +4032,7 @@ basic_builder& make_const_fat_id_impl(basic_builder& o, relationship_object_def 
 
 							o + "template<typename T>";
 							o + "DCON_RELEASE_INLINE void @obj@_const_fat_id::for_each_@r_prop@_from_@rel@(T&& func) const" + block{
-								o + "container.@obj@_for_each_@r_prop@_from_@rel@(id, func);";
+								o + "container.@obj@_for_each_@r_prop@_from_@rel@(id, [&, t = this](@p_type@ i){func(fatten(t->container, i));});";
 							};
 							o + "DCON_RELEASE_INLINE bool @obj@_const_fat_id::has_@r_prop@_from_@rel@(@p_type@ target) const" + block{
 								o + "return container.@obj@_has_@r_prop@_from_@rel@(id, target);";
@@ -3976,18 +4040,29 @@ basic_builder& make_const_fat_id_impl(basic_builder& o, relationship_object_def 
 						}
 					}
 					for(auto& ip : ri.rel_ptr->properties) {
-						o + substitute{ "p_type", ip.data_type };
-						o + substitute{ "prop", ip.name };
+						if(!ip.is_derived || ip.hook_get) {
+							o + substitute{ "p_type", ip.data_type };
+							o + substitute{ "prop", ip.name };
 
-						o + "template<typename T>";
-						o + "DCON_RELEASE_INLINE void @obj@_const_fat_id::for_each_@prop@_from_@rel@(T&& func) const" + block{
-							o + "container.@obj@_for_each_@prop@_from_@rel@(id, func);";
-						};
-						o + substitute{ "ref", is_vectorizable_type(parsed_file, ip.data_type) ? "" : " const&" };
+							auto upresult = to_fat_index_type(parsed_file, ip.data_type, true);
 
-						o + "DCON_RELEASE_INLINE bool @obj@_const_fat_id::has_@prop@_from_@rel@(@p_type@@ref@ target) const" + block{
-							o + "return container.@obj@_has_@prop@_from_@rel@(id, target);";
-						};
+							if(upresult.has_value()) {
+								o + "template<typename T>";
+								o + "DCON_RELEASE_INLINE void @obj@_const_fat_id::for_each_@prop@_from_@rel@(T&& func) const" + block{
+									o + "container.@obj@_for_each_@prop@_from_@rel@(id, [&, t = this](@p_type@ i){func(fatten(t->container, i));});";
+								};
+							} else {
+								o + "template<typename T>";
+								o + "DCON_RELEASE_INLINE void @obj@_const_fat_id::for_each_@prop@_from_@rel@(T&& func) const" + block{
+									o + "container.@obj@_for_each_@prop@_from_@rel@(id, func);";
+								};
+							}
+							o + substitute{ "ref", is_vectorizable_type(parsed_file, ip.data_type) ? "" : " const&" };
+
+							o + "DCON_RELEASE_INLINE bool @obj@_const_fat_id::has_@prop@_from_@rel@(@p_type@@ref@ target) const" + block{
+								o + "return container.@obj@_has_@prop@_from_@rel@(id, target);";
+							};
+						}
 					}
 				}
 			}
@@ -4043,6 +4118,7 @@ basic_builder& make_fat_id_impl(basic_builder& o, relationship_object_def const&
 						break;
 					case property_type::array_bitfield:
 						o + "DCON_RELEASE_INLINE bool @obj@_fat_id::get_@prop@(@index_type@ i) const noexcept { return container.@obj@_get_@prop@(id, i); }";
+						o + "DCON_RELEASE_INLINE uint32_t @obj@_fat_id::get_@prop@_size() const noexcept {return container.@obj@_get_@prop@_size();}";
 						break;
 					case property_type::array_other:
 					case property_type::array_vectorizable:
@@ -4050,6 +4126,7 @@ basic_builder& make_fat_id_impl(basic_builder& o, relationship_object_def const&
 							o + "DCON_RELEASE_INLINE @type@ @obj@_fat_id::get_@prop@(@index_type@ i) const noexcept { return @type@(container, container.@obj@_get_@prop@(id, i)); }";
 						else
 							o + "DCON_RELEASE_INLINE @type@& @obj@_fat_id::get_@prop@(@index_type@ i) const noexcept { return container.@obj@_get_@prop@(id, i); }";
+						o + "DCON_RELEASE_INLINE uint32_t @obj@_fat_id::get_@prop@_size() const noexcept {return container.@obj@_get_@prop@_size();}";
 						break;
 					case property_type::special_vector:
 						o + "DCON_RELEASE_INLINE std::pair<@type@*, @type@*> @obj@_fat_id::get_@prop@_range() const noexcept { return container.@obj@_get_@prop@_range(id); }";
@@ -4059,40 +4136,44 @@ basic_builder& make_fat_id_impl(basic_builder& o, relationship_object_def const&
 							o + "DCON_RELEASE_INLINE @type@& @obj@_fat_id::get_@prop@_at(uint32_t inner_index) const noexcept { return container.@obj@_get_@prop@_at(id, inner_index); }";
 						o + "DCON_RELEASE_INLINE uint32_t @obj@_fat_id::get_@prop@_capacity() const noexcept { return container.@obj@_get_@prop@_capacity(id); }";
 						o + "DCON_RELEASE_INLINE uint32_t @obj@_fat_id::get_@prop@_size() const noexcept { return container.@obj@_get_@prop@_size(id); }";
-						o + "DCON_RELEASE_INLINE bool @obj@_fat_id::@prop@_contains() const noexcept { return container.@obj@_@prop@_contains(id); }";
+						o + "DCON_RELEASE_INLINE bool @obj@_fat_id::@prop@_contains(@type@ v) const noexcept { return container.@obj@_@prop@_contains(id, v); }";
 						break;
 				}
 			}
 
-			switch(p.type) {
-				case property_type::bitfield:
-					o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@(bool v) const noexcept { container.@obj@_set_@prop@(id, v); }";
-					break;
-				case property_type::vectorizable:
-					o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@(@type@ v) const noexcept { container.@obj@_set_@prop@(id, v); }";
-					break;
-				case property_type::other:
-					o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@(@type@ const& v) const noexcept { container.@obj@_set_@prop@(id, v); }";
-					break;
-				case property_type::array_bitfield:
-					o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@(@index_type@ i, bool v) const noexcept { container.@obj@_set_@prop@(id, i, v); }";
-					break;
-				case property_type::array_other:
-					o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@(@index_type@ i, @type@ const& v) const noexcept { container.@obj@_set_@prop@(id, i, v); }";
-					break;
-				case property_type::array_vectorizable:
-					o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@(@index_type@ i, @type@ v) const noexcept { container.@obj@_set_@prop@(id, i, v); }";
-					break;
-				case property_type::special_vector:
-					o + "DCON_RELEASE_INLINE void @obj@_fat_id::@prop@_push_back(@type@ obj) const noexcept { container.@obj@_@prop@_push_back(id, obj); }";
-					o + "DCON_RELEASE_INLINE void @obj@_fat_id::@prop@_pop_back() const noexcept { container.@obj@_@prop@_pop_back(id); }";
-					o + "DCON_RELEASE_INLINE void @obj@_fat_id::@prop@_add_unique(@type@ obj) const noexcept { container.@obj@_@prop@_add_unique(id, obj); }";
-					o + "DCON_RELEASE_INLINE void @obj@_fat_id::@prop@_remove_unique(@type@ obj) const noexcept { container.@obj@_@prop@_remove_unique(id, obj); }";
-					o + "DCON_RELEASE_INLINE void @obj@_fat_id::@prop@_clear() const noexcept { container.@obj@_@prop@_clear(id); }";
-					o + "DCON_RELEASE_INLINE void @obj@_fat_id::@prop@_remove_at(uint32_t inner_index) const noexcept { container.@obj@_@prop@_remove_at(id, inner_index); }";
-					break;
+			if(!p.is_derived || p.hook_set) {
+				switch(p.type) {
+					case property_type::bitfield:
+						o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@(bool v) const noexcept { container.@obj@_set_@prop@(id, v); }";
+						break;
+					case property_type::vectorizable:
+						o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@(@type@ v) const noexcept { container.@obj@_set_@prop@(id, v); }";
+						break;
+					case property_type::other:
+						o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@(@type@ const& v) const noexcept { container.@obj@_set_@prop@(id, v); }";
+						break;
+					case property_type::array_bitfield:
+						o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@(@index_type@ i, bool v) const noexcept { container.@obj@_set_@prop@(id, i, v); }";
+						o + "DCON_RELEASE_INLINE void @obj@_fat_id::resize_@prop@(uint32_t sz) const noexcept {return container.@obj@_resize_@prop@(sz);}";
+						break;
+					case property_type::array_other:
+						o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@(@index_type@ i, @type@ const& v) const noexcept { container.@obj@_set_@prop@(id, i, v); }";
+						o + "DCON_RELEASE_INLINE void @obj@_fat_id::resize_@prop@(uint32_t sz) const noexcept {return container.@obj@_resize_@prop@(sz);}";
+						break;
+					case property_type::array_vectorizable:
+						o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@(@index_type@ i, @type@ v) const noexcept { container.@obj@_set_@prop@(id, i, v); }";
+						o + "DCON_RELEASE_INLINE void @obj@_fat_id::resize_@prop@(uint32_t sz) const noexcept {return container.@obj@_resize_@prop@(sz);}";
+						break;
+					case property_type::special_vector:
+						o + "DCON_RELEASE_INLINE void @obj@_fat_id::@prop@_push_back(@type@ obj) const noexcept { container.@obj@_@prop@_push_back(id, obj); }";
+						o + "DCON_RELEASE_INLINE void @obj@_fat_id::@prop@_pop_back() const noexcept { container.@obj@_@prop@_pop_back(id); }";
+						o + "DCON_RELEASE_INLINE void @obj@_fat_id::@prop@_add_unique(@type@ obj) const noexcept { container.@obj@_@prop@_add_unique(id, obj); }";
+						o + "DCON_RELEASE_INLINE void @obj@_fat_id::@prop@_remove_unique(@type@ obj) const noexcept { container.@obj@_@prop@_remove_unique(id, obj); }";
+						o + "DCON_RELEASE_INLINE void @obj@_fat_id::@prop@_clear() const noexcept { container.@obj@_@prop@_clear(id); }";
+						o + "DCON_RELEASE_INLINE void @obj@_fat_id::@prop@_remove_at(uint32_t inner_index) const noexcept { container.@obj@_@prop@_remove_at(id, inner_index); }";
+						break;
+				}
 			}
-
 		} // end loop over properties
 
 		for(auto& i : obj.indexed_objects) {
@@ -4144,42 +4225,65 @@ basic_builder& make_fat_id_impl(basic_builder& o, relationship_object_def const&
 						auto upresult = to_fat_index_type(parsed_file, ip.data_type, true);
 						o + substitute{ "type", upresult.has_value() ? *upresult : ip.data_type } +substitute{ "prop", ip.name };
 						o + substitute{ "index_type", ip.array_index_type };
-						switch(ip.type) {
-							case property_type::bitfield:
-								o + "DCON_RELEASE_INLINE bool @obj@_fat_id::get_@prop@_from_@rel@() const noexcept { return container.@obj@_get_@prop@_from_@rel@(id); }";
-								o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@_from_@rel@( bool v) const noexcept { container.@obj@_set_@prop@_from_@rel@(id, v); }";
-								break;
-							case property_type::vectorizable:
-								if(upresult.has_value())
-									o + "DCON_RELEASE_INLINE @type@ @obj@_fat_id::get_@prop@_from_@rel@() const noexcept { return @type@(container, container.@obj@_get_@prop@_from_@rel@(id)); }";
-								else
-									o + "DCON_RELEASE_INLINE @type@ @obj@_fat_id::get_@prop@_from_@rel@() const noexcept { return container.@obj@_get_@prop@_from_@rel@(id); }";
-								o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@_from_@rel@(@type@ v) const noexcept { container.@obj@_set_@prop@_from_@rel@(id, v); }";
-								break;
-							case property_type::other:
-								break;
-							case property_type::array_bitfield:
-								o + "DCON_RELEASE_INLINE bool @obj@_fat_id::get_@prop@_from_@rel@(@index_type@ i) const noexcept { return container.@obj@_get_@prop@_from_@rel@(id, i); }";
-								o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@_from_@rel@(@index_type@ i, bool v) const noexcept { container.@obj@_set_@prop@_from_@rel@(id, i, v); }";
-								break;
-							case property_type::array_other:
-								break;
-							case property_type::array_vectorizable:
-								if(upresult.has_value())
-									o + "DCON_RELEASE_INLINE @type@ @obj@_fat_id::get_@prop@_from_@rel@(@index_type@ i) const noexcept { return @type@(container, container.@obj@_get_@prop@_from_@rel@(id, i)); }";
-								else
-									o + "DCON_RELEASE_INLINE @type@ @obj@_fat_id::get_@prop@_from_@rel@(@index_type@ i) const noexcept { return container.@obj@_get_@prop@_from_@rel@(id, i); }";
-								o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@_from_@rel@(@index_type@ i, @type@ v) const noexcept { container.@obj@_set_@prop@_from_@rel@(id, i, v); }";
-								break;
-							case property_type::special_vector:
-								break;
+
+						if(!ip.is_derived || ip.hook_set) {
+							switch(ip.type) {
+								case property_type::bitfield:
+									o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@_from_@rel@( bool v) const noexcept { container.@obj@_set_@prop@_from_@rel@(id, v); }";
+									break;
+								case property_type::vectorizable:
+									o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@_from_@rel@(@type@ v) const noexcept { container.@obj@_set_@prop@_from_@rel@(id, v); }";
+									break;
+								case property_type::other:
+									break;
+								case property_type::array_bitfield:
+									o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@_from_@rel@(@index_type@ i, bool v) const noexcept { container.@obj@_set_@prop@_from_@rel@(id, i, v); }";
+									break;
+								case property_type::array_other:
+									break;
+								case property_type::array_vectorizable:
+									
+									o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@_from_@rel@(@index_type@ i, @type@ v) const noexcept { container.@obj@_set_@prop@_from_@rel@(id, i, v); }";
+									break;
+								case property_type::special_vector:
+									break;
+							}
 						}
+						if(!ip.is_derived || ip.hook_get) {
+							switch(ip.type) {
+								case property_type::bitfield:
+									o + "DCON_RELEASE_INLINE bool @obj@_fat_id::get_@prop@_from_@rel@() const noexcept { return container.@obj@_get_@prop@_from_@rel@(id); }";
+									break;
+								case property_type::vectorizable:
+									if(upresult.has_value())
+										o + "DCON_RELEASE_INLINE @type@ @obj@_fat_id::get_@prop@_from_@rel@() const noexcept { return @type@(container, container.@obj@_get_@prop@_from_@rel@(id)); }";
+									else
+										o + "DCON_RELEASE_INLINE @type@ @obj@_fat_id::get_@prop@_from_@rel@() const noexcept { return container.@obj@_get_@prop@_from_@rel@(id); }";
+									break;
+								case property_type::other:
+									break;
+								case property_type::array_bitfield:
+									o + "DCON_RELEASE_INLINE bool @obj@_fat_id::get_@prop@_from_@rel@(@index_type@ i) const noexcept { return container.@obj@_get_@prop@_from_@rel@(id, i); }";
+									break;
+								case property_type::array_other:
+									break;
+								case property_type::array_vectorizable:
+									if(upresult.has_value())
+										o + "DCON_RELEASE_INLINE @type@ @obj@_fat_id::get_@prop@_from_@rel@(@index_type@ i) const noexcept { return @type@(container, container.@obj@_get_@prop@_from_@rel@(id, i)); }";
+									else
+										o + "DCON_RELEASE_INLINE @type@ @obj@_fat_id::get_@prop@_from_@rel@(@index_type@ i) const noexcept { return container.@obj@_get_@prop@_from_@rel@(id, i); }";
+									break;
+								case property_type::special_vector:
+									break;
+							}
+						}
+						
 					}
 				}
 			} else if(ri.indexed_as == index_type::many) {
 				o + "template<typename T>";
 				o + "DCON_RELEASE_INLINE void @obj@_fat_id::for_each_@rel@_as_@rel_prop@(T&& func) const" + block{
-					o + "container.@obj@_for_each_@rel@_as_@rel_prop@(id, func);";
+					o + "container.@obj@_for_each_@rel@_as_@rel_prop@(id, [&, t = this](@rel@_id i){func(fatten(t->container, i));});";
 				};
 				if(ri.listed_as == list_type::array || ri.listed_as == list_type::std_vector) {
 					o + "DCON_RELEASE_INLINE std::pair<@rel@_id const*, @rel@_id const*> @obj@_fat_id::range_of_@rel@_as_@rel_prop@() const" + block{
@@ -4197,7 +4301,7 @@ basic_builder& make_fat_id_impl(basic_builder& o, relationship_object_def const&
 				if(is_only_of_type) {
 					o + "template<typename T>";
 					o + "DCON_RELEASE_INLINE void @obj@_fat_id::for_each_@rel@(T&& func) const" + block{
-						o + "container.@obj@_for_each_@rel@(id, func);";
+						o + "container.@obj@_for_each_@rel@(id, [&, t = this](@rel@_id i){func(fatten(t->container, i));});";
 					};
 					if(ri.listed_as == list_type::array || ri.listed_as == list_type::std_vector) {
 						o + "DCON_RELEASE_INLINE std::pair<@rel@_id const*, @rel@_id const*> @obj@_fat_id::range_of_@rel@() const" + block{
@@ -4216,7 +4320,7 @@ basic_builder& make_fat_id_impl(basic_builder& o, relationship_object_def const&
 
 							o + "template<typename T>";
 							o + "DCON_RELEASE_INLINE void @obj@_fat_id::for_each_@r_prop@_from_@rel@(T&& func) const" + block{
-								o + "container.@obj@_for_each_@r_prop@_from_@rel@(id, func);";
+								o + "container.@obj@_for_each_@r_prop@_from_@rel@(id, [&, t = this](@p_type@ i){func(fatten(t->container, i));});";
 							};
 							o + "DCON_RELEASE_INLINE bool @obj@_fat_id::has_@r_prop@_from_@rel@(@p_type@ target) const" + block{
 								o + "return container.@obj@_has_@r_prop@_from_@rel@(id, target);";
@@ -4224,18 +4328,30 @@ basic_builder& make_fat_id_impl(basic_builder& o, relationship_object_def const&
 						}
 					}
 					for(auto& ip : ri.rel_ptr->properties) {
-						o + substitute{ "p_type", ip.data_type };
-						o + substitute{ "prop", ip.name };
+						if(!ip.is_derived || ip.hook_get) {
+							o + substitute{ "p_type", ip.data_type };
+							o + substitute{ "prop", ip.name };
 
-						o + "template<typename T>";
-						o + "DCON_RELEASE_INLINE void @obj@_fat_id::for_each_@prop@_from_@rel@(T&& func) const" + block{
-							o + "container.@obj@_for_each_@prop@_from_@rel@(id, func);";
-						};
-						o + substitute{ "ref", is_vectorizable_type(parsed_file, ip.data_type) ? "" : " const&" };
+							auto upresult = to_fat_index_type(parsed_file, ip.data_type, true);
 
-						o + "DCON_RELEASE_INLINE bool @obj@_fat_id::has_@prop@_from_@rel@(@p_type@@ref@ target) const" + block{
-							o + "return container.@obj@_has_@prop@_from_@rel@(id, target);";
-						};
+							if(upresult.has_value()) {
+								o + "template<typename T>";
+								o + "DCON_RELEASE_INLINE void @obj@_fat_id::for_each_@prop@_from_@rel@(T&& func) const" + block{
+									o + "container.@obj@_for_each_@prop@_from_@rel@(id, [&, t = this](@p_type@ i){func(fatten(t->container, i));});";
+								};
+							} else {
+								o + "template<typename T>";
+								o + "DCON_RELEASE_INLINE void @obj@_fat_id::for_each_@prop@_from_@rel@(T&& func) const" + block{
+									o + "container.@obj@_for_each_@prop@_from_@rel@(id, func);";
+								};
+							}
+
+							o + substitute{ "ref", is_vectorizable_type(parsed_file, ip.data_type) ? "" : " const&" };
+
+							o + "DCON_RELEASE_INLINE bool @obj@_fat_id::has_@prop@_from_@rel@(@p_type@@ref@ target) const" + block{
+								o + "return container.@obj@_has_@prop@_from_@rel@(id, target);";
+							};
+						}
 					}
 				}
 			}

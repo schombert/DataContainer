@@ -7,6 +7,8 @@
 #include "car_owner_basic2.hpp"
 #include "car_owner_basic3.hpp"
 #include "expandable_test.hpp"
+
+
 TEST_CASE("simple case", "[core_datacontainer_tests]") {
 	auto ptr = std::make_unique< car_owner_basic::data_container >();
 	
@@ -19,7 +21,7 @@ TEST_CASE("simple case", "[core_datacontainer_tests]") {
 	REQUIRE(ptr->car_size() == 1);
 	REQUIRE(new_car.index() == 0);
 	REQUIRE(bool(new_car) == true);
-	REQUIRE(ptr->is_valid_car(new_car) == true);
+	REQUIRE(ptr->car_is_valid(new_car) == true);
 
 	REQUIRE(ptr->car_get_wheels(new_car) == 0);
 	REQUIRE(ptr->car_get_resale_value(new_car) == 0.0f);
@@ -37,7 +39,7 @@ TEST_CASE("simple case", "[core_datacontainer_tests]") {
 	REQUIRE(ptr->car_size() == 0);
 	REQUIRE(ptr->car_get_wheels(new_car) == 0);
 	REQUIRE(ptr->car_get_resale_value(new_car) == 0.0f);
-	REQUIRE(ptr->is_valid_car(new_car) == false);
+	REQUIRE(ptr->car_is_valid(new_car) == false);
 
 
 	auto new_person = ptr->create_person();
@@ -53,8 +55,52 @@ TEST_CASE("simple case", "[core_datacontainer_tests]") {
 	auto car_b = ptr->create_car();
 
 	REQUIRE(car_a != car_b);
-	REQUIRE(ptr->is_valid_car_ownership(ptr->car_get_car_ownership_as_owned_car(car_a)) == false);
-	REQUIRE(ptr->is_valid_car_ownership(ptr->car_get_car_ownership_as_owned_car(car_b)) == false);
+	REQUIRE(ptr->car_ownership_is_valid(ptr->car_get_car_ownership_as_owned_car(car_a)) == false);
+	REQUIRE(ptr->car_ownership_is_valid(ptr->car_get_car_ownership_as_owned_car(car_b)) == false);
+}
+
+TEST_CASE("simple case the good syntax", "[core_datacontainer_tests]") {
+	auto ptr = std::make_unique< car_owner_basic::data_container >();
+
+	REQUIRE((size_t(ptr.get()) & 63) == 0);
+
+	REQUIRE(ptr->car_size() == 0);
+
+	auto new_car = car_owner_basic::fatten(*ptr, ptr->create_car());
+
+	REQUIRE(ptr->car_size() == 1);
+	REQUIRE(bool(new_car) == true);
+	REQUIRE(new_car.is_valid() == true);
+
+	REQUIRE(new_car.get_wheels() == 0);
+	REQUIRE(new_car.get_resale_value() == 0.0f);
+
+
+	new_car.get_wheels() = 4;
+	new_car.set_resale_value(100.5f);
+
+	REQUIRE(new_car.get_wheels() == 4);
+	REQUIRE(new_car.get_resale_value() == 100.5f);
+
+	ptr->pop_back_car();
+	REQUIRE(new_car.is_valid() == false);
+
+
+	auto new_person = car_owner_basic::fatten(*ptr, ptr->create_person());
+
+	REQUIRE(new_person == car_owner_basic::person_id(0));
+	REQUIRE(new_person.get_age() == 0);
+
+	new_person.set_age(21);
+
+	REQUIRE(new_person.get_age() == 21);
+
+	auto car_a = car_owner_basic::fatten(*ptr, ptr->create_car());
+	auto car_b = car_owner_basic::fatten(*ptr, ptr->create_car());
+
+	REQUIRE(car_a != car_b);
+	REQUIRE(car_a.get_car_ownership().is_valid() == false);
+	REQUIRE(car_b.get_car_ownership().is_valid() == false);
 }
 
 TEST_CASE("basic relationship functions", "[core_datacontainer_tests]") {
@@ -72,7 +118,7 @@ TEST_CASE("basic relationship functions", "[core_datacontainer_tests]") {
 	REQUIRE(bool(r1) == true);
 	ptr->car_ownership_set_ownership_date(r1, 7);
 
-	REQUIRE(ptr->is_valid_car_ownership(r1));
+	REQUIRE(ptr->car_ownership_is_valid(r1));
 	REQUIRE(ptr->car_ownership_get_owner(r1) == persona);
 	REQUIRE(ptr->car_ownership_get_owned_car(r1) == carb);
 	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == persona);
@@ -104,7 +150,7 @@ TEST_CASE("basic relationship functions", "[core_datacontainer_tests]") {
 	found_car = false;
 
 	auto r2 = ptr->try_create_car_ownership(personb, carb);
-	REQUIRE(!ptr->is_valid_car_ownership(r2));
+	REQUIRE(!ptr->car_ownership_is_valid(r2));
 
 	auto r3 = ptr->try_create_car_ownership(persona, cara);
 
@@ -132,7 +178,7 @@ TEST_CASE("basic relationship functions", "[core_datacontainer_tests]") {
 	REQUIRE(found_car == false);
 
 	auto r4 = ptr->force_create_car_ownership(personb, cara);
-	REQUIRE(ptr->is_valid_car_ownership(r4));
+	REQUIRE(ptr->car_ownership_is_valid(r4));
 
 	count = 0;
 	found_car = false;
@@ -172,7 +218,7 @@ TEST_CASE("remove in the other direction", "[core_datacontainer_tests]") {
 	REQUIRE(bool(r1) == true);
 	ptr->car_ownership_set_ownership_date(r1, 7);
 
-	REQUIRE(ptr->is_valid_car_ownership(r1));
+	REQUIRE(ptr->car_ownership_is_valid(r1));
 	REQUIRE(ptr->car_ownership_get_owner(r1) == persona);
 	REQUIRE(ptr->car_ownership_get_owned_car(r1) == carb);
 	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == persona);
@@ -214,7 +260,7 @@ TEST_CASE("remove in the other direction", "[core_datacontainer_tests]") {
 	REQUIRE(bool(r1) == true);
 	ptr->car_ownership_set_ownership_date(r1, 7);
 
-	REQUIRE(ptr->is_valid_car_ownership(r1));
+	REQUIRE(ptr->car_ownership_is_valid(r1));
 	REQUIRE(ptr->car_ownership_get_owner(r1) == persona);
 	REQUIRE(ptr->car_ownership_get_owned_car(r1) == carb);
 	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == persona);
@@ -277,7 +323,7 @@ TEST_CASE("for compatactable basic relationship functions", "[core_datacontainer
 	REQUIRE(bool(r1) == true);
 	ptr->car_ownership_set_ownership_date(r1, 7);
 
-	REQUIRE(ptr->is_valid_car_ownership(r1));
+	REQUIRE(ptr->car_ownership_is_valid(r1));
 	REQUIRE(ptr->car_ownership_get_owner(r1) == persona);
 	REQUIRE(ptr->car_ownership_get_owned_car(r1) == carb);
 	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == persona);
@@ -309,7 +355,7 @@ TEST_CASE("for compatactable basic relationship functions", "[core_datacontainer
 	found_car = false;
 
 	auto r2 = ptr->try_create_car_ownership(personb, carb);
-	REQUIRE(!ptr->is_valid_car_ownership(r2));
+	REQUIRE(!ptr->car_ownership_is_valid(r2));
 
 	auto r3 = ptr->try_create_car_ownership(persona, cara);
 
@@ -337,7 +383,7 @@ TEST_CASE("for compatactable basic relationship functions", "[core_datacontainer
 	REQUIRE(found_car == false);
 
 	auto r4 = ptr->force_create_car_ownership(personb, cara);
-	REQUIRE(ptr->is_valid_car_ownership(r4));
+	REQUIRE(ptr->car_ownership_is_valid(r4));
 
 	count = 0;
 	found_car = false;
@@ -377,7 +423,7 @@ TEST_CASE("for compatactable remove in the other direction", "[core_datacontaine
 	REQUIRE(bool(r1) == true);
 	ptr->car_ownership_set_ownership_date(r1, 7);
 
-	REQUIRE(ptr->is_valid_car_ownership(r1));
+	REQUIRE(ptr->car_ownership_is_valid(r1));
 	REQUIRE(ptr->car_ownership_get_owner(r1) == persona);
 	REQUIRE(ptr->car_ownership_get_owned_car(r1) == carb);
 	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == persona);
@@ -418,7 +464,7 @@ TEST_CASE("for compatactable remove in the other direction", "[core_datacontaine
 	REQUIRE(bool(r1) == true);
 	ptr->car_ownership_set_ownership_date(r1, 7);
 
-	REQUIRE(ptr->is_valid_car_ownership(r1));
+	REQUIRE(ptr->car_ownership_is_valid(r1));
 	REQUIRE(ptr->car_ownership_get_owner(r1) == persona);
 	REQUIRE(ptr->car_ownership_get_owned_car(r1) == carb);
 	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == persona);
@@ -483,7 +529,7 @@ TEST_CASE("for erasable basic relationship functions", "[core_datacontainer_test
 	REQUIRE(bool(r1) == true);
 	ptr->car_ownership_set_ownership_date(r1, 7);
 
-	REQUIRE(ptr->is_valid_car_ownership(r1));
+	REQUIRE(ptr->car_ownership_is_valid(r1));
 	REQUIRE(ptr->car_ownership_get_owner(r1) == persona);
 	REQUIRE(ptr->car_ownership_get_owned_car(r1) == carb);
 	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == persona);
@@ -515,7 +561,7 @@ TEST_CASE("for erasable basic relationship functions", "[core_datacontainer_test
 	found_car = false;
 
 	auto r2 = ptr->try_create_car_ownership(personb, carb);
-	REQUIRE(!ptr->is_valid_car_ownership(r2));
+	REQUIRE(!ptr->car_ownership_is_valid(r2));
 
 	auto r3 = ptr->try_create_car_ownership(persona, cara);
 
@@ -543,7 +589,7 @@ TEST_CASE("for erasable basic relationship functions", "[core_datacontainer_test
 	REQUIRE(found_car == false);
 
 	auto r4 = ptr->force_create_car_ownership(personb, cara);
-	REQUIRE(ptr->is_valid_car_ownership(r4));
+	REQUIRE(ptr->car_ownership_is_valid(r4));
 
 	count = 0;
 	found_car = false;
@@ -583,7 +629,7 @@ TEST_CASE("for erasable remove in the other direction", "[core_datacontainer_tes
 	REQUIRE(bool(r1) == true);
 	ptr->car_ownership_set_ownership_date(r1, 7);
 
-	REQUIRE(ptr->is_valid_car_ownership(r1));
+	REQUIRE(ptr->car_ownership_is_valid(r1));
 	REQUIRE(ptr->car_ownership_get_owner(r1) == persona);
 	REQUIRE(ptr->car_ownership_get_owned_car(r1) == carb);
 	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == persona);
@@ -624,7 +670,7 @@ TEST_CASE("for erasable remove in the other direction", "[core_datacontainer_tes
 	REQUIRE(bool(r1) == true);
 	ptr->car_ownership_set_ownership_date(r1, 7);
 
-	REQUIRE(ptr->is_valid_car_ownership(r1));
+	REQUIRE(ptr->car_ownership_is_valid(r1));
 	REQUIRE(ptr->car_ownership_get_owner(r1) == persona);
 	REQUIRE(ptr->car_ownership_get_owned_car(r1) == carb);
 	REQUIRE(ptr->car_get_owner_from_car_ownership(carb) == persona);

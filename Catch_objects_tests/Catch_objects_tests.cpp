@@ -1,5 +1,4 @@
 #define CATCH_CONFIG_MAIN 
-#define DCON_NO_VE
 #define DCON_USE_EXCEPTIONS
 
 #include "catch.hpp"
@@ -44,14 +43,12 @@ TEST_CASE("property_types", "[objects_and_properties_tests]") {
 	ptr->create_thingy();
 
 	REQUIRE(ptr->thingy_get_bf_value(target) == false);
-	REQUIRE(ptr->thingy_get_bool_value(target) == false);
 	REQUIRE(ptr->thingy_get_obj_value(target).size() == 0);
 	REQUIRE(ptr->thingy_get_pooled_v_size(target) == 0);
 	REQUIRE(ptr->thingy_get_big_array_size() == 0);
 	REQUIRE(ptr->thingy_get_big_array_bf_size() == 0);
 
 	ptr->thingy_set_bf_value(target, true);
-	ptr->thingy_set_bool_value(target, true);
 	ptr->thingy_get_obj_value(target).push_back(3.0f);
 	ptr->thingy_get_obj_value(target).push_back(4.0f);
 	ptr->thingy_pooled_v_add_unique(target, -5i16);
@@ -71,7 +68,6 @@ TEST_CASE("property_types", "[objects_and_properties_tests]") {
 	ptr->thingy_set_big_array_bf(target, 3, true);
 
 	REQUIRE(ptr->thingy_get_bf_value(target) == true);
-	REQUIRE(ptr->thingy_get_bool_value(target) == true);
 	REQUIRE(ptr->thingy_get_obj_value(target).size() == 2);
 	REQUIRE(ptr->thingy_get_obj_value(target)[1] == 4.0f);
 	REQUIRE(ptr->thingy_pooled_v_contains(target, -5i16) == true);
@@ -83,7 +79,6 @@ TEST_CASE("property_types", "[objects_and_properties_tests]") {
 	ptr->delete_thingy(target);
 
 	REQUIRE(ptr->thingy_get_bf_value(target) == false);
-	REQUIRE(ptr->thingy_get_bool_value(target) == false);
 	REQUIRE(ptr->thingy_get_obj_value(target).size() == 0);
 	REQUIRE(ptr->thingy_get_pooled_v_size(target) == 0);
 	REQUIRE(ptr->thingy_get_big_array(target, 0) == 0.0f);
@@ -146,4 +141,16 @@ TEST_CASE("expandable_property_types", "[objects_and_properties_tests]") {
 	REQUIRE(ptr->thingy2_get_big_array(target, 0) == 0.0f);
 	REQUIRE(ptr->thingy2_get_big_array(target, 1) == 0.0f);
 	REQUIRE(ptr->thingy2_get_big_array_bf(target, 3) == false);
+}
+
+TEST_CASE("hooked property getter, setter", "[objects_and_properties_tests]") {
+	auto ptr = std::make_unique< dcon::data_container >();
+	auto thng = dcon::fatten(*ptr, ptr->create_thingy());
+
+	REQUIRE(thng.get_d_value() == 6);
+	REQUIRE(ptr->counter == 1);
+
+	thng.set_dbf_value(false);
+
+	REQUIRE(ptr->counter == 2);
 }

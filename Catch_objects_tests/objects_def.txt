@@ -18,18 +18,15 @@ object{
 	}
 
 	property{
-		name{bool_value}
-		type{bool}
-	}
-
-	property{
 		name{d_value}
 		type{derived{int32_t}}
+		hook{get}
 	}
 
 	property{
 		name{dbf_value}
 		type{derived{bitfield}}
+		hook{set}
 	}
 
 	property{
@@ -96,6 +93,21 @@ object{
 	property{
 		name{big_array_bf}
 		type{array{int32_t}{bitfield}}
+	}
+}
+
+relationship{
+	name{dummy_rel}
+
+	link{
+		object{thingy}
+		name{left}
+		type{unique}
+	}
+	link{
+		object{thingy2}
+		name{right}
+		type{unique}
 	}
 }
 
