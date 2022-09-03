@@ -41,6 +41,15 @@ namespace dcon {
 		bool relate_in_list : 1;
 		bool relate_in_list_left : 1;
 		bool relate_in_list_right : 1;
+		bool many_many : 1;
+		bool many_many__index : 1;
+		bool many_many_A : 1;
+		bool many_many_B : 1;
+		bool many_many_C : 1;
+		bool many_many_D : 1;
+		bool many_many_E : 1;
+		bool many_many_F : 1;
+		bool many_many_ignore : 1;
 		load_record() {
 			thingyA = false;
 			thingyA_some_value = false;
@@ -56,6 +65,15 @@ namespace dcon {
 			relate_in_list = false;
 			relate_in_list_left = false;
 			relate_in_list_right = false;
+			many_many = false;
+			many_many__index = false;
+			many_many_A = false;
+			many_many_B = false;
+			many_many_C = false;
+			many_many_D = false;
+			many_many_E = false;
+			many_many_F = false;
+			many_many_ignore = false;
 		}
 	};
 	//
@@ -223,6 +241,39 @@ namespace dcon {
 	
 	DCON_RELEASE_INLINE bool is_valid_index(relate_in_list_id id) { return bool(id); }
 	
+	//
+	// definition of strongly typed index for many_many_id
+	//
+	class many_many_id {
+		public:
+		using value_base_t = uint16_t;
+		using zero_is_null_t = std::true_type;
+	
+		uint16_t value = 0;
+	
+		constexpr many_many_id() noexcept = default;
+		explicit constexpr many_many_id(uint16_t v) noexcept : value(v + 1) {}
+		constexpr many_many_id(many_many_id const& v) noexcept = default;
+		constexpr many_many_id(many_many_id&& v) noexcept = default;
+	
+		many_many_id& operator=(many_many_id const& v) noexcept = default;
+		many_many_id& operator=(many_many_id&& v) noexcept = default;
+		constexpr bool operator==(many_many_id v) const noexcept { return value == v.value; }
+		constexpr bool operator!=(many_many_id v) const noexcept { return value != v.value; }
+		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
+		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
+			return int32_t(value) - 1;
+		}
+	};
+	
+	class many_many_id_pair {
+		public:
+		many_many_id left;
+		many_many_id right;
+	};
+	
+	DCON_RELEASE_INLINE bool is_valid_index(many_many_id id) { return bool(id); }
+	
 }
 
 #ifndef DCON_NO_VE
@@ -250,6 +301,11 @@ namespace ve {
 	template<>
 	struct value_to_vector_type_s<dcon::relate_in_list_id> {
 		using type = tagged_vector<dcon::relate_in_list_id>;
+	};
+	
+	template<>
+	struct value_to_vector_type_s<dcon::many_many_id> {
+		using type = tagged_vector<dcon::many_many_id>;
 	};
 	
 }
@@ -428,6 +484,129 @@ namespace dcon {
 			friend class data_container;
 		};
 
+		class alignas(64) many_many_class {
+			private:
+			//
+			// storage space for _index of type many_many_id
+			//
+			struct dtype__index {
+				many_many_id values[200];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype__index() { std::uninitialized_value_construct_n(values, 200); }
+			}
+			m__index;
+			
+			//
+			// storage space for A of type thingyA_id
+			//
+			struct alignas(64) dtype_A {
+				uint8_t padding[(63 + sizeof(thingyA_id)) & ~63ui64];
+				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_A() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))); }
+			}
+			m_A;
+			
+			//
+			// storage space for B of type thingyA_id
+			//
+			struct alignas(64) dtype_B {
+				uint8_t padding[(63 + sizeof(thingyA_id)) & ~63ui64];
+				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_B() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))); }
+			}
+			m_B;
+			
+			//
+			// storage space for C of type thingyA_id
+			//
+			struct alignas(64) dtype_C {
+				uint8_t padding[(63 + sizeof(thingyA_id)) & ~63ui64];
+				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_C() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))); }
+			}
+			m_C;
+			
+			//
+			// storage space for D of type thingyA_id
+			//
+			struct alignas(64) dtype_D {
+				uint8_t padding[(63 + sizeof(thingyA_id)) & ~63ui64];
+				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_D() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))); }
+			}
+			m_D;
+			
+			//
+			// storage space for E of type thingyA_id
+			//
+			struct alignas(64) dtype_E {
+				uint8_t padding[(63 + sizeof(thingyA_id)) & ~63ui64];
+				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_E() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))); }
+			}
+			m_E;
+			
+			//
+			// storage space for F of type thingyA_id
+			//
+			struct alignas(64) dtype_F {
+				uint8_t padding[(63 + sizeof(thingyA_id)) & ~63ui64];
+				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_F() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))); }
+			}
+			m_F;
+			
+			//
+			// storage space for ignore of type thingyA_id
+			//
+			struct alignas(64) dtype_ignore {
+				uint8_t padding[(63 + sizeof(thingyA_id)) & ~63ui64];
+				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_ignore() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))); }
+			}
+			m_ignore;
+			
+			many_many_id first_free = many_many_id();
+			uint32_t size_used = 0;
+
+			ankerl::unordered_dense::map<uint64_t, many_many_id, ankerl::unordered_dense::hash<uint64_t>> hashm_joint;
+			uint64_t to_joint_keydata(thingyA_id A_p, thingyA_id B_p, thingyA_id C_p, thingyA_id D_p, thingyA_id E_p, thingyA_id F_p) {
+				uint64_t result = 0;
+				result |= (uint64_t(A_p.value) << 0);
+				result |= (uint64_t(B_p.value) << 8);
+				result |= (uint64_t(C_p.value) << 16);
+				result |= (uint64_t(D_p.value) << 24);
+				result |= (uint64_t(E_p.value) << 32);
+				result |= (uint64_t(F_p.value) << 40);
+				return result;
+			}
+			
+
+			public:
+			many_many_class() {
+				for(int32_t i = 200 - 1; i >= 0; --i) {
+					m__index.vptr()[i] = first_free;
+					first_free = many_many_id(uint16_t(i));
+				}
+			}
+			friend class data_container;
+		};
+
 	}
 
 	class alignas(64) data_container {
@@ -437,6 +616,7 @@ namespace dcon {
 		internal::relate_same_class relate_same;
 		internal::relate_in_array_class relate_in_array;
 		internal::relate_in_list_class relate_in_list;
+		internal::many_many_class many_many;
 
 		//
 		// getters for thingyA: some_value
@@ -525,6 +705,8 @@ namespace dcon {
 		uint32_t relate_in_array_size() const noexcept { return relate_in_array.size_used; }
 
 		uint32_t relate_in_list_size() const noexcept { return relate_in_list.size_used; }
+
+		uint32_t many_many_size() const noexcept { return many_many.size_used; }
 
 		//
 		// primary key getters and setters for relate_same: left
@@ -923,6 +1105,291 @@ namespace dcon {
 			std::for_each(temp.begin(), temp.end(), [t = this](relate_in_list_id i) { t->delete_relate_in_list(i); });
 		}
 		
+		//
+		// getters for many_many: A
+		//
+		DCON_RELEASE_INLINE thingyA_id const& many_many_get_A(many_many_id id) const noexcept {
+			return many_many.m_A.vptr()[id.index()];
+		}
+		DCON_RELEASE_INLINE thingyA_id& many_many_get_A(many_many_id id) noexcept {
+			return many_many.m_A.vptr()[id.index()];
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> many_many_get_A(ve::contiguous_tags<many_many_id> id) const noexcept {
+			return ve::load(id, many_many.m_A.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> many_many_get_A(ve::partial_contiguous_tags<many_many_id> id) const noexcept {
+			return ve::load(id, many_many.m_A.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> many_many_get_A(ve::tagged_vector<many_many_id> id) const noexcept {
+			return ve::load(id, many_many.m_A.vptr());
+		}
+		#endif
+		
+		private:
+		//
+		// setters for many_many: A
+		//
+		DCON_RELEASE_INLINE void many_many_set_A(many_many_id id, thingyA_id value) noexcept {
+			many_many.m_A.vptr()[id.index()] = value;
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE void many_many_set_A(ve::contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
+			ve::store(id, many_many.m_A.vptr(), values);
+		}
+		DCON_RELEASE_INLINE void many_many_set_A(ve::partial_contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
+			ve::store(id, many_many.m_A.vptr(), values);
+		}
+		DCON_RELEASE_INLINE void many_many_set_A(ve::tagged_vector<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
+			ve::store(id, many_many.m_A.vptr(), values);
+		}
+		#endif
+		
+		public:
+		//
+		// getters for many_many: B
+		//
+		DCON_RELEASE_INLINE thingyA_id const& many_many_get_B(many_many_id id) const noexcept {
+			return many_many.m_B.vptr()[id.index()];
+		}
+		DCON_RELEASE_INLINE thingyA_id& many_many_get_B(many_many_id id) noexcept {
+			return many_many.m_B.vptr()[id.index()];
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> many_many_get_B(ve::contiguous_tags<many_many_id> id) const noexcept {
+			return ve::load(id, many_many.m_B.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> many_many_get_B(ve::partial_contiguous_tags<many_many_id> id) const noexcept {
+			return ve::load(id, many_many.m_B.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> many_many_get_B(ve::tagged_vector<many_many_id> id) const noexcept {
+			return ve::load(id, many_many.m_B.vptr());
+		}
+		#endif
+		
+		private:
+		//
+		// setters for many_many: B
+		//
+		DCON_RELEASE_INLINE void many_many_set_B(many_many_id id, thingyA_id value) noexcept {
+			many_many.m_B.vptr()[id.index()] = value;
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE void many_many_set_B(ve::contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
+			ve::store(id, many_many.m_B.vptr(), values);
+		}
+		DCON_RELEASE_INLINE void many_many_set_B(ve::partial_contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
+			ve::store(id, many_many.m_B.vptr(), values);
+		}
+		DCON_RELEASE_INLINE void many_many_set_B(ve::tagged_vector<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
+			ve::store(id, many_many.m_B.vptr(), values);
+		}
+		#endif
+		
+		public:
+		//
+		// getters for many_many: C
+		//
+		DCON_RELEASE_INLINE thingyA_id const& many_many_get_C(many_many_id id) const noexcept {
+			return many_many.m_C.vptr()[id.index()];
+		}
+		DCON_RELEASE_INLINE thingyA_id& many_many_get_C(many_many_id id) noexcept {
+			return many_many.m_C.vptr()[id.index()];
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> many_many_get_C(ve::contiguous_tags<many_many_id> id) const noexcept {
+			return ve::load(id, many_many.m_C.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> many_many_get_C(ve::partial_contiguous_tags<many_many_id> id) const noexcept {
+			return ve::load(id, many_many.m_C.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> many_many_get_C(ve::tagged_vector<many_many_id> id) const noexcept {
+			return ve::load(id, many_many.m_C.vptr());
+		}
+		#endif
+		
+		private:
+		//
+		// setters for many_many: C
+		//
+		DCON_RELEASE_INLINE void many_many_set_C(many_many_id id, thingyA_id value) noexcept {
+			many_many.m_C.vptr()[id.index()] = value;
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE void many_many_set_C(ve::contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
+			ve::store(id, many_many.m_C.vptr(), values);
+		}
+		DCON_RELEASE_INLINE void many_many_set_C(ve::partial_contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
+			ve::store(id, many_many.m_C.vptr(), values);
+		}
+		DCON_RELEASE_INLINE void many_many_set_C(ve::tagged_vector<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
+			ve::store(id, many_many.m_C.vptr(), values);
+		}
+		#endif
+		
+		public:
+		//
+		// getters for many_many: D
+		//
+		DCON_RELEASE_INLINE thingyA_id const& many_many_get_D(many_many_id id) const noexcept {
+			return many_many.m_D.vptr()[id.index()];
+		}
+		DCON_RELEASE_INLINE thingyA_id& many_many_get_D(many_many_id id) noexcept {
+			return many_many.m_D.vptr()[id.index()];
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> many_many_get_D(ve::contiguous_tags<many_many_id> id) const noexcept {
+			return ve::load(id, many_many.m_D.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> many_many_get_D(ve::partial_contiguous_tags<many_many_id> id) const noexcept {
+			return ve::load(id, many_many.m_D.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> many_many_get_D(ve::tagged_vector<many_many_id> id) const noexcept {
+			return ve::load(id, many_many.m_D.vptr());
+		}
+		#endif
+		
+		private:
+		//
+		// setters for many_many: D
+		//
+		DCON_RELEASE_INLINE void many_many_set_D(many_many_id id, thingyA_id value) noexcept {
+			many_many.m_D.vptr()[id.index()] = value;
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE void many_many_set_D(ve::contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
+			ve::store(id, many_many.m_D.vptr(), values);
+		}
+		DCON_RELEASE_INLINE void many_many_set_D(ve::partial_contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
+			ve::store(id, many_many.m_D.vptr(), values);
+		}
+		DCON_RELEASE_INLINE void many_many_set_D(ve::tagged_vector<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
+			ve::store(id, many_many.m_D.vptr(), values);
+		}
+		#endif
+		
+		public:
+		//
+		// getters for many_many: E
+		//
+		DCON_RELEASE_INLINE thingyA_id const& many_many_get_E(many_many_id id) const noexcept {
+			return many_many.m_E.vptr()[id.index()];
+		}
+		DCON_RELEASE_INLINE thingyA_id& many_many_get_E(many_many_id id) noexcept {
+			return many_many.m_E.vptr()[id.index()];
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> many_many_get_E(ve::contiguous_tags<many_many_id> id) const noexcept {
+			return ve::load(id, many_many.m_E.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> many_many_get_E(ve::partial_contiguous_tags<many_many_id> id) const noexcept {
+			return ve::load(id, many_many.m_E.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> many_many_get_E(ve::tagged_vector<many_many_id> id) const noexcept {
+			return ve::load(id, many_many.m_E.vptr());
+		}
+		#endif
+		
+		private:
+		//
+		// setters for many_many: E
+		//
+		DCON_RELEASE_INLINE void many_many_set_E(many_many_id id, thingyA_id value) noexcept {
+			many_many.m_E.vptr()[id.index()] = value;
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE void many_many_set_E(ve::contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
+			ve::store(id, many_many.m_E.vptr(), values);
+		}
+		DCON_RELEASE_INLINE void many_many_set_E(ve::partial_contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
+			ve::store(id, many_many.m_E.vptr(), values);
+		}
+		DCON_RELEASE_INLINE void many_many_set_E(ve::tagged_vector<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
+			ve::store(id, many_many.m_E.vptr(), values);
+		}
+		#endif
+		
+		public:
+		//
+		// getters for many_many: F
+		//
+		DCON_RELEASE_INLINE thingyA_id const& many_many_get_F(many_many_id id) const noexcept {
+			return many_many.m_F.vptr()[id.index()];
+		}
+		DCON_RELEASE_INLINE thingyA_id& many_many_get_F(many_many_id id) noexcept {
+			return many_many.m_F.vptr()[id.index()];
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> many_many_get_F(ve::contiguous_tags<many_many_id> id) const noexcept {
+			return ve::load(id, many_many.m_F.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> many_many_get_F(ve::partial_contiguous_tags<many_many_id> id) const noexcept {
+			return ve::load(id, many_many.m_F.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> many_many_get_F(ve::tagged_vector<many_many_id> id) const noexcept {
+			return ve::load(id, many_many.m_F.vptr());
+		}
+		#endif
+		
+		private:
+		//
+		// setters for many_many: F
+		//
+		DCON_RELEASE_INLINE void many_many_set_F(many_many_id id, thingyA_id value) noexcept {
+			many_many.m_F.vptr()[id.index()] = value;
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE void many_many_set_F(ve::contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
+			ve::store(id, many_many.m_F.vptr(), values);
+		}
+		DCON_RELEASE_INLINE void many_many_set_F(ve::partial_contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
+			ve::store(id, many_many.m_F.vptr(), values);
+		}
+		DCON_RELEASE_INLINE void many_many_set_F(ve::tagged_vector<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
+			ve::store(id, many_many.m_F.vptr(), values);
+		}
+		#endif
+		
+		public:
+		//
+		// getters for many_many: ignore
+		//
+		DCON_RELEASE_INLINE thingyA_id const& many_many_get_ignore(many_many_id id) const noexcept {
+			return many_many.m_ignore.vptr()[id.index()];
+		}
+		DCON_RELEASE_INLINE thingyA_id& many_many_get_ignore(many_many_id id) noexcept {
+			return many_many.m_ignore.vptr()[id.index()];
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> many_many_get_ignore(ve::contiguous_tags<many_many_id> id) const noexcept {
+			return ve::load(id, many_many.m_ignore.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> many_many_get_ignore(ve::partial_contiguous_tags<many_many_id> id) const noexcept {
+			return ve::load(id, many_many.m_ignore.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> many_many_get_ignore(ve::tagged_vector<many_many_id> id) const noexcept {
+			return ve::load(id, many_many.m_ignore.vptr());
+		}
+		#endif
+		
+		//
+		// setters for many_many: ignore
+		//
+		DCON_RELEASE_INLINE void many_many_set_ignore(many_many_id id, thingyA_id value) noexcept {
+			many_many.m_ignore.vptr()[id.index()] = value;
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE void many_many_set_ignore(ve::contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
+			ve::store(id, many_many.m_ignore.vptr(), values);
+		}
+		DCON_RELEASE_INLINE void many_many_set_ignore(ve::partial_contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
+			ve::store(id, many_many.m_ignore.vptr(), values);
+		}
+		DCON_RELEASE_INLINE void many_many_set_ignore(ve::tagged_vector<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
+			ve::store(id, many_many.m_ignore.vptr(), values);
+		}
+		#endif
+		
 
 		//
 		// convenience getters and setters that operate via an implcit join
@@ -994,6 +1461,10 @@ namespace dcon {
 		void thingyA_set_right_from_relate_in_list(thingyA_id ref_id, thingyB_id val) {
 			relate_in_list_set_right(relate_in_list_id(relate_in_list_id::value_base_t(ref_id.index())), val);
 		}
+		
+		//
+		// convenience getters and setters that operate via an implcit join
+		//
 		
 		//
 		// container pop_back for thingyA
@@ -1397,6 +1868,139 @@ namespace dcon {
 			return new_id;
 		}
 		
+		//
+		// container delete for many_many
+		//
+		void delete_many_many(many_many_id id_removed) {
+			if(!many_many_is_valid(id_removed)) return;
+			many_many.m__index.vptr()[id_removed.index()] = many_many.first_free;
+			many_many.first_free = id_removed;
+			if(int32_t(many_many.size_used) - 1 == id_removed.index()) {
+				for( ; many_many.size_used > 0 && many_many.m__index.vptr()[many_many.size_used - 1] != many_many_id(many_many_id::value_base_t(many_many.size_used - 1));  --many_many.size_used) ;
+			}
+			many_many.hashm_joint.erase( many_many.to_joint_keydata(many_many.m_A.vptr()[id_removed.index()], many_many.m_B.vptr()[id_removed.index()], many_many.m_C.vptr()[id_removed.index()], many_many.m_D.vptr()[id_removed.index()], many_many.m_E.vptr()[id_removed.index()], many_many.m_F.vptr()[id_removed.index()]) );
+			many_many_set_A(id_removed, thingyA_id());
+			many_many_set_B(id_removed, thingyA_id());
+			many_many_set_C(id_removed, thingyA_id());
+			many_many_set_D(id_removed, thingyA_id());
+			many_many_set_E(id_removed, thingyA_id());
+			many_many_set_F(id_removed, thingyA_id());
+			many_many_set_ignore(id_removed, thingyA_id());
+		}
+		
+		//
+		// container resize for many_many
+		//
+		void many_many_resize(uint32_t new_size) {
+			#ifndef DCON_USE_EXCEPTIONS
+			if(new_size > 200) std::abort();
+			#else
+			if(new_size > 200) throw dcon::out_of_space{};
+			#endif
+			const uint32_t old_size = many_many.size_used;
+			if(new_size < old_size) {
+				many_many.first_free = many_many_id();
+				int32_t i = int32_t(200 - 1);
+				for(; i >= int32_t(new_size); --i) {
+					many_many.m__index.vptr()[i] = many_many.first_free;
+					many_many.first_free = many_many_id(many_many_id::value_base_t(i));
+				}
+				for(; i >= 0; --i) {
+					if(many_many.m__index.vptr()[i] != many_many_id(many_many_id::value_base_t(i))) {
+						many_many.m__index.vptr()[i] = many_many.first_free;
+						many_many.first_free = many_many_id(many_many_id::value_base_t(i));
+					}
+				}
+				many_many.hashm_joint.clear();
+				std::fill_n(many_many.m_A.vptr() + 0, old_size, thingyA_id{});
+				std::fill_n(many_many.m_B.vptr() + 0, old_size, thingyA_id{});
+				std::fill_n(many_many.m_C.vptr() + 0, old_size, thingyA_id{});
+				std::fill_n(many_many.m_D.vptr() + 0, old_size, thingyA_id{});
+				std::fill_n(many_many.m_E.vptr() + 0, old_size, thingyA_id{});
+				std::fill_n(many_many.m_F.vptr() + 0, old_size, thingyA_id{});
+				std::fill_n(many_many.m_ignore.vptr() + 0, old_size, thingyA_id{});
+			} else if(new_size > old_size) {
+				many_many.first_free = many_many_id();
+				int32_t i = int32_t(200 - 1);
+				for(; i >= int32_t(old_size); --i) {
+					many_many.m__index.vptr()[i] = many_many.first_free;
+					many_many.first_free = many_many_id(many_many_id::value_base_t(i));
+				}
+				for(; i >= 0; --i) {
+					if(many_many.m__index.vptr()[i] != many_many_id(many_many_id::value_base_t(i))) {
+						many_many.m__index.vptr()[i] = many_many.first_free;
+						many_many.first_free = many_many_id(many_many_id::value_base_t(i));
+					}
+				}
+			}
+			many_many.size_used = new_size;
+		}
+		
+		//
+		// container try create relationship for many_many
+		//
+		many_many_id try_create_many_many(thingyA_id A_p, thingyA_id B_p, thingyA_id C_p, thingyA_id D_p, thingyA_id E_p, thingyA_id F_p, thingyA_id ignore_p) {
+			if(!bool(A_p)) return many_many_id();
+			if(!bool(B_p)) return many_many_id();
+			if(!bool(C_p)) return many_many_id();
+			if(!bool(D_p)) return many_many_id();
+			if(!bool(E_p)) return many_many_id();
+			if(!bool(F_p)) return many_many_id();
+			if(!bool(ignore_p)) return many_many_id();
+			if(many_many.hashm_joint.contains(many_many.to_joint_keydata(A_p, B_p, C_p, D_p, E_p, F_p))) return many_many_id();
+			#ifndef DCON_USE_EXCEPTIONS
+			if(!bool(many_many.first_free)) std::abort();
+			#else
+			if(!bool(many_many.first_free)) throw dcon::out_of_space{};
+			#endif
+			many_many_id new_id = many_many.first_free;
+			many_many.first_free = many_many.m__index.vptr()[many_many.first_free.index()];
+			many_many.m__index.vptr()[new_id.index()] = new_id;
+			many_many.size_used = std::max(many_many.size_used, uint32_t(new_id.index() + 1));
+			many_many_set_A(new_id, A_p);
+			many_many_set_B(new_id, B_p);
+			many_many_set_C(new_id, C_p);
+			many_many_set_D(new_id, D_p);
+			many_many_set_E(new_id, E_p);
+			many_many_set_F(new_id, F_p);
+			many_many_set_ignore(new_id, ignore_p);
+			many_many.hashm_joint.insert_or_assign(many_many.to_joint_keydata(A_p, B_p, C_p, D_p, E_p, F_p), new_id);
+			return new_id;
+		}
+		
+		//
+		// container force create relationship for many_many
+		//
+		many_many_id force_create_many_many(thingyA_id A_p, thingyA_id B_p, thingyA_id C_p, thingyA_id D_p, thingyA_id E_p, thingyA_id F_p, thingyA_id ignore_p) {
+			#ifndef DCON_USE_EXCEPTIONS
+			if(!bool(many_many.first_free)) std::abort();
+			#else
+			if(!bool(many_many.first_free)) throw dcon::out_of_space{};
+			#endif
+			many_many_id new_id = many_many.first_free;
+			many_many.first_free = many_many.m__index.vptr()[many_many.first_free.index()];
+			many_many.m__index.vptr()[new_id.index()] = new_id;
+			many_many.size_used = std::max(many_many.size_used, uint32_t(new_id.index() + 1));
+			{
+				auto key_dat = many_many.to_joint_keydata(A_p, B_p, C_p, D_p, E_p, F_p);
+				if(auto it = many_many.hashm_joint.find(key_dat); it !=  many_many.hashm_joint.end()) {
+					delete_many_many(it->second);
+				}
+				many_many.hashm_joint.insert_or_assign(key_dat, new_id);
+			}
+			many_many_set_A(new_id, A_p);
+			many_many_set_B(new_id, B_p);
+			many_many_set_C(new_id, C_p);
+			many_many_set_D(new_id, D_p);
+			many_many_set_E(new_id, E_p);
+			many_many_set_F(new_id, F_p);
+			many_many_set_ignore(new_id, ignore_p);
+			return new_id;
+		}
+		
+		bool many_many_is_valid(many_many_id id) const {
+			return bool(id) && uint32_t(id.index()) < many_many.size_used && many_many.m__index.vptr()[id.index()] == id;
+		}
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_thingyA(T&& func) {
 			for(uint32_t i = 0; i < thingyA.size_used; ++i) {
@@ -1437,12 +2041,21 @@ namespace dcon {
 			}
 		}
 		
+		template <typename T>
+		DCON_RELEASE_INLINE void for_each_many_many(T&& func) {
+			for(uint32_t i = 0; i < many_many.size_used; ++i) {
+				many_many_id tmp(many_many_id::value_base_t(i));
+				if(many_many.m__index.vptr()[tmp.index()] == tmp) func(tmp);
+			}
+		}
+		
 
 
 		void reset() {
 			relate_same_resize(0);
 			relate_in_array_resize(0);
 			relate_in_list_resize(0);
+			many_many_resize(0);
 			thingyA_resize(0);
 			thingyB_resize(0);
 		}
@@ -1451,6 +2064,12 @@ namespace dcon {
 				return it->second;
 			}
 			return relate_same_id();
+		}
+		many_many_id get_many_many_by_joint(thingyA_id A_p, thingyA_id B_p, thingyA_id C_p, thingyA_id D_p, thingyA_id E_p, thingyA_id F_p) {
+			if(auto it = many_many.hashm_joint.find(many_many.to_joint_keydata(A_p, B_p, C_p, D_p, E_p, F_p)); it != many_many.hashm_joint.end()) {
+				return it->second;
+			}
+			return many_many_id();
 		}
 
 		#ifndef DCON_NO_VE
@@ -1534,6 +2153,22 @@ namespace dcon {
 			ve::execute_parallel_exact(relate_in_list.size_used, functor);
 		}
 #endif
+		ve::vectorizable_buffer<float, many_many_id> many_many_make_vectorizable_float_buffer() const noexcept {
+			return ve::vectorizable_buffer<float, many_many_id>(many_many.size_used);
+		}
+		ve::vectorizable_buffer<int32_t, many_many_id> many_many_make_vectorizable_int_buffer() const noexcept {
+			return ve::vectorizable_buffer<int32_t, many_many_id>(many_many.size_used);
+		}
+		template<typename F>
+		DCON_RELEASE_INLINE void execute_serial_over_many_many(F&& functor) {
+			ve::execute_serial(many_many.size_used, functor);
+		}
+#ifndef VE_NO_TBB
+		template<typename F>
+		DCON_RELEASE_INLINE void execute_parallel_over_many_many(F&& functor) {
+			ve::execute_parallel_exact(many_many.size_used, functor);
+		}
+#endif
 		#endif
 
 		load_record serialize_entire_container_record() const noexcept {
@@ -1552,6 +2187,15 @@ namespace dcon {
 			result.relate_in_list = true;
 			result.relate_in_list_left = true;
 			result.relate_in_list_right = true;
+			result.many_many = true;
+			result.many_many_A = true;
+			result.many_many_B = true;
+			result.many_many_C = true;
+			result.many_many_D = true;
+			result.many_many_E = true;
+			result.many_many_F = true;
+			result.many_many_ignore = true;
+			result.many_many__index = true;
 			return result;
 		}
 		
@@ -1620,6 +2264,53 @@ namespace dcon {
 				}
 				dcon::record_header headerb(0, "$", "relate_in_list", "$index_end");
 				total_size += headerb.serialize_size();
+			}
+			if(serialize_selection.many_many) {
+				dcon::record_header header(0, "uint32_t", "many_many", "$size");
+				total_size += header.serialize_size();
+				total_size += sizeof(uint32_t);
+				if(serialize_selection.many_many_A) {
+					dcon::record_header iheader(0, "uint16_t", "many_many", "A");
+					total_size += iheader.serialize_size();
+					total_size += sizeof(thingyA_id) * many_many.size_used;
+				}
+				if(serialize_selection.many_many_B) {
+					dcon::record_header iheader(0, "uint16_t", "many_many", "B");
+					total_size += iheader.serialize_size();
+					total_size += sizeof(thingyA_id) * many_many.size_used;
+				}
+				if(serialize_selection.many_many_C) {
+					dcon::record_header iheader(0, "uint16_t", "many_many", "C");
+					total_size += iheader.serialize_size();
+					total_size += sizeof(thingyA_id) * many_many.size_used;
+				}
+				if(serialize_selection.many_many_D) {
+					dcon::record_header iheader(0, "uint16_t", "many_many", "D");
+					total_size += iheader.serialize_size();
+					total_size += sizeof(thingyA_id) * many_many.size_used;
+				}
+				if(serialize_selection.many_many_E) {
+					dcon::record_header iheader(0, "uint16_t", "many_many", "E");
+					total_size += iheader.serialize_size();
+					total_size += sizeof(thingyA_id) * many_many.size_used;
+				}
+				if(serialize_selection.many_many_F) {
+					dcon::record_header iheader(0, "uint16_t", "many_many", "F");
+					total_size += iheader.serialize_size();
+					total_size += sizeof(thingyA_id) * many_many.size_used;
+				}
+				if(serialize_selection.many_many_ignore) {
+					dcon::record_header iheader(0, "uint16_t", "many_many", "ignore");
+					total_size += iheader.serialize_size();
+					total_size += sizeof(thingyA_id) * many_many.size_used;
+				}
+				dcon::record_header headerb(0, "$", "many_many", "$index_end");
+				total_size += headerb.serialize_size();
+			}
+			if(serialize_selection.many_many__index) {
+				dcon::record_header iheader(0, "uint16_t", "many_many", "_index");
+				total_size += iheader.serialize_size();
+				total_size += sizeof(many_many_id) * many_many.size_used;
 			}
 			return total_size;
 		}
@@ -1699,6 +2390,62 @@ namespace dcon {
 				}
 				dcon::record_header headerb(0, "$", "relate_in_list", "$index_end");
 				headerb.serialize(output_buffer);
+			}
+			if(serialize_selection.many_many) {
+				dcon::record_header header(sizeof(uint32_t), "uint32_t", "many_many", "$size");
+				header.serialize(output_buffer);
+				*(reinterpret_cast<uint32_t*>(output_buffer)) = many_many.size_used;
+				output_buffer += sizeof(uint32_t);
+				{
+					dcon::record_header iheader(sizeof(thingyA_id) * many_many.size_used, "uint16_t", "many_many", "A");
+					iheader.serialize(output_buffer);
+					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), many_many.m_A.vptr(), sizeof(thingyA_id) * many_many.size_used);
+					output_buffer += sizeof(thingyA_id) * many_many.size_used;
+				}
+				{
+					dcon::record_header iheader(sizeof(thingyA_id) * many_many.size_used, "uint16_t", "many_many", "B");
+					iheader.serialize(output_buffer);
+					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), many_many.m_B.vptr(), sizeof(thingyA_id) * many_many.size_used);
+					output_buffer += sizeof(thingyA_id) * many_many.size_used;
+				}
+				{
+					dcon::record_header iheader(sizeof(thingyA_id) * many_many.size_used, "uint16_t", "many_many", "C");
+					iheader.serialize(output_buffer);
+					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), many_many.m_C.vptr(), sizeof(thingyA_id) * many_many.size_used);
+					output_buffer += sizeof(thingyA_id) * many_many.size_used;
+				}
+				{
+					dcon::record_header iheader(sizeof(thingyA_id) * many_many.size_used, "uint16_t", "many_many", "D");
+					iheader.serialize(output_buffer);
+					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), many_many.m_D.vptr(), sizeof(thingyA_id) * many_many.size_used);
+					output_buffer += sizeof(thingyA_id) * many_many.size_used;
+				}
+				{
+					dcon::record_header iheader(sizeof(thingyA_id) * many_many.size_used, "uint16_t", "many_many", "E");
+					iheader.serialize(output_buffer);
+					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), many_many.m_E.vptr(), sizeof(thingyA_id) * many_many.size_used);
+					output_buffer += sizeof(thingyA_id) * many_many.size_used;
+				}
+				{
+					dcon::record_header iheader(sizeof(thingyA_id) * many_many.size_used, "uint16_t", "many_many", "F");
+					iheader.serialize(output_buffer);
+					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), many_many.m_F.vptr(), sizeof(thingyA_id) * many_many.size_used);
+					output_buffer += sizeof(thingyA_id) * many_many.size_used;
+				}
+				{
+					dcon::record_header iheader(sizeof(thingyA_id) * many_many.size_used, "uint16_t", "many_many", "ignore");
+					iheader.serialize(output_buffer);
+					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), many_many.m_ignore.vptr(), sizeof(thingyA_id) * many_many.size_used);
+					output_buffer += sizeof(thingyA_id) * many_many.size_used;
+				}
+				dcon::record_header headerb(0, "$", "many_many", "$index_end");
+				headerb.serialize(output_buffer);
+			}
+			if(serialize_selection.many_many__index) {
+				dcon::record_header header(sizeof(many_many_id) * many_many.size_used, "uint16_t", "many_many", "_index");
+				header.serialize(output_buffer);
+				std::memcpy(reinterpret_cast<many_many_id*>(output_buffer), many_many.m__index.vptr(), sizeof(many_many_id) * many_many.size_used);
+				output_buffer += sizeof(many_many_id) * many_many.size_used;
 			}
 		}
 		
@@ -1986,6 +2733,232 @@ namespace dcon {
 									auto tmp = relate_in_list.m_right.vptr()[i];
 									relate_in_list.m_right.vptr()[i] = thingyB_id();
 									relate_in_list_set_right(relate_in_list_id(relate_in_list_id::value_base_t(i)), tmp);
+								}
+							}
+						}
+					} else
+					if(header.is_object("many_many")) {
+						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+							if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= many_many.size_used) {
+								many_many_resize(0);
+							}
+							many_many_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+							serialize_selection.many_many = true;
+						}
+						else if(header.is_property("__index")) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(many_many.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.many_many__index = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									many_many.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many__index = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									many_many.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many__index = true;
+							}
+							if(serialize_selection.many_many__index == true) {
+								many_many.size_used = 0;
+								many_many.first_free = many_many_id();
+								for(int32_t j = 200 - 1; j > 0; --j) {
+									if(many_many.m__index.vptr()[j] != many_many_id(uint16_t(j))) {
+										many_many.m__index.vptr()[j] = many_many.first_free;
+										many_many.first_free = many_many_id(uint16_t(j));
+									} else {
+										many_many.size_used = std::max(many_many.size_used, uint32_t(j));
+									}
+								}
+							}
+						}
+						else if(header.is_property("A")) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(many_many.m_A.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.many_many_A = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									many_many.m_A.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_A = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									many_many.m_A.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_A = true;
+							}
+						}
+						else if(header.is_property("B")) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(many_many.m_B.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.many_many_B = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									many_many.m_B.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_B = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									many_many.m_B.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_B = true;
+							}
+						}
+						else if(header.is_property("C")) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(many_many.m_C.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.many_many_C = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									many_many.m_C.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_C = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									many_many.m_C.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_C = true;
+							}
+						}
+						else if(header.is_property("D")) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(many_many.m_D.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.many_many_D = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									many_many.m_D.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_D = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									many_many.m_D.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_D = true;
+							}
+						}
+						else if(header.is_property("E")) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(many_many.m_E.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.many_many_E = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									many_many.m_E.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_E = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									many_many.m_E.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_E = true;
+							}
+						}
+						else if(header.is_property("F")) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(many_many.m_F.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.many_many_F = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									many_many.m_F.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_F = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									many_many.m_F.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_F = true;
+							}
+						}
+						else if(header.is_property("ignore")) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(many_many.m_ignore.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.many_many_ignore = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									many_many.m_ignore.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_ignore = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									many_many.m_ignore.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_ignore = true;
+							}
+						}
+						else if(header.is_property("$index_end")) {
+							if(serialize_selection.many_many_A == true) {
+								for(uint32_t i = 0; i < many_many.size_used; ++i) {
+									auto tmp = many_many.m_A.vptr()[i];
+									many_many.m_A.vptr()[i] = thingyA_id();
+									many_many_set_A(many_many_id(many_many_id::value_base_t(i)), tmp);
+								}
+							}
+							if(serialize_selection.many_many_B == true) {
+								for(uint32_t i = 0; i < many_many.size_used; ++i) {
+									auto tmp = many_many.m_B.vptr()[i];
+									many_many.m_B.vptr()[i] = thingyA_id();
+									many_many_set_B(many_many_id(many_many_id::value_base_t(i)), tmp);
+								}
+							}
+							if(serialize_selection.many_many_C == true) {
+								for(uint32_t i = 0; i < many_many.size_used; ++i) {
+									auto tmp = many_many.m_C.vptr()[i];
+									many_many.m_C.vptr()[i] = thingyA_id();
+									many_many_set_C(many_many_id(many_many_id::value_base_t(i)), tmp);
+								}
+							}
+							if(serialize_selection.many_many_D == true) {
+								for(uint32_t i = 0; i < many_many.size_used; ++i) {
+									auto tmp = many_many.m_D.vptr()[i];
+									many_many.m_D.vptr()[i] = thingyA_id();
+									many_many_set_D(many_many_id(many_many_id::value_base_t(i)), tmp);
+								}
+							}
+							if(serialize_selection.many_many_E == true) {
+								for(uint32_t i = 0; i < many_many.size_used; ++i) {
+									auto tmp = many_many.m_E.vptr()[i];
+									many_many.m_E.vptr()[i] = thingyA_id();
+									many_many_set_E(many_many_id(many_many_id::value_base_t(i)), tmp);
+								}
+							}
+							if(serialize_selection.many_many_F == true) {
+								for(uint32_t i = 0; i < many_many.size_used; ++i) {
+									auto tmp = many_many.m_F.vptr()[i];
+									many_many.m_F.vptr()[i] = thingyA_id();
+									many_many_set_F(many_many_id(many_many_id::value_base_t(i)), tmp);
+								}
+							}
+							if(serialize_selection.many_many_ignore == true) {
+								for(uint32_t i = 0; i < many_many.size_used; ++i) {
+									auto tmp = many_many.m_ignore.vptr()[i];
+									many_many.m_ignore.vptr()[i] = thingyA_id();
+									many_many_set_ignore(many_many_id(many_many_id::value_base_t(i)), tmp);
+								}
+							}
+							for(uint32_t idx = 0; idx < many_many.size_used; ++idx) {
+								auto this_key = many_many_id(many_many_id::value_base_t(idx));
+								if(many_many_is_valid(many_many_id(many_many_id::value_base_t(idx)))) {
+									auto key_dat = many_many.to_joint_keydata(many_many.m_A.vptr()[idx], many_many.m_B.vptr()[idx], many_many.m_C.vptr()[idx], many_many.m_D.vptr()[idx], many_many.m_E.vptr()[idx], many_many.m_F.vptr()[idx]);
+									if(auto it = many_many.hashm_joint.find(key_dat); it !=  many_many.hashm_joint.end()) {
+										delete_many_many(it->second);
+									}
+									many_many.hashm_joint.insert_or_assign(key_dat, this_key);
 								}
 							}
 						}
@@ -2282,6 +3255,232 @@ namespace dcon {
 								}
 							}
 						}
+					} else
+					if(header.is_object("many_many") && mask.many_many) {
+						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+							if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= many_many.size_used) {
+								many_many_resize(0);
+							}
+							many_many_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+							serialize_selection.many_many = true;
+						}
+						else if(header.is_property("__index") && mask.many_many__index) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(many_many.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.many_many__index = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									many_many.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many__index = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									many_many.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many__index = true;
+							}
+							if(serialize_selection.many_many__index == true) {
+								many_many.size_used = 0;
+								many_many.first_free = many_many_id();
+								for(int32_t j = 200 - 1; j > 0; --j) {
+									if(many_many.m__index.vptr()[j] != many_many_id(uint16_t(j))) {
+										many_many.m__index.vptr()[j] = many_many.first_free;
+										many_many.first_free = many_many_id(uint16_t(j));
+									} else {
+										many_many.size_used = std::max(many_many.size_used, uint32_t(j));
+									}
+								}
+							}
+						}
+						else if(header.is_property("A") && mask.many_many_A) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(many_many.m_A.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.many_many_A = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									many_many.m_A.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_A = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									many_many.m_A.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_A = true;
+							}
+						}
+						else if(header.is_property("B") && mask.many_many_B) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(many_many.m_B.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.many_many_B = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									many_many.m_B.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_B = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									many_many.m_B.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_B = true;
+							}
+						}
+						else if(header.is_property("C") && mask.many_many_C) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(many_many.m_C.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.many_many_C = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									many_many.m_C.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_C = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									many_many.m_C.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_C = true;
+							}
+						}
+						else if(header.is_property("D") && mask.many_many_D) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(many_many.m_D.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.many_many_D = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									many_many.m_D.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_D = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									many_many.m_D.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_D = true;
+							}
+						}
+						else if(header.is_property("E") && mask.many_many_E) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(many_many.m_E.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.many_many_E = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									many_many.m_E.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_E = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									many_many.m_E.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_E = true;
+							}
+						}
+						else if(header.is_property("F") && mask.many_many_F) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(many_many.m_F.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.many_many_F = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									many_many.m_F.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_F = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									many_many.m_F.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_F = true;
+							}
+						}
+						else if(header.is_property("ignore") && mask.many_many_ignore) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(many_many.m_ignore.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.many_many_ignore = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									many_many.m_ignore.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_ignore = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									many_many.m_ignore.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.many_many_ignore = true;
+							}
+						}
+						else if(header.is_property("$index_end") && mask.many_many) {
+							if(serialize_selection.many_many_A == true) {
+								for(uint32_t i = 0; i < many_many.size_used; ++i) {
+									auto tmp = many_many.m_A.vptr()[i];
+									many_many.m_A.vptr()[i] = thingyA_id();
+									many_many_set_A(many_many_id(many_many_id::value_base_t(i)), tmp);
+								}
+							}
+							if(serialize_selection.many_many_B == true) {
+								for(uint32_t i = 0; i < many_many.size_used; ++i) {
+									auto tmp = many_many.m_B.vptr()[i];
+									many_many.m_B.vptr()[i] = thingyA_id();
+									many_many_set_B(many_many_id(many_many_id::value_base_t(i)), tmp);
+								}
+							}
+							if(serialize_selection.many_many_C == true) {
+								for(uint32_t i = 0; i < many_many.size_used; ++i) {
+									auto tmp = many_many.m_C.vptr()[i];
+									many_many.m_C.vptr()[i] = thingyA_id();
+									many_many_set_C(many_many_id(many_many_id::value_base_t(i)), tmp);
+								}
+							}
+							if(serialize_selection.many_many_D == true) {
+								for(uint32_t i = 0; i < many_many.size_used; ++i) {
+									auto tmp = many_many.m_D.vptr()[i];
+									many_many.m_D.vptr()[i] = thingyA_id();
+									many_many_set_D(many_many_id(many_many_id::value_base_t(i)), tmp);
+								}
+							}
+							if(serialize_selection.many_many_E == true) {
+								for(uint32_t i = 0; i < many_many.size_used; ++i) {
+									auto tmp = many_many.m_E.vptr()[i];
+									many_many.m_E.vptr()[i] = thingyA_id();
+									many_many_set_E(many_many_id(many_many_id::value_base_t(i)), tmp);
+								}
+							}
+							if(serialize_selection.many_many_F == true) {
+								for(uint32_t i = 0; i < many_many.size_used; ++i) {
+									auto tmp = many_many.m_F.vptr()[i];
+									many_many.m_F.vptr()[i] = thingyA_id();
+									many_many_set_F(many_many_id(many_many_id::value_base_t(i)), tmp);
+								}
+							}
+							if(serialize_selection.many_many_ignore == true) {
+								for(uint32_t i = 0; i < many_many.size_used; ++i) {
+									auto tmp = many_many.m_ignore.vptr()[i];
+									many_many.m_ignore.vptr()[i] = thingyA_id();
+									many_many_set_ignore(many_many_id(many_many_id::value_base_t(i)), tmp);
+								}
+							}
+							for(uint32_t idx = 0; idx < many_many.size_used; ++idx) {
+								auto this_key = many_many_id(many_many_id::value_base_t(idx));
+								if(many_many_is_valid(many_many_id(many_many_id::value_base_t(idx)))) {
+									auto key_dat = many_many.to_joint_keydata(many_many.m_A.vptr()[idx], many_many.m_B.vptr()[idx], many_many.m_C.vptr()[idx], many_many.m_D.vptr()[idx], many_many.m_E.vptr()[idx], many_many.m_F.vptr()[idx]);
+									if(auto it = many_many.hashm_joint.find(key_dat); it !=  many_many.hashm_joint.end()) {
+										delete_many_many(it->second);
+									}
+									many_many.hashm_joint.insert_or_assign(key_dat, this_key);
+								}
+							}
+						}
 					}
 				}
 				input_buffer += header.record_size;
@@ -2301,6 +3500,8 @@ namespace dcon {
 	class relate_in_array_fat_id;
 	class relate_in_list_const_fat_id;
 	class relate_in_list_fat_id;
+	class many_many_const_fat_id;
+	class many_many_fat_id;
 	class thingyA_fat_id {
 		public:
 		data_container& container;
@@ -2878,6 +4079,121 @@ namespace dcon {
 		return relate_in_list_const_fat_id(c, id);
 	}
 	
+	class many_many_fat_id {
+		public:
+		data_container& container;
+		many_many_id id;
+		many_many_fat_id(data_container& c, many_many_id i) noexcept : container(c), id(i) {}
+		many_many_fat_id(many_many_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator many_many_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE many_many_fat_id& operator=(many_many_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE many_many_fat_id& operator=(many_many_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(many_many_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(many_many_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(many_many_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(many_many_id other) const noexcept {
+			return id != other;
+		}
+		explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE bool is_valid() const noexcept {
+			return container.many_many_is_valid(id);
+		}
+		DCON_RELEASE_INLINE thingyA_fat_id get_A() const noexcept;
+		DCON_RELEASE_INLINE thingyA_fat_id get_B() const noexcept;
+		DCON_RELEASE_INLINE thingyA_fat_id get_C() const noexcept;
+		DCON_RELEASE_INLINE thingyA_fat_id get_D() const noexcept;
+		DCON_RELEASE_INLINE thingyA_fat_id get_E() const noexcept;
+		DCON_RELEASE_INLINE thingyA_fat_id get_F() const noexcept;
+		DCON_RELEASE_INLINE thingyA_fat_id get_ignore() const noexcept;
+		DCON_RELEASE_INLINE void set_ignore(thingyA_id val) const noexcept;
+	};
+	DCON_RELEASE_INLINE many_many_fat_id fatten(data_container& c, many_many_id id) noexcept {
+		return many_many_fat_id(c, id);
+	}
+	
+	class many_many_const_fat_id {
+		public:
+		data_container const& container;
+		many_many_id id;
+		many_many_const_fat_id(data_container const& c, many_many_id i) noexcept : container(c), id(i) {}
+		many_many_const_fat_id(many_many_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		many_many_const_fat_id(many_many_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator many_many_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE many_many_const_fat_id& operator=(many_many_const_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE many_many_const_fat_id& operator=(many_many_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE many_many_const_fat_id& operator=(many_many_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(many_many_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(many_many_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(many_many_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(many_many_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(many_many_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(many_many_id other) const noexcept {
+			return id != other;
+		}
+		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE bool is_valid() const noexcept {
+			return container.many_many_is_valid(id);
+		}
+		DCON_RELEASE_INLINE thingyA_const_fat_id get_A() const noexcept;
+		DCON_RELEASE_INLINE thingyA_const_fat_id get_B() const noexcept;
+		DCON_RELEASE_INLINE thingyA_const_fat_id get_C() const noexcept;
+		DCON_RELEASE_INLINE thingyA_const_fat_id get_D() const noexcept;
+		DCON_RELEASE_INLINE thingyA_const_fat_id get_E() const noexcept;
+		DCON_RELEASE_INLINE thingyA_const_fat_id get_F() const noexcept;
+		DCON_RELEASE_INLINE thingyA_const_fat_id get_ignore() const noexcept;
+	};
+	DCON_RELEASE_INLINE bool operator==(many_many_fat_id const& l, many_many_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id == other.id;
+	}
+	DCON_RELEASE_INLINE bool operator!=(many_many_fat_id const& l, many_many_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id != other.id;
+	}
+	DCON_RELEASE_INLINE many_many_const_fat_id fatten(data_container const& c, many_many_id id) noexcept {
+		return many_many_const_fat_id(c, id);
+	}
+	
 	DCON_RELEASE_INLINE int32_t& thingyA_fat_id::get_some_value() const noexcept { return container.thingyA_get_some_value(id); }
 	DCON_RELEASE_INLINE void thingyA_fat_id::set_some_value(int32_t v) const noexcept { container.thingyA_set_some_value(id, v); }
 	DCON_RELEASE_INLINE relate_same_fat_id thingyA_fat_id::get_relate_same_as_left() const noexcept {
@@ -3081,6 +4397,53 @@ namespace dcon {
 	}
 	DCON_RELEASE_INLINE thingyB_const_fat_id relate_in_list_const_fat_id::get_right() const noexcept {
 		return thingyB_const_fat_id(container, container.relate_in_list_get_right(id));
+	}
+	
+	DCON_RELEASE_INLINE thingyA_fat_id many_many_fat_id::get_A() const noexcept {
+		return thingyA_fat_id(container, container.many_many_get_A(id));
+	}
+	DCON_RELEASE_INLINE thingyA_fat_id many_many_fat_id::get_B() const noexcept {
+		return thingyA_fat_id(container, container.many_many_get_B(id));
+	}
+	DCON_RELEASE_INLINE thingyA_fat_id many_many_fat_id::get_C() const noexcept {
+		return thingyA_fat_id(container, container.many_many_get_C(id));
+	}
+	DCON_RELEASE_INLINE thingyA_fat_id many_many_fat_id::get_D() const noexcept {
+		return thingyA_fat_id(container, container.many_many_get_D(id));
+	}
+	DCON_RELEASE_INLINE thingyA_fat_id many_many_fat_id::get_E() const noexcept {
+		return thingyA_fat_id(container, container.many_many_get_E(id));
+	}
+	DCON_RELEASE_INLINE thingyA_fat_id many_many_fat_id::get_F() const noexcept {
+		return thingyA_fat_id(container, container.many_many_get_F(id));
+	}
+	DCON_RELEASE_INLINE thingyA_fat_id many_many_fat_id::get_ignore() const noexcept {
+		return thingyA_fat_id(container, container.many_many_get_ignore(id));
+	}
+	DCON_RELEASE_INLINE void many_many_fat_id::set_ignore(thingyA_id val) const noexcept {
+		container.many_many_set_ignore(id, val);
+	}
+	
+	DCON_RELEASE_INLINE thingyA_const_fat_id many_many_const_fat_id::get_A() const noexcept {
+		return thingyA_const_fat_id(container, container.many_many_get_A(id));
+	}
+	DCON_RELEASE_INLINE thingyA_const_fat_id many_many_const_fat_id::get_B() const noexcept {
+		return thingyA_const_fat_id(container, container.many_many_get_B(id));
+	}
+	DCON_RELEASE_INLINE thingyA_const_fat_id many_many_const_fat_id::get_C() const noexcept {
+		return thingyA_const_fat_id(container, container.many_many_get_C(id));
+	}
+	DCON_RELEASE_INLINE thingyA_const_fat_id many_many_const_fat_id::get_D() const noexcept {
+		return thingyA_const_fat_id(container, container.many_many_get_D(id));
+	}
+	DCON_RELEASE_INLINE thingyA_const_fat_id many_many_const_fat_id::get_E() const noexcept {
+		return thingyA_const_fat_id(container, container.many_many_get_E(id));
+	}
+	DCON_RELEASE_INLINE thingyA_const_fat_id many_many_const_fat_id::get_F() const noexcept {
+		return thingyA_const_fat_id(container, container.many_many_get_F(id));
+	}
+	DCON_RELEASE_INLINE thingyA_const_fat_id many_many_const_fat_id::get_ignore() const noexcept {
+		return thingyA_const_fat_id(container, container.many_many_get_ignore(id));
 	}
 	
 }

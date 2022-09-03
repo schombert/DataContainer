@@ -850,8 +850,8 @@ basic_builder& make_relation_pk_getters_setters(basic_builder& o, std::string co
 
 	o + "void @rel@_set_@prop@(@rel@_id id, @prop_type@_id value) noexcept" + block{
 		o + "if(bool(value))" + block{
-			o + "delete_@rel@( @rel@_id(@rel@_id::value_base_t(value.index())) );"
-			+ "internal_move_relationship_@rel@(id, @rel@_id(@rel@_id::value_base_t(value.index())) );";
+			o + "delete_@rel@( @rel@_id(@rel@_id::value_base_t(value.index())) );";
+			o + "internal_move_relationship_@rel@(id, @rel@_id(@rel@_id::value_base_t(value.index())) );";
 		} + append{"else"} + block{
 			o + "delete_@rel@(id);";
 		};
@@ -934,6 +934,7 @@ basic_builder& make_relation_unique_non_pk_getters_setters(basic_builder& o, std
 			};
 			o + "@obj@.m_link_back_@prop@.vptr()[value.index()] = id;";
 		};
+		o + "@obj@.m_@prop@.vptr()[id.index()] = value";
 	};
 
 	o + "bool @obj@_try_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
@@ -946,6 +947,7 @@ basic_builder& make_relation_unique_non_pk_getters_setters(basic_builder& o, std
 		o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()]; bool(old_value))" + block{
 				o + "@obj@.m_link_back_@prop@.vptr()[old_value.index()] = @obj@_id();";
 		};
+		o + "@obj@.m_@prop@.vptr()[id.index()] = value";
 		o + "return true;";
 	};
 
@@ -2228,10 +2230,9 @@ basic_builder& make_relation_try_create(basic_builder& o, relationship_object_de
 	o + "@obj@_id try_create_@obj@(@params@)" + block{
 		for(auto& iob : cob.indexed_objects) {
 			o + substitute{ "prop", iob.property_name };
-			o + "if(!bool(@prop@_p)) return @obj@_id();";
 			if(cob.primary_key != iob) {
 				if(iob.index == index_type::at_most_one) {
-					o + "if(bool(@obj@.m_link_back_@prop@.vptr()[@prop@_p.index()])) return @obj@_id();";
+					o + "if(bool(@prop@_p) && bool(@obj@.m_link_back_@prop@.vptr()[@prop@_p.index()])) return @obj@_id();";
 				}
 			} else {
 				o + "if(@obj@_is_valid(@obj@_id(@obj@_id::value_base_t(@prop@_p.index())))) return @obj@_id();";
@@ -3169,11 +3170,7 @@ basic_builder& make_relation_unique_non_pk_join_getters_setters(basic_builder& o
 	if(ptype == property_type::bitfield) {
 		if(make_getter) {
 			o + "bool @obj@_get_@prop@_from_@rel@(@obj@_id id) const" + block{
-				o + "if(auto ref_id = @rel@.m_link_back_@as_name@.vptr()[id.index()]; bool(ref_id))" + block{
-					o + "return @rel@_get_@prop@(ref_id);";
-				} +append{ "else" } +block{
-					o + "return false;";
-				};
+				o + "return @rel@_get_@prop@(@rel@.m_link_back_@as_name@.vptr()[id.index()]);";
 			};
 
 			o + "#ifndef DCON_NO_VE";
@@ -3205,11 +3202,7 @@ basic_builder& make_relation_unique_non_pk_join_getters_setters(basic_builder& o
 	} else if(ptype == property_type::vectorizable) {
 		if(make_getter) {
 			o + "@type@ @obj@_get_@prop@_from_@rel@(@obj@_id id) const" + block{
-				o + "if(auto ref_id = @rel@.m_link_back_@as_name@.vptr()[id.index()]; bool(ref_id))" + block{
-					o + "return @rel@_get_@prop@(ref_id);";
-				} +append{ "else" } +block{
-					o + "return @type@{};";
-				};
+				o + "return @rel@_get_@prop@(@rel@.m_link_back_@as_name@.vptr()[id.index()]);";
 			};
 
 			o + "#ifndef DCON_NO_VE";
@@ -3238,11 +3231,7 @@ basic_builder& make_relation_unique_non_pk_join_getters_setters(basic_builder& o
 	} else if(ptype == property_type::array_bitfield) {
 		if(make_getter) {
 			o + "bool @obj@_get_@prop@_from_@rel@(@obj@_id id, @i_type@ i) const" + block{
-				o + "if(auto ref_id = @rel@.m_link_back_@as_name@.vptr()[id.index()]; bool(ref_id))" + block{
-					o + "return @rel@_get_@prop@(ref_id, i);";
-				} +append{ "else" } +block{
-					o + "return false;";
-				};
+				o + "return @rel@_get_@prop@(@rel@.m_link_back_@as_name@.vptr()[id.index()], i);";
 			};
 
 			o + "#ifndef DCON_NO_VE";
@@ -3270,11 +3259,7 @@ basic_builder& make_relation_unique_non_pk_join_getters_setters(basic_builder& o
 	} else if(ptype == property_type::array_vectorizable) {
 		if(make_getter) {
 			o + "@type@ @obj@_get_@prop@_from_@rel@(@obj@_id id, @i_type@ i) const" + block{
-				o + "if(auto ref_id = @rel@.m_link_back_@as_name@.vptr()[id.index()]; bool(ref_id))" + block{
-					o + "return @rel@_get_@prop@(ref_id, i);";
-				} +append{ "else" } +block{
-					o + "return @type@{};";
-				};
+				o + "return @rel@_get_@prop@(@rel@.m_link_back_@as_name@.vptr()[id.index()], i);";
 			};
 
 			o + "#ifndef DCON_NO_VE";
@@ -3890,8 +3875,11 @@ basic_builder& make_fat_id(basic_builder& o, relationship_object_def const& obj,
 					covered_by_ck = covered_by_ck || index.property_name == i.property_name;
 				}
 			}
-			if(!covered_by_ck)
+			if(!covered_by_ck) {
 				o + "DCON_RELEASE_INLINE void set_@prop@(@prtype@ val) const noexcept;";
+				if(i.index == index_type::at_most_one)
+					o + "DCON_RELEASE_INLINE bool try_set_@prop@(@prtype@ val) const noexcept;";
+			}
 			if(i.index == index_type::at_most_one) {
 			} else if(i.index == index_type::many) {
 			} else if(i.index == index_type::none) {
@@ -4368,6 +4356,11 @@ basic_builder& make_fat_id_impl(basic_builder& o, relationship_object_def const&
 				o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@(@prtype@ val) const noexcept" + block{
 						o + "container.@obj@_set_@prop@(id, val);";
 				};
+				if(i.index == index_type::at_most_one) {
+					o + "DCON_RELEASE_INLINE bool @obj@_fat_id::try_set_@prop@(@prtype@ val) const noexcept" + block{
+							o + "return container.@obj@_try_set_@prop@(id, val);";
+					};
+				}
 			}
 			if(i.index == index_type::at_most_one) {
 			} else if(i.index == index_type::many) {

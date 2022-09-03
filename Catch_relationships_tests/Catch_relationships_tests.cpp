@@ -25,6 +25,45 @@ TEST_CASE("double relation test", "[relationships_tests]") {
 	REQUIRE(ptr->relate_same_size() == 2);
 	REQUIRE(r1.get_left() == o1);
 	REQUIRE(r1.get_right() == o2);
+
+
+	auto o3 = ptr->create_thingyA();
+	auto o4 = ptr->create_thingyA();
+	auto o5 = ptr->create_thingyA();
+	auto o6 = ptr->create_thingyA();
+	auto o7 = ptr->create_thingyA();
+	auto o8 = ptr->create_thingyA();
+
+	REQUIRE(bool(ptr->try_create_relate_same(o2, o1)));
+	REQUIRE(bool(ptr->try_create_relate_same(o3, o3)));
+	auto r4 = fatten(*ptr, ptr->try_create_relate_same(o4, o2));
+	REQUIRE(bool(r4));
+	REQUIRE(bool(ptr->try_create_relate_same(o5, o2)));
+	REQUIRE(bool(ptr->try_create_relate_same(o6, o4)));
+	auto r2 = fatten(*ptr, ptr->try_create_relate_same(o7, o8));
+	REQUIRE(bool(r2));
+	auto r3 = fatten(*ptr, ptr->try_create_relate_same(o8, o5));
+	REQUIRE(bool(r3));
+
+	REQUIRE(!bool(ptr->try_create_relate_same(o4, o4)));
+
+	REQUIRE(r4.get_right() == o2);
+
+	REQUIRE(r4 == ptr->force_create_relate_same(o4, o4));
+
+	REQUIRE(r4.get_right() == o4);
+
+	REQUIRE(ptr->get_relate_same_by_joint(o4, o4) == r4);
+	REQUIRE(ptr->get_relate_same_by_joint(o7, o8) == r2);
+	REQUIRE(ptr->get_relate_same_by_joint(o8, o5) == r3);
+
+	ptr->delete_thingyA(o4);
+	REQUIRE(ptr->get_relate_same_by_joint(o4, o5) == r4);
+	REQUIRE(ptr->get_relate_same_by_joint(o8, o5) == dcon::relate_same_id());
+	REQUIRE(ptr->get_relate_same_by_joint(o4, o4) == dcon::relate_same_id());
+
+	ptr->delete_relate_same(r2);
+	REQUIRE(ptr->get_relate_same_by_joint(o7, o8) == dcon::relate_same_id());
 }
 
 TEST_CASE("array pool index storage", "[relationships_tests]") {
@@ -376,4 +415,37 @@ TEST_CASE("list index storage", "[relationships_tests]") {
 		REQUIRE(foundvals[0]);
 		REQUIRE(found_count == 1);
 	}
+}
+
+TEST_CASE("many many relation test", "[relationships_tests]") {
+
+	auto ptr = std::make_unique< dcon::data_container >();
+	auto o1 = fatten(*ptr, ptr->create_thingyA());
+	auto o2 = fatten(*ptr, ptr->create_thingyA());
+	auto o3 = fatten(*ptr, ptr->create_thingyA());
+
+	auto r1 = fatten(*ptr, ptr->try_create_many_many(o1, o2, o1, o3, o3, o2, o1));
+	auto r2 = fatten(*ptr, ptr->try_create_many_many(o2, o2, o3, o3, o3, o2, o2));
+	auto r3 = fatten(*ptr, ptr->try_create_many_many(o1, o2, o1, o3, o1, o2, o1));
+	auto r4 = fatten(*ptr, ptr->try_create_many_many(o1, o2, o1, o3, o3, o3, o1));
+
+	REQUIRE(bool(r1));
+	REQUIRE(bool(r2));
+	REQUIRE(bool(r3));
+	REQUIRE(bool(r4));
+
+	REQUIRE(ptr->get_many_many_by_joint(o2, o2, o3, o3, o3, o2) == r2);
+	REQUIRE(ptr->get_many_many_by_joint(o1, o2, o3, o3, o3, o1) == dcon::many_many_id());
+
+	REQUIRE(ptr->get_many_many_by_joint(o1, o2, o1, o3, o1, o2) == r3);
+	REQUIRE(false == bool(ptr->try_create_many_many(o1, o2, o1, o3, o1, o2, o3)));
+
+	auto r5 = fatten(*ptr, ptr->force_create_many_many(o1, o2, o1, o3, o1, o2, o3));
+
+	REQUIRE(bool(r5));
+
+	REQUIRE(r3.is_valid() == false);
+	REQUIRE(ptr->get_many_many_by_joint(o1, o2, o1, o3, o1, o2) == r5);
+
+	REQUIRE(r5.get_ignore() == o3);
 }

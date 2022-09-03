@@ -71,3 +71,57 @@ relationship{
 		index_storage{list}
 	}
 }
+
+relationship{
+	name{many_many}
+
+	storage_type{erasable}
+	size{200}
+
+	link{
+		object{thingyA}
+		name{A}
+		type{unindexed}
+	}
+	link{
+		object{thingyA}
+		name{B}
+		type{unindexed}
+	}
+	link{
+		object{thingyA}
+		name{C}
+		type{unindexed}
+	}
+	link{
+		object{thingyA}
+		name{D}
+		type{unindexed}
+	}
+	link{
+		object{thingyA}
+		name{E}
+		type{unindexed}
+	}
+	link{
+		object{thingyA}
+		name{F}
+		type{unindexed}
+	}
+	link{
+		object{thingyA}
+		name{ignore}
+		type{unindexed}
+	}
+
+
+	composite_key{
+		name{joint}
+		index{A}
+		index{B}
+		index{C}
+		index{D}
+		index{E}
+		index{F}
+	}
+}
