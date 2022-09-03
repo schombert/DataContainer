@@ -65,14 +65,15 @@ namespace dcon {
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
 	
-		uint16_t value;
+		uint16_t value = 0;
 	
+		constexpr thingyA_id() noexcept = default;
 		explicit constexpr thingyA_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr thingyA_id(thingyA_id const& v) noexcept = default;
 		constexpr thingyA_id(thingyA_id&& v) noexcept = default;
-		constexpr thingyA_id() noexcept : value(uint16_t(0)) {}
 	
-		thingyA_id& operator=(thingyA_id v) noexcept { value = v.value; return *this; }
+		thingyA_id& operator=(thingyA_id const& v) noexcept = default;
+		thingyA_id& operator=(thingyA_id&& v) noexcept = default;
 		constexpr bool operator==(thingyA_id v) const noexcept { return value == v.value; }
 		constexpr bool operator!=(thingyA_id v) const noexcept { return value != v.value; }
 		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
@@ -97,14 +98,15 @@ namespace dcon {
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
 	
-		uint16_t value;
+		uint16_t value = 0;
 	
+		constexpr thingyB_id() noexcept = default;
 		explicit constexpr thingyB_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr thingyB_id(thingyB_id const& v) noexcept = default;
 		constexpr thingyB_id(thingyB_id&& v) noexcept = default;
-		constexpr thingyB_id() noexcept : value(uint16_t(0)) {}
 	
-		thingyB_id& operator=(thingyB_id v) noexcept { value = v.value; return *this; }
+		thingyB_id& operator=(thingyB_id const& v) noexcept = default;
+		thingyB_id& operator=(thingyB_id&& v) noexcept = default;
 		constexpr bool operator==(thingyB_id v) const noexcept { return value == v.value; }
 		constexpr bool operator!=(thingyB_id v) const noexcept { return value != v.value; }
 		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
@@ -129,14 +131,15 @@ namespace dcon {
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
 	
-		uint16_t value;
+		uint16_t value = 0;
 	
+		constexpr relate_same_id() noexcept = default;
 		explicit constexpr relate_same_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr relate_same_id(relate_same_id const& v) noexcept = default;
 		constexpr relate_same_id(relate_same_id&& v) noexcept = default;
-		constexpr relate_same_id() noexcept : value(uint16_t(0)) {}
 	
-		relate_same_id& operator=(relate_same_id v) noexcept { value = v.value; return *this; }
+		relate_same_id& operator=(relate_same_id const& v) noexcept = default;
+		relate_same_id& operator=(relate_same_id&& v) noexcept = default;
 		constexpr bool operator==(relate_same_id v) const noexcept { return value == v.value; }
 		constexpr bool operator!=(relate_same_id v) const noexcept { return value != v.value; }
 		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
@@ -161,14 +164,15 @@ namespace dcon {
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
 	
-		uint16_t value;
+		uint16_t value = 0;
 	
+		constexpr relate_in_array_id() noexcept = default;
 		explicit constexpr relate_in_array_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr relate_in_array_id(relate_in_array_id const& v) noexcept = default;
 		constexpr relate_in_array_id(relate_in_array_id&& v) noexcept = default;
-		constexpr relate_in_array_id() noexcept : value(uint16_t(0)) {}
 	
-		relate_in_array_id& operator=(relate_in_array_id v) noexcept { value = v.value; return *this; }
+		relate_in_array_id& operator=(relate_in_array_id const& v) noexcept = default;
+		relate_in_array_id& operator=(relate_in_array_id&& v) noexcept = default;
 		constexpr bool operator==(relate_in_array_id v) const noexcept { return value == v.value; }
 		constexpr bool operator!=(relate_in_array_id v) const noexcept { return value != v.value; }
 		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
@@ -193,14 +197,15 @@ namespace dcon {
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
 	
-		uint16_t value;
+		uint16_t value = 0;
 	
+		constexpr relate_in_list_id() noexcept = default;
 		explicit constexpr relate_in_list_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr relate_in_list_id(relate_in_list_id const& v) noexcept = default;
 		constexpr relate_in_list_id(relate_in_list_id&& v) noexcept = default;
-		constexpr relate_in_list_id() noexcept : value(uint16_t(0)) {}
 	
-		relate_in_list_id& operator=(relate_in_list_id v) noexcept { value = v.value; return *this; }
+		relate_in_list_id& operator=(relate_in_list_id const& v) noexcept = default;
+		relate_in_list_id& operator=(relate_in_list_id&& v) noexcept = default;
 		constexpr bool operator==(relate_in_list_id v) const noexcept { return value == v.value; }
 		constexpr bool operator!=(relate_in_list_id v) const noexcept { return value != v.value; }
 		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
@@ -250,6 +255,9 @@ namespace ve {
 
 #endif
 namespace dcon {
+	namespace detail {
+	}
+
 	class data_container;
 
 	namespace internal {
@@ -268,6 +276,7 @@ namespace dcon {
 			m_some_value;
 			
 			uint32_t size_used = 0;
+
 
 			public:
 			friend class data_container;
@@ -301,6 +310,7 @@ namespace dcon {
 			thingyB_id first_free = thingyB_id();
 			uint32_t size_used = 0;
 
+
 			public:
 			thingyB_class() {
 				for(int32_t i = 1200 - 1; i >= 0; --i) {
@@ -327,6 +337,7 @@ namespace dcon {
 			
 			uint32_t size_used = 0;
 
+
 			public:
 			friend class data_container;
 		};
@@ -334,14 +345,14 @@ namespace dcon {
 		class alignas(64) relate_in_array_class {
 			private:
 			//
-			// storage space for right of type thingyA_id
+			// storage space for right of type thingyB_id
 			//
 			struct alignas(64) dtype_right {
-				uint8_t padding[(63 + sizeof(thingyA_id)) & ~63ui64];
-				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(1200))];
+				uint8_t padding[(63 + sizeof(thingyB_id)) & ~63ui64];
+				thingyB_id values[(sizeof(thingyB_id) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(thingyB_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyB_id)) - 1ui32) : uint32_t(1200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(1200))); }
+				dtype_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyB_id) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(thingyB_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyB_id)) - 1ui32) : uint32_t(1200))); }
 			}
 			m_right;
 			
@@ -356,8 +367,9 @@ namespace dcon {
 			}
 			m_array_right;
 			
-			dcon::stable_variable_vector_storage_mk_2<relate_in_array_id, 16, 2400 > right_storage;
+			dcon::stable_variable_vector_storage_mk_2<relate_in_array_id, 8, 2400 > right_storage;
 			uint32_t size_used = 0;
+
 
 			public:
 			friend class data_container;
@@ -366,14 +378,14 @@ namespace dcon {
 		class alignas(64) relate_in_list_class {
 			private:
 			//
-			// storage space for right of type thingyA_id
+			// storage space for right of type thingyB_id
 			//
 			struct alignas(64) dtype_right {
-				uint8_t padding[(63 + sizeof(thingyA_id)) & ~63ui64];
-				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(1200))];
+				uint8_t padding[(63 + sizeof(thingyB_id)) & ~63ui64];
+				thingyB_id values[(sizeof(thingyB_id) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(thingyB_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyB_id)) - 1ui32) : uint32_t(1200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(1200))); }
+				dtype_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyB_id) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(thingyB_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyB_id)) - 1ui32) : uint32_t(1200))); }
 			}
 			m_right;
 			
@@ -401,6 +413,7 @@ namespace dcon {
 			m_head_back_right;
 			
 			uint32_t size_used = 0;
+
 
 			public:
 			friend class data_container;
@@ -653,24 +666,44 @@ namespace dcon {
 			}
 		}
 		
+		DCON_RELEASE_INLINE relate_in_array_id thingyA_get_relate_in_array(thingyA_id id) const noexcept {
+			return relate_in_array_id(relate_in_array_id::value_base_t(id.index()));
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE ve::contiguous_tags<relate_in_array_id> thingyA_get_relate_in_array(ve::contiguous_tags<thingyA_id> id) const noexcept {
+			return ve::contiguous_tags<relate_in_array_id>(id.value);
+		}
+		DCON_RELEASE_INLINE ve::partial_contiguous_tags<relate_in_array_id> thingyA_get_relate_in_array(ve::partial_contiguous_tags<thingyA_id> id) const noexcept {
+			return ve::partial_contiguous_tags<relate_in_array_id>(id.value, id.subcount);
+		}
+		DCON_RELEASE_INLINE ve::tagged_vector<relate_in_array_id> thingyA_get_relate_in_array(ve::tagged_vector<thingyA_id> id) const noexcept {
+			return ve::tagged_vector<relate_in_array_id>(id, std::true_type{});
+		}
+		#endif
+		DCON_RELEASE_INLINE void thingyA_remove_relate_in_array(thingyA_id id) noexcept {
+			if(relate_in_array_is_valid(relate_in_array_id(relate_in_array_id::value_base_t(id.index())))) {
+				delete_relate_in_array(relate_in_array_id(relate_in_array_id::value_base_t(id.index())));
+			}
+		}
+		
 		//
 		// many key getters and setters for relate_in_array: right
 		//
-		DCON_RELEASE_INLINE thingyA_id relate_in_array_get_right(relate_in_array_id id) const noexcept {
+		DCON_RELEASE_INLINE thingyB_id relate_in_array_get_right(relate_in_array_id id) const noexcept {
 			return relate_in_array.m_right.vptr()[id.index()];
 		}
 		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> relate_in_array_get_right(ve::contiguous_tags<relate_in_array_id> id) const noexcept {
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyB_id> relate_in_array_get_right(ve::contiguous_tags<relate_in_array_id> id) const noexcept {
 			return ve::load(id, relate_in_array.m_right.vptr());
 		}
-		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> relate_in_array_get_right(ve::partial_contiguous_tags<relate_in_array_id> id) const noexcept {
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyB_id> relate_in_array_get_right(ve::partial_contiguous_tags<relate_in_array_id> id) const noexcept {
 			return ve::load(id, relate_in_array.m_right.vptr());
 		}
-		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> relate_in_array_get_right(ve::tagged_vector<relate_in_array_id> id) const noexcept {
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyB_id> relate_in_array_get_right(ve::tagged_vector<relate_in_array_id> id) const noexcept {
 			return ve::load(id, relate_in_array.m_right.vptr());
 		}
 		#endif
-		void relate_in_array_set_right(relate_in_array_id id, thingyA_id value) noexcept {
+		void relate_in_array_set_right(relate_in_array_id id, thingyB_id value) noexcept {
 			if(auto old_value = relate_in_array.m_right.vptr()[id.index()]; bool(old_value)) {
 				auto& vref = relate_in_array.m_array_right.vptr()[old_value.index()];
 				dcon::remove_unique_item(relate_in_array.right_storage, vref, id);
@@ -682,13 +715,13 @@ namespace dcon {
 		}
 		
 		template<typename T>
-		DCON_RELEASE_INLINE void thingyA_for_each_relate_in_array_as_right(thingyA_id id, T&& func) const {
+		DCON_RELEASE_INLINE void thingyB_for_each_relate_in_array_as_right(thingyB_id id, T&& func) const {
 			if(bool(id)) {
 				auto vrange = dcon::get_range(relate_in_array.right_storage, relate_in_array.m_array_right.vptr()[id.index()]);
 				std::for_each(vrange.first, vrange.second, func);
 			}
 		}
-		DCON_RELEASE_INLINE std::pair<relate_in_array_id const*, relate_in_array_id const*> thingyA_range_of_relate_in_array_as_right(thingyA_id id) const {
+		DCON_RELEASE_INLINE std::pair<relate_in_array_id const*, relate_in_array_id const*> thingyB_range_of_relate_in_array_as_right(thingyB_id id) const {
 			if(bool(id)) {
 				auto vrange = dcon::get_range(relate_in_array.right_storage, relate_in_array.m_array_right.vptr()[id.index()]);
 				return std::pair<relate_in_array_id const*, relate_in_array_id const*>(vrange.first, vrange.second);
@@ -696,8 +729,29 @@ namespace dcon {
 				return std::pair<relate_in_array_id const*, relate_in_array_id const*>(nullptr, nullptr);
 			}
 		}
-		void thingyA_remove_all_relate_in_array_as_right(thingyA_id id) noexcept {
-			auto rng = thingyA_range_of_relate_in_array_as_right(id);
+		void thingyB_remove_all_relate_in_array_as_right(thingyB_id id) noexcept {
+			auto rng = thingyB_range_of_relate_in_array_as_right(id);
+			dcon::local_vector<relate_in_array_id> temp(rng.first, rng.second);
+			std::for_each(temp.begin(), temp.end(), [t = this](relate_in_array_id i) { t->delete_relate_in_array(i); });
+		}
+		
+		template<typename T>
+		DCON_RELEASE_INLINE void thingyB_for_each_relate_in_array(thingyB_id id, T&& func) const {
+			if(bool(id)) {
+				auto vrange = dcon::get_range(relate_in_array.right_storage, relate_in_array.m_array_right.vptr()[id.index()]);
+				std::for_each(vrange.first, vrange.second, func);
+			}
+		}
+		DCON_RELEASE_INLINE std::pair<relate_in_array_id const*, relate_in_array_id const*> thingyB_range_of_relate_in_array(thingyB_id id) const {
+			if(bool(id)) {
+				auto vrange = dcon::get_range(relate_in_array.right_storage, relate_in_array.m_array_right.vptr()[id.index()]);
+				return std::pair<relate_in_array_id const*, relate_in_array_id const*>(vrange.first, vrange.second);
+			} else {
+				return std::pair<relate_in_array_id const*, relate_in_array_id const*>(nullptr, nullptr);
+			}
+		}
+		void thingyB_remove_all_relate_in_array(thingyB_id id) noexcept {
+			auto rng = thingyB_range_of_relate_in_array_as_right(id);
 			dcon::local_vector<relate_in_array_id> temp(rng.first, rng.second);
 			std::for_each(temp.begin(), temp.end(), [t = this](relate_in_array_id i) { t->delete_relate_in_array(i); });
 		}
@@ -757,24 +811,44 @@ namespace dcon {
 			}
 		}
 		
+		DCON_RELEASE_INLINE relate_in_list_id thingyA_get_relate_in_list(thingyA_id id) const noexcept {
+			return relate_in_list_id(relate_in_list_id::value_base_t(id.index()));
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE ve::contiguous_tags<relate_in_list_id> thingyA_get_relate_in_list(ve::contiguous_tags<thingyA_id> id) const noexcept {
+			return ve::contiguous_tags<relate_in_list_id>(id.value);
+		}
+		DCON_RELEASE_INLINE ve::partial_contiguous_tags<relate_in_list_id> thingyA_get_relate_in_list(ve::partial_contiguous_tags<thingyA_id> id) const noexcept {
+			return ve::partial_contiguous_tags<relate_in_list_id>(id.value, id.subcount);
+		}
+		DCON_RELEASE_INLINE ve::tagged_vector<relate_in_list_id> thingyA_get_relate_in_list(ve::tagged_vector<thingyA_id> id) const noexcept {
+			return ve::tagged_vector<relate_in_list_id>(id, std::true_type{});
+		}
+		#endif
+		DCON_RELEASE_INLINE void thingyA_remove_relate_in_list(thingyA_id id) noexcept {
+			if(relate_in_list_is_valid(relate_in_list_id(relate_in_list_id::value_base_t(id.index())))) {
+				delete_relate_in_list(relate_in_list_id(relate_in_list_id::value_base_t(id.index())));
+			}
+		}
+		
 		//
 		// many key getters and setters for relate_in_list: right
 		//
-		DCON_RELEASE_INLINE thingyA_id relate_in_list_get_right(relate_in_list_id id) const noexcept {
+		DCON_RELEASE_INLINE thingyB_id relate_in_list_get_right(relate_in_list_id id) const noexcept {
 			return relate_in_list.m_right.vptr()[id.index()];
 		}
 		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> relate_in_list_get_right(ve::contiguous_tags<relate_in_list_id> id) const noexcept {
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyB_id> relate_in_list_get_right(ve::contiguous_tags<relate_in_list_id> id) const noexcept {
 			return ve::load(id, relate_in_list.m_right.vptr());
 		}
-		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> relate_in_list_get_right(ve::partial_contiguous_tags<relate_in_list_id> id) const noexcept {
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyB_id> relate_in_list_get_right(ve::partial_contiguous_tags<relate_in_list_id> id) const noexcept {
 			return ve::load(id, relate_in_list.m_right.vptr());
 		}
-		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> relate_in_list_get_right(ve::tagged_vector<relate_in_list_id> id) const noexcept {
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyB_id> relate_in_list_get_right(ve::tagged_vector<relate_in_list_id> id) const noexcept {
 			return ve::load(id, relate_in_list.m_right.vptr());
 		}
 		#endif
-		void relate_in_list_set_right(relate_in_list_id id, thingyA_id value) noexcept {
+		void relate_in_list_set_right(relate_in_list_id id, thingyB_id value) noexcept {
 			if(auto old_value = relate_in_list.m_right.vptr()[id.index()]; bool(old_value)) {
 				if(auto old_left = relate_in_list.m_link_right.vptr()[id.index()].left; bool(old_left)) {
 					relate_in_list.m_link_right.vptr()[old_left.index()].right = relate_in_list.m_link_right.vptr()[id.index()].right;
@@ -809,16 +883,30 @@ namespace dcon {
 		}
 		
 		template<typename T>
-		DCON_RELEASE_INLINE void thingyA_for_each_relate_in_list_as_right(thingyA_id id, T&& func) const {
+		DCON_RELEASE_INLINE void thingyB_for_each_relate_in_list_as_right(thingyB_id id, T&& func) const {
 			if(bool(id)) {
 				for(auto list_pos = relate_in_list.m_head_back_right.vptr()[id.index()]; bool(list_pos); list_pos = relate_in_list.m_link_right.vptr()[list_pos.index()].right) {
 					func(list_pos);
 				}
 			}
 		}
-		void thingyA_remove_all_relate_in_list_as_right(thingyA_id id) noexcept {
+		void thingyB_remove_all_relate_in_list_as_right(thingyB_id id) noexcept {
 			dcon::local_vector<relate_in_list_id> temp;
-			thingyA_for_each_relate_in_list_as_right(id, [&](relate_in_list_id j) { temp.push_back(j); });
+			thingyB_for_each_relate_in_list_as_right(id, [&](relate_in_list_id j) { temp.push_back(j); });
+			std::for_each(temp.begin(), temp.end(), [t = this](relate_in_list_id i) { t->delete_relate_in_list(i); });
+		}
+		
+		template<typename T>
+		DCON_RELEASE_INLINE void thingyB_for_each_relate_in_list(thingyB_id id, T&& func) const {
+			if(bool(id)) {
+				for(auto list_pos = relate_in_list.m_head_back_right.vptr()[id.index()]; bool(list_pos); list_pos = relate_in_list.m_link_right.vptr()[list_pos.index()].right) {
+					func(list_pos);
+				}
+			}
+		}
+		void thingyB_remove_all_relate_in_list(thingyB_id id) noexcept {
+			dcon::local_vector<relate_in_list_id> temp;
+			thingyB_for_each_relate_in_list_as_right(id, [&](relate_in_list_id j) { temp.push_back(j); });
 			std::for_each(temp.begin(), temp.end(), [t = this](relate_in_list_id i) { t->delete_relate_in_list(i); });
 		}
 		
@@ -830,10 +918,69 @@ namespace dcon {
 		//
 		// convenience getters and setters that operate via an implcit join
 		//
+		template<typename T>
+		void thingyB_for_each_left_from_relate_in_array(thingyB_id id, T&& func) const {
+			thingyB_for_each_relate_in_array_as_right(id, [&](relate_in_array_id i) {
+				func(relate_in_array_get_left(i));
+			} );
+		}
+		bool thingyB_has_left_from_relate_in_array(thingyB_id id, thingyA_id const& target) const {
+			auto vrange = dcon::get_range(relate_in_array.right_storage, relate_in_array.m_array_right.vptr()[id.index()]);
+			for(auto pos = vrange.first; pos != vrange.second; ++pos) {
+				if(pos->index() == target.index()) return true;
+			}
+			return false;
+		}
+		thingyB_id thingyA_get_right_from_relate_in_array(thingyA_id ref_id) const {
+			return relate_in_array_get_right(relate_in_array_id(relate_in_array_id::value_base_t(ref_id.index())));
+		}
+		#ifndef DCON_NO_VE
+		ve::value_to_vector_type<thingyB_id> thingyA_get_right_from_relate_in_array(ve::contiguous_tags<thingyA_id> ref_id) const {
+			return relate_in_array_get_right(ve::contiguous_tags<relate_in_array_id>(ref_id.value));
+		}
+		ve::value_to_vector_type<thingyB_id> thingyA_get_right_from_relate_in_array(ve::partial_contiguous_tags<thingyA_id> ref_id) const {
+			return relate_in_array_get_right(ve::partial_contiguous_tags<relate_in_array_id>(ref_id.value, ref_id.subcount));
+		}
+		ve::value_to_vector_type<thingyB_id> thingyA_get_right_from_relate_in_array(ve::tagged_vector<thingyA_id> ref_id) const {
+			return relate_in_array_get_right(ve::tagged_vector<relate_in_array_id>(ref_id, std::true_type{}));
+		}
+		#endif
+		void thingyA_set_right_from_relate_in_array(thingyA_id ref_id, thingyB_id val) {
+			relate_in_array_set_right(relate_in_array_id(relate_in_array_id::value_base_t(ref_id.index())), val);
+		}
 		
 		//
 		// convenience getters and setters that operate via an implcit join
 		//
+		template<typename T>
+		void thingyB_for_each_left_from_relate_in_list(thingyB_id id, T&& func) const {
+			thingyB_for_each_relate_in_list_as_right(id, [&](relate_in_list_id i) {
+				func(relate_in_list_get_left(i));
+			} );
+		}
+		bool thingyB_has_left_from_relate_in_list(thingyB_id id, thingyA_id const& target) const {
+			for(auto list_pos = relate_in_list.m_head_back_right.vptr()[id.index()]; bool(list_pos); list_pos = relate_in_list.m_link_right.vptr()[list_pos.index()].right) {
+				if(list_pos.index() == target.index()) return true;
+			}
+			return false;
+		}
+		thingyB_id thingyA_get_right_from_relate_in_list(thingyA_id ref_id) const {
+			return relate_in_list_get_right(relate_in_list_id(relate_in_list_id::value_base_t(ref_id.index())));
+		}
+		#ifndef DCON_NO_VE
+		ve::value_to_vector_type<thingyB_id> thingyA_get_right_from_relate_in_list(ve::contiguous_tags<thingyA_id> ref_id) const {
+			return relate_in_list_get_right(ve::contiguous_tags<relate_in_list_id>(ref_id.value));
+		}
+		ve::value_to_vector_type<thingyB_id> thingyA_get_right_from_relate_in_list(ve::partial_contiguous_tags<thingyA_id> ref_id) const {
+			return relate_in_list_get_right(ve::partial_contiguous_tags<relate_in_list_id>(ref_id.value, ref_id.subcount));
+		}
+		ve::value_to_vector_type<thingyB_id> thingyA_get_right_from_relate_in_list(ve::tagged_vector<thingyA_id> ref_id) const {
+			return relate_in_list_get_right(ve::tagged_vector<relate_in_list_id>(ref_id, std::true_type{}));
+		}
+		#endif
+		void thingyA_set_right_from_relate_in_list(thingyA_id ref_id, thingyB_id val) {
+			relate_in_list_set_right(relate_in_list_id(relate_in_list_id::value_base_t(ref_id.index())), val);
+		}
 		
 		//
 		// container pop_back for thingyA
@@ -845,10 +992,6 @@ namespace dcon {
 			relate_same.size_used = thingyA.size_used - 1;
 			delete_relate_in_array(relate_in_array_id(relate_in_array_id::value_base_t(id_removed.index())));
 			relate_in_array.size_used = thingyA.size_used - 1;
-			delete_relate_in_array(relate_in_array_id(relate_in_array_id::value_base_t(id_removed.index())));
-			relate_in_array.size_used = thingyA.size_used - 1;
-			delete_relate_in_list(relate_in_list_id(relate_in_list_id::value_base_t(id_removed.index())));
-			relate_in_list.size_used = thingyA.size_used - 1;
 			delete_relate_in_list(relate_in_list_id(relate_in_list_id::value_base_t(id_removed.index())));
 			relate_in_list.size_used = thingyA.size_used - 1;
 			thingyA.m_some_value.vptr()[id_removed.index()] = int32_t{};
@@ -867,17 +1010,10 @@ namespace dcon {
 			const uint32_t old_size = thingyA.size_used;
 			if(new_size < old_size) {
 				std::fill_n(thingyA.m_some_value.vptr() + new_size, old_size - new_size, int32_t{});
-				relate_same_resize(new_size);
-				relate_in_array_resize(new_size);
-				relate_in_array_resize(new_size);
-				relate_in_list_resize(new_size);
-				relate_in_list_resize(new_size);
+				relate_same_resize(std::min(new_size, relate_same.size_used));
+				relate_in_array_resize(std::min(new_size, relate_in_array.size_used));
+				relate_in_list_resize(std::min(new_size, relate_in_list.size_used));
 			} else if(new_size > old_size) {
-				relate_same_resize(new_size);
-				relate_in_array_resize(new_size);
-				relate_in_array_resize(new_size);
-				relate_in_list_resize(new_size);
-				relate_in_list_resize(new_size);
 			}
 			thingyA.size_used = new_size;
 		}
@@ -894,8 +1030,6 @@ namespace dcon {
 			#endif
 			relate_same.size_used = thingyA.size_used + 1;
 			relate_in_array.size_used = thingyA.size_used + 1;
-			relate_in_array.size_used = thingyA.size_used + 1;
-			relate_in_list.size_used = thingyA.size_used + 1;
 			relate_in_list.size_used = thingyA.size_used + 1;
 			++thingyA.size_used;
 			return new_id;
@@ -914,12 +1048,6 @@ namespace dcon {
 			delete_relate_in_array(relate_in_array_id(relate_in_array_id::value_base_t(id_removed.index())));
 			internal_move_relationship_relate_in_array(relate_in_array_id(relate_in_array_id::value_base_t(last_id.index())), relate_in_array_id(relate_in_array_id::value_base_t(id_removed.index())));
 			relate_in_array.size_used = thingyA.size_used - 1;
-			delete_relate_in_array(relate_in_array_id(relate_in_array_id::value_base_t(id_removed.index())));
-			internal_move_relationship_relate_in_array(relate_in_array_id(relate_in_array_id::value_base_t(last_id.index())), relate_in_array_id(relate_in_array_id::value_base_t(id_removed.index())));
-			relate_in_array.size_used = thingyA.size_used - 1;
-			delete_relate_in_list(relate_in_list_id(relate_in_list_id::value_base_t(id_removed.index())));
-			internal_move_relationship_relate_in_list(relate_in_list_id(relate_in_list_id::value_base_t(last_id.index())), relate_in_list_id(relate_in_list_id::value_base_t(id_removed.index())));
-			relate_in_list.size_used = thingyA.size_used - 1;
 			delete_relate_in_list(relate_in_list_id(relate_in_list_id::value_base_t(id_removed.index())));
 			internal_move_relationship_relate_in_list(relate_in_list_id(relate_in_list_id::value_base_t(last_id.index())), relate_in_list_id(relate_in_list_id::value_base_t(id_removed.index())));
 			relate_in_list.size_used = thingyA.size_used - 1;
@@ -941,6 +1069,8 @@ namespace dcon {
 			if(int32_t(thingyB.size_used) - 1 == id_removed.index()) {
 				for( ; thingyB.size_used > 0 && thingyB.m__index.vptr()[thingyB.size_used - 1] != thingyB_id(thingyB_id::value_base_t(thingyB.size_used - 1));  --thingyB.size_used) ;
 			}
+			thingyB_remove_all_relate_in_array_as_right(id_removed);
+			thingyB_remove_all_relate_in_list_as_right(id_removed);
 			thingyB.m_some_value.vptr()[id_removed.index()] = int32_t{};
 		}
 		
@@ -984,6 +1114,8 @@ namespace dcon {
 					}
 				}
 				std::fill_n(thingyB.m_some_value.vptr() + new_size, old_size - new_size, int32_t{});
+				relate_in_array_resize(0);
+				relate_in_list_resize(0);
 			} else if(new_size > old_size) {
 				thingyB.first_free = thingyB_id();
 				int32_t i = int32_t(1200 - 1);
@@ -1056,8 +1188,11 @@ namespace dcon {
 		// container try create relationship for relate_same
 		//
 		relate_same_id try_create_relate_same(thingyA_id left_p, thingyA_id right_p) {
+			if(!bool(left_p)) return relate_same_id();
 			if(relate_same_is_valid(relate_same_id(relate_same_id::value_base_t(left_p.index())))) return relate_same_id();
+			if(!bool(right_p)) return relate_same_id();
 			relate_same_id new_id(relate_same_id::value_base_t(left_p.index()));
+			if(relate_same.size_used < uint32_t(left_p.value)) relate_same_resize(uint32_t(left_p.value));
 			relate_same_set_right(new_id, right_p);
 			return new_id;
 		}
@@ -1067,6 +1202,7 @@ namespace dcon {
 		//
 		relate_same_id force_create_relate_same(thingyA_id left_p, thingyA_id right_p) {
 			relate_same_id new_id(relate_same_id::value_base_t(left_p.index()));
+			if(relate_same.size_used < uint32_t(left_p.value)) relate_same_resize(uint32_t(left_p.value));
 			relate_same_set_right(new_id, right_p);
 			return new_id;
 		}
@@ -1082,8 +1218,8 @@ namespace dcon {
 			#endif
 			const uint32_t old_size = relate_in_array.size_used;
 			if(new_size < old_size) {
-				std::fill_n(relate_in_array.m_right.vptr() + 0, old_size, thingyA_id{});
-				std::for_each(relate_in_array.m_array_right.vptr() + 0, relate_in_array.m_array_right.vptr() + 0 + thingyA.size_used, [t = this](dcon::stable_mk_2_tag& i){ t->relate_in_array.right_storage.release(i); });
+				std::fill_n(relate_in_array.m_right.vptr() + 0, old_size, thingyB_id{});
+				std::for_each(relate_in_array.m_array_right.vptr() + 0, relate_in_array.m_array_right.vptr() + 0 + thingyB.size_used, [t = this](dcon::stable_mk_2_tag& i){ t->relate_in_array.right_storage.release(i); });
 			} else if(new_size > old_size) {
 			}
 			relate_in_array.size_used = new_size;
@@ -1093,7 +1229,7 @@ namespace dcon {
 		// container delete for relate_in_array
 		//
 		void delete_relate_in_array(relate_in_array_id id_removed) {
-			relate_in_array_set_right(id_removed, thingyA_id());
+			relate_in_array_set_right(id_removed, thingyB_id());
 		}
 		
 		//
@@ -1102,7 +1238,7 @@ namespace dcon {
 		void pop_back_relate_in_array() {
 			if(relate_in_array.size_used == 0) return;
 			relate_in_array_id id_removed(relate_in_array_id::value_base_t(relate_in_array.size_used - 1));
-			relate_in_array_set_right(id_removed, thingyA_id());
+			relate_in_array_set_right(id_removed, thingyB_id());
 			--relate_in_array.size_used;
 		}
 		
@@ -1114,21 +1250,24 @@ namespace dcon {
 		// container move relationship for relate_in_array
 		//
 		void internal_move_relationship_relate_in_array(relate_in_array_id last_id, relate_in_array_id id_removed) {
-			relate_in_array_set_right(id_removed, thingyA_id());
+			relate_in_array_set_right(id_removed, thingyB_id());
 			if(auto tmp = relate_in_array.m_right.vptr()[last_id.index()]; bool(tmp)) {
 				dcon::replace_unique_item(relate_in_array.right_storage, relate_in_array.m_array_right.vptr()[tmp.index()], last_id, id_removed);
 			}
 			relate_in_array.m_right.vptr()[id_removed.index()] = std::move(relate_in_array.m_right.vptr()[last_id.index()]);
-			relate_in_array.m_right.vptr()[last_id.index()] = thingyA_id();
+			relate_in_array.m_right.vptr()[last_id.index()] = thingyB_id();
 		}
 		
 		public:
 		//
 		// container try create relationship for relate_in_array
 		//
-		relate_in_array_id try_create_relate_in_array(thingyA_id left_p, thingyA_id right_p) {
+		relate_in_array_id try_create_relate_in_array(thingyA_id left_p, thingyB_id right_p) {
+			if(!bool(left_p)) return relate_in_array_id();
 			if(relate_in_array_is_valid(relate_in_array_id(relate_in_array_id::value_base_t(left_p.index())))) return relate_in_array_id();
+			if(!bool(right_p)) return relate_in_array_id();
 			relate_in_array_id new_id(relate_in_array_id::value_base_t(left_p.index()));
+			if(relate_in_array.size_used < uint32_t(left_p.value)) relate_in_array_resize(uint32_t(left_p.value));
 			relate_in_array_set_right(new_id, right_p);
 			return new_id;
 		}
@@ -1136,8 +1275,9 @@ namespace dcon {
 		//
 		// container force create relationship for relate_in_array
 		//
-		relate_in_array_id force_create_relate_in_array(thingyA_id left_p, thingyA_id right_p) {
+		relate_in_array_id force_create_relate_in_array(thingyA_id left_p, thingyB_id right_p) {
 			relate_in_array_id new_id(relate_in_array_id::value_base_t(left_p.index()));
+			if(relate_in_array.size_used < uint32_t(left_p.value)) relate_in_array_resize(uint32_t(left_p.value));
 			relate_in_array_set_right(new_id, right_p);
 			return new_id;
 		}
@@ -1153,9 +1293,9 @@ namespace dcon {
 			#endif
 			const uint32_t old_size = relate_in_list.size_used;
 			if(new_size < old_size) {
-				std::fill_n(relate_in_list.m_right.vptr() + 0, old_size, thingyA_id{});
+				std::fill_n(relate_in_list.m_right.vptr() + 0, old_size, thingyB_id{});
 				std::fill_n(relate_in_list.m_link_right.vptr() + 0, old_size, relate_in_list_id_pair{});
-				std::fill_n(relate_in_list.m_head_back_right.vptr() + 0, thingyA.size_used, relate_in_list_id{});
+				std::fill_n(relate_in_list.m_head_back_right.vptr() + 0, thingyB.size_used, relate_in_list_id{});
 			} else if(new_size > old_size) {
 			}
 			relate_in_list.size_used = new_size;
@@ -1165,7 +1305,7 @@ namespace dcon {
 		// container delete for relate_in_list
 		//
 		void delete_relate_in_list(relate_in_list_id id_removed) {
-			relate_in_list_set_right(id_removed, thingyA_id());
+			relate_in_list_set_right(id_removed, thingyB_id());
 		}
 		
 		//
@@ -1174,7 +1314,7 @@ namespace dcon {
 		void pop_back_relate_in_list() {
 			if(relate_in_list.size_used == 0) return;
 			relate_in_list_id id_removed(relate_in_list_id::value_base_t(relate_in_list.size_used - 1));
-			relate_in_list_set_right(id_removed, thingyA_id());
+			relate_in_list_set_right(id_removed, thingyB_id());
 			--relate_in_list.size_used;
 		}
 		
@@ -1186,7 +1326,7 @@ namespace dcon {
 		// container move relationship for relate_in_list
 		//
 		void internal_move_relationship_relate_in_list(relate_in_list_id last_id, relate_in_list_id id_removed) {
-			relate_in_list_set_right(id_removed, thingyA_id());
+			relate_in_list_set_right(id_removed, thingyB_id());
 			if(bool(relate_in_list.m_right.vptr()[last_id.index()])) {
 				auto tmp = relate_in_list.m_link_right.vptr()[last_id.index()];
 				if(bool(tmp.left)) {
@@ -1203,16 +1343,19 @@ namespace dcon {
 			relate_in_list.m_link_right.vptr()[id_removed.index()] = std::move(relate_in_list.m_link_right.vptr()[last_id.index()]);
 			relate_in_list.m_link_right.vptr()[last_id.index()] = relate_in_list_id_pair();
 			relate_in_list.m_right.vptr()[id_removed.index()] = std::move(relate_in_list.m_right.vptr()[last_id.index()]);
-			relate_in_list.m_right.vptr()[last_id.index()] = thingyA_id();
+			relate_in_list.m_right.vptr()[last_id.index()] = thingyB_id();
 		}
 		
 		public:
 		//
 		// container try create relationship for relate_in_list
 		//
-		relate_in_list_id try_create_relate_in_list(thingyA_id left_p, thingyA_id right_p) {
+		relate_in_list_id try_create_relate_in_list(thingyA_id left_p, thingyB_id right_p) {
+			if(!bool(left_p)) return relate_in_list_id();
 			if(relate_in_list_is_valid(relate_in_list_id(relate_in_list_id::value_base_t(left_p.index())))) return relate_in_list_id();
+			if(!bool(right_p)) return relate_in_list_id();
 			relate_in_list_id new_id(relate_in_list_id::value_base_t(left_p.index()));
+			if(relate_in_list.size_used < uint32_t(left_p.value)) relate_in_list_resize(uint32_t(left_p.value));
 			relate_in_list_set_right(new_id, right_p);
 			return new_id;
 		}
@@ -1220,8 +1363,9 @@ namespace dcon {
 		//
 		// container force create relationship for relate_in_list
 		//
-		relate_in_list_id force_create_relate_in_list(thingyA_id left_p, thingyA_id right_p) {
+		relate_in_list_id force_create_relate_in_list(thingyA_id left_p, thingyB_id right_p) {
 			relate_in_list_id new_id(relate_in_list_id::value_base_t(left_p.index()));
+			if(relate_in_list.size_used < uint32_t(left_p.value)) relate_in_list_resize(uint32_t(left_p.value));
 			relate_in_list_set_right(new_id, right_p);
 			return new_id;
 		}
@@ -1427,7 +1571,7 @@ namespace dcon {
 				if(serialize_selection.relate_in_array_right) {
 					dcon::record_header iheader(0, "uint16_t", "relate_in_array", "right");
 					total_size += iheader.serialize_size();
-					total_size += sizeof(thingyA_id) * relate_in_array.size_used;
+					total_size += sizeof(thingyB_id) * relate_in_array.size_used;
 				}
 				dcon::record_header headerb(0, "$", "relate_in_array", "$index_end");
 				total_size += headerb.serialize_size();
@@ -1439,7 +1583,7 @@ namespace dcon {
 				if(serialize_selection.relate_in_list_right) {
 					dcon::record_header iheader(0, "uint16_t", "relate_in_list", "right");
 					total_size += iheader.serialize_size();
-					total_size += sizeof(thingyA_id) * relate_in_list.size_used;
+					total_size += sizeof(thingyB_id) * relate_in_list.size_used;
 				}
 				dcon::record_header headerb(0, "$", "relate_in_list", "$index_end");
 				total_size += headerb.serialize_size();
@@ -1501,10 +1645,10 @@ namespace dcon {
 				*(reinterpret_cast<uint32_t*>(output_buffer)) = relate_in_array.size_used;
 				output_buffer += sizeof(uint32_t);
 				{
-					dcon::record_header iheader(sizeof(thingyA_id) * relate_in_array.size_used, "uint16_t", "relate_in_array", "right");
+					dcon::record_header iheader(sizeof(thingyB_id) * relate_in_array.size_used, "uint16_t", "relate_in_array", "right");
 					iheader.serialize(output_buffer);
-					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), relate_in_array.m_right.vptr(), sizeof(thingyA_id) * relate_in_array.size_used);
-					output_buffer += sizeof(thingyA_id) * relate_in_array.size_used;
+					std::memcpy(reinterpret_cast<thingyB_id*>(output_buffer), relate_in_array.m_right.vptr(), sizeof(thingyB_id) * relate_in_array.size_used);
+					output_buffer += sizeof(thingyB_id) * relate_in_array.size_used;
 				}
 				dcon::record_header headerb(0, "$", "relate_in_array", "$index_end");
 				headerb.serialize(output_buffer);
@@ -1515,10 +1659,10 @@ namespace dcon {
 				*(reinterpret_cast<uint32_t*>(output_buffer)) = relate_in_list.size_used;
 				output_buffer += sizeof(uint32_t);
 				{
-					dcon::record_header iheader(sizeof(thingyA_id) * relate_in_list.size_used, "uint16_t", "relate_in_list", "right");
+					dcon::record_header iheader(sizeof(thingyB_id) * relate_in_list.size_used, "uint16_t", "relate_in_list", "right");
 					iheader.serialize(output_buffer);
-					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), relate_in_list.m_right.vptr(), sizeof(thingyA_id) * relate_in_list.size_used);
-					output_buffer += sizeof(thingyA_id) * relate_in_list.size_used;
+					std::memcpy(reinterpret_cast<thingyB_id*>(output_buffer), relate_in_list.m_right.vptr(), sizeof(thingyB_id) * relate_in_list.size_used);
+					output_buffer += sizeof(thingyB_id) * relate_in_list.size_used;
 				}
 				dcon::record_header headerb(0, "$", "relate_in_list", "$index_end");
 				headerb.serialize(output_buffer);
@@ -1761,7 +1905,7 @@ namespace dcon {
 							if(serialize_selection.relate_in_array_right == true) {
 								for(uint32_t i = 0; i < relate_in_array.size_used; ++i) {
 									auto tmp = relate_in_array.m_right.vptr()[i];
-									relate_in_array.m_right.vptr()[i] = thingyA_id();
+									relate_in_array.m_right.vptr()[i] = thingyB_id();
 									relate_in_array_set_right(relate_in_array_id(relate_in_array_id::value_base_t(i)), tmp);
 								}
 							}
@@ -1797,7 +1941,7 @@ namespace dcon {
 							if(serialize_selection.relate_in_list_right == true) {
 								for(uint32_t i = 0; i < relate_in_list.size_used; ++i) {
 									auto tmp = relate_in_list.m_right.vptr()[i];
-									relate_in_list.m_right.vptr()[i] = thingyA_id();
+									relate_in_list.m_right.vptr()[i] = thingyB_id();
 									relate_in_list_set_right(relate_in_list_id(relate_in_list_id::value_base_t(i)), tmp);
 								}
 							}
@@ -2044,7 +2188,7 @@ namespace dcon {
 							if(serialize_selection.relate_in_array_right == true) {
 								for(uint32_t i = 0; i < relate_in_array.size_used; ++i) {
 									auto tmp = relate_in_array.m_right.vptr()[i];
-									relate_in_array.m_right.vptr()[i] = thingyA_id();
+									relate_in_array.m_right.vptr()[i] = thingyB_id();
 									relate_in_array_set_right(relate_in_array_id(relate_in_array_id::value_base_t(i)), tmp);
 								}
 							}
@@ -2080,7 +2224,7 @@ namespace dcon {
 							if(serialize_selection.relate_in_list_right == true) {
 								for(uint32_t i = 0; i < relate_in_list.size_used; ++i) {
 									auto tmp = relate_in_list.m_right.vptr()[i];
-									relate_in_list.m_right.vptr()[i] = thingyA_id();
+									relate_in_list.m_right.vptr()[i] = thingyB_id();
 									relate_in_list_set_right(relate_in_list_id(relate_in_list_id::value_base_t(i)), tmp);
 								}
 							}
@@ -2144,15 +2288,14 @@ namespace dcon {
 		DCON_RELEASE_INLINE void remove_relate_same_as_left() const noexcept;
 		DCON_RELEASE_INLINE relate_in_array_fat_id get_relate_in_array_as_left() const noexcept;
 		DCON_RELEASE_INLINE void remove_relate_in_array_as_left() const noexcept;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_relate_in_array_as_right(T&& func) const;
-		DCON_RELEASE_INLINE std::pair<relate_in_array_id const*, relate_in_array_id const*> range_of_relate_in_array_as_right() const;
-		DCON_RELEASE_INLINE void remove_all_relate_in_array_as_right() const noexcept;
+		DCON_RELEASE_INLINE relate_in_array_fat_id get_relate_in_array() const noexcept;
+		DCON_RELEASE_INLINE void remove_relate_in_array() const noexcept;
+		DCON_RELEASE_INLINE thingyB_fat_id get_right_from_relate_in_array() const noexcept;
 		DCON_RELEASE_INLINE relate_in_list_fat_id get_relate_in_list_as_left() const noexcept;
 		DCON_RELEASE_INLINE void remove_relate_in_list_as_left() const noexcept;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_relate_in_list_as_right(T&& func) const;
-		DCON_RELEASE_INLINE void remove_all_relate_in_list_as_right() const noexcept;
+		DCON_RELEASE_INLINE relate_in_list_fat_id get_relate_in_list() const noexcept;
+		DCON_RELEASE_INLINE void remove_relate_in_list() const noexcept;
+		DCON_RELEASE_INLINE thingyB_fat_id get_right_from_relate_in_list() const noexcept;
 	};
 	DCON_RELEASE_INLINE thingyA_fat_id fatten(data_container& c, thingyA_id id) noexcept {
 		return thingyA_fat_id(c, id);
@@ -2209,12 +2352,11 @@ namespace dcon {
 		DCON_RELEASE_INLINE int32_t const& get_some_value() const noexcept;
 		DCON_RELEASE_INLINE relate_same_const_fat_id get_relate_same_as_left() const noexcept;
 		DCON_RELEASE_INLINE relate_in_array_const_fat_id get_relate_in_array_as_left() const noexcept;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_relate_in_array_as_right(T&& func) const;
-		DCON_RELEASE_INLINE std::pair<relate_in_array_id const*, relate_in_array_id const*> range_of_relate_in_array_as_right() const;
+		DCON_RELEASE_INLINE relate_in_array_const_fat_id get_relate_in_array() const noexcept;
+		DCON_RELEASE_INLINE thingyB_const_fat_id get_right_from_relate_in_array() const noexcept;
 		DCON_RELEASE_INLINE relate_in_list_const_fat_id get_relate_in_list_as_left() const noexcept;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_relate_in_list_as_right(T&& func) const;
+		DCON_RELEASE_INLINE relate_in_list_const_fat_id get_relate_in_list() const noexcept;
+		DCON_RELEASE_INLINE thingyB_const_fat_id get_right_from_relate_in_list() const noexcept;
 	};
 	DCON_RELEASE_INLINE bool operator==(thingyA_fat_id const& l, thingyA_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -2264,6 +2406,26 @@ namespace dcon {
 		}
 		DCON_RELEASE_INLINE int32_t& get_some_value() const noexcept;
 		DCON_RELEASE_INLINE void set_some_value(int32_t v) const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_in_array_as_right(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<relate_in_array_id const*, relate_in_array_id const*> range_of_relate_in_array_as_right() const;
+		DCON_RELEASE_INLINE void remove_all_relate_in_array_as_right() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_in_array(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<relate_in_array_id const*, relate_in_array_id const*> range_of_relate_in_array() const;
+		DCON_RELEASE_INLINE void remove_all_relate_in_array() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_left_from_relate_in_array(T&& func) const;
+		DCON_RELEASE_INLINE bool has_left_from_relate_in_array(thingyA_id target) const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_in_list_as_right(T&& func) const;
+		DCON_RELEASE_INLINE void remove_all_relate_in_list_as_right() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_in_list(T&& func) const;
+		DCON_RELEASE_INLINE void remove_all_relate_in_list() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_left_from_relate_in_list(T&& func) const;
+		DCON_RELEASE_INLINE bool has_left_from_relate_in_list(thingyA_id target) const;
 	};
 	DCON_RELEASE_INLINE thingyB_fat_id fatten(data_container& c, thingyB_id id) noexcept {
 		return thingyB_fat_id(c, id);
@@ -2318,6 +2480,22 @@ namespace dcon {
 			return container.thingyB_is_valid(id);
 		}
 		DCON_RELEASE_INLINE int32_t const& get_some_value() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_in_array_as_right(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<relate_in_array_id const*, relate_in_array_id const*> range_of_relate_in_array_as_right() const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_in_array(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<relate_in_array_id const*, relate_in_array_id const*> range_of_relate_in_array() const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_left_from_relate_in_array(T&& func) const;
+		DCON_RELEASE_INLINE bool has_left_from_relate_in_array(thingyA_id target) const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_in_list_as_right(T&& func) const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_in_list(T&& func) const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_left_from_relate_in_list(T&& func) const;
+		DCON_RELEASE_INLINE bool has_left_from_relate_in_list(thingyA_id target) const;
 	};
 	DCON_RELEASE_INLINE bool operator==(thingyB_fat_id const& l, thingyB_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -2473,8 +2651,8 @@ namespace dcon {
 		}
 		DCON_RELEASE_INLINE thingyA_fat_id get_left() const noexcept;
 		DCON_RELEASE_INLINE void set_left(thingyA_id val) const noexcept;
-		DCON_RELEASE_INLINE thingyA_fat_id get_right() const noexcept;
-		DCON_RELEASE_INLINE void set_right(thingyA_id val) const noexcept;
+		DCON_RELEASE_INLINE thingyB_fat_id get_right() const noexcept;
+		DCON_RELEASE_INLINE void set_right(thingyB_id val) const noexcept;
 	};
 	DCON_RELEASE_INLINE relate_in_array_fat_id fatten(data_container& c, relate_in_array_id id) noexcept {
 		return relate_in_array_fat_id(c, id);
@@ -2529,7 +2707,7 @@ namespace dcon {
 			return container.relate_in_array_is_valid(id);
 		}
 		DCON_RELEASE_INLINE thingyA_const_fat_id get_left() const noexcept;
-		DCON_RELEASE_INLINE thingyA_const_fat_id get_right() const noexcept;
+		DCON_RELEASE_INLINE thingyB_const_fat_id get_right() const noexcept;
 	};
 	DCON_RELEASE_INLINE bool operator==(relate_in_array_fat_id const& l, relate_in_array_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -2579,8 +2757,8 @@ namespace dcon {
 		}
 		DCON_RELEASE_INLINE thingyA_fat_id get_left() const noexcept;
 		DCON_RELEASE_INLINE void set_left(thingyA_id val) const noexcept;
-		DCON_RELEASE_INLINE thingyA_fat_id get_right() const noexcept;
-		DCON_RELEASE_INLINE void set_right(thingyA_id val) const noexcept;
+		DCON_RELEASE_INLINE thingyB_fat_id get_right() const noexcept;
+		DCON_RELEASE_INLINE void set_right(thingyB_id val) const noexcept;
 	};
 	DCON_RELEASE_INLINE relate_in_list_fat_id fatten(data_container& c, relate_in_list_id id) noexcept {
 		return relate_in_list_fat_id(c, id);
@@ -2635,7 +2813,7 @@ namespace dcon {
 			return container.relate_in_list_is_valid(id);
 		}
 		DCON_RELEASE_INLINE thingyA_const_fat_id get_left() const noexcept;
-		DCON_RELEASE_INLINE thingyA_const_fat_id get_right() const noexcept;
+		DCON_RELEASE_INLINE thingyB_const_fat_id get_right() const noexcept;
 	};
 	DCON_RELEASE_INLINE bool operator==(relate_in_list_fat_id const& l, relate_in_list_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -2663,15 +2841,14 @@ namespace dcon {
 	DCON_RELEASE_INLINE void thingyA_fat_id::remove_relate_in_array_as_left() const noexcept {
 		container.thingyA_remove_relate_in_array_as_left(id);
 	}
-	template<typename T>
-	DCON_RELEASE_INLINE void thingyA_fat_id::for_each_relate_in_array_as_right(T&& func) const {
-		container.thingyA_for_each_relate_in_array_as_right(id, [&, t = this](relate_in_array_id i){func(fatten(t->container, i));});
+	DCON_RELEASE_INLINE relate_in_array_fat_id thingyA_fat_id::get_relate_in_array() const noexcept {
+		return relate_in_array_fat_id(container, container.thingyA_get_relate_in_array(id));
 	}
-	DCON_RELEASE_INLINE std::pair<relate_in_array_id const*, relate_in_array_id const*> thingyA_fat_id::range_of_relate_in_array_as_right() const {
-		return container.thingyA_range_of_relate_in_array_as_right(id);
+	DCON_RELEASE_INLINE void thingyA_fat_id::remove_relate_in_array() const noexcept {
+		container.thingyA_remove_relate_in_array(id);
 	}
-	DCON_RELEASE_INLINE void thingyA_fat_id::remove_all_relate_in_array_as_right() const noexcept {
-		container.thingyA_remove_all_relate_in_array_as_right(id);
+	DCON_RELEASE_INLINE thingyB_fat_id thingyA_fat_id::get_right_from_relate_in_array() const noexcept {
+		return thingyB_fat_id(container, container.thingyA_get_right_from_relate_in_array(id));
 	}
 	DCON_RELEASE_INLINE relate_in_list_fat_id thingyA_fat_id::get_relate_in_list_as_left() const noexcept {
 		return relate_in_list_fat_id(container, container.thingyA_get_relate_in_list_as_left(id));
@@ -2679,12 +2856,14 @@ namespace dcon {
 	DCON_RELEASE_INLINE void thingyA_fat_id::remove_relate_in_list_as_left() const noexcept {
 		container.thingyA_remove_relate_in_list_as_left(id);
 	}
-	template<typename T>
-	DCON_RELEASE_INLINE void thingyA_fat_id::for_each_relate_in_list_as_right(T&& func) const {
-		container.thingyA_for_each_relate_in_list_as_right(id, [&, t = this](relate_in_list_id i){func(fatten(t->container, i));});
+	DCON_RELEASE_INLINE relate_in_list_fat_id thingyA_fat_id::get_relate_in_list() const noexcept {
+		return relate_in_list_fat_id(container, container.thingyA_get_relate_in_list(id));
 	}
-	DCON_RELEASE_INLINE void thingyA_fat_id::remove_all_relate_in_list_as_right() const noexcept {
-		container.thingyA_remove_all_relate_in_list_as_right(id);
+	DCON_RELEASE_INLINE void thingyA_fat_id::remove_relate_in_list() const noexcept {
+		container.thingyA_remove_relate_in_list(id);
+	}
+	DCON_RELEASE_INLINE thingyB_fat_id thingyA_fat_id::get_right_from_relate_in_list() const noexcept {
+		return thingyB_fat_id(container, container.thingyA_get_right_from_relate_in_list(id));
 	}
 	
 	DCON_RELEASE_INLINE int32_t const& thingyA_const_fat_id::get_some_value() const noexcept { return container.thingyA_get_some_value(id); }
@@ -2694,25 +2873,110 @@ namespace dcon {
 	DCON_RELEASE_INLINE relate_in_array_const_fat_id thingyA_const_fat_id::get_relate_in_array_as_left() const noexcept {
 		return relate_in_array_const_fat_id(container, container.thingyA_get_relate_in_array_as_left(id));
 	}
-	template<typename T>
-	DCON_RELEASE_INLINE void thingyA_const_fat_id::for_each_relate_in_array_as_right(T&& func) const {
-		container.thingyA_for_each_relate_in_array_as_right(id, [&, t = this](relate_in_array_id i){func(fatten(t->container, i));});
+	DCON_RELEASE_INLINE relate_in_array_const_fat_id thingyA_const_fat_id::get_relate_in_array() const noexcept {
+		return relate_in_array_const_fat_id(container, container.thingyA_get_relate_in_array(id));
 	}
-	DCON_RELEASE_INLINE std::pair<relate_in_array_id const*, relate_in_array_id const*> thingyA_const_fat_id::range_of_relate_in_array_as_right() const {
-		return container.thingyA_range_of_relate_in_array_as_right(id);
+	DCON_RELEASE_INLINE thingyB_const_fat_id thingyA_const_fat_id::get_right_from_relate_in_array() const noexcept {
+		return thingyB_const_fat_id(container, container.thingyA_get_right_from_relate_in_array(id));
 	}
 	DCON_RELEASE_INLINE relate_in_list_const_fat_id thingyA_const_fat_id::get_relate_in_list_as_left() const noexcept {
 		return relate_in_list_const_fat_id(container, container.thingyA_get_relate_in_list_as_left(id));
 	}
-	template<typename T>
-	DCON_RELEASE_INLINE void thingyA_const_fat_id::for_each_relate_in_list_as_right(T&& func) const {
-		container.thingyA_for_each_relate_in_list_as_right(id, [&, t = this](relate_in_list_id i){func(fatten(t->container, i));});
+	DCON_RELEASE_INLINE relate_in_list_const_fat_id thingyA_const_fat_id::get_relate_in_list() const noexcept {
+		return relate_in_list_const_fat_id(container, container.thingyA_get_relate_in_list(id));
+	}
+	DCON_RELEASE_INLINE thingyB_const_fat_id thingyA_const_fat_id::get_right_from_relate_in_list() const noexcept {
+		return thingyB_const_fat_id(container, container.thingyA_get_right_from_relate_in_list(id));
 	}
 	
 	DCON_RELEASE_INLINE int32_t& thingyB_fat_id::get_some_value() const noexcept { return container.thingyB_get_some_value(id); }
 	DCON_RELEASE_INLINE void thingyB_fat_id::set_some_value(int32_t v) const noexcept { container.thingyB_set_some_value(id, v); }
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_fat_id::for_each_relate_in_array_as_right(T&& func) const {
+		container.thingyB_for_each_relate_in_array_as_right(id, [&, t = this](relate_in_array_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE std::pair<relate_in_array_id const*, relate_in_array_id const*> thingyB_fat_id::range_of_relate_in_array_as_right() const {
+		return container.thingyB_range_of_relate_in_array_as_right(id);
+	}
+	DCON_RELEASE_INLINE void thingyB_fat_id::remove_all_relate_in_array_as_right() const noexcept {
+		container.thingyB_remove_all_relate_in_array_as_right(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_fat_id::for_each_relate_in_array(T&& func) const {
+		container.thingyB_for_each_relate_in_array(id, [&, t = this](relate_in_array_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE std::pair<relate_in_array_id const*, relate_in_array_id const*> thingyB_fat_id::range_of_relate_in_array() const {
+		return container.thingyB_range_of_relate_in_array(id);
+	}
+	DCON_RELEASE_INLINE void thingyB_fat_id::remove_all_relate_in_array() const noexcept {
+		container.thingyB_remove_all_relate_in_array(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_fat_id::for_each_left_from_relate_in_array(T&& func) const {
+		container.thingyB_for_each_left_from_relate_in_array(id, [&, t = this](thingyA_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE bool thingyB_fat_id::has_left_from_relate_in_array(thingyA_id target) const {
+		return container.thingyB_has_left_from_relate_in_array(id, target);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_fat_id::for_each_relate_in_list_as_right(T&& func) const {
+		container.thingyB_for_each_relate_in_list_as_right(id, [&, t = this](relate_in_list_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE void thingyB_fat_id::remove_all_relate_in_list_as_right() const noexcept {
+		container.thingyB_remove_all_relate_in_list_as_right(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_fat_id::for_each_relate_in_list(T&& func) const {
+		container.thingyB_for_each_relate_in_list(id, [&, t = this](relate_in_list_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE void thingyB_fat_id::remove_all_relate_in_list() const noexcept {
+		container.thingyB_remove_all_relate_in_list(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_fat_id::for_each_left_from_relate_in_list(T&& func) const {
+		container.thingyB_for_each_left_from_relate_in_list(id, [&, t = this](thingyA_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE bool thingyB_fat_id::has_left_from_relate_in_list(thingyA_id target) const {
+		return container.thingyB_has_left_from_relate_in_list(id, target);
+	}
 	
 	DCON_RELEASE_INLINE int32_t const& thingyB_const_fat_id::get_some_value() const noexcept { return container.thingyB_get_some_value(id); }
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_const_fat_id::for_each_relate_in_array_as_right(T&& func) const {
+		container.thingyB_for_each_relate_in_array_as_right(id, [&, t = this](relate_in_array_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE std::pair<relate_in_array_id const*, relate_in_array_id const*> thingyB_const_fat_id::range_of_relate_in_array_as_right() const {
+		return container.thingyB_range_of_relate_in_array_as_right(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_const_fat_id::for_each_relate_in_array(T&& func) const {
+		container.thingyB_for_each_relate_in_array(id, [&, t = this](relate_in_array_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE std::pair<relate_in_array_id const*, relate_in_array_id const*> thingyB_const_fat_id::range_of_relate_in_array() const {
+		return container.thingyB_range_of_relate_in_array(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_const_fat_id::for_each_left_from_relate_in_array(T&& func) const {
+		container.thingyB_for_each_left_from_relate_in_array(id, [&, t = this](thingyA_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE bool thingyB_const_fat_id::has_left_from_relate_in_array(thingyA_id target) const {
+		return container.thingyB_has_left_from_relate_in_array(id, target);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_const_fat_id::for_each_relate_in_list_as_right(T&& func) const {
+		container.thingyB_for_each_relate_in_list_as_right(id, [&, t = this](relate_in_list_id i){func(fatten(t->container, i));});
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_const_fat_id::for_each_relate_in_list(T&& func) const {
+		container.thingyB_for_each_relate_in_list(id, [&, t = this](relate_in_list_id i){func(fatten(t->container, i));});
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_const_fat_id::for_each_left_from_relate_in_list(T&& func) const {
+		container.thingyB_for_each_left_from_relate_in_list(id, [&, t = this](thingyA_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE bool thingyB_const_fat_id::has_left_from_relate_in_list(thingyA_id target) const {
+		return container.thingyB_has_left_from_relate_in_list(id, target);
+	}
 	
 	DCON_RELEASE_INLINE thingyA_fat_id relate_same_fat_id::get_left() const noexcept {
 		return thingyA_fat_id(container, container.relate_same_get_left(id));
@@ -2740,18 +3004,18 @@ namespace dcon {
 	DCON_RELEASE_INLINE void relate_in_array_fat_id::set_left(thingyA_id val) const noexcept {
 		container.relate_in_array_set_left(id, val);
 	}
-	DCON_RELEASE_INLINE thingyA_fat_id relate_in_array_fat_id::get_right() const noexcept {
-		return thingyA_fat_id(container, container.relate_in_array_get_right(id));
+	DCON_RELEASE_INLINE thingyB_fat_id relate_in_array_fat_id::get_right() const noexcept {
+		return thingyB_fat_id(container, container.relate_in_array_get_right(id));
 	}
-	DCON_RELEASE_INLINE void relate_in_array_fat_id::set_right(thingyA_id val) const noexcept {
+	DCON_RELEASE_INLINE void relate_in_array_fat_id::set_right(thingyB_id val) const noexcept {
 		container.relate_in_array_set_right(id, val);
 	}
 	
 	DCON_RELEASE_INLINE thingyA_const_fat_id relate_in_array_const_fat_id::get_left() const noexcept {
 		return thingyA_const_fat_id(container, container.relate_in_array_get_left(id));
 	}
-	DCON_RELEASE_INLINE thingyA_const_fat_id relate_in_array_const_fat_id::get_right() const noexcept {
-		return thingyA_const_fat_id(container, container.relate_in_array_get_right(id));
+	DCON_RELEASE_INLINE thingyB_const_fat_id relate_in_array_const_fat_id::get_right() const noexcept {
+		return thingyB_const_fat_id(container, container.relate_in_array_get_right(id));
 	}
 	
 	DCON_RELEASE_INLINE thingyA_fat_id relate_in_list_fat_id::get_left() const noexcept {
@@ -2760,18 +3024,18 @@ namespace dcon {
 	DCON_RELEASE_INLINE void relate_in_list_fat_id::set_left(thingyA_id val) const noexcept {
 		container.relate_in_list_set_left(id, val);
 	}
-	DCON_RELEASE_INLINE thingyA_fat_id relate_in_list_fat_id::get_right() const noexcept {
-		return thingyA_fat_id(container, container.relate_in_list_get_right(id));
+	DCON_RELEASE_INLINE thingyB_fat_id relate_in_list_fat_id::get_right() const noexcept {
+		return thingyB_fat_id(container, container.relate_in_list_get_right(id));
 	}
-	DCON_RELEASE_INLINE void relate_in_list_fat_id::set_right(thingyA_id val) const noexcept {
+	DCON_RELEASE_INLINE void relate_in_list_fat_id::set_right(thingyB_id val) const noexcept {
 		container.relate_in_list_set_right(id, val);
 	}
 	
 	DCON_RELEASE_INLINE thingyA_const_fat_id relate_in_list_const_fat_id::get_left() const noexcept {
 		return thingyA_const_fat_id(container, container.relate_in_list_get_left(id));
 	}
-	DCON_RELEASE_INLINE thingyA_const_fat_id relate_in_list_const_fat_id::get_right() const noexcept {
-		return thingyA_const_fat_id(container, container.relate_in_list_get_right(id));
+	DCON_RELEASE_INLINE thingyB_const_fat_id relate_in_list_const_fat_id::get_right() const noexcept {
+		return thingyB_const_fat_id(container, container.relate_in_list_get_right(id));
 	}
 	
 }

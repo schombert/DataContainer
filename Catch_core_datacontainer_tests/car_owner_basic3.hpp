@@ -59,14 +59,15 @@ namespace cob3 {
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
 	
-		uint16_t value;
+		uint16_t value = 0;
 	
+		constexpr car_id() noexcept = default;
 		explicit constexpr car_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr car_id(car_id const& v) noexcept = default;
 		constexpr car_id(car_id&& v) noexcept = default;
-		constexpr car_id() noexcept : value(uint16_t(0)) {}
 	
-		car_id& operator=(car_id v) noexcept { value = v.value; return *this; }
+		car_id& operator=(car_id const& v) noexcept = default;
+		car_id& operator=(car_id&& v) noexcept = default;
 		constexpr bool operator==(car_id v) const noexcept { return value == v.value; }
 		constexpr bool operator!=(car_id v) const noexcept { return value != v.value; }
 		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
@@ -91,14 +92,15 @@ namespace cob3 {
 		using value_base_t = uint8_t;
 		using zero_is_null_t = std::true_type;
 	
-		uint8_t value;
+		uint8_t value = 0;
 	
+		constexpr person_id() noexcept = default;
 		explicit constexpr person_id(uint8_t v) noexcept : value(v + 1) {}
 		constexpr person_id(person_id const& v) noexcept = default;
 		constexpr person_id(person_id&& v) noexcept = default;
-		constexpr person_id() noexcept : value(uint8_t(0)) {}
 	
-		person_id& operator=(person_id v) noexcept { value = v.value; return *this; }
+		person_id& operator=(person_id const& v) noexcept = default;
+		person_id& operator=(person_id&& v) noexcept = default;
 		constexpr bool operator==(person_id v) const noexcept { return value == v.value; }
 		constexpr bool operator!=(person_id v) const noexcept { return value != v.value; }
 		explicit constexpr operator bool() const noexcept { return value != uint8_t(0); }
@@ -123,14 +125,15 @@ namespace cob3 {
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
 	
-		uint16_t value;
+		uint16_t value = 0;
 	
+		constexpr car_ownership_id() noexcept = default;
 		explicit constexpr car_ownership_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr car_ownership_id(car_ownership_id const& v) noexcept = default;
 		constexpr car_ownership_id(car_ownership_id&& v) noexcept = default;
-		constexpr car_ownership_id() noexcept : value(uint16_t(0)) {}
 	
-		car_ownership_id& operator=(car_ownership_id v) noexcept { value = v.value; return *this; }
+		car_ownership_id& operator=(car_ownership_id const& v) noexcept = default;
+		car_ownership_id& operator=(car_ownership_id&& v) noexcept = default;
 		constexpr bool operator==(car_ownership_id v) const noexcept { return value == v.value; }
 		constexpr bool operator!=(car_ownership_id v) const noexcept { return value != v.value; }
 		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
@@ -911,6 +914,8 @@ namespace cob3 {
 		// container try create relationship for car_ownership
 		//
 		car_ownership_id try_create_car_ownership(person_id owner_p, car_id owned_car_p) {
+			if(!bool(owner_p)) return car_ownership_id();
+			if(!bool(owned_car_p)) return car_ownership_id();
 			if(car_ownership_is_valid(car_ownership_id(car_ownership_id::value_base_t(owned_car_p.index())))) return car_ownership_id();
 			car_ownership_id new_id(car_ownership_id::value_base_t(owned_car_p.index()));
 			car_ownership_set_owner(new_id, owner_p);

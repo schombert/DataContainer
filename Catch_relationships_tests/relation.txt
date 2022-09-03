@@ -44,7 +44,7 @@ relationship{
 		type{unique}
 	}
 	link{
-		object{thingyA}
+		object{thingyB}
 		name{right}
 		type{many}
 		index_storage{array}
@@ -59,7 +59,7 @@ relationship{
 		type{unique}
 	}
 	link{
-		object{thingyA}
+		object{thingyB}
 		name{right}
 		type{many}
 		index_storage{list}

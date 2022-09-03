@@ -63,15 +63,15 @@ basic_builder& make_vectorizable_type_array_setters(basic_builder& o, std::strin
 	std::string const& type, std::string const& index_type, bool is_expandable);
 
 basic_builder& make_relation_pk_getters_setters(basic_builder& o, std::string const& relation_name, std::string const& property_name,
-	std::string const& property_type, bool is_expandable);
+	std::string const& property_type, bool is_expandable, bool is_covered_by_ck);
 basic_builder& make_relation_pk_reverse_getters_setters(basic_builder& o, std::string const& relation_name,
 	std::string const& property_name, std::string const& property_type, bool is_expandable, bool skip_as);
 basic_builder& make_relation_unique_non_pk_getters_setters(basic_builder& o, std::string const& relation_name,
-	std::string const& property_name, std::string const& property_type, bool is_expandable);
+	std::string const& property_name, std::string const& property_type, bool is_expandable, bool is_covered_by_ck);
 basic_builder& make_relation_unique_non_pk_reverse_getters_setters(basic_builder& o, std::string const& relation_name,
 	std::string const& property_name, std::string const& property_type, bool is_expandable, bool skip_as);
 basic_builder& make_relation_many_getters_setters(basic_builder& o, std::string const& relation_name, list_type ltype,
-	std::string const& property_name, std::string const& property_type, bool is_expandable);
+	std::string const& property_name, std::string const& property_type, bool is_expandable, bool is_covered_by_ck);
 basic_builder& make_relation_many_reverse_getters_setters(basic_builder& o, std::string const& relation_name, list_type ltype,
 	std::string const& property_name, std::string const& property_type, bool is_expandable, bool skip_as);
 basic_builder& make_pop_back(basic_builder& o, relationship_object_def const& obj);
@@ -96,3 +96,5 @@ basic_builder& make_const_fat_id(basic_builder& o, relationship_object_def const
 basic_builder& make_fat_id(basic_builder& o, relationship_object_def const& obj, file_def const& parsed_file);
 basic_builder& make_const_fat_id_impl(basic_builder& o, relationship_object_def const& obj, file_def const& parsed_file);
 basic_builder& make_fat_id_impl(basic_builder& o, relationship_object_def const& obj, file_def const& parsed_file);
+
+basic_builder& make_composite_key_declarations(basic_builder& o, std::string const& obj_name, composite_index_def const& cc);

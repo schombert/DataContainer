@@ -44,14 +44,15 @@ basic_builder& make_id_definition(basic_builder& o, std::string const& type_name
 		+ "using value_base_t = @type@;"
 		+ "using zero_is_null_t = std::true_type;"
 		+ line_break{}
-		+"@type@ value;"
+		+"@type@ value = 0;"
 		+ line_break{}
+		+"constexpr @name@() noexcept = default;"
 		+"explicit constexpr @name@(@type@ v) noexcept : value(v + 1) {}"
 		+ "constexpr @name@(@name@ const& v) noexcept = default;"
 		+ "constexpr @name@(@name@&& v) noexcept = default;"
-		+ "constexpr @name@() noexcept : value(@type@(0)) {}"
 		+ line_break{}
-		+"@name@& operator=(@name@ v) noexcept { value = v.value; return *this; }"
+		+"@name@& operator=(@name@ const& v) noexcept = default;"
+		+"@name@& operator=(@name@&& v) noexcept = default;"
 		+"constexpr bool operator==(@name@ v) const noexcept { return value == v.value; }"
 		+ "constexpr bool operator!=(@name@ v) const noexcept { return value != v.value; }"
 		+ "explicit constexpr operator bool() const noexcept { return value != @type@(0); }"
@@ -821,7 +822,7 @@ basic_builder& make_special_array_setters(basic_builder& o, std::string const& o
 }
 
 basic_builder& make_relation_pk_getters_setters(basic_builder& o, std::string const& relation_name, std::string const& property_name,
-	std::string const& property_type, bool is_expandable) {
+	std::string const& property_type, bool is_expandable, bool is_covered_by_ck) {
 	o + substitute{ "rel", relation_name } +substitute{ "prop", property_name } +substitute{ "prop_type", property_type } +
 		substitute{ "vector_position", is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags" };
 	o + heading{ "primary key getters and setters for @rel@: @prop@" };
@@ -844,6 +845,9 @@ basic_builder& make_relation_pk_getters_setters(basic_builder& o, std::string co
 	};
 	o + "#endif";
 
+	if(is_covered_by_ck)
+		o + "private:";
+
 	o + "void @rel@_set_@prop@(@rel@_id id, @prop_type@_id value) noexcept" + block{
 		o + "if(bool(value))" + block{
 			o + "delete_@rel@( @rel@_id(@rel@_id::value_base_t(value.index())) );"
@@ -862,6 +866,9 @@ basic_builder& make_relation_pk_getters_setters(basic_builder& o, std::string co
 		};
 		o + "return true;";
 	};
+
+	if(is_covered_by_ck)
+		o + "public:";
 
 	o + line_break{};
 	return o;
@@ -904,7 +911,7 @@ basic_builder& make_relation_pk_reverse_getters_setters(basic_builder& o, std::s
 }
 
 basic_builder& make_relation_unique_non_pk_getters_setters(basic_builder& o, std::string const& relation_name,
-	std::string const& property_name, std::string const& property_type, bool is_expandable) {
+	std::string const& property_name, std::string const& property_type, bool is_expandable, bool is_covered_by_ck) {
 
 	o + substitute{ "obj", relation_name } +substitute{ "prop", property_name } +substitute{ "type", property_type + "_id"};
 	o + heading{ "unique key getters and setters for @obj@: @prop@" };
@@ -913,6 +920,9 @@ basic_builder& make_relation_unique_non_pk_getters_setters(basic_builder& o, std
 	make_vectorizable_getters(o, std::string("ve::value_to_vector_type<") + property_type + "_id>", is_expandable);
 
 	o + substitute{ "type", property_type + "_id" };
+
+	if(is_covered_by_ck)
+		o + "private:";
 
 	o + "void @obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
 		o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()]; bool(old_value))" + block{
@@ -938,6 +948,9 @@ basic_builder& make_relation_unique_non_pk_getters_setters(basic_builder& o, std
 		};
 		o + "return true;";
 	};
+
+	if(is_covered_by_ck)
+		o + "public:";
 
 	o + line_break{};
 	return o;
@@ -981,7 +994,7 @@ basic_builder& make_relation_unique_non_pk_reverse_getters_setters(basic_builder
 }
 
 basic_builder& make_relation_many_getters_setters(basic_builder& o, std::string const& relation_name, list_type ltype,
-	std::string const& property_name, std::string const& property_type, bool is_expandable) {
+	std::string const& property_name, std::string const& property_type, bool is_expandable, bool is_covered_by_ck) {
 
 	o + substitute{ "obj", relation_name } +substitute{ "prop", property_name } +substitute{ "type", property_type + "_id" };
 	o + heading{ "many key getters and setters for @obj@: @prop@" };
@@ -990,6 +1003,9 @@ basic_builder& make_relation_many_getters_setters(basic_builder& o, std::string 
 	make_vectorizable_getters(o, std::string("ve::value_to_vector_type<") + property_type + "_id>", is_expandable);
 
 	o + substitute{ "type", property_type + "_id" };
+
+	if(is_covered_by_ck)
+		o + "private:";
 
 	o + "void @obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
 		if(ltype == list_type::list) {
@@ -1047,6 +1063,9 @@ basic_builder& make_relation_many_getters_setters(basic_builder& o, std::string 
 			o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
 		}
 	};
+
+	if(is_covered_by_ck)
+		o + "public:";
 
 
 	o + line_break{};
@@ -1172,6 +1191,20 @@ basic_builder& make_pop_back(basic_builder& o, relationship_object_def const& co
 
 		if(cob.hook_delete)
 			o + "on_delete_@obj@(id_removed);";
+
+		for(auto& ck : cob.composite_indexes) {
+			std::string params;
+			for(auto& idx : ck.component_indexes) {
+				if(params.length() > 0)
+					params += ", ";
+				if(idx.property_name == cob.primary_key.property_name)
+					params += "id_removed";
+				else
+					params += cob.name + ".m_" + idx.property_name + ".vptr()[id_removed.index()]";
+			}
+			o + substitute{ "params", params } +substitute{ "ckname", ck.name };
+			o + "if(auto it = @obj@.hashm_@ckname@.erase( @obj@.to_@ckname@_keydata(@params@) );";
+		}
 
 		for(auto& iob : cob.indexed_objects) {
 			o + substitute{ "i_prop_name", iob.property_name } +substitute{ "i_type_name", iob.type_name };
@@ -1374,6 +1407,10 @@ basic_builder& make_object_resize(basic_builder& o, relationship_object_def cons
 					};
 				};
 			}
+			for(auto& ck : cob.composite_indexes) {
+				o + substitute{ "ckname", ck.name };
+				o + "@obj@.hashm_@ckname@.clear();";
+			}
 			for(auto& io : cob.indexed_objects) {
 				if(cob.primary_key != io) {
 					if(!cob.is_expandable) {
@@ -1421,57 +1458,11 @@ basic_builder& make_object_resize(basic_builder& o, relationship_object_def cons
 			}
 			for(auto& cr : cob.relationships_involved_in) {
 				if(cr.as_primary_key) {
-					o + (cr.relation_name + "_resize(new_size);");
+					o + (cr.relation_name + "_resize(std::min(new_size, " + cr.relation_name + ".size_used));");
 				} else if(cr.indexed_as == index_type::at_most_one) {
-					if(!cob.is_expandable) {
-						clear_value_range(o, cr.relation_name, std::string("link_back_") + cr.property_name,
-							cr.relation_name + "_id", property_type::other, "0", "old_size");
-					} else {
-						shrink_value_range(o, cr.relation_name, std::string("link_back_") + cr.property_name,
-							property_type::other, "new_size", "old_size - new_size");
-						clear_value_range(o, cr.relation_name, std::string("link_back_") + cr.property_name,
-							cr.relation_name + "_id", property_type::other, "0", "new_size");
-					}
-					clear_value_range(o, cr.relation_name, cr.property_name, cob.name + "_id", property_type::other,
-						"0", cr.relation_name + ".size_used");
+					o + (cr.relation_name + "_resize(0);");
 				} else if(cr.indexed_as == index_type::many) {
-					if(cr.listed_as == list_type::list) {
-						if(!cob.is_expandable) {
-							clear_value_range(o, cr.relation_name, std::string("head_back_") + cr.property_name,
-								cr.relation_name + "_id", property_type::other, "0", "old_size");
-						} else {
-							shrink_value_range(o, cr.relation_name, std::string("head_back_") + cr.property_name,
-								property_type::other, "new_size", "old_size - new_size");
-							clear_value_range(o, cr.relation_name, std::string("head_back_") + cr.property_name,
-								cr.relation_name + "_id", property_type::other, "0", "new_size");
-						}
-						clear_value_range(o, cr.relation_name, std::string("link_") + cr.property_name, cr.relation_name + "_id_pair",
-							property_type::other, "0", cr.relation_name + ".size_used");
-					} else if(cr.listed_as == list_type::array) {
-						if(!cob.is_expandable) {
-							clear_value_range(o, cr.relation_name, cr.property_name,
-								"", property_type::special_vector, "0", "old_size", true);
-						} else {
-							shrink_value_range(o, cr.relation_name, cr.property_name,
-								property_type::special_vector, "new_size", "old_size - new_size", true);
-							clear_value_range(o, cr.relation_name, cr.property_name,
-								"", property_type::special_vector, "0", "new_size", true);
-						}
-					} else if(cr.listed_as == list_type::std_vector) {
-						if(!cob.is_expandable) {
-							clear_value_range(o, cr.relation_name, std::string("array_") + cr.property_name,
-								std::string("std::vector<") + cr.relation_name + "_id>", property_type::object,
-								"0", "old_size");
-						} else {
-							shrink_value_range(o, cr.relation_name, std::string("array_") + cr.property_name,
-								property_type::object, "new_size", "old_size - new_size");
-							clear_value_range(o, cr.relation_name, std::string("array_") + cr.property_name,
-								std::string("std::vector<") + cr.relation_name + "_id>", property_type::object,
-								"0", "new_size");
-						}
-					}
-					clear_value_range(o, cr.relation_name, cr.property_name, cob.name + "_id", property_type::other,
-						"0", cr.relation_name + ".size_used");
+					o + (cr.relation_name + "_resize(0);");
 				}
 			}
 		} + append{ "else if(new_size > old_size)" } + block{ // expanding
@@ -1512,33 +1503,11 @@ basic_builder& make_object_resize(basic_builder& o, relationship_object_def cons
 
 				for(auto& cr : cob.relationships_involved_in) {
 					if(cr.as_primary_key) {
-						o + (cr.relation_name + "_resize(new_size);");
+
 					} else if(cr.indexed_as == index_type::at_most_one) {
-						clear_value_range(o, cr.relation_name, std::string("link_back_") + cr.property_name,
-							cr.relation_name + "_id", property_type::other, "0", "old_size");
-						clear_value_range(o, cr.relation_name, cr.property_name, cob.name + "_id", property_type::other,
-							"0", cr.relation_name + ".size_used");
 						grow_value_range(o, cr.relation_name, std::string("link_back_") + cr.property_name,
 							property_type::other, "new_size");
 					} else if(cr.indexed_as == index_type::many) {
-						if(cr.listed_as == list_type::list) {
-							clear_value_range(o, cr.relation_name, std::string("head_back_") + cr.property_name,
-								cr.relation_name + "_id", property_type::other, "0", "old_size");
-
-							clear_value_range(o, cr.relation_name, std::string("link_") + cr.property_name, cr.relation_name + "_id_pair",
-								property_type::other, "0", cr.relation_name + ".size_used");
-						} else if(cr.listed_as == list_type::array) {
-							clear_value_range(o, cr.relation_name, cr.property_name,
-								"", property_type::special_vector, "0", "old_size", true);
-						} else if(cr.listed_as == list_type::std_vector) {
-							clear_value_range(o, cr.relation_name, std::string("array_") + cr.property_name,
-								std::string("std::vector<") + cr.relation_name + "_id>", property_type::object,
-								"0", "old_size");
-						}
-
-						clear_value_range(o, cr.relation_name, cr.property_name, cob.name + "_id", property_type::other,
-							"0", cr.relation_name + ".size_used");
-
 						if(cr.listed_as == list_type::list) {
 							grow_value_range(o, cr.relation_name, std::string("head_back_") + cr.property_name,
 								property_type::other, "new_size");
@@ -1551,34 +1520,9 @@ basic_builder& make_object_resize(basic_builder& o, relationship_object_def cons
 						}
 					}
 				}
-			} else {
-				for(auto& cr : cob.relationships_involved_in) {
-					if(cr.as_primary_key) {
-						o + (cr.relation_name + "_resize(new_size);");
-					} else if(cr.indexed_as == index_type::at_most_one) {
-						clear_value_range(o, cr.relation_name, std::string("link_back_") + cr.property_name,
-							cr.relation_name + "_id", property_type::other, "0", "new_size");
-						clear_value_range(o, cr.relation_name, cr.property_name, cob.name + "_id", property_type::other,
-							"0", cr.relation_name + ".size_used");
-					} else if(cr.indexed_as == index_type::many) {
-						if(cr.listed_as == list_type::list) {
-							clear_value_range(o, cr.relation_name, std::string("head_back_") + cr.property_name,
-								cr.relation_name + "_id_pair", property_type::other, "0", "new_size");
-						} else if(cr.listed_as == list_type::array) {
-							clear_value_range(o, cr.relation_name, cr.property_name,
-								"", property_type::special_vector, "0", "new_size", true);
-						} else if(cr.listed_as == list_type::std_vector) {
-							clear_value_range(o, cr.relation_name, std::string("array_") + cr.property_name,
-								std::string("std::vector<") + cr.relation_name + "_id>", property_type::object,
-								"0", "new_size");
-						}
-						clear_value_range(o, cr.relation_name, cr.property_name, cob.name + "_id", property_type::other,
-							"0", cr.relation_name + ".size_used");
-					}
-				}
 			}
 			
-		};
+		}; // end expanding
 
 		o + "@obj@.size_used = new_size;";
 	};
@@ -1654,6 +1598,20 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 		o + "if(id_removed == last_id) { pop_back_@obj@(); return; }";
 		if(cob.hook_delete)
 			o + "on_delete_@obj@(id_removed);";
+
+		for(auto& ck : cob.composite_indexes) {
+			std::string params;
+			for(auto& idx : ck.component_indexes) {
+				if(params.length() > 0)
+					params += ", ";
+				if(idx.property_name == cob.primary_key.property_name)
+					params += "id_removed";
+				else
+					params += cob.name + ".m_" + idx.property_name + ".vptr()[id_removed.index()]";
+			}
+			o + substitute{ "params", params } +substitute{ "ckname", ck.name };
+			o + "if(auto it = @obj@.hashm_@ckname@.erase( @obj@.to_@ckname@_keydata(@params@) );";
+		}
 
 		for(auto& iob : cob.indexed_objects) {
 			o + substitute{ "i_prop_name", iob.property_name } +substitute{ "i_type_name", iob.type_name };
@@ -1799,6 +1757,51 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 					"last_id", "id_removed", cp.data_type + "{}", cob.is_expandable);
 			}
 		}
+
+		for(auto& ck : cob.composite_indexes) {
+			if(ck.involves_primary_key) {
+				{
+					std::string params;
+					for(auto& idx : ck.component_indexes) {
+						if(params.length() > 0)
+							params += ", ";
+						if(idx.property_name == cob.primary_key.property_name)
+							params += "last_id";
+						else
+							params += cob.name + ".m_" + idx.property_name + ".vptr()[id_removed.index()]";
+					}
+					o + substitute{ "params", params } +substitute{ "ckname", ck.name };
+					o + "@obj@.hashm_@ckname@.erase(@obj@.to_@ckname@_keydata(@params@));";
+				}
+				{
+					std::string params;
+					for(auto& idx : ck.component_indexes) {
+						if(params.length() > 0)
+							params += ", ";
+						if(idx.property_name == cob.primary_key.property_name)
+							params += "id_removed";
+						else
+							params += cob.name + ".m_" + idx.property_name + ".vptr()[id_removed.index()]";
+					}
+					o + substitute{ "params", params } +substitute{ "ckname", ck.name };
+					o + "@obj@.hashm_@ckname@.insert_or_assign(@obj@.to_@ckname@_keydata(@params@), id_removed);";
+				}
+			} else {
+				std::string params;
+				for(auto& idx : ck.component_indexes) {
+					if(params.length() > 0)
+						params += ", ";
+					if(idx.property_name == cob.primary_key.property_name)
+						params += "last_id";
+					else
+						params += cob.name + ".m_" + idx.property_name + ".vptr()[id_removed.index()]";
+				}
+				o + substitute{ "params", params } +substitute{ "ckname", ck.name };
+				o + "@obj@.hashm_@ckname@.insert_or_assign(@obj@.to_@ckname@_keydata(@params@), id_removed);";
+			}
+			
+		}
+
 		o + "--@obj@.size_used;";
 		if(cob.hook_move)
 			o + "on_move_@obj@(id_removed, last_id);";
@@ -1929,6 +1932,20 @@ basic_builder& make_clearing_delete(basic_builder& o, relationship_object_def co
 		if(cob.hook_delete)
 			o + "on_delete_@obj@(id_removed);";
 
+		for(auto& ck : cob.composite_indexes) {
+			std::string params;
+			for(auto& idx : ck.component_indexes) {
+				if(params.length() > 0)
+					params += ", ";
+				if(idx.property_name == cob.primary_key.property_name)
+					params += "id_removed";
+				else
+					params += cob.name + ".m_" + idx.property_name + ".vptr()[id_removed.index()]";
+			}
+			o + substitute{ "params", params } +substitute{ "ckname", ck.name };
+			o + "if(auto it = @obj@.hashm_@ckname@.erase( @obj@.to_@ckname@_keydata(@params@) );";
+		}
+
 		for(auto& io : cob.indexed_objects) {
 			if(cob.primary_key != io) {
 				o + substitute{ "i_prop", io.property_name } +substitute{ "i_type", io.type_name };
@@ -1972,6 +1989,20 @@ basic_builder& make_erasable_delete(basic_builder& o, relationship_object_def co
 			"@obj@.m__index.vptr()[@obj@.size_used - 1] != @obj@_id(@obj@_id::value_base_t(@obj@.size_used - 1));  "
 			"--@obj@.size_used) ;";
 		};
+
+		for(auto& ck : cob.composite_indexes) {
+			std::string params;
+			for(auto& idx : ck.component_indexes) {
+				if(params.length() > 0)
+					params += ", ";
+				if(idx.property_name == cob.primary_key.property_name)
+					params += "id_removed";
+				else
+					params += cob.name + ".m_" + idx.property_name + ".vptr()[id_removed.index()]";
+			}
+			o + substitute{ "params", params } +substitute{ "ckname", ck.name };
+			o + "if(auto it = @obj@.hashm_@ckname@.erase( @obj@.to_@ckname@_keydata(@params@) );";
+		}
 
 		for(auto& io : cob.indexed_objects) {
 			if(cob.primary_key != io) {
@@ -2138,12 +2169,26 @@ basic_builder& make_relation_try_create(basic_builder& o, relationship_object_de
 	o + "@obj@_id try_create_@obj@(@params@)" + block{
 		for(auto& iob : cob.indexed_objects) {
 			o + substitute{ "prop", iob.property_name };
+			o + "if(!bool(@prop@_p)) return @obj@_id();";
 			if(cob.primary_key != iob) {
 				if(iob.index == index_type::at_most_one) {
-					o + "if(bool(@prop@_p) && bool(@obj@.m_@prop@.vptr()[@prop@_p.index()])) return @obj@_id();";
+					o + "if(bool(@obj@.m_link_back_@prop@.vptr()[@prop@_p.index()])) return @obj@_id();";
 				}
 			} else {
 				o + "if(@obj@_is_valid(@obj@_id(@obj@_id::value_base_t(@prop@_p.index())))) return @obj@_id();";
+			}
+		}
+
+		for(auto& ck : cob.composite_indexes) {
+			if(!ck.involves_primary_key) {
+				std::string params;
+				for(auto& idx : ck.component_indexes) {
+					if(params.length() > 0)
+						params += ", ";
+					params += idx.property_name + "_p";
+				}
+				o + substitute{ "params", params } +substitute{ "ckname", ck.name };
+				o + "if(@obj@.hashm_@ckname@.contains(@obj@.to_@ckname@_keydata(@params@))) return @obj@_id();";
 			}
 		}
 
@@ -2154,6 +2199,7 @@ basic_builder& make_relation_try_create(basic_builder& o, relationship_object_de
 				}
 			}
 			o + "@obj@_id new_id(@obj@_id::value_base_t(@pkey@_p.index()));";
+			o + "if(@obj@.size_used < uint32_t(@pkey@_p.value)) @obj@_resize(uint32_t(@pkey@_p.value));";
 		} else if(cob.store_type != storage_type::erasable) {
 			o + "@obj@_id new_id = @obj@_id(@obj@_id::value_base_t(@obj@.size_used));";
 
@@ -2179,6 +2225,17 @@ basic_builder& make_relation_try_create(basic_builder& o, relationship_object_de
 			}
 		}
 
+		for(auto& ck : cob.composite_indexes) {
+			std::string params;
+			for(auto& idx : ck.component_indexes) {
+				if(params.length() > 0)
+					params += ", ";
+				params += idx.property_name + "_p";
+			}
+			o + substitute{ "params", params } +substitute{ "ckname", ck.name };
+			o + "@obj@.hashm_@ckname@.insert(@obj@.hashm_@ckname@.value_type(@obj@.to_@ckname@_keydata(@params@), new_id));";
+		}
+
 		if(cob.hook_create)
 			o + "on_create_@obj@(new_id);";
 
@@ -2201,6 +2258,7 @@ basic_builder& make_relation_force_create(basic_builder& o, relationship_object_
 				}
 			}
 			o + "@obj@_id new_id(@obj@_id::value_base_t(@pkey@_p.index()));";
+			o + "if(@obj@.size_used < uint32_t(@pkey@_p.value)) @obj@_resize(uint32_t(@pkey@_p.value));";
 		} else if(cob.store_type != storage_type::erasable) {
 			o + "@obj@_id new_id = @obj@_id(@obj@_id::value_base_t(@obj@.size_used));";
 
@@ -2216,6 +2274,23 @@ basic_builder& make_relation_force_create(basic_builder& o, relationship_object_
 			}
 		} else {
 			erasable_set_new_id(o, cob);
+		}
+
+		for(auto& ck : cob.composite_indexes) {
+			std::string params;
+			for(auto& idx : ck.component_indexes) {
+				if(params.length() > 0)
+					params += ", ";
+				params += idx.property_name + "_p";
+			}
+			o + substitute{ "params", params } +substitute{ "ckname", ck.name };
+			o + inline_block{
+				o + "auto key_dat = @obj@.to_@ckname@_keydata(@params@);";
+				o + "if(auto it = @obj@.hashm_@ckname@.find(key_dat); it !=  @obj@.hashm_@ckname@.end())" + block{
+					o + "delete_@obj@(it->second);";
+				};
+				o + "@obj@.hashm_@ckname@.insert(@obj@.hashm_@ckname@.value_type(key_dat, new_id));";
+			};
 		}
 
 
@@ -3715,7 +3790,15 @@ basic_builder& make_fat_id(basic_builder& o, relationship_object_def const& obj,
 			o + substitute{ "rtype", i.type_name + "_fat_id" }  +substitute{ "prop", i.property_name };
 			o + substitute{ "prtype", i.type_name + "_id" };
 			o + "DCON_RELEASE_INLINE @rtype@ get_@prop@() const noexcept;";
-			o + "DCON_RELEASE_INLINE void set_@prop@(@prtype@ val) const noexcept;";
+
+			bool covered_by_ck = false;
+			for(auto& ck : obj.composite_indexes) {
+				for(auto& index : ck.component_indexes) {
+					covered_by_ck = covered_by_ck || index.property_name == i.property_name;
+				}
+			}
+			if(!covered_by_ck)
+				o + "DCON_RELEASE_INLINE void set_@prop@(@prtype@ val) const noexcept;";
 			if(i.index == index_type::at_most_one) {
 			} else if(i.index == index_type::many) {
 			} else if(i.index == index_type::none) {
@@ -4182,9 +4265,17 @@ basic_builder& make_fat_id_impl(basic_builder& o, relationship_object_def const&
 			o + "DCON_RELEASE_INLINE @rtype@ @obj@_fat_id::get_@prop@() const noexcept" + block{
 					o + "return @rtype@(container, container.@obj@_get_@prop@(id));";
 			};
-			o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@(@prtype@ val) const noexcept" + block{
-					o + "container.@obj@_set_@prop@(id, val);";
-			};
+			bool covered_by_ck = false;
+			for(auto& ck : obj.composite_indexes) {
+				for(auto& index : ck.component_indexes) {
+					covered_by_ck = covered_by_ck || index.property_name == i.property_name;
+				}
+			}
+			if(!covered_by_ck) {
+				o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@(@prtype@ val) const noexcept" + block{
+						o + "container.@obj@_set_@prop@(id, val);";
+				};
+			}
 			if(i.index == index_type::at_most_one) {
 			} else if(i.index == index_type::many) {
 			} else if(i.index == index_type::none) {
@@ -4357,6 +4448,82 @@ basic_builder& make_fat_id_impl(basic_builder& o, relationship_object_def const&
 			}
 		} // end loop over relationships involved in
 	
+	o + line_break{};
+	return o;
+}
+
+basic_builder& make_composite_key_declarations(basic_builder& o, std::string const& obj_name, composite_index_def const& cc) {
+	std::string parameter_string;
+	for(auto& k : cc.component_indexes) {
+		if(parameter_string.length() != 0)
+			parameter_string += ", ";
+		parameter_string += k.object_type + "_id " + k.property_name + "_p";
+	}
+	o + substitute{ "ccname", cc.name } +substitute{ "obj", obj_name }
+	+substitute{ "intvalue", std::to_string(cc.total_bytes) } +substitute{ "params", parameter_string };
+	if(cc.total_bytes > 8) {
+		o + "ankerl::unordered_dense::map<dcon::key_data_extended<@intvalue@>, "
+			"@obj@_id, detail::internal_hash_@intvalue@> hashm_@ccname@;";
+		o + "dcon::key_data_extended<@intvalue@> to_@ccname@_keydata(@params@)" + block{
+			o + "dcon::key_data_extended<@intvalue@> result;";
+			for(auto& k : cc.component_indexes) {
+				o + substitute{ "byte", std::to_string(k.bit_position / 8) };
+				o + substitute{ "bit", std::to_string(k.bit_position & 7) };
+				o + substitute{ "param", k.property_name + "_p"};
+				if(k.number_of_bits > 16) {
+					o + "*(reinterpret_cast<uint32_t*>(result.values.data() + @byte@)) = "
+						"uint32_t(*(reinterpret_cast<uint32_t*>(result.values.data() + @byte@)) | "
+						"(uint32_t(@param@.value) << @bit@));";
+				} else if(k.number_of_bits > 8) {
+					o + "*(reinterpret_cast<uint16_t*>(result.values.data() + @byte@)) = "
+						"uint16_t(*(reinterpret_cast<uint16_t*>(result.values.data() + @byte@)) | "
+						"(uint16_t(@param@.value) << @bit@));";
+				} else {
+					o + "*(reinterpret_cast<uint8_t*>(result.values.data() + @byte@)) = "
+						"uint8_t(*(reinterpret_cast<uint8_t*>(result.values.data() + @byte@)) | "
+						"(uint8_t(@param@.value) << @bit@));";
+				}
+			}
+			o + "return result;";
+		};
+	} else if(cc.total_bytes > 4) {
+		o + "ankerl::unordered_dense::map<uint64_t, "
+			"@obj@_id, ankerl::unordered_dense::hash<uint64_t>> hashm_@ccname@;";
+		o + "uint64_t to_@ccname@_keydata(@params@)" + block{
+			o + "uint64_t result = 0;";
+			for(auto& k : cc.component_indexes) {
+				o + substitute{ "bit", std::to_string(k.bit_position) };
+				o + substitute{ "param", k.property_name + "_p"};
+				o + "result |= (uint64_t(@param@.value) << @bit@));";
+			}
+			o + "return result;";
+		};
+	} else if(cc.total_bytes > 2) {
+		o + "ankerl::unordered_dense::map<uint32_t, "
+			"@obj@_id, ankerl::unordered_dense::hash<uint32_t>> hashm_@ccname@;";
+		o + "uint32_t to_@ccname@_keydata(@params@)" + block{
+			o + "uint32_t result = 0;";
+			for(auto& k : cc.component_indexes) {
+				o + substitute{ "bit", std::to_string(k.bit_position) };
+				o + substitute{ "param", k.property_name + "_p"};
+				o + "result |= (uint32_t(@param@.value) << @bit@));";
+			}
+			o + "return result;";
+		};
+	} else { // case uint16_t
+		o + "ankerl::unordered_dense::map<uint16_t, "
+			"@obj@_id, ankerl::unordered_dense::hash<uint16_t>> hashm_@ccname@;";
+		o + "uint16_t to_@ccname@_keydata(@params@)" + block{
+			o + "uint16_t result = 0;";
+			for(auto& k : cc.component_indexes) {
+				o + substitute{ "bit", std::to_string(k.bit_position) };
+				o + substitute{ "param", k.property_name + "_p"};
+				o + "result |= (uint16_t(@param@.value) << @bit@));";
+			}
+			o + "return result;";
+		};
+	}
+
 	o + line_break{};
 	return o;
 }

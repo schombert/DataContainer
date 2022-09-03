@@ -36,6 +36,9 @@
     <ClInclude Include="ve_sse.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="unordered_dense.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\file_format_documentation.md">

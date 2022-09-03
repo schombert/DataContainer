@@ -195,6 +195,53 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
+
+		// patch up composite key info
+		bool needs_hash_include = false;
+		std::vector<int32_t> byte_sizes_need_hash;
+
+		for(auto& ob : parsed_file.relationship_objects) {
+			for(auto& cc : ob.composite_indexes) {
+				needs_hash_include = true;
+
+				int32_t bits_so_far = 0;
+				for(auto& k : cc.component_indexes) {
+
+					for(auto& ri : ob.indexed_objects) {
+						if(ri.property_name == k.property_name) {
+							k.object_type = ri.type_name;
+						}
+					}
+
+					if(k.object_type.length() == 0) {
+						error_to_file(output_file_name, std::string("Indexed link ") + k.property_name + " in composite key " + cc.name +
+							" in relationship " + ob.name + " does not refer to a link in the relationship.");
+					}
+
+					k.bit_position = bits_so_far;
+					if(k.property_name == ob.primary_key.property_name)
+						cc.involves_primary_key = true;
+
+					if(ob.is_expandable) {
+						k.number_of_bits = 32;
+						bits_so_far += 32;
+					} else {
+						k.number_of_bits = 0;
+						for(auto sz = ob.size; sz != 0; sz = sz >> 1) {
+							++k.number_of_bits;
+							++bits_so_far;
+						}
+					}
+				}
+
+				cc.total_bytes = (bits_so_far + 7) / 8;
+				if(cc.total_bytes > 8 &&
+					std::find(byte_sizes_need_hash.begin(), byte_sizes_need_hash.end(), cc.total_bytes) == byte_sizes_need_hash.end()) {
+					byte_sizes_need_hash.push_back(cc.total_bytes);
+				}
+			}
+		}
+
 		// compose contents of generated file
 		std::string output;
 
@@ -213,6 +260,9 @@ int main(int argc, char *argv[]) {
 		output += "#ifndef DCON_NO_VE\n";
 		output += "#include \"ve.hpp\"\n";
 		output += "#endif\n";
+		if(needs_hash_include) {
+			output += "#include \"unordered_dense.h\"\n";
+		}
 		for(auto& i : parsed_file.includes) {
 			output += "#include ";
 			output += i;
@@ -269,6 +319,21 @@ int main(int argc, char *argv[]) {
 
 		//reopen namespace
 		output += "namespace " + parsed_file.namspace + " {\n";
+
+		output += "\tnamespace detail {\n";
+
+		//declare hashing functions as needed
+		for(int32_t i : byte_sizes_need_hash) {
+			o + substitute{"intvalue", std::to_string(i) };
+			o + "struct internal_hash_@intvalue@" + class_block{
+				o + "using is_avalanching = void;";
+				o + "auto operator()(dcon::key_data_extended<@intvalue@>const& e) const noexcept -> uint64_t" + block{
+					o + "return ankerl::unordered_dense::detail::wyhash::hash(e.values.data(), @intvalue@);";
+				};
+			};
+			output += o.to_string(2);
+		}
+		output += "\t}\n\n"; // close namespace detail
 
 		//predeclare data_container
 		output += "\tclass data_container;\n\n";
@@ -359,7 +424,7 @@ int main(int argc, char *argv[]) {
 								struct_padding::none, i.related_to->is_expandable,
 								"std::numeric_limits<dcon::stable_mk_2_tag>::max()").to_string(3);
 
-							output += "\t\t\tdcon::stable_variable_vector_storage_mk_2<" + ob.name + "_id, 16, " + std::to_string(ob.size * 2) + " > "
+							output += "\t\t\tdcon::stable_variable_vector_storage_mk_2<" + ob.name + "_id, 8, " + std::to_string(ob.size * 2) + " > "
 								+ i.property_name + "_storage;\n";
 						} else {
 							error_to_file(output_file_name, std::string("Unable to estimate an upper bound on storage space for ") +
@@ -383,6 +448,12 @@ int main(int argc, char *argv[]) {
 			}
 
 			output += "\t\t\tuint32_t size_used = 0;\n";
+			output += "\n";
+
+			// make composite key functions and hashmaps
+			for(auto& cc : ob.composite_indexes) {
+				output += make_composite_key_declarations(o, ob.name, cc).to_string(3);
+			}
 
 			output += "\n";
 			output += "\t\t\tpublic:\n";
@@ -531,8 +602,16 @@ int main(int argc, char *argv[]) {
 		for(auto& r : parsed_file.relationship_objects) {
 
 			for(auto& i : r.indexed_objects) {
+
+				bool covered_by_ck = false;
+				for(auto& ck : r.composite_indexes) {
+					for(auto& index : ck.component_indexes) {
+						covered_by_ck = covered_by_ck || index.property_name == i.property_name;
+					}
+				}
+
 				if(i.index == index_type::at_most_one && r.primary_key == i) {
-					output += make_relation_pk_getters_setters(o, r.name, i.property_name, i.type_name, r.is_expandable).to_string(2);
+					output += make_relation_pk_getters_setters(o, r.name, i.property_name, i.type_name, r.is_expandable, covered_by_ck).to_string(2);
 					output += make_relation_pk_reverse_getters_setters(o, r.name, i.property_name, i.type_name,
 						i.related_to->is_expandable, false).to_string(2);
 
@@ -547,7 +626,7 @@ int main(int argc, char *argv[]) {
 					}
 				} else if(i.index == index_type::at_most_one) {
 					output += make_relation_unique_non_pk_getters_setters(o, r.name,
-						i.property_name, i.type_name, r.is_expandable).to_string(2);
+						i.property_name, i.type_name, r.is_expandable, covered_by_ck).to_string(2);
 					output += make_relation_unique_non_pk_reverse_getters_setters(o, r.name,
 						i.property_name, i.type_name, i.related_to->is_expandable, false).to_string(2);
 					
@@ -563,7 +642,7 @@ int main(int argc, char *argv[]) {
 					}
 				} else if(i.index == index_type::many) {
 					output += make_relation_many_getters_setters(o, r.name, i.ltype,
-						i.property_name, i.type_name, r.is_expandable).to_string(2);
+						i.property_name, i.type_name, r.is_expandable, covered_by_ck).to_string(2);
 					output += make_relation_many_reverse_getters_setters(o, r.name, i.ltype,
 						i.property_name, i.type_name, i.related_to->is_expandable, false).to_string(2);
 
@@ -579,8 +658,12 @@ int main(int argc, char *argv[]) {
 				} else if(i.index == index_type::none) {
 					output += make_vectorizable_type_getters(o, r.name, i.property_name,
 						i.type_name + "_id", r.is_expandable).to_string(2);
+					if(covered_by_ck)
+						output += "\t\tprivate:\n";
 					output += make_vectorizable_type_setters(o, r.name, i.property_name,
 						i.type_name + "_id", r.is_expandable).to_string(2);
+					if(covered_by_ck)
+						output += "\t\tpublic:\n";
 				}// end -- creation of property references getters / setters
 			} //end of loop creating individual property getters / setters
 		} // end creating relationship getters / setters

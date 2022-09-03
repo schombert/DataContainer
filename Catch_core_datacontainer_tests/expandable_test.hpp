@@ -55,14 +55,15 @@ namespace ex1 {
 		using value_base_t = uint32_t;
 		using zero_is_null_t = std::true_type;
 	
-		uint32_t value;
+		uint32_t value = 0;
 	
+		constexpr top_id() noexcept = default;
 		explicit constexpr top_id(uint32_t v) noexcept : value(v + 1) {}
 		constexpr top_id(top_id const& v) noexcept = default;
 		constexpr top_id(top_id&& v) noexcept = default;
-		constexpr top_id() noexcept : value(uint32_t(0)) {}
 	
-		top_id& operator=(top_id v) noexcept { value = v.value; return *this; }
+		top_id& operator=(top_id const& v) noexcept = default;
+		top_id& operator=(top_id&& v) noexcept = default;
 		constexpr bool operator==(top_id v) const noexcept { return value == v.value; }
 		constexpr bool operator!=(top_id v) const noexcept { return value != v.value; }
 		explicit constexpr operator bool() const noexcept { return value != uint32_t(0); }
@@ -87,14 +88,15 @@ namespace ex1 {
 		using value_base_t = uint32_t;
 		using zero_is_null_t = std::true_type;
 	
-		uint32_t value;
+		uint32_t value = 0;
 	
+		constexpr bottom_id() noexcept = default;
 		explicit constexpr bottom_id(uint32_t v) noexcept : value(v + 1) {}
 		constexpr bottom_id(bottom_id const& v) noexcept = default;
 		constexpr bottom_id(bottom_id&& v) noexcept = default;
-		constexpr bottom_id() noexcept : value(uint32_t(0)) {}
 	
-		bottom_id& operator=(bottom_id v) noexcept { value = v.value; return *this; }
+		bottom_id& operator=(bottom_id const& v) noexcept = default;
+		bottom_id& operator=(bottom_id&& v) noexcept = default;
 		constexpr bool operator==(bottom_id v) const noexcept { return value == v.value; }
 		constexpr bool operator!=(bottom_id v) const noexcept { return value != v.value; }
 		explicit constexpr operator bool() const noexcept { return value != uint32_t(0); }
@@ -119,14 +121,15 @@ namespace ex1 {
 		using value_base_t = uint32_t;
 		using zero_is_null_t = std::true_type;
 	
-		uint32_t value;
+		uint32_t value = 0;
 	
+		constexpr lr_relation_id() noexcept = default;
 		explicit constexpr lr_relation_id(uint32_t v) noexcept : value(v + 1) {}
 		constexpr lr_relation_id(lr_relation_id const& v) noexcept = default;
 		constexpr lr_relation_id(lr_relation_id&& v) noexcept = default;
-		constexpr lr_relation_id() noexcept : value(uint32_t(0)) {}
 	
-		lr_relation_id& operator=(lr_relation_id v) noexcept { value = v.value; return *this; }
+		lr_relation_id& operator=(lr_relation_id const& v) noexcept = default;
+		lr_relation_id& operator=(lr_relation_id&& v) noexcept = default;
 		constexpr bool operator==(lr_relation_id v) const noexcept { return value == v.value; }
 		constexpr bool operator!=(lr_relation_id v) const noexcept { return value != v.value; }
 		explicit constexpr operator bool() const noexcept { return value != uint32_t(0); }
@@ -784,6 +787,8 @@ namespace ex1 {
 		// container try create relationship for lr_relation
 		//
 		lr_relation_id try_create_lr_relation(top_id left_p, bottom_id right_p) {
+			if(!bool(left_p)) return lr_relation_id();
+			if(!bool(right_p)) return lr_relation_id();
 			lr_relation_id new_id = lr_relation.first_free;
 			bool expanded = !bool(lr_relation.first_free );
 			if(expanded) {

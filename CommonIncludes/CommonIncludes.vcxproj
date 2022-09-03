@@ -87,6 +87,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -125,6 +126,7 @@
   <ItemGroup>
     <ClInclude Include="catch.hpp" />
     <ClInclude Include="common_types.hpp" />
+    <ClInclude Include="unordered_dense.h" />
     <ClInclude Include="ve.hpp" />
     <ClInclude Include="ve_avx.hpp" />
     <ClInclude Include="ve_avx2.hpp" />

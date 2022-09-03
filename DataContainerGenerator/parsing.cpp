@@ -245,7 +245,7 @@ composite_index_def parse_composite_key(char const * start, char const * end, ch
 					err_out.add(std::string("wrong number of parameters for \"index\" on line ")
 						+ std::to_string(calculate_line_from_position(start, extracted.key.start)));
 				} else {
-					result.component_indexes.push_back(extracted.values[0].to_string());
+					result.component_indexes.push_back(key_component{ extracted.values[0].to_string(), std::string(), 0, 0 });
 				}
 			} else {
 				err_out.add(std::string("unexpected token \"") + kstr + "\" while parsing composite key on line "

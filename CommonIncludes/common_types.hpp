@@ -12,6 +12,8 @@
 #include <cstddef>
 #include <type_traits>
 #include <new>
+#include <array>
+#include <cstring>
 
 #ifdef NDEBUG 
 #ifdef _MSC_VER 
@@ -114,6 +116,21 @@ namespace dcon {
 		}
 		T* begin() { return (ptr_end - storage <= 128) ? storage : expanded_storage.data(); }
 		T* end() { return (ptr_end - storage <= 128) ? ptr_end : expanded_storage.data() + expanded_storage.size(); }
+	};
+
+	template<size_t N>
+	struct key_data_extended {
+		std::array<uint8_t, N> values;
+
+		key_data_extended() {
+			values.fill(0);
+		}
+		bool operator==(key_data_extended<N> const& other) const noexcept {
+			return std::memcmp(values.data(), other.values.data(), 7) == 0;
+		}
+		bool operator!=(key_data_extended<N> const& other) const noexcept {
+			return std::memcmp(values.data(), other.values.data(), 7) != 0;
+		}
 	};
 
 	struct record_header {

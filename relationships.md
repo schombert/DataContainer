@@ -29,9 +29,95 @@ A link of `type{unique}` means that the handle for the linked object may only ap
 
 ### Storage of indexing data
 
+For `type{unique}` keys (except primary keys, see next section) the indexing data required is a simple handle back to the relationship they are involved in (if any) that is logically managed as part of the object. (Note: the management of this data is entirely invisible to the end user, this is simply a description of how it is implemented.) For `type{many}`, however, the indexing data is more complicated; efficiency demands that each object maintain a list of the relationships it is involved in, and this list needs some kind of dynamic storage. I haven't been able to come up with a solution that is obviously best in all cases, so instead you can pick among three options for how these lists are to be stored on a case-by-case basis: `index_storage{array}`, `index_storage{std_vector}`, and `index_storage{list}`.
+
+If you choose `array`, the lists of relationships will be stored as dynamically sized arrays backed by a fixed-size memory pool. Internally this is implemented in the same way that `vector_pool` type properties are, as described in (Objects and properties)[objects_and_properties.md#vector_pool]. The advantage of this approach are that the general memory allocator does not have to be called in order to manage the indexes. The disadvantages are two fold. First, the memory pool backing the lists is a fixed size, and it is possible to exhaust it. Currently the size of this pool is 16 times the maximum number of relationship instances bytes. Secondly, because the maximum number of relationship instances is used to estimate the size of the memory pool, it cannot be used in conjunction with relationships that are defined as `size{expandable}` (including those that are implicitly `size{expandable}` because of their primary key, as described below).
+
+If you choose `std_vector`, the lists of relationships will each be stored in a `std::vector`. This is more flexible than arrays backed by a fixed-size memory pool, but it also incurs more overhead, both in storing each `std::vector` (24 bytes in many implementations), and in the performance costs incurred by using the general memory allocator to grow the underlying storage of these `std::vector`s.
+
+Finally there is `list`, which is probably just a bad option .[^2] If you choose `list` the lists of relationships will be stored in a doubly linked list that is managed logically as an intrusive list inside the relationship instances themselves. Theoretically, this has the same trade-offs as any linked list as compared to an array: it has better insertion and deletion performance at the cost of slower traversal times. But given that the individual lists of relationships will probably be small, I suspect that it doesn't really provide better insertion an deletion performance.[^3] The one advantage it does provide, and the reason it is still available as an option, is that the implementation, like `array`, never calls the general memory allocator. But, unlike `array`, it can be used with relationships stored as `size{expandable}`, and its design guarantees that it will never run out of space (the storage space required to place each relationship instance in a list is logically allocated as part of the memory backing the potential relationship instance itself, so if you have enough room to store the relationships, you have enough room to store any configuration of the lists involving them).
+
 ### Primary keys
 
+Primary keys are an aspect of relationships that the generator attempts to manage automatically, and to hide from the end user as much as possible. However, there are performance implications to primary keys, as well as some implications for behavior, so you probably still need to be aware of them.
+
+Every relationship is automatically assigned a primary key, when possible, as a performance optimization. The primary key must be one of the `type{unique}` links in the relationship; if there are no such links then no primary key can be assigned. When choosing a primary key automatically, object definitions that specify fixed size are strictly preferred to `expandable` ones. Then, object definitions with `contiguous` storage type are chosen over those with `erasable` which are chosen over those with `compactable`. Finally, all other things being equal, the object definition that has the smallest defined size is preferred. If you don't like the way this automatic choice is made, or if you come to rely on any of the behavioral differences associated with the unique key and don't want your program to break if something in the definition of the objects or relationship changes, you can add `primary_key{link_name}` to the definition of a relationship, which will force the named `type{unique}` link to be used as the primary key.
+
+If a relationship has a primary key, then instances of it are stored as a logical part of the object instances of the primary key type (you can think of this as the relationship adding extra members to the class or struct definition for the primary key). In particular, this means that the indexes used to access the relationship instances are logically identical to those that are used to access the object instances (although they still have distinct types). And so no actual storage space is allocated for relationship instances to store a handle to the object instance for its primary key link, nor do object instances of that type have storage allocated to store the handle of the relationships instance of this type (as both can be calculated directly from the handles themselves). This means that a relationship that has one link of type `unique` is more efficient than it would be if that link were turned into type `unindexed`, even though in general such links require less storage.
+
+This also has implications for converting existing objects to be managed by a data container. It might seem natural to convert a pointer from type `object_a` to `object_b` such as:
+
+```
+class object_a {
+	...
+	public:
+	object_b* member_pointer;
+	...
+};
+```
+
+to something like:
+
+```
+object{
+	name{object_a}
+	...
+	property{
+		name{member_pointer}
+		type{object_b_id}
+	}
+	...
+}
+```
+
+However, it is just as efficient (and will be essentially represented in the same way internally) to convert it to:
+
+```
+object{
+	name{object_a}
+	...
+}
+
+relationship{
+	name{...}
+	link{
+		object{object_a}
+		name{...}
+		type{unique}
+	}
+	link{
+		object{object_b}
+		name{member_pointer}
+		type{unindexed}
+	}
+}
+```
+
+This requires you to add some additional names describing the relationship from `object_a` to `object_b`, but you don't lose anything by making an explicit relationship in this way, and you gain the additional flexibility of being able to add indexing information later for `member_pointer` if you so choose.
+
+Ideally, there would be no differences between the way the primary keys behave and the behavior of other links, but unfortunately some compromises have been made for the sake of performance. For every object linked with `unique` you can get a handle back to the relationship it is involved in with `𝘰𝘣𝘫𝘦𝘤𝘵 𝘯𝘢𝘮𝘦_get_𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_as_𝘭𝘪𝘯𝘬 𝘯𝘢𝘮𝘦(𝘰𝘣𝘫𝘦𝘤𝘵 𝘯𝘢𝘮𝘦_id)` (more details and slightly less verbose function names are described below). For a non primary, but `unique`, key this function may return a handle containing the invalid index value if no relationship has been created involving the object. Thus, you could cast this return value to bool to test whether such a relationship exists. On the other hand, if the object is linked as a primary key, `𝘰𝘣𝘫𝘦𝘤𝘵 𝘯𝘢𝘮𝘦_get_𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_as_𝘭𝘪𝘯𝘬 𝘯𝘢𝘮𝘦(𝘰𝘣𝘫𝘦𝘤𝘵 𝘯𝘢𝘮𝘦_id)` called with a valid object handle will never return an invalid index. To test whether the returned value represents an existing relationship, the best you can do is check it with `𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_is_valid(𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_id)`. For a relationship with a primary key, that function returns true if at least one link other than the primary key contains a potentially valid object handle.
+
+Finally, if a relationship has a primary key, any `size` or `storage_type`keys in its description will be ignored. It will be given a `size` to match that of the primary key, and its storage type will function as `contiguous`, except that its current size will always be adjusted to match that of the primary key. For relationships without a primary key, `size` and `storage_type` function as they do with objects.
+
 ### Composite keys
+
+The first thing to note is that using one or more composite keys brings in an additional dependency, namely [this hash map](https://github.com/martinus/unordered_dense). A copy of the single header file necessary to use it is in CommonIncludes, but you can (and probably should) grab a copy of the most up-to-date version yourself.
+
+Composite keys are added to a relationship by adding `composite_key{...}` as an additional key inside the relationship definition. `composite_key` expects a single parameter that will be parsed as a sequence of sub-keys. Like a link or a property, each `composite_key` must contain a `name{...}` sub-key that contains in its single parameter a valid C++ identifier. Each composite key must also include two or more `index{𝘭𝘪𝘯𝘬 𝘯𝘢𝘮𝘦}` sub-keys, where each link name is a link previously defined for the relationship.
+
+Defining a composite key does two things. First, it allows you to find an instance of the relationship based on the combination of indexes in the composite key. Specifically, the data container will provide the function `get_𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_by_𝘤𝘰𝘮𝘱𝘰𝘴𝘪𝘵𝘦 𝘬𝘦𝘺 𝘯𝘢𝘮𝘦(...)` taking as parameters a handle for each of the links involved in the composite key. For example, a composite key defined as
+
+```
+composite_key{
+	name{owner_pet_key}
+	index{owner}
+	index{owned_pet}
+}
+```
+
+would generate the function `get_𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_by_owner_pet_key(person_id owner_p, pet_id owned_pet_p)` This function returns a handle to the relationship instance between handles that match those passed as parameters, or an invalid handle if there is no such relationship instance. Secondly, it forces each relationship instance to contain a unique combination of the linked objects involved in the composite key.
+
+Multiple composite keys may be defined for the same relationship. If they are, the uniqueness requirement will be enforced for each composite key independently of the others. For example if the first composite key is between links `A`, `B`, and `C` and the second composite key is between links `B`, `C`, and `D`, then each relationship instance will required to have both an A-B-C combination that is unique to it and a B-C-D combination that is unique to it.
 
 ### Try create and force create
 
@@ -46,3 +132,7 @@ in addition to those of properties.
 #### Implicit joins
 
 [^1]: You can also work around some of these limitations with `hook{delete}` and `hook{move}`, but be sure to measure to make sure that this solution is actually better than `type{unique}` or `type{many}`.
+
+[^2]: Look, it felt clever when I was designing it, and leaving it in doesn't really hurt anything, so get off my back.
+
+[^3]: Please feel free to contribute a measurement confirming this.

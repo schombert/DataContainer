@@ -82,9 +82,18 @@ struct in_relation_information {
 	relationship_object_def const* rel_ptr;
 };
 
+struct key_component {
+	std::string property_name;
+	std::string object_type;
+	int32_t number_of_bits = 0;
+	int32_t bit_position = 0;
+};
+
 struct composite_index_def {
 	std::string name;
-	std::vector<std::string> component_indexes;
+	bool involves_primary_key = false;
+	int32_t total_bytes;
+	std::vector<key_component> component_indexes;
 };
 
 struct primary_key_type {
