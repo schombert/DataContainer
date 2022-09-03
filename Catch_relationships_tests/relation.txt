@@ -33,6 +33,12 @@ relationship{
 		name{right}
 		type{unindexed}
 	}
+
+	composite_key{
+		name{joint}
+		index{left}
+		index{right}
+	}
 }
 
 relationship{

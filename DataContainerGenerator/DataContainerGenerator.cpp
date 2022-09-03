@@ -793,6 +793,12 @@ int main(int argc, char *argv[]) {
 		}
 		output += "\t\t}\n";
 
+		for(auto& cob : parsed_file.relationship_objects) {
+			for(auto& cc : cob.composite_indexes) {
+				output += make_composite_key_getter(o, cob.name, cc).to_string(2);
+			}
+		}
+
 		output += "\n";
 		//make ve interface
 		output += "\t\t#ifndef DCON_NO_VE\n";

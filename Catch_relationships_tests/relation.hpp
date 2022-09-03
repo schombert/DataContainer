@@ -11,6 +11,7 @@
 #ifndef DCON_NO_VE
 #include "ve.hpp"
 #endif
+#include "unordered_dense.h"
 
 #ifdef NDEBUG
 #ifdef _MSC_VER
@@ -337,6 +338,14 @@ namespace dcon {
 			
 			uint32_t size_used = 0;
 
+			ankerl::unordered_dense::map<uint32_t, relate_same_id, ankerl::unordered_dense::hash<uint32_t>> hashm_joint;
+			uint32_t to_joint_keydata(thingyA_id left_p, thingyA_id right_p) {
+				uint32_t result = 0;
+				result |= (uint32_t(left_p.value) << 0);
+				result |= (uint32_t(right_p.value) << 11);
+				return result;
+			}
+			
 
 			public:
 			friend class data_container;
@@ -534,6 +543,7 @@ namespace dcon {
 			return ve::tagged_vector<thingyA_id>(id, std::true_type{});
 		}
 		#endif
+		private:
 		void relate_same_set_left(relate_same_id id, thingyA_id value) noexcept {
 			if(bool(value)) {
 				delete_relate_same( relate_same_id(relate_same_id::value_base_t(value.index())) );
@@ -551,6 +561,7 @@ namespace dcon {
 			}
 			return true;
 		}
+		public:
 		
 		DCON_RELEASE_INLINE relate_same_id thingyA_get_relate_same_as_left(thingyA_id id) const noexcept {
 			return relate_same_id(relate_same_id::value_base_t(id.index()));
@@ -593,6 +604,7 @@ namespace dcon {
 		}
 		#endif
 		
+		private:
 		//
 		// setters for relate_same: right
 		//
@@ -611,6 +623,7 @@ namespace dcon {
 		}
 		#endif
 		
+		public:
 		//
 		// primary key getters and setters for relate_in_array: left
 		//
@@ -1147,6 +1160,7 @@ namespace dcon {
 			#endif
 			const uint32_t old_size = relate_same.size_used;
 			if(new_size < old_size) {
+				relate_same.hashm_joint.clear();
 				std::fill_n(relate_same.m_right.vptr() + 0, old_size, thingyA_id{});
 			} else if(new_size > old_size) {
 			}
@@ -1157,6 +1171,7 @@ namespace dcon {
 		// container delete for relate_same
 		//
 		void delete_relate_same(relate_same_id id_removed) {
+			relate_same.hashm_joint.erase( relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(id_removed.index())), relate_same.m_right.vptr()[id_removed.index()]) );
 			relate_same_set_right(id_removed, thingyA_id());
 		}
 		
@@ -1166,6 +1181,7 @@ namespace dcon {
 		void pop_back_relate_same() {
 			if(relate_same.size_used == 0) return;
 			relate_same_id id_removed(relate_same_id::value_base_t(relate_same.size_used - 1));
+			relate_same.hashm_joint.erase( relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(id_removed.index())), relate_same.m_right.vptr()[id_removed.index()]) );
 			relate_same_set_right(id_removed, thingyA_id());
 			--relate_same.size_used;
 		}
@@ -1178,9 +1194,12 @@ namespace dcon {
 		// container move relationship for relate_same
 		//
 		void internal_move_relationship_relate_same(relate_same_id last_id, relate_same_id id_removed) {
+			relate_same.hashm_joint.erase(relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(last_id.index())), relate_same.m_right.vptr()[last_id.index()]));
 			relate_same_set_right(id_removed, thingyA_id());
 			relate_same.m_right.vptr()[id_removed.index()] = std::move(relate_same.m_right.vptr()[last_id.index()]);
 			relate_same.m_right.vptr()[last_id.index()] = thingyA_id();
+			relate_same.hashm_joint.erase(relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(last_id.index())), relate_same.m_right.vptr()[id_removed.index()]));
+			relate_same.hashm_joint.insert_or_assign(relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(id_removed.index())), relate_same.m_right.vptr()[id_removed.index()]), id_removed);
 		}
 		
 		public:
@@ -1194,6 +1213,7 @@ namespace dcon {
 			relate_same_id new_id(relate_same_id::value_base_t(left_p.index()));
 			if(relate_same.size_used < uint32_t(left_p.value)) relate_same_resize(uint32_t(left_p.value));
 			relate_same_set_right(new_id, right_p);
+			relate_same.hashm_joint.insert_or_assign(relate_same.to_joint_keydata(left_p, right_p), new_id);
 			return new_id;
 		}
 		
@@ -1203,6 +1223,13 @@ namespace dcon {
 		relate_same_id force_create_relate_same(thingyA_id left_p, thingyA_id right_p) {
 			relate_same_id new_id(relate_same_id::value_base_t(left_p.index()));
 			if(relate_same.size_used < uint32_t(left_p.value)) relate_same_resize(uint32_t(left_p.value));
+			{
+				auto key_dat = relate_same.to_joint_keydata(left_p, right_p);
+				if(auto it = relate_same.hashm_joint.find(key_dat); it !=  relate_same.hashm_joint.end()) {
+					delete_relate_same(it->second);
+				}
+				relate_same.hashm_joint.insert_or_assign(key_dat, new_id);
+			}
 			relate_same_set_right(new_id, right_p);
 			return new_id;
 		}
@@ -1418,6 +1445,12 @@ namespace dcon {
 			relate_in_list_resize(0);
 			thingyA_resize(0);
 			thingyB_resize(0);
+		}
+		relate_same_id get_relate_same_by_joint(thingyA_id left_p, thingyA_id right_p) {
+			if(auto it = relate_same.hashm_joint.find(relate_same.to_joint_keydata(left_p, right_p)); it != relate_same.hashm_joint.end()) {
+				return it->second;
+			}
+			return relate_same_id();
 		}
 
 		#ifndef DCON_NO_VE
@@ -1873,6 +1906,16 @@ namespace dcon {
 									relate_same_set_right(relate_same_id(relate_same_id::value_base_t(i)), tmp);
 								}
 							}
+							for(uint32_t idx = 0; idx < relate_same.size_used; ++idx) {
+								auto this_key = relate_same_id(relate_same_id::value_base_t(idx));
+								if(relate_same_is_valid(relate_same_id(relate_same_id::value_base_t(idx)))) {
+									auto key_dat = relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(idx)), relate_same.m_right.vptr()[idx]);
+									if(auto it = relate_same.hashm_joint.find(key_dat); it !=  relate_same.hashm_joint.end()) {
+										delete_relate_same(it->second);
+									}
+									relate_same.hashm_joint.insert_or_assign(key_dat, this_key);
+								}
+							}
 						}
 					} else
 					if(header.is_object("relate_in_array")) {
@@ -2154,6 +2197,16 @@ namespace dcon {
 									auto tmp = relate_same.m_right.vptr()[i];
 									relate_same.m_right.vptr()[i] = thingyA_id();
 									relate_same_set_right(relate_same_id(relate_same_id::value_base_t(i)), tmp);
+								}
+							}
+							for(uint32_t idx = 0; idx < relate_same.size_used; ++idx) {
+								auto this_key = relate_same_id(relate_same_id::value_base_t(idx));
+								if(relate_same_is_valid(relate_same_id(relate_same_id::value_base_t(idx)))) {
+									auto key_dat = relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(idx)), relate_same.m_right.vptr()[idx]);
+									if(auto it = relate_same.hashm_joint.find(key_dat); it !=  relate_same.hashm_joint.end()) {
+										delete_relate_same(it->second);
+									}
+									relate_same.hashm_joint.insert_or_assign(key_dat, this_key);
 								}
 							}
 						}
@@ -2544,9 +2597,7 @@ namespace dcon {
 			return container.relate_same_is_valid(id);
 		}
 		DCON_RELEASE_INLINE thingyA_fat_id get_left() const noexcept;
-		DCON_RELEASE_INLINE void set_left(thingyA_id val) const noexcept;
 		DCON_RELEASE_INLINE thingyA_fat_id get_right() const noexcept;
-		DCON_RELEASE_INLINE void set_right(thingyA_id val) const noexcept;
 	};
 	DCON_RELEASE_INLINE relate_same_fat_id fatten(data_container& c, relate_same_id id) noexcept {
 		return relate_same_fat_id(c, id);
@@ -2981,14 +3032,8 @@ namespace dcon {
 	DCON_RELEASE_INLINE thingyA_fat_id relate_same_fat_id::get_left() const noexcept {
 		return thingyA_fat_id(container, container.relate_same_get_left(id));
 	}
-	DCON_RELEASE_INLINE void relate_same_fat_id::set_left(thingyA_id val) const noexcept {
-		container.relate_same_set_left(id, val);
-	}
 	DCON_RELEASE_INLINE thingyA_fat_id relate_same_fat_id::get_right() const noexcept {
 		return thingyA_fat_id(container, container.relate_same_get_right(id));
-	}
-	DCON_RELEASE_INLINE void relate_same_fat_id::set_right(thingyA_id val) const noexcept {
-		container.relate_same_set_right(id, val);
 	}
 	
 	DCON_RELEASE_INLINE thingyA_const_fat_id relate_same_const_fat_id::get_left() const noexcept {

@@ -86,6 +86,7 @@ basic_builder& make_relation_try_create(basic_builder& o, relationship_object_de
 basic_builder& make_relation_force_create(basic_builder& o, relationship_object_def const& cob);
 basic_builder& make_serialize_plan_generator(basic_builder& o, file_def const& parsed_file, load_save_def const& rt);
 basic_builder& make_serialize_size(basic_builder& o, file_def const& parsed_file);
+void make_serialize_singe_object(basic_builder & o, const relationship_object_def & ob);
 basic_builder& make_serialize(basic_builder& o, file_def const& parsed_file);
 basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, bool with_mask);
 basic_builder& make_serialize_all_generator(basic_builder& o, file_def const& parsed_file);
@@ -98,3 +99,4 @@ basic_builder& make_const_fat_id_impl(basic_builder& o, relationship_object_def 
 basic_builder& make_fat_id_impl(basic_builder& o, relationship_object_def const& obj, file_def const& parsed_file);
 
 basic_builder& make_composite_key_declarations(basic_builder& o, std::string const& obj_name, composite_index_def const& cc);
+basic_builder& make_composite_key_getter(basic_builder& o, std::string const& obj_name, composite_index_def const& cc);
