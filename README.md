@@ -22,7 +22,7 @@ The following documentation explains all you need to know about how to generate 
 - [Overview](overview.md)
 - [Objects and properties](objects_and_properties.md)
 - [Relationships](relationships.md)
-- [Serialization and deerialization](serialization.md)
+- [Serialization and deserialization](serialization.md)
 - [Multithreading](multithreading.md)
 - [The ve SIMD library](ve_documentation.md)
 - [File format](file_format_documentation.md)

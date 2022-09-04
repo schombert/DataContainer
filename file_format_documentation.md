@@ -47,7 +47,7 @@ For example:
 
 ```
 load_save{
-name{store_standard}
+	name{store_standard}
 	only_objects{standard}{bonus}
 	exclude_properties{discard}
 }
