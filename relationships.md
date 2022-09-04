@@ -18,12 +18,12 @@ Specifying the objects involved in a relationship is done by adding `link` keys 
 
 It was already mentioned in the [overview](overview.md) that relationship instances can be thought of as entries in a table. (e.g. the the table below of a relationship between two objects with a single property.)
 
-| pet (animal id)    | owner (person id) | adopted on (some date type |
-| ------------------ | ----------------- | -------------------------- |
-| 1                  | 7                 | ...                        |
-| 2                  | 3                 | ...                        |
-| 5                  | 4                 | ...                        |
-| 9                  | 3                 | ...                        |
+| pet (animal id)    | owner (person id) | adopted on (some date type) |
+| ------------------ | ----------------- | --------------------------- |
+| 1                  | 7                 | ...                         |
+| 2                  | 3                 | ...                         |
+| 5                  | 4                 | ...                         |
+| 9                  | 3                 | ...                         |
 
 A link of `type{unique}` means that the handle for the linked object may only appear once in the column for that link, while a link with `type{many}` may appear multiple times. And, leveraging those constraints, indexing data is stored for the linked objects that allows you to lookup the relationships that they are involved in. An object that is linked as `type{unique}` will have functions added that allow finding the unique relationship instance (if any) that it is in, while an object that is linked as `type{many}` will have functions added to iterate over all of the relationship instances that it is involved in. Leveraging this indexing data also allows the data container to keep relationships up to date with changes in the objects: an object that is deleted will be removed from any relationships it is in, and an object that is moved will have any relationships it is involved in updated to reflect its new location. And this helps to explain the purpose of `type{unindexed}`. As with `type{many}`, no constraints are placed on how many times the objects linked in this way may appear in a column. Additionally, no extra indexing data is stored at all. This has two effects. First, no functions will be created for looking up relationship instances from the object linked. And secondly, the relationship instances will not be updated with any changes to the objects; and so invalid or incorrect handles may end up stored in such a link. A `type{unindexed}` link, then, is only advisable when you know that you need the performance advantages that it brings, and when you know that the objects being related will be neither created, nor deleted, nor moved for the lifetime of the relationship instance.[^1] Further suggestions for making the best used of `type{unindexed}` links are found in [Primary keys](#rimary-keys) below.
 

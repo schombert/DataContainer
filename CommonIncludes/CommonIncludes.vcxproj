@@ -139,6 +139,7 @@
     <None Include="..\multithreading.md" />
     <None Include="..\objects_and_properties.md" />
     <None Include="..\overview.md" />
+    <None Include="..\README.md" />
     <None Include="..\relationships.md" />
     <None Include="..\serialization.md" />
     <None Include="..\ve_documentation.md" />
