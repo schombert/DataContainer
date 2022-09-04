@@ -169,6 +169,9 @@ namespace ve {
 
 #endif
 namespace cob2 {
+	namespace detail {
+	}
+
 	class data_container;
 
 	namespace internal {
@@ -200,6 +203,7 @@ namespace cob2 {
 			
 			uint32_t size_used = 0;
 
+
 			public:
 			friend class data_container;
 		};
@@ -219,6 +223,7 @@ namespace cob2 {
 			m_age;
 			
 			uint32_t size_used = 0;
+
 
 			public:
 			friend class data_container;
@@ -262,6 +267,7 @@ namespace cob2 {
 			m_array_owner;
 			
 			uint32_t size_used = 0;
+
 
 			public:
 			friend class data_container;
@@ -676,9 +682,8 @@ namespace cob2 {
 			if(new_size < old_size) {
 				std::fill_n(car.m_wheels.vptr() + new_size, old_size - new_size, int32_t{});
 				std::fill_n(car.m_resale_value.vptr() + new_size, old_size - new_size, float{});
-				car_ownership_resize(new_size);
+				car_ownership_resize(std::min(new_size, car_ownership.size_used));
 			} else if(new_size > old_size) {
-				car_ownership_resize(new_size);
 			}
 			car.size_used = new_size;
 		}
@@ -741,13 +746,8 @@ namespace cob2 {
 			const uint32_t old_size = person.size_used;
 			if(new_size < old_size) {
 				std::fill_n(person.m_age.vptr() + new_size, old_size - new_size, int32_t{});
-				std::destroy_n(car_ownership.m_array_owner.vptr() + 0, old_size);
-				std::uninitialized_default_construct_n(car_ownership.m_array_owner.vptr() + 0, old_size);
-				std::fill_n(car_ownership.m_owner.vptr() + 0, car_ownership.size_used, person_id{});
+				car_ownership_resize(0);
 			} else if(new_size > old_size) {
-				std::destroy_n(car_ownership.m_array_owner.vptr() + 0, new_size);
-				std::uninitialized_default_construct_n(car_ownership.m_array_owner.vptr() + 0, new_size);
-				std::fill_n(car_ownership.m_owner.vptr() + 0, car_ownership.size_used, person_id{});
 			}
 			person.size_used = new_size;
 		}
@@ -849,10 +849,9 @@ namespace cob2 {
 		// container try create relationship for car_ownership
 		//
 		car_ownership_id try_create_car_ownership(person_id owner_p, car_id owned_car_p) {
-			if(!bool(owner_p)) return car_ownership_id();
-			if(!bool(owned_car_p)) return car_ownership_id();
 			if(car_ownership_is_valid(car_ownership_id(car_ownership_id::value_base_t(owned_car_p.index())))) return car_ownership_id();
 			car_ownership_id new_id(car_ownership_id::value_base_t(owned_car_p.index()));
+			if(car_ownership.size_used < uint32_t(owned_car_p.value)) car_ownership_resize(uint32_t(owned_car_p.value));
 			car_ownership_set_owner(new_id, owner_p);
 			return new_id;
 		}
@@ -862,6 +861,7 @@ namespace cob2 {
 		//
 		car_ownership_id force_create_car_ownership(person_id owner_p, car_id owned_car_p) {
 			car_ownership_id new_id(car_ownership_id::value_base_t(owned_car_p.index()));
+			if(car_ownership.size_used < uint32_t(owned_car_p.value)) car_ownership_resize(uint32_t(owned_car_p.value));
 			car_ownership_set_owner(new_id, owner_p);
 			return new_id;
 		}
@@ -1966,6 +1966,7 @@ namespace cob2 {
 		DCON_RELEASE_INLINE void set_owner(person_id val) const noexcept;
 		DCON_RELEASE_INLINE car_fat_id get_owned_car() const noexcept;
 		DCON_RELEASE_INLINE void set_owned_car(car_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_owned_car(car_id val) const noexcept;
 	};
 	DCON_RELEASE_INLINE car_ownership_fat_id fatten(data_container& c, car_ownership_id id) noexcept {
 		return car_ownership_fat_id(c, id);
@@ -2150,6 +2151,9 @@ namespace cob2 {
 	}
 	DCON_RELEASE_INLINE void car_ownership_fat_id::set_owned_car(car_id val) const noexcept {
 		container.car_ownership_set_owned_car(id, val);
+	}
+	DCON_RELEASE_INLINE bool car_ownership_fat_id::try_set_owned_car(car_id val) const noexcept {
+		return container.car_ownership_try_set_owned_car(id, val);
 	}
 	
 	DCON_RELEASE_INLINE int32_t const& car_ownership_const_fat_id::get_ownership_date() const noexcept { return container.car_ownership_get_ownership_date(id); }

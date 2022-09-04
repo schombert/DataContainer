@@ -1678,9 +1678,7 @@ namespace dcon {
 		// container try create relationship for relate_same
 		//
 		relate_same_id try_create_relate_same(thingyA_id left_p, thingyA_id right_p) {
-			if(!bool(left_p)) return relate_same_id();
 			if(relate_same_is_valid(relate_same_id(relate_same_id::value_base_t(left_p.index())))) return relate_same_id();
-			if(!bool(right_p)) return relate_same_id();
 			relate_same_id new_id(relate_same_id::value_base_t(left_p.index()));
 			if(relate_same.size_used < uint32_t(left_p.value)) relate_same_resize(uint32_t(left_p.value));
 			relate_same_set_right(new_id, right_p);
@@ -1761,9 +1759,7 @@ namespace dcon {
 		// container try create relationship for relate_in_array
 		//
 		relate_in_array_id try_create_relate_in_array(thingyA_id left_p, thingyB_id right_p) {
-			if(!bool(left_p)) return relate_in_array_id();
 			if(relate_in_array_is_valid(relate_in_array_id(relate_in_array_id::value_base_t(left_p.index())))) return relate_in_array_id();
-			if(!bool(right_p)) return relate_in_array_id();
 			relate_in_array_id new_id(relate_in_array_id::value_base_t(left_p.index()));
 			if(relate_in_array.size_used < uint32_t(left_p.value)) relate_in_array_resize(uint32_t(left_p.value));
 			relate_in_array_set_right(new_id, right_p);
@@ -1849,9 +1845,7 @@ namespace dcon {
 		// container try create relationship for relate_in_list
 		//
 		relate_in_list_id try_create_relate_in_list(thingyA_id left_p, thingyB_id right_p) {
-			if(!bool(left_p)) return relate_in_list_id();
 			if(relate_in_list_is_valid(relate_in_list_id(relate_in_list_id::value_base_t(left_p.index())))) return relate_in_list_id();
-			if(!bool(right_p)) return relate_in_list_id();
 			relate_in_list_id new_id(relate_in_list_id::value_base_t(left_p.index()));
 			if(relate_in_list.size_used < uint32_t(left_p.value)) relate_in_list_resize(uint32_t(left_p.value));
 			relate_in_list_set_right(new_id, right_p);
@@ -1940,13 +1934,6 @@ namespace dcon {
 		// container try create relationship for many_many
 		//
 		many_many_id try_create_many_many(thingyA_id A_p, thingyA_id B_p, thingyA_id C_p, thingyA_id D_p, thingyA_id E_p, thingyA_id F_p, thingyA_id ignore_p) {
-			if(!bool(A_p)) return many_many_id();
-			if(!bool(B_p)) return many_many_id();
-			if(!bool(C_p)) return many_many_id();
-			if(!bool(D_p)) return many_many_id();
-			if(!bool(E_p)) return many_many_id();
-			if(!bool(F_p)) return many_many_id();
-			if(!bool(ignore_p)) return many_many_id();
 			if(many_many.hashm_joint.contains(many_many.to_joint_keydata(A_p, B_p, C_p, D_p, E_p, F_p))) return many_many_id();
 			#ifndef DCON_USE_EXCEPTIONS
 			if(!bool(many_many.first_free)) std::abort();
@@ -3903,6 +3890,7 @@ namespace dcon {
 		}
 		DCON_RELEASE_INLINE thingyA_fat_id get_left() const noexcept;
 		DCON_RELEASE_INLINE void set_left(thingyA_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_left(thingyA_id val) const noexcept;
 		DCON_RELEASE_INLINE thingyB_fat_id get_right() const noexcept;
 		DCON_RELEASE_INLINE void set_right(thingyB_id val) const noexcept;
 	};
@@ -4009,6 +3997,7 @@ namespace dcon {
 		}
 		DCON_RELEASE_INLINE thingyA_fat_id get_left() const noexcept;
 		DCON_RELEASE_INLINE void set_left(thingyA_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_left(thingyA_id val) const noexcept;
 		DCON_RELEASE_INLINE thingyB_fat_id get_right() const noexcept;
 		DCON_RELEASE_INLINE void set_right(thingyB_id val) const noexcept;
 	};
@@ -4365,6 +4354,9 @@ namespace dcon {
 	DCON_RELEASE_INLINE void relate_in_array_fat_id::set_left(thingyA_id val) const noexcept {
 		container.relate_in_array_set_left(id, val);
 	}
+	DCON_RELEASE_INLINE bool relate_in_array_fat_id::try_set_left(thingyA_id val) const noexcept {
+		return container.relate_in_array_try_set_left(id, val);
+	}
 	DCON_RELEASE_INLINE thingyB_fat_id relate_in_array_fat_id::get_right() const noexcept {
 		return thingyB_fat_id(container, container.relate_in_array_get_right(id));
 	}
@@ -4384,6 +4376,9 @@ namespace dcon {
 	}
 	DCON_RELEASE_INLINE void relate_in_list_fat_id::set_left(thingyA_id val) const noexcept {
 		container.relate_in_list_set_left(id, val);
+	}
+	DCON_RELEASE_INLINE bool relate_in_list_fat_id::try_set_left(thingyA_id val) const noexcept {
+		return container.relate_in_list_try_set_left(id, val);
 	}
 	DCON_RELEASE_INLINE thingyB_fat_id relate_in_list_fat_id::get_right() const noexcept {
 		return thingyB_fat_id(container, container.relate_in_list_get_right(id));

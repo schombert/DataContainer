@@ -169,6 +169,9 @@ namespace ve {
 
 #endif
 namespace ex1 {
+	namespace detail {
+	}
+
 	class data_container;
 
 	namespace internal {
@@ -186,6 +189,7 @@ namespace ex1 {
 			m_wheels;
 			
 			uint32_t size_used = 0;
+
 
 			public:
 			friend class data_container;
@@ -205,6 +209,7 @@ namespace ex1 {
 			m_legs;
 			
 			uint32_t size_used = 0;
+
 
 			public:
 			friend class data_container;
@@ -280,6 +285,7 @@ namespace ex1 {
 			
 			lr_relation_id first_free = lr_relation_id();
 			uint32_t size_used = 0;
+
 
 			public:
 			friend class data_container;
@@ -638,15 +644,9 @@ namespace ex1 {
 			const uint32_t old_size = top.size_used;
 			if(new_size < old_size) {
 				top.m_wheels.values.resize(1 + new_size);
-				lr_relation.m_array_left.values.resize(1 + new_size);
-				std::destroy_n(lr_relation.m_array_left.vptr() + 0, new_size);
-				std::uninitialized_default_construct_n(lr_relation.m_array_left.vptr() + 0, new_size);
-				std::fill_n(lr_relation.m_left.vptr() + 0, lr_relation.size_used, top_id{});
+				lr_relation_resize(0);
 			} else if(new_size > old_size) {
 				top.m_wheels.values.resize(1 + new_size);
-				std::destroy_n(lr_relation.m_array_left.vptr() + 0, old_size);
-				std::uninitialized_default_construct_n(lr_relation.m_array_left.vptr() + 0, old_size);
-				std::fill_n(lr_relation.m_left.vptr() + 0, lr_relation.size_used, top_id{});
 				lr_relation.m_array_left.values.resize(1 + new_size);
 			}
 			top.size_used = new_size;
@@ -701,15 +701,9 @@ namespace ex1 {
 			const uint32_t old_size = bottom.size_used;
 			if(new_size < old_size) {
 				bottom.m_legs.values.resize(1 + new_size);
-				lr_relation.m_array_right.values.resize(1 + new_size);
-				std::destroy_n(lr_relation.m_array_right.vptr() + 0, new_size);
-				std::uninitialized_default_construct_n(lr_relation.m_array_right.vptr() + 0, new_size);
-				std::fill_n(lr_relation.m_right.vptr() + 0, lr_relation.size_used, bottom_id{});
+				lr_relation_resize(0);
 			} else if(new_size > old_size) {
 				bottom.m_legs.values.resize(1 + new_size);
-				std::destroy_n(lr_relation.m_array_right.vptr() + 0, old_size);
-				std::uninitialized_default_construct_n(lr_relation.m_array_right.vptr() + 0, old_size);
-				std::fill_n(lr_relation.m_right.vptr() + 0, lr_relation.size_used, bottom_id{});
 				lr_relation.m_array_right.values.resize(1 + new_size);
 			}
 			bottom.size_used = new_size;
@@ -787,8 +781,6 @@ namespace ex1 {
 		// container try create relationship for lr_relation
 		//
 		lr_relation_id try_create_lr_relation(top_id left_p, bottom_id right_p) {
-			if(!bool(left_p)) return lr_relation_id();
-			if(!bool(right_p)) return lr_relation_id();
 			lr_relation_id new_id = lr_relation.first_free;
 			bool expanded = !bool(lr_relation.first_free );
 			if(expanded) {

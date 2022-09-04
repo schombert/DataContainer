@@ -73,7 +73,7 @@ namespace dcon {
 		} else {
 			using ref_removed_type = std::remove_cv_t<std::remove_reference_t<T>>;
 			using signed_type = std::make_signed_t<ref_removed_type>;
-			return static_cast<int32_t>(static_cast<signed_type>( id ) );
+			return static_cast<int32_t>(static_cast<signed_type>(id));
 		}
 	}
 
@@ -146,7 +146,7 @@ namespace dcon {
 		char const* property_name_end;
 
 		record_header() {}
-		record_header(uint64_t sz, char  const* type, char  const* object, char const* property) : 
+		record_header(uint64_t sz, char  const* type, char  const* object, char const* property) :
 			record_size(uint32_t(sz)), type_name_start(type), object_name_start(object), property_name_start(property) {
 			type_name_end = type_name_start + strlen(type_name_start);
 			object_name_end = object_name_start + strlen(object_name_start);
@@ -192,7 +192,7 @@ namespace dcon {
 			record_size = *sz;
 			input_buffer += 4;
 			type_name_start = reinterpret_cast<char const*>(input_buffer);
-			while(input_buffer < end && *input_buffer != std::byte(0) ) {
+			while(input_buffer < end && *input_buffer != std::byte(0)) {
 				++input_buffer;
 			}
 			type_name_end = reinterpret_cast<char const*>(input_buffer);
@@ -245,6 +245,17 @@ namespace dcon {
 		}
 	};
 
+	template<typename T>
+	void for_each_record(std::byte const* input_buffer, std::byte const* end, T&& functor) {
+		while(input_buffer < end) {
+			dcon::record_header header;
+			header.deserialize(input_buffer, end);
+			if(input_buffer + header.record_size <= end) {
+				functor(header, input_buffer, input_buffer + header.record_size);
+			}
+			input_buffer += header.record_size;
+		}
+	}
 
 	using stable_mk_2_tag = uint32_t;
 

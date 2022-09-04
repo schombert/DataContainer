@@ -934,7 +934,7 @@ basic_builder& make_relation_unique_non_pk_getters_setters(basic_builder& o, std
 			};
 			o + "@obj@.m_link_back_@prop@.vptr()[value.index()] = id;";
 		};
-		o + "@obj@.m_@prop@.vptr()[id.index()] = value";
+		o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
 	};
 
 	o + "bool @obj@_try_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
@@ -947,7 +947,7 @@ basic_builder& make_relation_unique_non_pk_getters_setters(basic_builder& o, std
 		o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()]; bool(old_value))" + block{
 				o + "@obj@.m_link_back_@prop@.vptr()[old_value.index()] = @obj@_id();";
 		};
-		o + "@obj@.m_@prop@.vptr()[id.index()] = value";
+		o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
 		o + "return true;";
 	};
 
@@ -2739,9 +2739,9 @@ basic_builder& conversion_attempt(basic_builder& o, file_def const& parsed_file,
 						o + "@f_type@ temp;";
 						o + "deserialize(icpy, temp, input_buffer + header.record_size);";
 						if(to_bitfield)
-							o + "dcon::bit_vector_set(@obj@.m_@prop@.vptr(@s_index@), i, convert_type(&temp, (@to_type@*)nullptr));";
+							o + "dcon::bit_vector_set(@obj@.m_@prop@.vptr(@s_index@), i, convert_type(temp, (@to_type@*)nullptr));";
 						else
-							o + "@obj@.m_@prop@.vptr(@s_index@)[i] = convert_type(&temp, (@to_type@*)nullptr));";
+							o + "@obj@.m_@prop@.vptr(@s_index@)[i] = convert_type(temp, (@to_type@*)nullptr));";
 					};
 					o + "serialize_selection.@obj@_@prop@ = true;";
 				};
@@ -2753,9 +2753,9 @@ basic_builder& conversion_attempt(basic_builder& o, file_def const& parsed_file,
 					o + "for(uint32_t i = 0; i < std::min(@obj@.size_used, uint32_t(header.record_size / sizeof(@f_type@))); ++i)" + block{
 						if(to_bitfield)
 							o + "dcon::bit_vector_set(@obj@.m_@prop@.vptr(@s_index@), i, "
-								"convert_type(reinterpret_cast<@f_type@ const*>(input_buffer) + i, (@to_type@*)nullptr));";
+								"convert_type(*(reinterpret_cast<@f_type@ const*>(input_buffer) + i), (@to_type@*)nullptr));";
 						else
-							o + "@obj@.m_@prop@.vptr(@s_index@)[i] = convert_type(reinterpret_cast<@f_type@ const*>(input_buffer) + i, (@to_type@*)nullptr));";
+							o + "@obj@.m_@prop@.vptr(@s_index@)[i] = convert_type(*(reinterpret_cast<@f_type@ const*>(input_buffer) + i), (@to_type@*)nullptr));";
 					};
 					o + "serialize_selection.@obj@_@prop@ = true;";
 				};
@@ -2957,7 +2957,7 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 														o + "for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii)" + block{
 															o + "@f_type@ temp;";
 															o + "deserialize(icpy, temp, input_buffer + header.record_size);";
-															o + "dcon::get(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[ix], ii) = convert_type(&temp, (@type@*)nullptr);";
+															o + "dcon::get(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[ix], ii) = convert_type(temp, (@type@*)nullptr);";
 														};
 														o + "++ix;";
 													};
@@ -2979,7 +2979,7 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 														o + "dcon::resize(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[ix], sz);";
 														o + "for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii)" + block{
 															o + "dcon::get(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[ix], ii) = "
-																"convert_type(reinterpret_cast<@f_type@ const*>(icpy), (@type@*)nullptr);";
+																"convert_type(*(reinterpret_cast<@f_type@ const*>(icpy)), (@type@*)nullptr);";
 															o + "icpy += sizeof(@f_type@);";
 														};
 														o + "++ix;";

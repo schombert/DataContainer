@@ -79,14 +79,15 @@ namespace dcon {
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
 	
-		uint16_t value;
+		uint16_t value = 0;
 	
+		constexpr thingy_id() noexcept = default;
 		explicit constexpr thingy_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr thingy_id(thingy_id const& v) noexcept = default;
 		constexpr thingy_id(thingy_id&& v) noexcept = default;
-		constexpr thingy_id() noexcept : value(uint16_t(0)) {}
 	
-		thingy_id& operator=(thingy_id v) noexcept { value = v.value; return *this; }
+		thingy_id& operator=(thingy_id const& v) noexcept = default;
+		thingy_id& operator=(thingy_id&& v) noexcept = default;
 		constexpr bool operator==(thingy_id v) const noexcept { return value == v.value; }
 		constexpr bool operator!=(thingy_id v) const noexcept { return value != v.value; }
 		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
@@ -111,14 +112,15 @@ namespace dcon {
 		using value_base_t = uint32_t;
 		using zero_is_null_t = std::true_type;
 	
-		uint32_t value;
+		uint32_t value = 0;
 	
+		constexpr thingy2_id() noexcept = default;
 		explicit constexpr thingy2_id(uint32_t v) noexcept : value(v + 1) {}
 		constexpr thingy2_id(thingy2_id const& v) noexcept = default;
 		constexpr thingy2_id(thingy2_id&& v) noexcept = default;
-		constexpr thingy2_id() noexcept : value(uint32_t(0)) {}
 	
-		thingy2_id& operator=(thingy2_id v) noexcept { value = v.value; return *this; }
+		thingy2_id& operator=(thingy2_id const& v) noexcept = default;
+		thingy2_id& operator=(thingy2_id&& v) noexcept = default;
 		constexpr bool operator==(thingy2_id v) const noexcept { return value == v.value; }
 		constexpr bool operator!=(thingy2_id v) const noexcept { return value != v.value; }
 		explicit constexpr operator bool() const noexcept { return value != uint32_t(0); }
@@ -143,14 +145,15 @@ namespace dcon {
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
 	
-		uint16_t value;
+		uint16_t value = 0;
 	
+		constexpr dummy_rel_id() noexcept = default;
 		explicit constexpr dummy_rel_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr dummy_rel_id(dummy_rel_id const& v) noexcept = default;
 		constexpr dummy_rel_id(dummy_rel_id&& v) noexcept = default;
-		constexpr dummy_rel_id() noexcept : value(uint16_t(0)) {}
 	
-		dummy_rel_id& operator=(dummy_rel_id v) noexcept { value = v.value; return *this; }
+		dummy_rel_id& operator=(dummy_rel_id const& v) noexcept = default;
+		dummy_rel_id& operator=(dummy_rel_id&& v) noexcept = default;
 		constexpr bool operator==(dummy_rel_id v) const noexcept { return value == v.value; }
 		constexpr bool operator!=(dummy_rel_id v) const noexcept { return value != v.value; }
 		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
@@ -190,6 +193,9 @@ namespace ve {
 
 #endif
 namespace dcon {
+	namespace detail {
+	}
+
 	class data_container;
 
 	namespace internal {
@@ -328,6 +334,7 @@ namespace dcon {
 			
 			uint32_t size_used = 0;
 
+
 			public:
 			friend class data_container;
 		};
@@ -451,6 +458,7 @@ namespace dcon {
 			
 			uint32_t size_used = 0;
 
+
 			public:
 			friend class data_container;
 		};
@@ -481,6 +489,7 @@ namespace dcon {
 			m_link_back_right;
 			
 			uint32_t size_used = 0;
+
 
 			public:
 			friend class data_container;
@@ -1083,6 +1092,7 @@ namespace dcon {
 				}
 				dummy_rel.m_link_back_right.vptr()[value.index()] = id;
 			}
+			dummy_rel.m_right.vptr()[id.index()] = value;
 		}
 		bool dummy_rel_try_set_right(dummy_rel_id id, thingy2_id value) noexcept {
 			if(bool(value)) {
@@ -1094,6 +1104,7 @@ namespace dcon {
 			if(auto old_value = dummy_rel.m_right.vptr()[id.index()]; bool(old_value)) {
 				dummy_rel.m_link_back_right.vptr()[old_value.index()] = dummy_rel_id();
 			}
+			dummy_rel.m_right.vptr()[id.index()] = value;
 			return true;
 		}
 		
@@ -1142,11 +1153,7 @@ namespace dcon {
 		// convenience getters and setters that operate via an implcit join
 		//
 		thingy_id thingy2_get_left_from_dummy_rel(thingy2_id id) const {
-			if(auto ref_id = dummy_rel.m_link_back_right.vptr()[id.index()]; bool(ref_id)) {
-				return dummy_rel_get_left(ref_id);
-			} else {
-				return thingy_id{};
-			}
+			return dummy_rel_get_left(dummy_rel.m_link_back_right.vptr()[id.index()]);
 		}
 		#ifndef DCON_NO_VE
 		ve::value_to_vector_type<thingy_id> thingy2_get_left_from_dummy_rel(ve::contiguous_tags<thingy2_id> id) const {
@@ -1231,9 +1238,8 @@ namespace dcon {
 					}
 					std::fill_n(thingy.m_big_array_bf.vptr(s) + (new_size + 7) / 8, (new_size + old_size - new_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});
 				}
-				dummy_rel_resize(new_size);
+				dummy_rel_resize(std::min(new_size, dummy_rel.size_used));
 			} else if(new_size > old_size) {
-				dummy_rel_resize(new_size);
 			}
 			thingy.size_used = new_size;
 		}
@@ -1327,9 +1333,7 @@ namespace dcon {
 					}
 					thingy2.m_big_array_bf.values[s].resize(1 + (new_size + 7) / 8);
 				}
-				dummy_rel.m_link_back_right.values.resize(1 + new_size);
-				std::fill_n(dummy_rel.m_link_back_right.vptr() + 0, new_size, dummy_rel_id{});
-				std::fill_n(dummy_rel.m_right.vptr() + 0, dummy_rel.size_used, thingy2_id{});
+				dummy_rel_resize(0);
 			} else if(new_size > old_size) {
 				thingy2.m_some_value.values.resize(1 + new_size);
 				thingy2.m_bf_value.values.resize(1 + (new_size + 7) / 8);
@@ -1341,8 +1345,6 @@ namespace dcon {
 				for(int32_t s = 0; s < int32_t(thingy2.m_big_array_bf.size); ++s) {
 					thingy2.m_big_array_bf.values[s].resize(1 + (new_size + 7) / 8);
 				}
-				std::fill_n(dummy_rel.m_link_back_right.vptr() + 0, old_size, dummy_rel_id{});
-				std::fill_n(dummy_rel.m_right.vptr() + 0, dummy_rel.size_used, thingy2_id{});
 				dummy_rel.m_link_back_right.values.resize(1 + new_size);
 			}
 			thingy2.size_used = new_size;
@@ -1454,8 +1456,9 @@ namespace dcon {
 		//
 		dummy_rel_id try_create_dummy_rel(thingy_id left_p, thingy2_id right_p) {
 			if(dummy_rel_is_valid(dummy_rel_id(dummy_rel_id::value_base_t(left_p.index())))) return dummy_rel_id();
-			if(bool(right_p) && bool(dummy_rel.m_right.vptr()[right_p.index()])) return dummy_rel_id();
+			if(bool(right_p) && bool(dummy_rel.m_link_back_right.vptr()[right_p.index()])) return dummy_rel_id();
 			dummy_rel_id new_id(dummy_rel_id::value_base_t(left_p.index()));
+			if(dummy_rel.size_used < uint32_t(left_p.value)) dummy_rel_resize(uint32_t(left_p.value));
 			dummy_rel_set_right(new_id, right_p);
 			return new_id;
 		}
@@ -1465,6 +1468,7 @@ namespace dcon {
 		//
 		dummy_rel_id force_create_dummy_rel(thingy_id left_p, thingy2_id right_p) {
 			dummy_rel_id new_id(dummy_rel_id::value_base_t(left_p.index()));
+			if(dummy_rel.size_used < uint32_t(left_p.value)) dummy_rel_resize(uint32_t(left_p.value));
 			dummy_rel_set_right(new_id, right_p);
 			return new_id;
 		}
@@ -3424,8 +3428,10 @@ namespace dcon {
 		}
 		DCON_RELEASE_INLINE thingy_fat_id get_left() const noexcept;
 		DCON_RELEASE_INLINE void set_left(thingy_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_left(thingy_id val) const noexcept;
 		DCON_RELEASE_INLINE thingy2_fat_id get_right() const noexcept;
 		DCON_RELEASE_INLINE void set_right(thingy2_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_right(thingy2_id val) const noexcept;
 	};
 	DCON_RELEASE_INLINE dummy_rel_fat_id fatten(data_container& c, dummy_rel_id id) noexcept {
 		return dummy_rel_fat_id(c, id);
@@ -3623,11 +3629,17 @@ namespace dcon {
 	DCON_RELEASE_INLINE void dummy_rel_fat_id::set_left(thingy_id val) const noexcept {
 		container.dummy_rel_set_left(id, val);
 	}
+	DCON_RELEASE_INLINE bool dummy_rel_fat_id::try_set_left(thingy_id val) const noexcept {
+		return container.dummy_rel_try_set_left(id, val);
+	}
 	DCON_RELEASE_INLINE thingy2_fat_id dummy_rel_fat_id::get_right() const noexcept {
 		return thingy2_fat_id(container, container.dummy_rel_get_right(id));
 	}
 	DCON_RELEASE_INLINE void dummy_rel_fat_id::set_right(thingy2_id val) const noexcept {
 		container.dummy_rel_set_right(id, val);
+	}
+	DCON_RELEASE_INLINE bool dummy_rel_fat_id::try_set_right(thingy2_id val) const noexcept {
+		return container.dummy_rel_try_set_right(id, val);
 	}
 	
 	DCON_RELEASE_INLINE thingy_const_fat_id dummy_rel_const_fat_id::get_left() const noexcept {

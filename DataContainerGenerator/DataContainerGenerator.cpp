@@ -776,7 +776,7 @@ int main(int argc, char *argv[]) {
 		for(auto& con : parsed_file.conversion_list) {
 			if(std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.to) != parsed_file.object_types.end() ||
 				std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.from) != parsed_file.object_types.end()) {
-				output += "\t\t" + con.to + " convert_type(" + con.from + " const* source, " + con.to + "* overload_selector) const;\n";
+				output += "\t\t" + con.to + " convert_type(" + con.from + " const& source, " + con.to + "* overload_selector) const;\n";
 			}
 		}
 
