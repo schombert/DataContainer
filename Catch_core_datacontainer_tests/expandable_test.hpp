@@ -1,4 +1,11 @@
 #pragma once
+
+//
+// This file was automatically generated from: expandable_test.txt
+// EDIT AT YOUR OWN RISK; all changes will be lost upon regeneration
+// NOT SUITABLE FOR USE IN CRITICAL SOFTWARE WHERE LIVES OR LIVELIHOODS DEPEND ON THE CORRECT OPERATION
+//
+
 #include <cstdint>
 #include <cstddef>
 #include <utility>
@@ -300,6 +307,9 @@ namespace ex1 {
 		internal::lr_relation_class lr_relation;
 
 		//
+		// Functions for top:
+		//
+		//
 		// getters for top: wheels
 		//
 		DCON_RELEASE_INLINE int32_t const& top_get_wheels(top_id id) const noexcept {
@@ -319,10 +329,6 @@ namespace ex1 {
 			return ve::load(id, top.m_wheels.vptr());
 		}
 		#endif
-		
-		//
-		// setters for top: wheels
-		//
 		DCON_RELEASE_INLINE void top_set_wheels(top_id id, int32_t value) noexcept {
 			top.m_wheels.vptr()[id.index()] = value;
 		}
@@ -337,9 +343,81 @@ namespace ex1 {
 			ve::store(id, top.m_wheels.vptr(), values);
 		}
 		#endif
+		template<typename T>
+		DCON_RELEASE_INLINE void top_for_each_lr_relation_as_left(top_id id, T&& func) const {
+			if(bool(id)) {
+				auto& vref = lr_relation.m_array_left.vptr()[id.index()];
+				std::for_each(vref.begin(), vref.end(), func);
+			}
+		}
+		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> top_range_of_lr_relation_as_left(top_id id) const {
+			if(bool(id)) {
+				auto& vref = lr_relation.m_array_left.vptr()[id.index()];
+				return std::pair<lr_relation_id const*, lr_relation_id const*>(vref.data(), vref.data() + vref.size());
+			} else {
+				return std::pair<lr_relation_id const*, lr_relation_id const*>(nullptr, nullptr);
+			}
+		}
+		void top_remove_all_lr_relation_as_left(top_id id) noexcept {
+			auto rng = top_range_of_lr_relation_as_left(id);
+			dcon::local_vector<lr_relation_id> temp(rng.first, rng.second);
+			std::for_each(temp.begin(), temp.end(), [t = this](lr_relation_id i) { t->delete_lr_relation(i); });
+		}
+		template<typename T>
+		DCON_RELEASE_INLINE void top_for_each_lr_relation(top_id id, T&& func) const {
+			if(bool(id)) {
+				auto& vref = lr_relation.m_array_left.vptr()[id.index()];
+				std::for_each(vref.begin(), vref.end(), func);
+			}
+		}
+		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> top_range_of_lr_relation(top_id id) const {
+			if(bool(id)) {
+				auto& vref = lr_relation.m_array_left.vptr()[id.index()];
+				return std::pair<lr_relation_id const*, lr_relation_id const*>(vref.data(), vref.data() + vref.size());
+			} else {
+				return std::pair<lr_relation_id const*, lr_relation_id const*>(nullptr, nullptr);
+			}
+		}
+		void top_remove_all_lr_relation(top_id id) noexcept {
+			auto rng = top_range_of_lr_relation_as_left(id);
+			dcon::local_vector<lr_relation_id> temp(rng.first, rng.second);
+			std::for_each(temp.begin(), temp.end(), [t = this](lr_relation_id i) { t->delete_lr_relation(i); });
+		}
+		template<typename T>
+		void top_for_each_right_from_lr_relation(top_id id, T&& func) const {
+			top_for_each_lr_relation_as_left(id, [&](lr_relation_id i) {
+				func(lr_relation_get_right(i));
+			} );
+		}
+		bool top_has_right_from_lr_relation(top_id id, bottom_id target) const {
+			auto& vref = lr_relation.m_array_left.vptr()[id.index()];
+			for(auto pos = vref.begin(); pos != vref.end(); ++pos) {
+				if(lr_relation.m_right.vptr()[pos->index()] == target) return true;
+			}
+			return false;
+		}
+		template<typename T>
+		void top_for_each_thingies_from_lr_relation(top_id id, T&& func) const {
+			top_for_each_lr_relation_as_left(id, [&](lr_relation_id i) {
+				func(lr_relation_get_thingies(i));
+			} );
+		}
+		bool top_has_thingies_from_lr_relation(top_id id, int32_t target) const {
+			auto& vref = lr_relation.m_array_left.vptr()[id.index()];
+			for(auto pos = vref.begin(); pos != vref.end(); ++pos) {
+				if(lr_relation.m_thingies.vptr()[pos->index()] == target) return true;
+			}
+			return false;
+		}
+		DCON_RELEASE_INLINE bool top_is_valid(top_id id) const noexcept {
+			return bool(id) && uint32_t(id.index()) < top.size_used;
+		}
 		
 		uint32_t top_size() const noexcept { return top.size_used; }
 
+		//
+		// Functions for bottom:
+		//
 		//
 		// getters for bottom: legs
 		//
@@ -360,10 +438,6 @@ namespace ex1 {
 			return ve::load(id, bottom.m_legs.vptr());
 		}
 		#endif
-		
-		//
-		// setters for bottom: legs
-		//
 		DCON_RELEASE_INLINE void bottom_set_legs(bottom_id id, int32_t value) noexcept {
 			bottom.m_legs.vptr()[id.index()] = value;
 		}
@@ -378,9 +452,81 @@ namespace ex1 {
 			ve::store(id, bottom.m_legs.vptr(), values);
 		}
 		#endif
+		template<typename T>
+		DCON_RELEASE_INLINE void bottom_for_each_lr_relation_as_right(bottom_id id, T&& func) const {
+			if(bool(id)) {
+				auto& vref = lr_relation.m_array_right.vptr()[id.index()];
+				std::for_each(vref.begin(), vref.end(), func);
+			}
+		}
+		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> bottom_range_of_lr_relation_as_right(bottom_id id) const {
+			if(bool(id)) {
+				auto& vref = lr_relation.m_array_right.vptr()[id.index()];
+				return std::pair<lr_relation_id const*, lr_relation_id const*>(vref.data(), vref.data() + vref.size());
+			} else {
+				return std::pair<lr_relation_id const*, lr_relation_id const*>(nullptr, nullptr);
+			}
+		}
+		void bottom_remove_all_lr_relation_as_right(bottom_id id) noexcept {
+			auto rng = bottom_range_of_lr_relation_as_right(id);
+			dcon::local_vector<lr_relation_id> temp(rng.first, rng.second);
+			std::for_each(temp.begin(), temp.end(), [t = this](lr_relation_id i) { t->delete_lr_relation(i); });
+		}
+		template<typename T>
+		DCON_RELEASE_INLINE void bottom_for_each_lr_relation(bottom_id id, T&& func) const {
+			if(bool(id)) {
+				auto& vref = lr_relation.m_array_right.vptr()[id.index()];
+				std::for_each(vref.begin(), vref.end(), func);
+			}
+		}
+		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> bottom_range_of_lr_relation(bottom_id id) const {
+			if(bool(id)) {
+				auto& vref = lr_relation.m_array_right.vptr()[id.index()];
+				return std::pair<lr_relation_id const*, lr_relation_id const*>(vref.data(), vref.data() + vref.size());
+			} else {
+				return std::pair<lr_relation_id const*, lr_relation_id const*>(nullptr, nullptr);
+			}
+		}
+		void bottom_remove_all_lr_relation(bottom_id id) noexcept {
+			auto rng = bottom_range_of_lr_relation_as_right(id);
+			dcon::local_vector<lr_relation_id> temp(rng.first, rng.second);
+			std::for_each(temp.begin(), temp.end(), [t = this](lr_relation_id i) { t->delete_lr_relation(i); });
+		}
+		template<typename T>
+		void bottom_for_each_left_from_lr_relation(bottom_id id, T&& func) const {
+			bottom_for_each_lr_relation_as_right(id, [&](lr_relation_id i) {
+				func(lr_relation_get_left(i));
+			} );
+		}
+		bool bottom_has_left_from_lr_relation(bottom_id id, top_id target) const {
+			auto& vref = lr_relation.m_array_right.vptr()[id.index()];
+			for(auto pos = vref.begin(); pos != vref.end(); ++pos) {
+				if(lr_relation.m_left.vptr()[pos->index()] == target) return true;
+			}
+			return false;
+		}
+		template<typename T>
+		void bottom_for_each_thingies_from_lr_relation(bottom_id id, T&& func) const {
+			bottom_for_each_lr_relation_as_right(id, [&](lr_relation_id i) {
+				func(lr_relation_get_thingies(i));
+			} );
+		}
+		bool bottom_has_thingies_from_lr_relation(bottom_id id, int32_t target) const {
+			auto& vref = lr_relation.m_array_right.vptr()[id.index()];
+			for(auto pos = vref.begin(); pos != vref.end(); ++pos) {
+				if(lr_relation.m_thingies.vptr()[pos->index()] == target) return true;
+			}
+			return false;
+		}
+		DCON_RELEASE_INLINE bool bottom_is_valid(bottom_id id) const noexcept {
+			return bool(id) && uint32_t(id.index()) < bottom.size_used;
+		}
 		
 		uint32_t bottom_size() const noexcept { return bottom.size_used; }
 
+		//
+		// Functions for lr_relation:
+		//
 		//
 		// getters for lr_relation: thingies
 		//
@@ -401,10 +547,6 @@ namespace ex1 {
 			return ve::load(id, lr_relation.m_thingies.vptr());
 		}
 		#endif
-		
-		//
-		// setters for lr_relation: thingies
-		//
 		DCON_RELEASE_INLINE void lr_relation_set_thingies(lr_relation_id id, int32_t value) noexcept {
 			lr_relation.m_thingies.vptr()[id.index()] = value;
 		}
@@ -419,12 +561,6 @@ namespace ex1 {
 			ve::store(id, lr_relation.m_thingies.vptr(), values);
 		}
 		#endif
-		
-		uint32_t lr_relation_size() const noexcept { return lr_relation.size_used; }
-
-		//
-		// many key getters and setters for lr_relation: left
-		//
 		DCON_RELEASE_INLINE top_id lr_relation_get_left(lr_relation_id id) const noexcept {
 			return lr_relation.m_left.vptr()[id.index()];
 		}
@@ -452,52 +588,6 @@ namespace ex1 {
 			}
 			lr_relation.m_left.vptr()[id.index()] = value;
 		}
-		
-		template<typename T>
-		DCON_RELEASE_INLINE void top_for_each_lr_relation_as_left(top_id id, T&& func) const {
-			if(bool(id)) {
-				auto& vref = lr_relation.m_array_left.vptr()[id.index()];
-				std::for_each(vref.begin(), vref.end(), func);
-			}
-		}
-		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> top_range_of_lr_relation_as_left(top_id id) const {
-			if(bool(id)) {
-				auto& vref = lr_relation.m_array_left.vptr()[id.index()];
-				return std::pair<lr_relation_id const*, lr_relation_id const*>(vref.data(), vref.data() + vref.size());
-			} else {
-				return std::pair<lr_relation_id const*, lr_relation_id const*>(nullptr, nullptr);
-			}
-		}
-		void top_remove_all_lr_relation_as_left(top_id id) noexcept {
-			auto rng = top_range_of_lr_relation_as_left(id);
-			dcon::local_vector<lr_relation_id> temp(rng.first, rng.second);
-			std::for_each(temp.begin(), temp.end(), [t = this](lr_relation_id i) { t->delete_lr_relation(i); });
-		}
-		
-		template<typename T>
-		DCON_RELEASE_INLINE void top_for_each_lr_relation(top_id id, T&& func) const {
-			if(bool(id)) {
-				auto& vref = lr_relation.m_array_left.vptr()[id.index()];
-				std::for_each(vref.begin(), vref.end(), func);
-			}
-		}
-		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> top_range_of_lr_relation(top_id id) const {
-			if(bool(id)) {
-				auto& vref = lr_relation.m_array_left.vptr()[id.index()];
-				return std::pair<lr_relation_id const*, lr_relation_id const*>(vref.data(), vref.data() + vref.size());
-			} else {
-				return std::pair<lr_relation_id const*, lr_relation_id const*>(nullptr, nullptr);
-			}
-		}
-		void top_remove_all_lr_relation(top_id id) noexcept {
-			auto rng = top_range_of_lr_relation_as_left(id);
-			dcon::local_vector<lr_relation_id> temp(rng.first, rng.second);
-			std::for_each(temp.begin(), temp.end(), [t = this](lr_relation_id i) { t->delete_lr_relation(i); });
-		}
-		
-		//
-		// many key getters and setters for lr_relation: right
-		//
 		DCON_RELEASE_INLINE bottom_id lr_relation_get_right(lr_relation_id id) const noexcept {
 			return lr_relation.m_right.vptr()[id.index()];
 		}
@@ -525,106 +615,13 @@ namespace ex1 {
 			}
 			lr_relation.m_right.vptr()[id.index()] = value;
 		}
-		
-		template<typename T>
-		DCON_RELEASE_INLINE void bottom_for_each_lr_relation_as_right(bottom_id id, T&& func) const {
-			if(bool(id)) {
-				auto& vref = lr_relation.m_array_right.vptr()[id.index()];
-				std::for_each(vref.begin(), vref.end(), func);
-			}
-		}
-		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> bottom_range_of_lr_relation_as_right(bottom_id id) const {
-			if(bool(id)) {
-				auto& vref = lr_relation.m_array_right.vptr()[id.index()];
-				return std::pair<lr_relation_id const*, lr_relation_id const*>(vref.data(), vref.data() + vref.size());
-			} else {
-				return std::pair<lr_relation_id const*, lr_relation_id const*>(nullptr, nullptr);
-			}
-		}
-		void bottom_remove_all_lr_relation_as_right(bottom_id id) noexcept {
-			auto rng = bottom_range_of_lr_relation_as_right(id);
-			dcon::local_vector<lr_relation_id> temp(rng.first, rng.second);
-			std::for_each(temp.begin(), temp.end(), [t = this](lr_relation_id i) { t->delete_lr_relation(i); });
+		DCON_RELEASE_INLINE bool lr_relation_is_valid(lr_relation_id id) const noexcept {
+			return bool(id) && uint32_t(id.index()) < lr_relation.size_used && lr_relation.m__index.vptr()[id.index()] == id;
 		}
 		
-		template<typename T>
-		DCON_RELEASE_INLINE void bottom_for_each_lr_relation(bottom_id id, T&& func) const {
-			if(bool(id)) {
-				auto& vref = lr_relation.m_array_right.vptr()[id.index()];
-				std::for_each(vref.begin(), vref.end(), func);
-			}
-		}
-		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> bottom_range_of_lr_relation(bottom_id id) const {
-			if(bool(id)) {
-				auto& vref = lr_relation.m_array_right.vptr()[id.index()];
-				return std::pair<lr_relation_id const*, lr_relation_id const*>(vref.data(), vref.data() + vref.size());
-			} else {
-				return std::pair<lr_relation_id const*, lr_relation_id const*>(nullptr, nullptr);
-			}
-		}
-		void bottom_remove_all_lr_relation(bottom_id id) noexcept {
-			auto rng = bottom_range_of_lr_relation_as_right(id);
-			dcon::local_vector<lr_relation_id> temp(rng.first, rng.second);
-			std::for_each(temp.begin(), temp.end(), [t = this](lr_relation_id i) { t->delete_lr_relation(i); });
-		}
-		
+		uint32_t lr_relation_size() const noexcept { return lr_relation.size_used; }
 
-		//
-		// convenience getters and setters that operate via an implcit join
-		//
-		template<typename T>
-		void top_for_each_thingies_from_lr_relation(top_id id, T&& func) const {
-			top_for_each_lr_relation_as_left(id, [&](lr_relation_id i) {
-				func(lr_relation_get_thingies(i));
-			} );
-		}
-		bool top_has_thingies_from_lr_relation(top_id id, int32_t target) const {
-			auto& vref = lr_relation.m_array_left.vptr()[id.index()];
-			for(auto pos = vref.begin(); pos != vref.end(); ++pos) {
-				if(lr_relation.m_thingies.vptr()[pos->index()] == target) return true;
-			}
-			return false;
-		}
-		template<typename T>
-		void bottom_for_each_thingies_from_lr_relation(bottom_id id, T&& func) const {
-			bottom_for_each_lr_relation_as_right(id, [&](lr_relation_id i) {
-				func(lr_relation_get_thingies(i));
-			} );
-		}
-		bool bottom_has_thingies_from_lr_relation(bottom_id id, int32_t target) const {
-			auto& vref = lr_relation.m_array_right.vptr()[id.index()];
-			for(auto pos = vref.begin(); pos != vref.end(); ++pos) {
-				if(lr_relation.m_thingies.vptr()[pos->index()] == target) return true;
-			}
-			return false;
-		}
-		template<typename T>
-		void bottom_for_each_left_from_lr_relation(bottom_id id, T&& func) const {
-			bottom_for_each_lr_relation_as_right(id, [&](lr_relation_id i) {
-				func(lr_relation_get_left(i));
-			} );
-		}
-		bool bottom_has_left_from_lr_relation(bottom_id id, top_id const& target) const {
-			auto& vref = lr_relation.m_array_right.vptr()[id.index()];
-			for(auto pos = vref.begin(); pos != vref.end(); ++pos) {
-				if(lr_relation.m_left.vptr()[pos->index()] == target) return true;
-			}
-			return false;
-		}
-		template<typename T>
-		void top_for_each_right_from_lr_relation(top_id id, T&& func) const {
-			top_for_each_lr_relation_as_left(id, [&](lr_relation_id i) {
-				func(lr_relation_get_right(i));
-			} );
-		}
-		bool top_has_right_from_lr_relation(top_id id, bottom_id const& target) const {
-			auto& vref = lr_relation.m_array_left.vptr()[id.index()];
-			for(auto pos = vref.begin(); pos != vref.end(); ++pos) {
-				if(lr_relation.m_right.vptr()[pos->index()] == target) return true;
-			}
-			return false;
-		}
-		
+
 		//
 		// container pop_back for top
 		//
@@ -679,9 +676,6 @@ namespace ex1 {
 			--top.size_used;
 		}
 		
-		bool top_is_valid(top_id id) const {
-			return bool(id) && uint32_t(id.index()) < top.size_used;
-		}
 		//
 		// container pop_back for bottom
 		//
@@ -720,9 +714,6 @@ namespace ex1 {
 			return new_id;
 		}
 		
-		bool bottom_is_valid(bottom_id id) const {
-			return bool(id) && uint32_t(id.index()) < bottom.size_used;
-		}
 		//
 		// container delete for lr_relation
 		//
@@ -823,9 +814,6 @@ namespace ex1 {
 			return new_id;
 		}
 		
-		bool lr_relation_is_valid(lr_relation_id id) const {
-			return bool(id) && uint32_t(id.index()) < lr_relation.size_used && lr_relation.m__index.vptr()[id.index()] == id;
-		}
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_top(T&& func) {
 			for(uint32_t i = 0; i < top.size_used; ++i) {
@@ -1011,13 +999,13 @@ namespace ex1 {
 				header.serialize(output_buffer);
 				*(reinterpret_cast<uint32_t*>(output_buffer)) = lr_relation.size_used;
 				output_buffer += sizeof(uint32_t);
-				{
+		 {
 					dcon::record_header iheader(sizeof(top_id) * lr_relation.size_used, "uint32_t", "lr_relation", "left");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<top_id*>(output_buffer), lr_relation.m_left.vptr(), sizeof(top_id) * lr_relation.size_used);
 					output_buffer += sizeof(top_id) * lr_relation.size_used;
 				}
-				{
+		 {
 					dcon::record_header iheader(sizeof(bottom_id) * lr_relation.size_used, "uint32_t", "lr_relation", "right");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<bottom_id*>(output_buffer), lr_relation.m_right.vptr(), sizeof(bottom_id) * lr_relation.size_used);
@@ -1672,10 +1660,7 @@ namespace ex1 {
 			return id != other;
 		}
 		explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE bool is_valid() const noexcept {
-			return container.top_is_valid(id);
-		}
-		DCON_RELEASE_INLINE int32_t& get_wheels() const noexcept;
+		DCON_RELEASE_INLINE int32_t& get_wheels() const;
 		DCON_RELEASE_INLINE void set_wheels(int32_t v) const noexcept;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_lr_relation_as_left(T&& func) const;
@@ -1691,6 +1676,8 @@ namespace ex1 {
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_thingies_from_lr_relation(T&& func) const;
 		DCON_RELEASE_INLINE bool has_thingies_from_lr_relation(int32_t target) const;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
 	};
 	DCON_RELEASE_INLINE top_fat_id fatten(data_container& c, top_id id) noexcept {
 		return top_fat_id(c, id);
@@ -1741,10 +1728,7 @@ namespace ex1 {
 			return id != other;
 		}
 		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE bool is_valid() const noexcept {
-			return container.top_is_valid(id);
-		}
-		DCON_RELEASE_INLINE int32_t const& get_wheels() const noexcept;
+		DCON_RELEASE_INLINE int32_t const& get_wheels() const;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_lr_relation_as_left(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation_as_left() const;
@@ -1757,6 +1741,8 @@ namespace ex1 {
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_thingies_from_lr_relation(T&& func) const;
 		DCON_RELEASE_INLINE bool has_thingies_from_lr_relation(int32_t target) const;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
 	};
 	DCON_RELEASE_INLINE bool operator==(top_fat_id const& l, top_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -1801,10 +1787,7 @@ namespace ex1 {
 			return id != other;
 		}
 		explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE bool is_valid() const noexcept {
-			return container.bottom_is_valid(id);
-		}
-		DCON_RELEASE_INLINE int32_t& get_legs() const noexcept;
+		DCON_RELEASE_INLINE int32_t& get_legs() const;
 		DCON_RELEASE_INLINE void set_legs(int32_t v) const noexcept;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_lr_relation_as_right(T&& func) const;
@@ -1820,6 +1803,8 @@ namespace ex1 {
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_thingies_from_lr_relation(T&& func) const;
 		DCON_RELEASE_INLINE bool has_thingies_from_lr_relation(int32_t target) const;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
 	};
 	DCON_RELEASE_INLINE bottom_fat_id fatten(data_container& c, bottom_id id) noexcept {
 		return bottom_fat_id(c, id);
@@ -1870,10 +1855,7 @@ namespace ex1 {
 			return id != other;
 		}
 		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE bool is_valid() const noexcept {
-			return container.bottom_is_valid(id);
-		}
-		DCON_RELEASE_INLINE int32_t const& get_legs() const noexcept;
+		DCON_RELEASE_INLINE int32_t const& get_legs() const;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_lr_relation_as_right(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation_as_right() const;
@@ -1886,6 +1868,8 @@ namespace ex1 {
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_thingies_from_lr_relation(T&& func) const;
 		DCON_RELEASE_INLINE bool has_thingies_from_lr_relation(int32_t target) const;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
 	};
 	DCON_RELEASE_INLINE bool operator==(bottom_fat_id const& l, bottom_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -1930,15 +1914,14 @@ namespace ex1 {
 			return id != other;
 		}
 		explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE bool is_valid() const noexcept {
-			return container.lr_relation_is_valid(id);
-		}
-		DCON_RELEASE_INLINE int32_t& get_thingies() const noexcept;
+		DCON_RELEASE_INLINE int32_t& get_thingies() const;
 		DCON_RELEASE_INLINE void set_thingies(int32_t v) const noexcept;
 		DCON_RELEASE_INLINE top_fat_id get_left() const noexcept;
 		DCON_RELEASE_INLINE void set_left(top_id val) const noexcept;
 		DCON_RELEASE_INLINE bottom_fat_id get_right() const noexcept;
 		DCON_RELEASE_INLINE void set_right(bottom_id val) const noexcept;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
 	};
 	DCON_RELEASE_INLINE lr_relation_fat_id fatten(data_container& c, lr_relation_id id) noexcept {
 		return lr_relation_fat_id(c, id);
@@ -1989,12 +1972,11 @@ namespace ex1 {
 			return id != other;
 		}
 		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE bool is_valid() const noexcept {
-			return container.lr_relation_is_valid(id);
-		}
-		DCON_RELEASE_INLINE int32_t const& get_thingies() const noexcept;
+		DCON_RELEASE_INLINE int32_t const& get_thingies() const;
 		DCON_RELEASE_INLINE top_const_fat_id get_left() const noexcept;
 		DCON_RELEASE_INLINE bottom_const_fat_id get_right() const noexcept;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
 	};
 	DCON_RELEASE_INLINE bool operator==(lr_relation_fat_id const& l, lr_relation_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -2008,8 +1990,12 @@ namespace ex1 {
 		return lr_relation_const_fat_id(c, id);
 	}
 	
-	DCON_RELEASE_INLINE int32_t& top_fat_id::get_wheels() const noexcept { return container.top_get_wheels(id); }
-	DCON_RELEASE_INLINE void top_fat_id::set_wheels(int32_t v) const noexcept { container.top_set_wheels(id, v); }
+	DCON_RELEASE_INLINE int32_t& top_fat_id::get_wheels() const {
+		return container.top_get_wheels(id);
+	}
+	DCON_RELEASE_INLINE void top_fat_id::set_wheels(int32_t v) const noexcept {
+		container.top_set_wheels(id, v);
+	}
 	template<typename T>
 	DCON_RELEASE_INLINE void top_fat_id::for_each_lr_relation_as_left(T&& func) const {
 		container.top_for_each_lr_relation_as_left(id, [&, t = this](lr_relation_id i){func(fatten(t->container, i));});
@@ -2044,8 +2030,13 @@ namespace ex1 {
 	DCON_RELEASE_INLINE bool top_fat_id::has_thingies_from_lr_relation(int32_t target) const {
 		return container.top_has_thingies_from_lr_relation(id, target);
 	}
+	DCON_RELEASE_INLINE bool top_fat_id::is_valid() const noexcept {
+		return container.top_is_valid(id);
+	}
 	
-	DCON_RELEASE_INLINE int32_t const& top_const_fat_id::get_wheels() const noexcept { return container.top_get_wheels(id); }
+	DCON_RELEASE_INLINE int32_t const& top_const_fat_id::get_wheels() const {
+		return container.top_get_wheels(id);
+	}
 	template<typename T>
 	DCON_RELEASE_INLINE void top_const_fat_id::for_each_lr_relation_as_left(T&& func) const {
 		container.top_for_each_lr_relation_as_left(id, [&, t = this](lr_relation_id i){func(fatten(t->container, i));});
@@ -2074,9 +2065,16 @@ namespace ex1 {
 	DCON_RELEASE_INLINE bool top_const_fat_id::has_thingies_from_lr_relation(int32_t target) const {
 		return container.top_has_thingies_from_lr_relation(id, target);
 	}
+	DCON_RELEASE_INLINE bool top_const_fat_id::is_valid() const noexcept {
+		return container.top_is_valid(id);
+	}
 	
-	DCON_RELEASE_INLINE int32_t& bottom_fat_id::get_legs() const noexcept { return container.bottom_get_legs(id); }
-	DCON_RELEASE_INLINE void bottom_fat_id::set_legs(int32_t v) const noexcept { container.bottom_set_legs(id, v); }
+	DCON_RELEASE_INLINE int32_t& bottom_fat_id::get_legs() const {
+		return container.bottom_get_legs(id);
+	}
+	DCON_RELEASE_INLINE void bottom_fat_id::set_legs(int32_t v) const noexcept {
+		container.bottom_set_legs(id, v);
+	}
 	template<typename T>
 	DCON_RELEASE_INLINE void bottom_fat_id::for_each_lr_relation_as_right(T&& func) const {
 		container.bottom_for_each_lr_relation_as_right(id, [&, t = this](lr_relation_id i){func(fatten(t->container, i));});
@@ -2111,8 +2109,13 @@ namespace ex1 {
 	DCON_RELEASE_INLINE bool bottom_fat_id::has_thingies_from_lr_relation(int32_t target) const {
 		return container.bottom_has_thingies_from_lr_relation(id, target);
 	}
+	DCON_RELEASE_INLINE bool bottom_fat_id::is_valid() const noexcept {
+		return container.bottom_is_valid(id);
+	}
 	
-	DCON_RELEASE_INLINE int32_t const& bottom_const_fat_id::get_legs() const noexcept { return container.bottom_get_legs(id); }
+	DCON_RELEASE_INLINE int32_t const& bottom_const_fat_id::get_legs() const {
+		return container.bottom_get_legs(id);
+	}
 	template<typename T>
 	DCON_RELEASE_INLINE void bottom_const_fat_id::for_each_lr_relation_as_right(T&& func) const {
 		container.bottom_for_each_lr_relation_as_right(id, [&, t = this](lr_relation_id i){func(fatten(t->container, i));});
@@ -2141,9 +2144,16 @@ namespace ex1 {
 	DCON_RELEASE_INLINE bool bottom_const_fat_id::has_thingies_from_lr_relation(int32_t target) const {
 		return container.bottom_has_thingies_from_lr_relation(id, target);
 	}
+	DCON_RELEASE_INLINE bool bottom_const_fat_id::is_valid() const noexcept {
+		return container.bottom_is_valid(id);
+	}
 	
-	DCON_RELEASE_INLINE int32_t& lr_relation_fat_id::get_thingies() const noexcept { return container.lr_relation_get_thingies(id); }
-	DCON_RELEASE_INLINE void lr_relation_fat_id::set_thingies(int32_t v) const noexcept { container.lr_relation_set_thingies(id, v); }
+	DCON_RELEASE_INLINE int32_t& lr_relation_fat_id::get_thingies() const {
+		return container.lr_relation_get_thingies(id);
+	}
+	DCON_RELEASE_INLINE void lr_relation_fat_id::set_thingies(int32_t v) const noexcept {
+		container.lr_relation_set_thingies(id, v);
+	}
 	DCON_RELEASE_INLINE top_fat_id lr_relation_fat_id::get_left() const noexcept {
 		return top_fat_id(container, container.lr_relation_get_left(id));
 	}
@@ -2156,13 +2166,21 @@ namespace ex1 {
 	DCON_RELEASE_INLINE void lr_relation_fat_id::set_right(bottom_id val) const noexcept {
 		container.lr_relation_set_right(id, val);
 	}
+	DCON_RELEASE_INLINE bool lr_relation_fat_id::is_valid() const noexcept {
+		return container.lr_relation_is_valid(id);
+	}
 	
-	DCON_RELEASE_INLINE int32_t const& lr_relation_const_fat_id::get_thingies() const noexcept { return container.lr_relation_get_thingies(id); }
+	DCON_RELEASE_INLINE int32_t const& lr_relation_const_fat_id::get_thingies() const {
+		return container.lr_relation_get_thingies(id);
+	}
 	DCON_RELEASE_INLINE top_const_fat_id lr_relation_const_fat_id::get_left() const noexcept {
 		return top_const_fat_id(container, container.lr_relation_get_left(id));
 	}
 	DCON_RELEASE_INLINE bottom_const_fat_id lr_relation_const_fat_id::get_right() const noexcept {
 		return bottom_const_fat_id(container, container.lr_relation_get_right(id));
+	}
+	DCON_RELEASE_INLINE bool lr_relation_const_fat_id::is_valid() const noexcept {
+		return container.lr_relation_is_valid(id);
 	}
 	
 }

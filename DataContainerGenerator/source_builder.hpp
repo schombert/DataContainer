@@ -51,7 +51,7 @@ public:
 	std::vector<substitute> substitutes;
 	std::vector<std::string> lines;
 	int32_t extra_tabs = 0;
-	//basic_builder
+	bool declaration_mode = false;
 
 	basic_builder& operator+(substitute const& sub) & {
 		for(auto& s : substitutes) {
@@ -70,6 +70,8 @@ public:
 	basic_builder& operator+(append const& a) & {
 		if(lines.size() > 0)
 			lines.back() += (std::string(" ") + a.value);
+		else
+			add_line(std::string(" ") + a.value);
 		return *this;
 	}
 	basic_builder& operator+(std::string const& line) & {
@@ -92,10 +94,20 @@ public:
 	}
 	template<typename T>
 	auto operator+(T&& func) ->std::enable_if_t<std::is_invocable_v<T, basic_builder&>, basic_builder&> {
-		++extra_tabs;
-		func(*this);
-		--extra_tabs;
-		add_line("}");
+		if(!declaration_mode) {
+			if(lines.size() > 0)
+				lines.back() += " {";
+			else 
+				add_line("{");
+
+			++extra_tabs;
+			func(*this);
+			--extra_tabs;
+
+			add_line("}");
+		} else if(lines.size() > 0) {
+			lines.back() += ';';
+		}
 		return *this;
 	}
 	void add_line(std::string const& line) {
@@ -140,6 +152,7 @@ public:
 		extra_tabs = 0;
 		lines.clear();
 		substitutes.clear();
+		declaration_mode = false;
 
 		return output;
 	}
@@ -147,15 +160,15 @@ public:
 
 template<typename T>
 auto trailing_semicolon_state::operator+(T&& func)->std::enable_if_t<std::is_invocable_v<T, basic_builder&>, basic_builder&> {
-	++ref.extra_tabs;
-	func(ref);
-	--ref.extra_tabs;
-	ref.add_line("};");
+	ref + func;
+	if(!ref.declaration_mode && ref.lines.size() > 0) {
+		ref.lines.back() += ';';
+	}
 	return ref;
 }
 
-#define block append{"{"} + [&](basic_builder& o)
-#define class_block append{"{"} + trailing_semicolon{} +  [&](basic_builder& o) 
-#define inline_block "{" + [&](basic_builder& o)
+#define block [&](basic_builder& o)
+#define class_block trailing_semicolon{} + [&](basic_builder& o) 
+#define inline_block line_break{} + [&](basic_builder& o)
 
 

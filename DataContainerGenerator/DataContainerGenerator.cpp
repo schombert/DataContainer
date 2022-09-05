@@ -487,201 +487,26 @@ int main(int argc, char *argv[]) {
 		output += "\n";
 
 		for(auto& ob : parsed_file.relationship_objects) {
-			const std::string id_name = (ob.primary_key.points_to ? ob.primary_key.points_to->name : ob.name) + "_id";
-
-			//getters and setters
-			for(auto& p : ob.properties) {
-				// hook stubs
-				if(p.hook_get) {
-					if(p.type != property_type::array_bitfield && p.type != property_type::array_other && p.type != property_type::array_vectorizable) {
-						output += make_hooked_getters(o, ob.name, p.name, p.data_type,
-							p.type == property_type::bitfield ? hook_type::bitfield :
-							(p.type == property_type::vectorizable ? hook_type::vectorizable : hook_type::other),
-							ob.is_expandable).to_string(2);
-					} else {
-						output += make_array_hooked_getters(o, ob.name, p.name, p.data_type, p.array_index_type,
-							p.type == property_type::bitfield ? hook_type::bitfield :  hook_type::vectorizable,
-							ob.is_expandable).to_string(2);
-					}
-				}
-				if(p.hook_set) {
-					if(p.type != property_type::array_bitfield && p.type != property_type::array_other && p.type != property_type::array_vectorizable) {
-						output += make_hooked_setters(o, ob.name, p.name, p.data_type,
-							p.type == property_type::bitfield ? hook_type::bitfield :
-							(p.type == property_type::vectorizable ? hook_type::vectorizable : hook_type::other),
-							ob.is_expandable).to_string(2);
-					} else {
-						output += make_array_hooked_setters(o, ob.name, p.name, p.data_type, p.array_index_type,
-							p.type == property_type::bitfield ? hook_type::bitfield : hook_type::vectorizable,
-							ob.is_expandable).to_string(2);
-					}
-				}
-
-				if(p.is_derived) {
-					
-				} else if(p.type == property_type::bitfield) {
-					if(!p.hook_get)
-						output += make_bitfield_getters(o, ob.name, p.name, ob.is_expandable).to_string(2);
-					if(!p.hook_set) 
-						output += make_bitfield_setters(o, ob.name, p.name, ob.is_expandable).to_string(2);
-				} else if(p.type == property_type::object) {
-					if(!p.hook_get)
-						output += make_object_getters(o, ob.name, p.name, p.data_type).to_string(2);
-					if(!p.hook_set)
-						output += make_object_setters(o, ob.name, p.name, p.data_type).to_string(2);
-				} else if(p.type == property_type::special_vector) {
-					if(!p.hook_get)
-						output += make_special_array_getters(o, ob.name, p.name, p.data_type).to_string(2);
-					if(!p.hook_set) 
-						output += make_special_array_setters(o, ob.name, p.name, p.data_type).to_string(2);
-				} else if(p.type == property_type::vectorizable) {
-					if(!p.hook_get)
-						output += make_vectorizable_type_getters(o, ob.name, p.name, p.data_type, ob.is_expandable).to_string(2);
-					if(!p.hook_set)
-						output += make_vectorizable_type_setters(o, ob.name, p.name, p.data_type, ob.is_expandable).to_string(2);
-				} else if(p.type == property_type::array_vectorizable) {
-					if(!p.hook_get)
-						output += make_vectorizable_type_array_getters(o, ob.name, p.name, p.data_type, p.array_index_type, ob.is_expandable).to_string(2);
-					if(!p.hook_set)
-						output += make_vectorizable_type_array_setters(o, ob.name, p.name, p.data_type, p.array_index_type, ob.is_expandable).to_string(2);
-				} else if(p.type == property_type::array_other) {
-					if(!p.hook_get)
-						output += make_object_array_getters(o, ob.name, p.name, p.data_type, p.array_index_type).to_string(2);
-					if(!p.hook_set)
-						output += make_object_array_setters(o, ob.name, p.name, p.data_type, p.array_index_type).to_string(2);
-				} else if(p.type == property_type::array_bitfield) {
-					if(!p.hook_get)
-						output += make_bitfield_array_getters(o, ob.name, p.name, p.array_index_type, ob.is_expandable).to_string(2);
-					if(!p.hook_set)
-						output += make_bitfield_array_setters(o, ob.name, p.name, p.array_index_type, ob.is_expandable).to_string(2);
-				} else { // nonvectorizable data type w/o special handling
-					if(!p.hook_get)
-						output += make_object_getters(o, ob.name, p.name, p.data_type).to_string(2);
-					if(!p.hook_set)
-						output += make_object_setters(o, ob.name, p.name, p.data_type).to_string(2);
-				}
-			} // end loop over each property
+			output += make_object_member_declarations(o, parsed_file, ob,
+				true, false, "", false).to_string(2);
 
 			// creation / deletion / move hook routines
 			if(ob.hook_create) {
-				output += "\t\tvoid on_create_" + ob.name + "(" + id_name + " id);\n";
+				output += "\t\tvoid on_create_" + ob.name + "(" + ob.name + "_id id);\n";
 			}
 			if(ob.hook_delete) {
-				output += "\t\tvoid on_delete_" + ob.name + "(" + id_name + " id);\n";
+				output += "\t\tvoid on_delete_" + ob.name + "(" + ob.name + "_id id);\n";
 			}
 			if(ob.hook_move) {
-				output += "\t\tvoid on_move_" + ob.name + "(" + id_name + " new_id," + id_name + " old_id);\n";
+				output += "\t\tvoid on_move_" + ob.name + "(" + ob.name + "_id new_id," + ob.name + "_id old_id);\n";
 			}
 
 			output += "\t\tuint32_t " + ob.name + "_size() const noexcept { return " + ob.name + ".size_used; }\n\n";
 		} // end getters / setters creation loop over relationships / objects
 
 
-
-		/*
-			relationship design:
-
-			each relationship entry contains one id for each related object not the primary key = m_ property_name
-
-			if the object(s) related to are of the many type, then either: each relationship entry contains an intrusive linked list = m_link_ property_name
-				(and related object contains a reference back to the head relationship entry = m_head_back_ property_name)
-			or if it is of the array type the object related to gets an array with the indexes of all the relationship ids of this type it appears in
-				= m_array_ property_name and possibly property_name _storage
-
-			if the object(s) are of single type and not the primary key,
-				it has an entry referencing the relationship entry = m_link_back_ property_name,
-				if any (the primary key object, can find its relationship by its own key -- check wether the relationship exists by seeing whether
-				the other references in the relationship are set)
-
-			provided functions :
-				object related by many -> for each over relationships where it is in a particular position
-					-> also expose range if it is array type
-
-				object related by one (and indexed) / the relationship itself by name : get / set for any properties (and get other by one related values)
-
-				find relationship: fill in all related objects -> returns existing relationship if it exists (uses index if possible)
-
-				try_create relationship : /create if the relationship is new -- if there is an index/, and if no other relationships have to be destroyed
-				force_create relationship : /do nothing if it already exists -- by index/, break any other conflicting relations
-				delete relationship
-			*/
-
-		for(auto& r : parsed_file.relationship_objects) {
-
-			for(auto& i : r.indexed_objects) {
-
-				bool covered_by_ck = false;
-				for(auto& ck : r.composite_indexes) {
-					for(auto& index : ck.component_indexes) {
-						covered_by_ck = covered_by_ck || index.property_name == i.property_name;
-					}
-				}
-
-				if(i.index == index_type::at_most_one && r.primary_key == i) {
-					output += make_relation_pk_getters_setters(o, r.name, i.property_name, i.type_name, r.is_expandable, covered_by_ck).to_string(2);
-					output += make_relation_pk_reverse_getters_setters(o, r.name, i.property_name, i.type_name,
-						i.related_to->is_expandable, false).to_string(2);
-
-					bool is_only_of_type = true;
-					for(auto ir : r.indexed_objects) {
-						if(ir.type_name == i.type_name && ir.property_name != i.property_name)
-							is_only_of_type = false;
-					}
-					if(is_only_of_type) {
-						output += make_relation_pk_reverse_getters_setters(o, r.name, i.property_name, i.type_name,
-							i.related_to->is_expandable, true).to_string(2);
-					}
-				} else if(i.index == index_type::at_most_one) {
-					output += make_relation_unique_non_pk_getters_setters(o, r.name,
-						i.property_name, i.type_name, r.is_expandable, covered_by_ck).to_string(2);
-					output += make_relation_unique_non_pk_reverse_getters_setters(o, r.name,
-						i.property_name, i.type_name, i.related_to->is_expandable, false).to_string(2);
-					
-					bool is_only_of_type = true;
-					for(auto ir : r.indexed_objects) {
-						if(ir.type_name == i.type_name && ir.property_name != i.property_name)
-							is_only_of_type = false;
-					}
-
-					if(is_only_of_type) { //make shortcut function names
-						output += make_relation_unique_non_pk_reverse_getters_setters(o, r.name,
-							i.property_name, i.type_name, i.related_to->is_expandable, true).to_string(2);
-					}
-				} else if(i.index == index_type::many) {
-					output += make_relation_many_getters_setters(o, r.name, i.ltype,
-						i.property_name, i.type_name, r.is_expandable, covered_by_ck).to_string(2);
-					output += make_relation_many_reverse_getters_setters(o, r.name, i.ltype,
-						i.property_name, i.type_name, i.related_to->is_expandable, false).to_string(2);
-
-					bool is_only_of_type = true;
-					for(auto ir : r.indexed_objects) {
-						if(ir.type_name == i.type_name && ir.property_name != i.property_name)
-							is_only_of_type = false;
-					}
-					if(is_only_of_type) { // shortcut functions
-						output += make_relation_many_reverse_getters_setters(o, r.name, i.ltype,
-							i.property_name, i.type_name, i.related_to->is_expandable, true).to_string(2);
-					} //end shortcut functions in relationship
-				} else if(i.index == index_type::none) {
-					output += make_vectorizable_type_getters(o, r.name, i.property_name,
-						i.type_name + "_id", r.is_expandable).to_string(2);
-					if(covered_by_ck)
-						output += "\t\tprivate:\n";
-					output += make_vectorizable_type_setters(o, r.name, i.property_name,
-						i.type_name + "_id", r.is_expandable).to_string(2);
-					if(covered_by_ck)
-						output += "\t\tpublic:\n";
-				}// end -- creation of property references getters / setters
-			} //end of loop creating individual property getters / setters
-		} // end creating relationship getters / setters
-
 		output += "\n";
 
-		for(auto cob : parsed_file.relationship_objects) {
-			if(cob.is_relationship) {
-				output += make_join_getters_setters(o, cob).to_string(2);
-			}
-		}
 
 		// creation / deletion routines
 		for(auto& cob : parsed_file.relationship_objects) {
@@ -697,35 +522,16 @@ int main(int argc, char *argv[]) {
 						output += make_compactable_delete(o, cob).to_string(2);
 					}
 
-					output += "\t\tbool " + cob.name + "_is_valid(" + id_name + " id) const {\n";
-					output += "\t\t\treturn bool(id) && uint32_t(id.index()) < " + cob.name + ".size_used;\n";
-					output += "\t\t}\n";
 				} else if(cob.store_type == storage_type::erasable) {
 					output += make_erasable_delete(o, cob).to_string(2);
 					output += make_erasable_create(o, cob).to_string(2);
 					output += make_object_resize(o, cob).to_string(2);
-
-					output += "\t\tbool " + cob.name + "_is_valid(" + id_name + " id) const {\n";
-					output += "\t\t\treturn bool(id) && uint32_t(id.index()) < " + cob.name + ".size_used && "
-						+ cob.name + ".m__index.vptr()[id.index()] == id;\n";
-					output += "\t\t}\n";
 				}
 			} else if(cob.primary_key.points_to) { // primary key relationship
 				output += make_object_resize(o, cob).to_string(2);
 				output += make_clearing_delete(o, cob).to_string(2);
 				output += make_pop_back(o, cob).to_string(2);
 
-				output += "\t\tbool " + cob.name + "_is_valid(" + id_name + " id) const {\n";
-				output += "\t\t\treturn bool(id) && uint32_t(id.index()) < " + cob.name + ".size_used && " + 
-					"" + cob.primary_key.points_to->name + "_is_valid(" + cob.primary_key.points_to->name + 
-					"_id(" + cob.primary_key.points_to->name  + "_id::value_base_t(id.index()))) && (";
-				for(auto& iob : cob.indexed_objects) {
-					if(cob.primary_key != iob) {
-						output += "bool(" + cob.name + ".m_" + iob.property_name + ".vptr()[id.index()]) || ";
-					}
-				}
-				output += "false);\n";
-				output += "\t\t}\n"; // end is_valid
 
 				output += "\t\tprivate:\n";
 				output += make_internal_move_relationship(o, cob).to_string(2);
@@ -745,9 +551,6 @@ int main(int argc, char *argv[]) {
 					output += make_relation_try_create(o, cob).to_string(2);
 					output += make_relation_force_create(o, cob).to_string(2);
 
-					output += "\t\tbool " + cob.name + "_is_valid(" + id_name + " id) const {\n";
-					output += "\t\t\treturn bool(id) && uint32_t(id.index()) < " + cob.name + ".size_used;\n";
-					output += "\t\t}\n";
 				} else if(cob.store_type == storage_type::erasable) {
 					output += make_erasable_delete(o, cob).to_string(2);
 					output += make_object_resize(o, cob).to_string(2);
@@ -755,10 +558,6 @@ int main(int argc, char *argv[]) {
 					output += make_relation_try_create(o, cob).to_string(2);
 					output += make_relation_force_create(o, cob).to_string(2);
 
-					output += "\t\tbool " + cob.name + "_is_valid(" + id_name + " id) const {\n";
-					output += "\t\t\treturn bool(id) && uint32_t(id.index()) < " + cob.name + ".size_used && "
-						+ cob.name + ".m__index.vptr()[id.index()] == id;\n";
-					output += "\t\t}\n";
 				}
 			} // end case relationship no primary key
 		} // end creation / deletion reoutines creation loop

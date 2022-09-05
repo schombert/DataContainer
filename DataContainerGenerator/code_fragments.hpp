@@ -21,59 +21,6 @@ std::string expand_size_to_fill_cacheline_calculation(std::string const& member_
 
 basic_builder& make_erasable_object_constructor(basic_builder& o, std::string const& name, size_t size);
 
-enum class hook_type { bitfield, vectorizable, other };
-
-basic_builder& make_hooked_getters(basic_builder& o, std::string const& object_name, std::string const& property_name, 
-	std::string const& property_type, hook_type ht, bool is_expandable);
-basic_builder& make_hooked_setters(basic_builder& o, std::string const& object_name, std::string const& property_name,
-	std::string const& property_type, hook_type ht, bool is_expandable);
-basic_builder& make_array_hooked_getters(basic_builder& o, std::string const& object_name, std::string const& property_name,
-	std::string const& property_type, std::string const& index_type, hook_type ht, bool is_expandable);
-basic_builder& make_array_hooked_setters(basic_builder& o, std::string const& object_name, std::string const& property_name,
-	std::string const& property_type, std::string const& index_type, hook_type ht, bool is_expandable);
-
-basic_builder& make_bitfield_getters(basic_builder& o, std::string const& object_name, std::string const& property_name,
-	bool is_expandable);
-basic_builder& make_bitfield_setters(basic_builder& o, std::string const& object_name, std::string const& property_name,
-	bool is_expandable);
-basic_builder& make_object_getters(basic_builder& o, std::string const& object_name,  std::string const& property_name,
-	std::string const& type);
-basic_builder& make_object_setters(basic_builder& o, std::string const& object_name, std::string const& property_name,
-	std::string const& type);
-basic_builder& make_vectorizable_type_getters(basic_builder& o, std::string const& object_name, std::string const& property_name,
-	std::string const& type, bool is_expandable);
-basic_builder& make_vectorizable_type_setters(basic_builder& o, std::string const& object_name, std::string const& property_name,
-	std::string const& type, bool is_expandable);
-basic_builder& make_special_array_getters(basic_builder& o, std::string const& object_name, std::string const& property_name,
-	std::string const& type);
-basic_builder& make_special_array_setters(basic_builder& o, std::string const& object_name, std::string const& property_name,
-	std::string const& type);
-
-basic_builder& make_object_array_getters(basic_builder& o, std::string const& object_name, std::string const& property_name,
-	std::string const& type, std::string const& index_type);
-basic_builder& make_object_array_setters(basic_builder& o, std::string const& object_name, std::string const& property_name,
-	std::string const& type, std::string const& index_type);
-basic_builder& make_bitfield_array_setters(basic_builder& o, std::string const& object_name, std::string const& property_name,
-	std::string const& index_type, bool is_expandable);
-basic_builder& make_bitfield_array_getters(basic_builder& o, std::string const& object_name, std::string const& property_name,
-	std::string const& index_type, bool is_expandable);
-basic_builder& make_vectorizable_type_array_getters(basic_builder& o, std::string const& object_name, std::string const& property_name,
-	std::string const& type, std::string const& index_type, bool is_expandable);
-basic_builder& make_vectorizable_type_array_setters(basic_builder& o, std::string const& object_name, std::string const& property_name,
-	std::string const& type, std::string const& index_type, bool is_expandable);
-
-basic_builder& make_relation_pk_getters_setters(basic_builder& o, std::string const& relation_name, std::string const& property_name,
-	std::string const& property_type, bool is_expandable, bool is_covered_by_ck);
-basic_builder& make_relation_pk_reverse_getters_setters(basic_builder& o, std::string const& relation_name,
-	std::string const& property_name, std::string const& property_type, bool is_expandable, bool skip_as);
-basic_builder& make_relation_unique_non_pk_getters_setters(basic_builder& o, std::string const& relation_name,
-	std::string const& property_name, std::string const& property_type, bool is_expandable, bool is_covered_by_ck);
-basic_builder& make_relation_unique_non_pk_reverse_getters_setters(basic_builder& o, std::string const& relation_name,
-	std::string const& property_name, std::string const& property_type, bool is_expandable, bool skip_as);
-basic_builder& make_relation_many_getters_setters(basic_builder& o, std::string const& relation_name, list_type ltype,
-	std::string const& property_name, std::string const& property_type, bool is_expandable, bool is_covered_by_ck);
-basic_builder& make_relation_many_reverse_getters_setters(basic_builder& o, std::string const& relation_name, list_type ltype,
-	std::string const& property_name, std::string const& property_type, bool is_expandable, bool skip_as);
 basic_builder& make_pop_back(basic_builder& o, relationship_object_def const& obj);
 basic_builder& make_object_resize(basic_builder& o, relationship_object_def const& obj);
 basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def const& obj);
@@ -90,7 +37,6 @@ void make_serialize_singe_object(basic_builder & o, const relationship_object_de
 basic_builder& make_serialize(basic_builder& o, file_def const& parsed_file);
 basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, bool with_mask);
 basic_builder& make_serialize_all_generator(basic_builder& o, file_def const& parsed_file);
-basic_builder& make_join_getters_setters(basic_builder& o, relationship_object_def const& obj);
 basic_builder& make_iterate_over_objects(basic_builder& o, relationship_object_def const& obj);
 
 basic_builder& make_const_fat_id(basic_builder& o, relationship_object_def const& obj, file_def const& parsed_file);
@@ -100,3 +46,8 @@ basic_builder& make_fat_id_impl(basic_builder& o, relationship_object_def const&
 
 basic_builder& make_composite_key_declarations(basic_builder& o, std::string const& obj_name, composite_index_def const& cc);
 basic_builder& make_composite_key_getter(basic_builder& o, std::string const& obj_name, composite_index_def const& cc);
+
+basic_builder& make_object_member_declarations(basic_builder& o, file_def const& parsed_file, relationship_object_def const& obj,
+	bool add_prefix, bool declaration_mode, std::string const& namesp, bool const_mode);
+
+std::optional<std::string> to_fat_index_type(file_def const& parsed_file, std::string const& original_name, bool is_const);
