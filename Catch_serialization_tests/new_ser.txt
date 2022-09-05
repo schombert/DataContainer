@@ -1,4 +1,12 @@
-namespace{os}
+namespace{ns}
+
+legacy_types {
+	name{std::vector<float>}
+}
+convert{
+	from{std::vector<float>}
+	to{c_struct_b}
+}
 
 object{
 	name{thingy}
@@ -22,35 +30,13 @@ object{
 	}
 
 	property{
-		name{bf_value}
-		type{bitfield}
-		
-		tag{simple}
-	}
-
-	property{
 		name{d_value}
 		type{derived{int32_t}}
 	}
 
 	property{
 		name{obj_value}
-		type{object{std::vector<float>}}
-	}
-
-	property{
-		name{pooled_v}
-		type{vector_pool{1000}{int16_t}}
-	}
-
-	property{
-		name{big_array}
-		type{array{int32_t}{float}}
-	}
-
-	property{
-		name{big_array_bf}
-		type{array{int32_t}{bitfield}}
+		type{c_struct_b}
 	}
 
 	property {

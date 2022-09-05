@@ -1,7 +1,7 @@
 #pragma once
 
 //
-// This file was automatically generated from: old_ser.txt
+// This file was automatically generated from: new_ser.txt
 // EDIT AT YOUR OWN RISK; all changes will be lost upon regeneration
 // NOT SUITABLE FOR USE IN CRITICAL SOFTWARE WHERE LIVES OR LIVELIHOODS DEPEND ON THE CORRECT OPERATION
 //
@@ -32,17 +32,13 @@
 #pragma warning( push )
 #pragma warning( disable : 4324 )
 
-namespace os {
+namespace ns {
 	struct load_record {
 		bool thingy : 1;
 		bool thingy_i_value : 1;
 		bool thingy_f_value : 1;
-		bool thingy_bf_value : 1;
 		bool thingy_d_value : 1;
 		bool thingy_obj_value : 1;
-		bool thingy_pooled_v : 1;
-		bool thingy_big_array : 1;
-		bool thingy_big_array_bf : 1;
 		bool thingy_custom_struct : 1;
 		bool thingy2 : 1;
 		bool thingy2_some_value : 1;
@@ -53,12 +49,8 @@ namespace os {
 			thingy = false;
 			thingy_i_value = false;
 			thingy_f_value = false;
-			thingy_bf_value = false;
 			thingy_d_value = false;
 			thingy_obj_value = false;
-			thingy_pooled_v = false;
-			thingy_big_array = false;
-			thingy_big_array_bf = false;
 			thingy_custom_struct = false;
 			thingy2 = false;
 			thingy2_some_value = false;
@@ -171,24 +163,24 @@ namespace os {
 #ifndef DCON_NO_VE
 namespace ve {
 	template<>
-	struct value_to_vector_type_s<os::thingy_id> {
-		using type = tagged_vector<os::thingy_id>;
+	struct value_to_vector_type_s<ns::thingy_id> {
+		using type = tagged_vector<ns::thingy_id>;
 	};
 	
 	template<>
-	struct value_to_vector_type_s<os::thingy2_id> {
-		using type = tagged_vector<os::thingy2_id>;
+	struct value_to_vector_type_s<ns::thingy2_id> {
+		using type = tagged_vector<ns::thingy2_id>;
 	};
 	
 	template<>
-	struct value_to_vector_type_s<os::dummy_rel_id> {
-		using type = tagged_vector<os::dummy_rel_id>;
+	struct value_to_vector_type_s<ns::dummy_rel_id> {
+		using type = tagged_vector<ns::dummy_rel_id>;
 	};
 	
 }
 
 #endif
-namespace os {
+namespace ns {
 	namespace detail {
 	}
 
@@ -222,123 +214,16 @@ namespace os {
 			m_f_value;
 			
 			//
-			// storage space for bf_value of type dcon::bitfield_type
+			// storage space for obj_value of type c_struct_b
 			//
-			struct alignas(64) dtype_bf_value {
-				uint8_t padding[(63 + sizeof(dcon::bitfield_type)) & ~63ui64];
-				dcon::bitfield_type values[((uint32_t(1200 + 7)) / 8ui32 + 63ui32) & ~63ui32];
+			struct alignas(64) dtype_obj_value {
+				uint8_t padding[(63 + sizeof(c_struct_b)) & ~63ui64];
+				c_struct_b values[(sizeof(c_struct_b) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(c_struct_b))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(c_struct_b)) - 1ui32) : uint32_t(1200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_bf_value() { std::uninitialized_value_construct_n(values - 1, 1 + ((uint32_t(1200 + 7)) / 8ui32 + 63ui32) & ~63ui32); }
-			}
-			m_bf_value;
-			
-			//
-			// storage space for obj_value of type std::vector<float>
-			//
-			struct dtype_obj_value {
-				std::vector<float> values[1200];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_obj_value() { std::uninitialized_value_construct_n(values, 1200); }
+				dtype_obj_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(c_struct_b) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(c_struct_b))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(c_struct_b)) - 1ui32) : uint32_t(1200))); }
 			}
 			m_obj_value;
-			
-			//
-			// storage space for pooled_v of type dcon::stable_mk_2_tag
-			//
-			struct dtype_pooled_v {
-				dcon::stable_mk_2_tag values[1200];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_pooled_v() { std::uninitialized_fill_n(values, 1200, std::numeric_limits<dcon::stable_mk_2_tag>::max()); }
-			}
-			m_pooled_v;
-			
-			dcon::stable_variable_vector_storage_mk_2<int16_t, 16, 1000 > pooled_v_storage;
-			//
-			// storage space for big_array of type array of float
-			//
-			struct dtype_big_array {
-				std::byte* values = nullptr;
-				uint32_t size = 0;
-				DCON_RELEASE_INLINE auto vptr(int32_t i) const {
-					return reinterpret_cast<float const*>(values + ((63ui64 + sizeof(float)) & ~63ui64) + i * (sizeof(float) * 1200 + 64ui64 - ((sizeof(float) * 1200) & 63ui64) + ((sizeof(float) + 63ui64) & ~63ui64)));
-				}
-				DCON_RELEASE_INLINE auto vptr(int32_t i) {
-					return reinterpret_cast<float*>(values + ((63ui64 + sizeof(float)) & ~63ui64) + i * (sizeof(float) * 1200 + 64ui64 - ((sizeof(float) * 1200) & 63ui64) + ((sizeof(float) + 63ui64) & ~63ui64)));
-				}
-				DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t) {
-					std::byte* temp = (std::byte*)(::operator new(((63ui64 + sizeof(float)) & ~63ui64) + sz * (sizeof(float) * 1200 + 64ui64 - ((sizeof(float) * 1200) & 63ui64) + ((sizeof(float) + 63ui64) & ~63ui64)), std::align_val_t{ 64 }));
-					if(sz > size) {
-						if(values) {
-							std::memcpy(temp, values, ((63ui64 + sizeof(float)) & ~63ui64) + size * (sizeof(float) * 1200 + 64ui64 - ((sizeof(float) * 1200) & 63ui64) + ((sizeof(float) + 63ui64) & ~63ui64)));
-							std::memset(temp + ((63ui64 + sizeof(float)) & ~63ui64) + size * (sizeof(float) * 1200 + 64ui64 - ((sizeof(float) * 1200) & 63ui64) + ((sizeof(float) + 63ui64) & ~63ui64)), 0, (sz - size) * (sizeof(float) * 1200 + 64ui64 - ((sizeof(float) * 1200) & 63ui64) + ((sizeof(float) + 63ui64) & ~63ui64)));
-						} else {
-							std::memset(temp, 0, ((63ui64 + sizeof(float)) & ~63ui64) + sz * (sizeof(float) * 1200 + 64ui64 - ((sizeof(float) * 1200) & 63ui64) + ((sizeof(float) + 63ui64) & ~63ui64)));
-						}
-					} else {
-						std::memcpy(temp, values, ((63ui64 + sizeof(float)) & ~63ui64) + sz * (sizeof(float) * 1200 + 64ui64 - ((sizeof(float) * 1200) & 63ui64) + ((sizeof(float) + 63ui64) & ~63ui64)));
-					}
-					::operator delete(values, std::align_val_t{ 64 });
-					values = temp;
-					size = sz;
-				}
-				~dtype_big_array() { ::operator delete(values, std::align_val_t{ 64 }); }
-				DCON_RELEASE_INLINE void copy_value(int32_t dest, int32_t source) {
-					for(int32_t i = 0; i < int32_t(size); ++i) {
-						vptr(i)[dest] = vptr(i)[source];
-					}
-				}
-				DCON_RELEASE_INLINE void zero_at(int32_t dest) {
-					for(int32_t i = 0; i < int32_t(size); ++i) {
-						vptr(i)[dest] = float{};
-					}
-				}
-			}
-			m_big_array;
-			
-			//
-			// storage space for big_array_bf of type array of dcon::bitfield_type
-			//
-			struct dtype_big_array_bf {
-				std::byte* values = nullptr;
-				uint32_t size = 0;
-				DCON_RELEASE_INLINE auto vptr(int32_t i) const {
-					return reinterpret_cast<dcon::bitfield_type const*>(values + ((63ui64 + sizeof(dcon::bitfield_type)) & ~63ui64) + i * ( (1200 + 7) / 8 + 64ui64 - (( (1200 + 7) / 8) & 63ui64) ));
-				}
-				DCON_RELEASE_INLINE auto vptr(int32_t i) {
-					return reinterpret_cast<dcon::bitfield_type*>(values + ((63ui64 + sizeof(dcon::bitfield_type)) & ~63ui64) + i * ( (1200 + 7) / 8 + 64ui64 - (( (1200 + 7) / 8) & 63ui64) ));
-				}
-				DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t) {
-					std::byte* temp = (std::byte*)(::operator new(((63ui64 + sizeof(dcon::bitfield_type)) & ~63ui64) + sz * ( (1200 + 7) / 8 + 64ui64 - (( (1200 + 7) / 8) & 63ui64) ), std::align_val_t{ 64 }));
-					if(sz > size) {
-						if(values) {
-							std::memcpy(temp, values, ((63ui64 + sizeof(dcon::bitfield_type)) & ~63ui64) + size * ( (1200 + 7) / 8 + 64ui64 - (( (1200 + 7) / 8) & 63ui64) ));
-							std::memset(temp + ((63ui64 + sizeof(dcon::bitfield_type)) & ~63ui64) + size * ( (1200 + 7) / 8 + 64ui64 - (( (1200 + 7) / 8) & 63ui64) ), 0, (sz - size) * ( (1200 + 7) / 8 + 64ui64 - (( (1200 + 7) / 8) & 63ui64) ));
-						} else {
-							std::memset(temp, 0, ((63ui64 + sizeof(dcon::bitfield_type)) & ~63ui64) + sz * ( (1200 + 7) / 8 + 64ui64 - (( (1200 + 7) / 8) & 63ui64) ));
-						}
-					} else {
-						std::memcpy(temp, values, ((63ui64 + sizeof(dcon::bitfield_type)) & ~63ui64) + sz * ( (1200 + 7) / 8 + 64ui64 - (( (1200 + 7) / 8) & 63ui64) ));
-					}
-					::operator delete(values, std::align_val_t{ 64 });
-					values = temp;
-					size = sz;
-				}
-				~dtype_big_array_bf() { ::operator delete(values, std::align_val_t{ 64 }); }
-				DCON_RELEASE_INLINE void copy_value(int32_t dest, int32_t source) {
-					for(int32_t i = 0; i < int32_t(size); ++i) {
-						dcon::bit_vector_set(vptr(i), dest, dcon::bit_vector_test(vptr(i), source));
-					}
-				}
-				DCON_RELEASE_INLINE void zero_at(int32_t dest) {
-					for(int32_t i = 0; i < int32_t(size); ++i) {
-						dcon::bit_vector_set(vptr(i), dest, false);
-					}
-				}
-			}
-			m_big_array_bf;
 			
 			//
 			// storage space for custom_struct of type c_struct
@@ -507,185 +392,21 @@ namespace os {
 		#endif
 		
 		//
-		// getters for thingy: bf_value
-		//
-		DCON_RELEASE_INLINE bool thingy_get_bf_value(thingy_id id) const noexcept {
-			return dcon::bit_vector_test(thingy.m_bf_value.vptr(), id.index());
-		}
-		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE ve::vbitfield_type thingy_get_bf_value(ve::contiguous_tags<thingy_id> id) const noexcept {
-			return ve::load(id, thingy.m_bf_value.vptr());
-		}
-		DCON_RELEASE_INLINE ve::vbitfield_type thingy_get_bf_value(ve::partial_contiguous_tags<thingy_id> id) const noexcept {
-			return ve::load(id, thingy.m_bf_value.vptr());
-		}
-		DCON_RELEASE_INLINE ve::vbitfield_type thingy_get_bf_value(ve::tagged_vector<thingy_id> id) const noexcept {
-			return ve::load(id, thingy.m_bf_value.vptr());
-		}
-		#endif
-		
-		//
-		// setters for thingy: bf_value
-		//
-		DCON_RELEASE_INLINE void thingy_set_bf_value(thingy_id id, bool value) noexcept {
-			dcon::bit_vector_set(thingy.m_bf_value.vptr(), id.index(), value);
-		}
-		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE void thingy_set_bf_value(ve::contiguous_tags<thingy_id> id, ve::vbitfield_type values) noexcept {
-			ve::store(id, thingy.m_bf_value.vptr(), values);
-		}
-		DCON_RELEASE_INLINE void thingy_set_bf_value(ve::partial_contiguous_tags<thingy_id> id, ve::vbitfield_type values) noexcept {
-			ve::store(id, thingy.m_bf_value.vptr(), values);
-		}
-		DCON_RELEASE_INLINE void thingy_set_bf_value(ve::tagged_vector<thingy_id> id, ve::vbitfield_type values) noexcept {
-			ve::store(id, thingy.m_bf_value.vptr(), values);
-		}
-		#endif
-		
-		//
 		// getters for thingy: obj_value
 		//
-		DCON_RELEASE_INLINE std::vector<float> const& thingy_get_obj_value(thingy_id id) const noexcept {
+		DCON_RELEASE_INLINE c_struct_b const& thingy_get_obj_value(thingy_id id) const noexcept {
 			return thingy.m_obj_value.vptr()[id.index()];
 		}
-		DCON_RELEASE_INLINE std::vector<float>& thingy_get_obj_value(thingy_id id) noexcept {
+		DCON_RELEASE_INLINE c_struct_b& thingy_get_obj_value(thingy_id id) noexcept {
 			return thingy.m_obj_value.vptr()[id.index()];
 		}
 		
 		//
 		// setters for thingy: obj_value
 		//
-		DCON_RELEASE_INLINE void thingy_set_obj_value(thingy_id id, std::vector<float> const& value) noexcept {
+		DCON_RELEASE_INLINE void thingy_set_obj_value(thingy_id id, c_struct_b const& value) noexcept {
 			thingy.m_obj_value.vptr()[id.index()] = value;
 		}
-		
-		//
-		// getters for thingy: pooled_v (special array)
-		//
-		std::pair<int16_t*, int16_t*> thingy_get_pooled_v_range(thingy_id id) const noexcept {
-			return dcon::get_range(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[id.index()]);
-		}
-		int16_t& thingy_get_pooled_v_at(thingy_id id, uint32_t inner_index) const noexcept {
-			return dcon::get(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[id.index()], inner_index);
-		}
-		uint32_t thingy_get_pooled_v_capacity(thingy_id id) const noexcept {
-			return dcon::get_capacity(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[id.index()]);
-		}
-		uint32_t thingy_get_pooled_v_size(thingy_id id) const noexcept {
-			return dcon::get_size(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[id.index()]);
-		}
-		bool thingy_pooled_v_contains(thingy_id id, int16_t obj) const noexcept {
-			return dcon::contains_item(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[id.index()], obj);
-		}
-		
-		//
-		// setters for thingy: pooled_v (special array)
-		//
-		void thingy_pooled_v_push_back(thingy_id id, int16_t obj) noexcept {
-			dcon::push_back(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[id.index()], obj);
-		}
-		void thingy_pooled_v_pop_back(thingy_id id) noexcept {
-			dcon::pop_back(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[id.index()]);
-		}
-		void thingy_pooled_v_add_unique(thingy_id id, int16_t obj) noexcept {
-			dcon::add_unique_item(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[id.index()], obj);
-		}
-		void thingy_pooled_v_remove_unique(thingy_id id, int16_t obj) noexcept {
-			dcon::remove_unique_item(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[id.index()], obj);
-		}
-		void thingy_pooled_v_clear(thingy_id id) noexcept {
-			thingy.pooled_v_storage.release(thingy.m_pooled_v.vptr()[id.index()]);
-		}
-		void thingy_pooled_v_remove_at(thingy_id id, uint32_t inner_index) noexcept {
-			dcon::remove_at(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[id.index()], inner_index);
-		}
-		
-		//
-		// getters for thingy: big_array
-		//
-		DCON_RELEASE_INLINE float const& thingy_get_big_array(thingy_id id, int32_t n) const noexcept {
-			return thingy.m_big_array.vptr(dcon::get_index(n))[id.index()];
-		}
-		DCON_RELEASE_INLINE float& thingy_get_big_array(thingy_id id, int32_t n) noexcept {
-			return thingy.m_big_array.vptr(dcon::get_index(n))[id.index()];
-		}
-		DCON_RELEASE_INLINE uint32_t thingy_get_big_array_size() const noexcept {
-			return thingy.m_big_array.size;
-		}
-		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE ve::value_to_vector_type<float> thingy_get_big_array(ve::contiguous_tags<thingy_id> id, int32_t n) const noexcept {
-			return ve::load(id, thingy.m_big_array.vptr(dcon::get_index(n)));
-		}
-		DCON_RELEASE_INLINE ve::value_to_vector_type<float> thingy_get_big_array(ve::partial_contiguous_tags<thingy_id> id, int32_t n) const noexcept {
-			return ve::load(id, thingy.m_big_array.vptr(dcon::get_index(n)));
-		}
-		DCON_RELEASE_INLINE ve::value_to_vector_type<float> thingy_get_big_array(ve::tagged_vector<thingy_id> id, int32_t n) const noexcept {
-			return ve::load(id, thingy.m_big_array.vptr(dcon::get_index(n)));
-		}
-		#endif
-		
-		//
-		// setters for thingy: big_array
-		//
-		DCON_RELEASE_INLINE void thingy_set_big_array(thingy_id id, int32_t n, float value) noexcept {
-			thingy.m_big_array.vptr(dcon::get_index(n))[id.index()] = value;
-		}
-		DCON_RELEASE_INLINE void thingy_resize_big_array(uint32_t size) noexcept {
-			return thingy.m_big_array.resize(size, thingy.size_used);
-		}
-		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE void thingy_set_big_array(ve::contiguous_tags<thingy_id> id, int32_t n, ve::value_to_vector_type<float> values) noexcept {
-			ve::store(id, thingy.m_big_array.vptr(dcon::get_index(n)), values);
-		}
-		DCON_RELEASE_INLINE void thingy_set_big_array(ve::partial_contiguous_tags<thingy_id> id, int32_t n, ve::value_to_vector_type<float> values) noexcept {
-			ve::store(id, thingy.m_big_array.vptr(dcon::get_index(n)), values);
-		}
-		DCON_RELEASE_INLINE void thingy_set_big_array(ve::tagged_vector<thingy_id> id, int32_t n, ve::value_to_vector_type<float> values) noexcept {
-			ve::store(id, thingy.m_big_array.vptr(dcon::get_index(n)), values);
-		}
-		#endif
-		
-		//
-		// getters for thingy: big_array_bf
-		//
-		DCON_RELEASE_INLINE bool thingy_get_big_array_bf(thingy_id id, int32_t n) const noexcept {
-			return dcon::bit_vector_test(thingy.m_big_array_bf.vptr(dcon::get_index(n)), id.index());
-		}
-		DCON_RELEASE_INLINE uint32_t thingy_get_big_array_bf_size() const noexcept {
-			return thingy.m_big_array_bf.size;
-		}
-		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE ve::vbitfield_type thingy_get_big_array_bf(ve::contiguous_tags<thingy_id> id, int32_t n) const noexcept {
-			return ve::load(id, thingy.m_big_array_bf.vptr(dcon::get_index(n)));
-		}
-		DCON_RELEASE_INLINE ve::vbitfield_type thingy_get_big_array_bf(ve::partial_contiguous_tags<thingy_id> id, int32_t n) const noexcept {
-			return ve::load(id, thingy.m_big_array_bf.vptr(dcon::get_index(n)));
-		}
-		DCON_RELEASE_INLINE ve::vbitfield_type thingy_get_big_array_bf(ve::tagged_vector<thingy_id> id, int32_t n) const noexcept {
-			return ve::load(id, thingy.m_big_array_bf.vptr(dcon::get_index(n)));
-		}
-		#endif
-		
-		//
-		// setters for thingy: big_array_bf
-		//
-		DCON_RELEASE_INLINE void thingy_set_big_array_bf(thingy_id id, int32_t n, bool value) noexcept {
-			dcon::bit_vector_set(thingy.m_big_array_bf.vptr(dcon::get_index(n)), id.index(), value);
-		}
-		DCON_RELEASE_INLINE void thingy_resize_big_array_bf(uint32_t size) noexcept {
-			thingy.m_big_array_bf.resize(size, thingy.size_used);
-		}
-		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE void thingy_set_big_array_bf(ve::contiguous_tags<thingy_id> id, int32_t n, ve::vbitfield_type values) noexcept {
-			ve::store(id, thingy.m_big_array_bf.vptr(dcon::get_index(n)), values);
-		}
-		DCON_RELEASE_INLINE void thingy_set_big_array_bf(ve::partial_contiguous_tags<thingy_id> id, int32_t n, ve::vbitfield_type values) noexcept {
-			ve::store(id, thingy.m_big_array_bf.vptr(dcon::get_index(n)), values);
-		}
-		DCON_RELEASE_INLINE void thingy_set_big_array_bf(ve::tagged_vector<thingy_id> id, int32_t n, ve::vbitfield_type values) noexcept {
-			ve::store(id, thingy.m_big_array_bf.vptr(dcon::get_index(n)), values);
-		}
-		#endif
 		
 		//
 		// getters for thingy: custom_struct
@@ -945,11 +666,7 @@ namespace os {
 			thingy_remove_all_dummy_rel_as_left(id_removed);
 			thingy.m_i_value.vptr()[id_removed.index()] = int16_t{};
 			thingy.m_f_value.vptr()[id_removed.index()] = float{};
-			dcon::bit_vector_set(thingy.m_bf_value.vptr(), id_removed.index(), false);
-			thingy.m_obj_value.vptr()[id_removed.index()] = std::vector<float>{};
-			thingy.pooled_v_storage.release(thingy.m_pooled_v.vptr()[id_removed.index()]);
-			thingy.m_big_array.zero_at(id_removed.index());
-			thingy.m_big_array_bf.zero_at(id_removed.index());
+			thingy.m_obj_value.vptr()[id_removed.index()] = c_struct_b{};
 			thingy.m_custom_struct.vptr()[id_removed.index()] = c_struct{};
 			--thingy.size_used;
 		}
@@ -967,22 +684,7 @@ namespace os {
 			if(new_size < old_size) {
 				std::fill_n(thingy.m_i_value.vptr() + new_size, old_size - new_size, int16_t{});
 				std::fill_n(thingy.m_f_value.vptr() + new_size, old_size - new_size, float{});
-				for(uint32_t i = new_size; i < 8 * (((new_size + 7) / 8)); ++i) {
-					dcon::bit_vector_set(thingy.m_bf_value.vptr(), i, false);
-				}
-				std::fill_n(thingy.m_bf_value.vptr() + (new_size + 7) / 8, (new_size + old_size - new_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});
-				std::destroy_n(thingy.m_obj_value.vptr() + new_size, old_size - new_size);
-				std::uninitialized_default_construct_n(thingy.m_obj_value.vptr() + new_size, old_size - new_size);
-				std::for_each(thingy.m_pooled_v.vptr() + new_size, thingy.m_pooled_v.vptr() + new_size + old_size - new_size, [t = this](dcon::stable_mk_2_tag& i){ t->thingy.pooled_v_storage.release(i); });
-				for(int32_t s = 0; s < int32_t(thingy.m_big_array.size); ++s) {
-					std::fill_n(thingy.m_big_array.vptr(s) + new_size, old_size - new_size, float{});
-				}
-				for(int32_t s = 0; s < int32_t(thingy.m_big_array_bf.size); ++s) {
-					for(uint32_t i = new_size; i < 8 * (((new_size + 7) / 8)); ++i) {
-						dcon::bit_vector_set(thingy.m_big_array_bf.vptr(s), i, false);
-					}
-					std::fill_n(thingy.m_big_array_bf.vptr(s) + (new_size + 7) / 8, (new_size + old_size - new_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});
-				}
+				std::fill_n(thingy.m_obj_value.vptr() + new_size, old_size - new_size, c_struct_b{});
 				std::fill_n(thingy.m_custom_struct.vptr() + new_size, old_size - new_size, c_struct{});
 				dummy_rel_resize(0);
 			} else if(new_size > old_size) {
@@ -1019,17 +721,8 @@ namespace os {
 			thingy.m_i_value.vptr()[last_id.index()] = int16_t{};
 			thingy.m_f_value.vptr()[id_removed.index()] = std::move(thingy.m_f_value.vptr()[last_id.index()]);
 			thingy.m_f_value.vptr()[last_id.index()] = float{};
-			dcon::bit_vector_set(thingy.m_bf_value.vptr(), id_removed.index(), dcon::bit_vector_test(thingy.m_bf_value.vptr(), last_id.index()));
-			dcon::bit_vector_set(thingy.m_bf_value.vptr(), last_id.index(), false);
 			thingy.m_obj_value.vptr()[id_removed.index()] = std::move(thingy.m_obj_value.vptr()[last_id.index()]);
-			thingy.m_obj_value.vptr()[last_id.index()] = std::vector<float>{};
-			thingy.pooled_v_storage.release(thingy.m_pooled_v.vptr()[id_removed.index()]);
-			thingy.m_pooled_v.vptr()[id_removed.index()] = std::move(thingy.m_pooled_v.vptr()[last_id.index()]);
-			thingy.m_pooled_v.vptr()[last_id.index()] = std::numeric_limits<dcon::stable_mk_2_tag>::max();
-			thingy.m_big_array.copy_value(id_removed.index(), last_id.index());
-			thingy.m_big_array.zero_at(last_id.index());
-			thingy.m_big_array_bf.copy_value(id_removed.index(), last_id.index());
-			thingy.m_big_array_bf.zero_at(last_id.index());
+			thingy.m_obj_value.vptr()[last_id.index()] = c_struct_b{};
 			thingy.m_custom_struct.vptr()[id_removed.index()] = std::move(thingy.m_custom_struct.vptr()[last_id.index()]);
 			thingy.m_custom_struct.vptr()[last_id.index()] = c_struct{};
 			--thingy.size_used;
@@ -1216,9 +909,8 @@ namespace os {
 		}
 		
 
-		uint64_t serialize_size(std::vector<float> const& obj) const;
-		void serialize(std::byte*& output_buffer, std::vector<float> const& obj) const;
-		void deserialize(std::byte const*& input_buffer, std::vector<float> & obj, std::byte const* end) const;
+		void deserialize(std::byte const*& input_buffer, std::vector<float>& obj, std::byte const* end) const;
+		c_struct_b convert_type(std::vector<float> const& source, c_struct_b* overload_selector) const;
 
 		void reset() {
 			dummy_rel_resize(0);
@@ -1288,7 +980,6 @@ namespace os {
 			result.thingy = true;
 			result.thingy_i_value = true;
 			result.thingy_f_value = true;
-			result.thingy_bf_value = true;
 			return result;
 		}
 		
@@ -1297,12 +988,8 @@ namespace os {
 			result.thingy = true;
 			result.thingy_i_value = true;
 			result.thingy_f_value = true;
-			result.thingy_bf_value = true;
 			result.thingy_d_value = true;
 			result.thingy_obj_value = true;
-			result.thingy_pooled_v = true;
-			result.thingy_big_array = true;
-			result.thingy_big_array_bf = true;
 			result.thingy_custom_struct = true;
 			return result;
 		}
@@ -1322,12 +1009,8 @@ namespace os {
 			result.thingy = true;
 			result.thingy_i_value = true;
 			result.thingy_f_value = true;
-			result.thingy_bf_value = true;
 			result.thingy_d_value = true;
 			result.thingy_obj_value = true;
-			result.thingy_pooled_v = true;
-			result.thingy_big_array = true;
-			result.thingy_big_array_bf = true;
 			result.thingy_custom_struct = true;
 			result.thingy2 = true;
 			result.thingy2_some_value = true;
@@ -1357,41 +1040,10 @@ namespace os {
 				total_size += iheader.serialize_size();
 				total_size += sizeof(float) * thingy.size_used;
 			}
-			if(serialize_selection.thingy_bf_value) {
-				dcon::record_header iheader(0, "bitfield", "thingy", "bf_value");
-				total_size += iheader.serialize_size();
-				total_size += (thingy.size_used + 7) / 8;
-			}
 			if(serialize_selection.thingy_obj_value) {
-				std::for_each(thingy.m_obj_value.vptr(), thingy.m_obj_value.vptr() + thingy.size_used, [t = this, &total_size](std::vector<float> const& obj){ total_size += t->serialize_size(obj); });
-				dcon::record_header iheader(0, "std::vector<float>", "thingy", "obj_value");
+				dcon::record_header iheader(0, "c_struct_b", "thingy", "obj_value");
 				total_size += iheader.serialize_size();
-			}
-			if(serialize_selection.thingy_pooled_v) {
-				std::for_each(thingy.m_pooled_v.vptr(), thingy.m_pooled_v.vptr() + thingy.size_used, [t = this, &total_size](dcon::stable_mk_2_tag obj) {
-					auto rng = dcon::get_range(t->thingy.pooled_v_storage, obj);
-					total_size += sizeof(uint16_t);
-					total_size += sizeof(int16_t) * (rng.second - rng.first);
-				} );
-				{
-					total_size += 8;
-					dcon::record_header iheader(0, "stable_mk_2_tag", "thingy", "pooled_v");
-					total_size += iheader.serialize_size();
-				}
-			}
-			if(serialize_selection.thingy_big_array) {
-				total_size += 6;
-				total_size += sizeof(uint16_t);
-				total_size += thingy.m_big_array.size * sizeof(float) * thingy.size_used;
-				dcon::record_header iheader(0, "$array", "thingy", "big_array");
-				total_size += iheader.serialize_size();
-			}
-			if(serialize_selection.thingy_big_array_bf) {
-				total_size += 9;
-				total_size += sizeof(uint16_t);
-				total_size += thingy.m_big_array_bf.size * (thingy.size_used + 7) / 8;
-				dcon::record_header iheader(0, "$array", "thingy", "big_array_bf");
-				total_size += iheader.serialize_size();
+				total_size += sizeof(c_struct_b) * thingy.size_used;
 			}
 			if(serialize_selection.thingy_custom_struct) {
 				dcon::record_header iheader(0, "c_struct", "thingy", "custom_struct");
@@ -1445,63 +1097,11 @@ namespace os {
 				std::memcpy(reinterpret_cast<float*>(output_buffer), thingy.m_f_value.vptr(), sizeof(float) * thingy.size_used);
 				output_buffer += sizeof(float) * thingy.size_used;
 			}
-			if(serialize_selection.thingy_bf_value) {
-				dcon::record_header header((thingy.size_used + 7) / 8, "bitfield", "thingy", "bf_value");
-				header.serialize(output_buffer);
-				std::memcpy(reinterpret_cast<dcon::bitfield_type*>(output_buffer), thingy.m_bf_value.vptr(), (thingy.size_used + 7) / 8);
-				output_buffer += (thingy.size_used + 7) / 8;
-			}
 			if(serialize_selection.thingy_obj_value) {
-				size_t total_size = 0;
-				std::for_each(thingy.m_obj_value.vptr(), thingy.m_obj_value.vptr() + thingy.size_used, [t = this, &total_size](std::vector<float> const& obj) {
-					total_size += t->serialize_size(obj);
-				} );
-				dcon::record_header header(total_size, "std::vector<float>", "thingy", "obj_value");
+				dcon::record_header header(sizeof(c_struct_b) * thingy.size_used, "c_struct_b", "thingy", "obj_value");
 				header.serialize(output_buffer);
-				std::for_each(thingy.m_obj_value.vptr(), thingy.m_obj_value.vptr() + thingy.size_used, [t = this, &output_buffer](std::vector<float> const& obj){ t->serialize(output_buffer, obj); });
-			}
-			if(serialize_selection.thingy_pooled_v) {
-				size_t total_size = 0;
-				std::for_each(thingy.m_pooled_v.vptr(), thingy.m_pooled_v.vptr() + thingy.size_used, [t = this, &total_size](dcon::stable_mk_2_tag obj) {
-					auto rng = dcon::get_range(t->thingy.pooled_v_storage, obj);
-					total_size += sizeof(uint16_t) + sizeof(int16_t) * (rng.second - rng.first);
-				} );
-				total_size += 8;
-				dcon::record_header header(total_size, "stable_mk_2_tag", "thingy", "pooled_v");
-				header.serialize(output_buffer);
-				std::memcpy(reinterpret_cast<char*>(output_buffer), "int16_t", 8);
-				output_buffer += 8;
-				std::for_each(thingy.m_pooled_v.vptr(), thingy.m_pooled_v.vptr() + thingy.size_used, [t = this, &output_buffer](dcon::stable_mk_2_tag obj) {
-					auto rng = dcon::get_range(t->thingy.pooled_v_storage, obj);
-					*(reinterpret_cast<uint16_t*>(output_buffer)) = uint16_t(rng.second - rng.first);
-					output_buffer += sizeof(uint16_t);
-					std::memcpy(reinterpret_cast<int16_t*>(output_buffer), rng.first, sizeof(int16_t) * (rng.second - rng.first));
-					output_buffer += sizeof(int16_t) * (rng.second - rng.first);
-				} );
-			}
-			if(serialize_selection.thingy_big_array) {
-				dcon::record_header header(6 + sizeof(uint16_t) + sizeof(float) * thingy.m_big_array.size * thingy.size_used, "$array", "thingy", "big_array");
-				header.serialize(output_buffer);
-				std::memcpy(reinterpret_cast<char*>(output_buffer), "float", 6);
-				output_buffer += 6;
-				*(reinterpret_cast<uint16_t*>(output_buffer)) = uint16_t(thingy.m_big_array.size);
-				output_buffer += sizeof(uint16_t);
-				for(int32_t s = 0; s < int32_t(thingy.m_big_array.size); ++s) {
-					std::memcpy(reinterpret_cast<float*>(output_buffer), thingy.m_big_array.vptr(s), sizeof(float) * thingy.size_used);
-					output_buffer +=  sizeof(float) * thingy.size_used;
-				}
-			}
-			if(serialize_selection.thingy_big_array_bf) {
-				dcon::record_header header(9 + sizeof(uint16_t) + thingy.m_big_array_bf.size * (thingy.size_used + 7) / 8, "$array", "thingy", "big_array_bf");
-				header.serialize(output_buffer);
-				std::memcpy(reinterpret_cast<char*>(output_buffer), "bitfield", 9);
-				output_buffer += 9;
-				*(reinterpret_cast<uint16_t*>(output_buffer)) = uint16_t(thingy.m_big_array_bf.size);
-				output_buffer += sizeof(uint16_t);
-				for(int32_t s = 0; s < int32_t(thingy.m_big_array_bf.size); ++s) {
-					std::memcpy(reinterpret_cast<dcon::bitfield_type*>(output_buffer), thingy.m_big_array_bf.vptr(s), (thingy.size_used + 7) / 8);
-					output_buffer += (thingy.size_used + 7) / 8;
-				}
+				std::memcpy(reinterpret_cast<c_struct_b*>(output_buffer), thingy.m_obj_value.vptr(), sizeof(c_struct_b) * thingy.size_used);
+				output_buffer += sizeof(c_struct_b) * thingy.size_used;
 			}
 			if(serialize_selection.thingy_custom_struct) {
 				dcon::record_header header(sizeof(c_struct) * thingy.size_used, "c_struct", "thingy", "custom_struct");
@@ -1670,222 +1270,21 @@ namespace os {
 								serialize_selection.thingy_f_value = true;
 							}
 						}
-						else if(header.is_property("bf_value")) {
-							if(header.is_type("bitfield")) {
-								std::memcpy(thingy.m_bf_value.vptr(), reinterpret_cast<dcon::bitfield_type const*>(input_buffer), std::min(size_t(thingy.size_used + 7) / 8, header.record_size));
-								serialize_selection.thingy_bf_value = true;
-							}
-						}
 						else if(header.is_property("d_value")) {
 						}
 						else if(header.is_property("obj_value")) {
-							if(header.is_type("std::vector<float>")) {
-								std::byte const* icpy = input_buffer;
-								for(uint32_t i = 0; icpy < input_buffer + header.record_size && i < thingy.size_used; ++i) {
-									deserialize(icpy, thingy.m_obj_value.vptr()[i], input_buffer + header.record_size);
-								}
+							if(header.is_type("c_struct_b")) {
+								std::memcpy(thingy.m_obj_value.vptr(), reinterpret_cast<c_struct_b const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(c_struct_b), header.record_size));
 								serialize_selection.thingy_obj_value = true;
 							}
-						}
-						else if(header.is_property("pooled_v")) {
-							if(header.is_type("stable_mk_2_tag")) {
-								uint32_t ix = 0;
-								std::byte const* zero_pos = std::find(input_buffer, input_buffer + header.record_size, std::byte(0));
-								if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "int16_t")) {
-									for(std::byte const* icpy = zero_pos + 1; ix < thingy.size_used && icpy < input_buffer + header.record_size; ) {
-										uint16_t sz = 0;
-										if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-											sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), (input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(int16_t) ));
-											icpy += sizeof(uint16_t);
-										}
-										dcon::load_range(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], reinterpret_cast<int16_t const*>(icpy), reinterpret_cast<int16_t const*>(icpy) + sz);
-										icpy += sz * sizeof(int16_t);
-										++ix;
-									}
-									serialize_selection.thingy_pooled_v = true;
+							else if(header.is_type("std::vector<float>")) {
+								std::byte const* icpy = input_buffer;
+								for(uint32_t i = 0; icpy < input_buffer + header.record_size && i < thingy.size_used; ++i) {
+									std::vector<float> temp;
+									deserialize(icpy, temp, input_buffer + header.record_size);
+									thingy.m_obj_value.vptr()[i] = std::move(convert_type(temp, (c_struct_b*)nullptr));
 								}
-								else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "int8_t")) {
-									for(std::byte const* icpy = zero_pos + 1; ix < thingy.size_used && icpy < input_buffer + header.record_size; ) {
-										uint16_t sz = 0;
-										if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-											sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), (input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(int8_t) ));
-											icpy += sizeof(uint16_t);
-										}
-										dcon::resize(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], sz);
-										for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {
-											dcon::get(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], ii) = int16_t(*(reinterpret_cast<int8_t const*>(icpy) + ii));
-											icpy += sizeof(int8_t);
-										}
-										++ix;
-									}
-									serialize_selection.thingy_pooled_v = true;
-								}
-								else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "uint8_t")) {
-									for(std::byte const* icpy = zero_pos + 1; ix < thingy.size_used && icpy < input_buffer + header.record_size; ) {
-										uint16_t sz = 0;
-										if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-											sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), (input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(uint8_t) ));
-											icpy += sizeof(uint16_t);
-										}
-										dcon::resize(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], sz);
-										for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {
-											dcon::get(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], ii) = int16_t(*(reinterpret_cast<uint8_t const*>(icpy) + ii));
-											icpy += sizeof(uint8_t);
-										}
-										++ix;
-									}
-									serialize_selection.thingy_pooled_v = true;
-								}
-								else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "uint16_t")) {
-									for(std::byte const* icpy = zero_pos + 1; ix < thingy.size_used && icpy < input_buffer + header.record_size; ) {
-										uint16_t sz = 0;
-										if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-											sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), (input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(uint16_t) ));
-											icpy += sizeof(uint16_t);
-										}
-										dcon::resize(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], sz);
-										for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {
-											dcon::get(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], ii) = int16_t(*(reinterpret_cast<uint16_t const*>(icpy) + ii));
-											icpy += sizeof(uint16_t);
-										}
-										++ix;
-									}
-									serialize_selection.thingy_pooled_v = true;
-								}
-								else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "int32_t")) {
-									for(std::byte const* icpy = zero_pos + 1; ix < thingy.size_used && icpy < input_buffer + header.record_size; ) {
-										uint16_t sz = 0;
-										if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-											sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), (input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(int32_t) ));
-											icpy += sizeof(uint16_t);
-										}
-										dcon::resize(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], sz);
-										for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {
-											dcon::get(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], ii) = int16_t(*(reinterpret_cast<int32_t const*>(icpy) + ii));
-											icpy += sizeof(int32_t);
-										}
-										++ix;
-									}
-									serialize_selection.thingy_pooled_v = true;
-								}
-								else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "uint32_t")) {
-									for(std::byte const* icpy = zero_pos + 1; ix < thingy.size_used && icpy < input_buffer + header.record_size; ) {
-										uint16_t sz = 0;
-										if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-											sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), (input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(uint32_t) ));
-											icpy += sizeof(uint16_t);
-										}
-										dcon::resize(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], sz);
-										for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {
-											dcon::get(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], ii) = int16_t(*(reinterpret_cast<uint32_t const*>(icpy) + ii));
-											icpy += sizeof(uint32_t);
-										}
-										++ix;
-									}
-									serialize_selection.thingy_pooled_v = true;
-								}
-								else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "int64_t")) {
-									for(std::byte const* icpy = zero_pos + 1; ix < thingy.size_used && icpy < input_buffer + header.record_size; ) {
-										uint16_t sz = 0;
-										if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-											sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), (input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(int64_t) ));
-											icpy += sizeof(uint16_t);
-										}
-										dcon::resize(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], sz);
-										for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {
-											dcon::get(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], ii) = int16_t(*(reinterpret_cast<int64_t const*>(icpy) + ii));
-											icpy += sizeof(int64_t);
-										}
-										++ix;
-									}
-									serialize_selection.thingy_pooled_v = true;
-								}
-								else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "uint64_t")) {
-									for(std::byte const* icpy = zero_pos + 1; ix < thingy.size_used && icpy < input_buffer + header.record_size; ) {
-										uint16_t sz = 0;
-										if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-											sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), (input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(uint64_t) ));
-											icpy += sizeof(uint16_t);
-										}
-										dcon::resize(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], sz);
-										for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {
-											dcon::get(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], ii) = int16_t(*(reinterpret_cast<uint64_t const*>(icpy) + ii));
-											icpy += sizeof(uint64_t);
-										}
-										++ix;
-									}
-									serialize_selection.thingy_pooled_v = true;
-								}
-								else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "float")) {
-									for(std::byte const* icpy = zero_pos + 1; ix < thingy.size_used && icpy < input_buffer + header.record_size; ) {
-										uint16_t sz = 0;
-										if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-											sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), (input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(float) ));
-											icpy += sizeof(uint16_t);
-										}
-										dcon::resize(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], sz);
-										for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {
-											dcon::get(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], ii) = int16_t(*(reinterpret_cast<float const*>(icpy) + ii));
-											icpy += sizeof(float);
-										}
-										++ix;
-									}
-									serialize_selection.thingy_pooled_v = true;
-								}
-								else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "double")) {
-									for(std::byte const* icpy = zero_pos + 1; ix < thingy.size_used && icpy < input_buffer + header.record_size; ) {
-										uint16_t sz = 0;
-										if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-											sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), (input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(double) ));
-											icpy += sizeof(uint16_t);
-										}
-										dcon::resize(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], sz);
-										for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {
-											dcon::get(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], ii) = int16_t(*(reinterpret_cast<double const*>(icpy) + ii));
-											icpy += sizeof(double);
-										}
-										++ix;
-									}
-									serialize_selection.thingy_pooled_v = true;
-								}
-							}
-						}
-						else if(header.is_property("big_array")) {
-							if(header.is_type("$array")) {
-								std::byte const* zero_pos = std::find(input_buffer, input_buffer + header.record_size, std::byte(0));
-								std::byte const* icpy = zero_pos + 1;
-								if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "float")) {
-									if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-										thingy.m_big_array.resize(*(reinterpret_cast<uint16_t const*>(icpy)), thingy.size_used);
-										icpy += sizeof(uint16_t);
-									} else {
-										thingy.m_big_array.resize(0, thingy.size_used);
-									}
-									for(int32_t s = 0; s < int32_t(thingy.m_big_array.size) && icpy < input_buffer + header.record_size; ++s) {
-										std::memcpy(thingy.m_big_array.vptr(s), reinterpret_cast<float const*>(icpy), std::min(sizeof(float) * thingy.size_used, size_t(input_buffer + header.record_size - icpy)));
-										icpy += sizeof(float) * thingy.size_used;
-									}
-									serialize_selection.thingy_big_array = true;
-								}
-							}
-						}
-						else if(header.is_property("big_array_bf")) {
-							if(header.is_type("$array")) {
-								std::byte const* zero_pos = std::find(input_buffer, input_buffer + header.record_size, std::byte(0));
-								std::byte const* icpy = zero_pos + 1;
-								if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "bitfield")) {
-									if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-										thingy.m_big_array_bf.resize(*(reinterpret_cast<uint16_t const*>(icpy)), thingy.size_used);
-										icpy += sizeof(uint16_t);
-									} else {
-										thingy.m_big_array_bf.resize(0, thingy.size_used);
-									}
-									for(int32_t s = 0; s < int32_t(thingy.m_big_array_bf.size) && icpy < input_buffer + header.record_size; ++s) {
-										std::memcpy(thingy.m_big_array_bf.vptr(s), reinterpret_cast<dcon::bitfield_type const*>(icpy), std::min(size_t(thingy.size_used + 7) / 8, size_t(input_buffer + header.record_size - icpy)));
-										icpy += (thingy.size_used + 7) / 8;
-									}
-									serialize_selection.thingy_big_array_bf = true;
-								}
+								serialize_selection.thingy_obj_value = true;
 							}
 						}
 						else if(header.is_property("custom_struct")) {
@@ -2145,222 +1544,21 @@ namespace os {
 								serialize_selection.thingy_f_value = true;
 							}
 						}
-						else if(header.is_property("bf_value") && mask.thingy_bf_value) {
-							if(header.is_type("bitfield")) {
-								std::memcpy(thingy.m_bf_value.vptr(), reinterpret_cast<dcon::bitfield_type const*>(input_buffer), std::min(size_t(thingy.size_used + 7) / 8, header.record_size));
-								serialize_selection.thingy_bf_value = true;
-							}
-						}
 						else if(header.is_property("d_value") && mask.thingy_d_value) {
 						}
 						else if(header.is_property("obj_value") && mask.thingy_obj_value) {
-							if(header.is_type("std::vector<float>")) {
-								std::byte const* icpy = input_buffer;
-								for(uint32_t i = 0; icpy < input_buffer + header.record_size && i < thingy.size_used; ++i) {
-									deserialize(icpy, thingy.m_obj_value.vptr()[i], input_buffer + header.record_size);
-								}
+							if(header.is_type("c_struct_b")) {
+								std::memcpy(thingy.m_obj_value.vptr(), reinterpret_cast<c_struct_b const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(c_struct_b), header.record_size));
 								serialize_selection.thingy_obj_value = true;
 							}
-						}
-						else if(header.is_property("pooled_v") && mask.thingy_pooled_v) {
-							if(header.is_type("stable_mk_2_tag")) {
-								uint32_t ix = 0;
-								std::byte const* zero_pos = std::find(input_buffer, input_buffer + header.record_size, std::byte(0));
-								if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "int16_t")) {
-									for(std::byte const* icpy = zero_pos + 1; ix < thingy.size_used && icpy < input_buffer + header.record_size; ) {
-										uint16_t sz = 0;
-										if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-											sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), (input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(int16_t) ));
-											icpy += sizeof(uint16_t);
-										}
-										dcon::load_range(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], reinterpret_cast<int16_t const*>(icpy), reinterpret_cast<int16_t const*>(icpy) + sz);
-										icpy += sz * sizeof(int16_t);
-										++ix;
-									}
-									serialize_selection.thingy_pooled_v = true;
+							else if(header.is_type("std::vector<float>")) {
+								std::byte const* icpy = input_buffer;
+								for(uint32_t i = 0; icpy < input_buffer + header.record_size && i < thingy.size_used; ++i) {
+									std::vector<float> temp;
+									deserialize(icpy, temp, input_buffer + header.record_size);
+									thingy.m_obj_value.vptr()[i] = std::move(convert_type(temp, (c_struct_b*)nullptr));
 								}
-								else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "int8_t")) {
-									for(std::byte const* icpy = zero_pos + 1; ix < thingy.size_used && icpy < input_buffer + header.record_size; ) {
-										uint16_t sz = 0;
-										if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-											sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), (input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(int8_t) ));
-											icpy += sizeof(uint16_t);
-										}
-										dcon::resize(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], sz);
-										for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {
-											dcon::get(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], ii) = int16_t(*(reinterpret_cast<int8_t const*>(icpy) + ii));
-											icpy += sizeof(int8_t);
-										}
-										++ix;
-									}
-									serialize_selection.thingy_pooled_v = true;
-								}
-								else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "uint8_t")) {
-									for(std::byte const* icpy = zero_pos + 1; ix < thingy.size_used && icpy < input_buffer + header.record_size; ) {
-										uint16_t sz = 0;
-										if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-											sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), (input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(uint8_t) ));
-											icpy += sizeof(uint16_t);
-										}
-										dcon::resize(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], sz);
-										for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {
-											dcon::get(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], ii) = int16_t(*(reinterpret_cast<uint8_t const*>(icpy) + ii));
-											icpy += sizeof(uint8_t);
-										}
-										++ix;
-									}
-									serialize_selection.thingy_pooled_v = true;
-								}
-								else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "uint16_t")) {
-									for(std::byte const* icpy = zero_pos + 1; ix < thingy.size_used && icpy < input_buffer + header.record_size; ) {
-										uint16_t sz = 0;
-										if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-											sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), (input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(uint16_t) ));
-											icpy += sizeof(uint16_t);
-										}
-										dcon::resize(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], sz);
-										for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {
-											dcon::get(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], ii) = int16_t(*(reinterpret_cast<uint16_t const*>(icpy) + ii));
-											icpy += sizeof(uint16_t);
-										}
-										++ix;
-									}
-									serialize_selection.thingy_pooled_v = true;
-								}
-								else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "int32_t")) {
-									for(std::byte const* icpy = zero_pos + 1; ix < thingy.size_used && icpy < input_buffer + header.record_size; ) {
-										uint16_t sz = 0;
-										if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-											sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), (input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(int32_t) ));
-											icpy += sizeof(uint16_t);
-										}
-										dcon::resize(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], sz);
-										for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {
-											dcon::get(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], ii) = int16_t(*(reinterpret_cast<int32_t const*>(icpy) + ii));
-											icpy += sizeof(int32_t);
-										}
-										++ix;
-									}
-									serialize_selection.thingy_pooled_v = true;
-								}
-								else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "uint32_t")) {
-									for(std::byte const* icpy = zero_pos + 1; ix < thingy.size_used && icpy < input_buffer + header.record_size; ) {
-										uint16_t sz = 0;
-										if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-											sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), (input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(uint32_t) ));
-											icpy += sizeof(uint16_t);
-										}
-										dcon::resize(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], sz);
-										for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {
-											dcon::get(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], ii) = int16_t(*(reinterpret_cast<uint32_t const*>(icpy) + ii));
-											icpy += sizeof(uint32_t);
-										}
-										++ix;
-									}
-									serialize_selection.thingy_pooled_v = true;
-								}
-								else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "int64_t")) {
-									for(std::byte const* icpy = zero_pos + 1; ix < thingy.size_used && icpy < input_buffer + header.record_size; ) {
-										uint16_t sz = 0;
-										if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-											sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), (input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(int64_t) ));
-											icpy += sizeof(uint16_t);
-										}
-										dcon::resize(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], sz);
-										for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {
-											dcon::get(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], ii) = int16_t(*(reinterpret_cast<int64_t const*>(icpy) + ii));
-											icpy += sizeof(int64_t);
-										}
-										++ix;
-									}
-									serialize_selection.thingy_pooled_v = true;
-								}
-								else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "uint64_t")) {
-									for(std::byte const* icpy = zero_pos + 1; ix < thingy.size_used && icpy < input_buffer + header.record_size; ) {
-										uint16_t sz = 0;
-										if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-											sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), (input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(uint64_t) ));
-											icpy += sizeof(uint16_t);
-										}
-										dcon::resize(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], sz);
-										for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {
-											dcon::get(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], ii) = int16_t(*(reinterpret_cast<uint64_t const*>(icpy) + ii));
-											icpy += sizeof(uint64_t);
-										}
-										++ix;
-									}
-									serialize_selection.thingy_pooled_v = true;
-								}
-								else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "float")) {
-									for(std::byte const* icpy = zero_pos + 1; ix < thingy.size_used && icpy < input_buffer + header.record_size; ) {
-										uint16_t sz = 0;
-										if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-											sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), (input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(float) ));
-											icpy += sizeof(uint16_t);
-										}
-										dcon::resize(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], sz);
-										for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {
-											dcon::get(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], ii) = int16_t(*(reinterpret_cast<float const*>(icpy) + ii));
-											icpy += sizeof(float);
-										}
-										++ix;
-									}
-									serialize_selection.thingy_pooled_v = true;
-								}
-								else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "double")) {
-									for(std::byte const* icpy = zero_pos + 1; ix < thingy.size_used && icpy < input_buffer + header.record_size; ) {
-										uint16_t sz = 0;
-										if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-											sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), (input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(double) ));
-											icpy += sizeof(uint16_t);
-										}
-										dcon::resize(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], sz);
-										for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii) {
-											dcon::get(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[ix], ii) = int16_t(*(reinterpret_cast<double const*>(icpy) + ii));
-											icpy += sizeof(double);
-										}
-										++ix;
-									}
-									serialize_selection.thingy_pooled_v = true;
-								}
-							}
-						}
-						else if(header.is_property("big_array") && mask.thingy_big_array) {
-							if(header.is_type("$array")) {
-								std::byte const* zero_pos = std::find(input_buffer, input_buffer + header.record_size, std::byte(0));
-								std::byte const* icpy = zero_pos + 1;
-								if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "float")) {
-									if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-										thingy.m_big_array.resize(*(reinterpret_cast<uint16_t const*>(icpy)), thingy.size_used);
-										icpy += sizeof(uint16_t);
-									} else {
-										thingy.m_big_array.resize(0, thingy.size_used);
-									}
-									for(int32_t s = 0; s < int32_t(thingy.m_big_array.size) && icpy < input_buffer + header.record_size; ++s) {
-										std::memcpy(thingy.m_big_array.vptr(s), reinterpret_cast<float const*>(icpy), std::min(sizeof(float) * thingy.size_used, size_t(input_buffer + header.record_size - icpy)));
-										icpy += sizeof(float) * thingy.size_used;
-									}
-									serialize_selection.thingy_big_array = true;
-								}
-							}
-						}
-						else if(header.is_property("big_array_bf") && mask.thingy_big_array_bf) {
-							if(header.is_type("$array")) {
-								std::byte const* zero_pos = std::find(input_buffer, input_buffer + header.record_size, std::byte(0));
-								std::byte const* icpy = zero_pos + 1;
-								if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), reinterpret_cast<char const*>(zero_pos), "bitfield")) {
-									if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size) {
-										thingy.m_big_array_bf.resize(*(reinterpret_cast<uint16_t const*>(icpy)), thingy.size_used);
-										icpy += sizeof(uint16_t);
-									} else {
-										thingy.m_big_array_bf.resize(0, thingy.size_used);
-									}
-									for(int32_t s = 0; s < int32_t(thingy.m_big_array_bf.size) && icpy < input_buffer + header.record_size; ++s) {
-										std::memcpy(thingy.m_big_array_bf.vptr(s), reinterpret_cast<dcon::bitfield_type const*>(icpy), std::min(size_t(thingy.size_used + 7) / 8, size_t(input_buffer + header.record_size - icpy)));
-										icpy += (thingy.size_used + 7) / 8;
-									}
-									serialize_selection.thingy_big_array_bf = true;
-								}
+								serialize_selection.thingy_obj_value = true;
 							}
 						}
 						else if(header.is_property("custom_struct") && mask.thingy_custom_struct) {
@@ -2534,29 +1732,8 @@ namespace os {
 		DCON_RELEASE_INLINE void set_i_value(int16_t v) const noexcept;
 		DCON_RELEASE_INLINE float& get_f_value() const noexcept;
 		DCON_RELEASE_INLINE void set_f_value(float v) const noexcept;
-		DCON_RELEASE_INLINE bool get_bf_value() const noexcept;
-		DCON_RELEASE_INLINE void set_bf_value(bool v) const noexcept;
-		DCON_RELEASE_INLINE std::vector<float>& get_obj_value() const noexcept;
-		DCON_RELEASE_INLINE void set_obj_value(std::vector<float> const& v) const noexcept;
-		DCON_RELEASE_INLINE std::pair<int16_t*, int16_t*> get_pooled_v_range() const noexcept;
-		DCON_RELEASE_INLINE int16_t& get_pooled_v_at(uint32_t inner_index) const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_pooled_v_capacity() const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_pooled_v_size() const noexcept;
-		DCON_RELEASE_INLINE bool pooled_v_contains(int16_t v) const noexcept;
-		DCON_RELEASE_INLINE void pooled_v_push_back(int16_t obj) const noexcept;
-		DCON_RELEASE_INLINE void pooled_v_pop_back() const noexcept;
-		DCON_RELEASE_INLINE void pooled_v_add_unique(int16_t obj) const noexcept;
-		DCON_RELEASE_INLINE void pooled_v_remove_unique(int16_t obj) const noexcept;
-		DCON_RELEASE_INLINE void pooled_v_clear() const noexcept;
-		DCON_RELEASE_INLINE void pooled_v_remove_at(uint32_t inner_index) const noexcept;
-		DCON_RELEASE_INLINE float& get_big_array(int32_t i) const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_big_array_size() const noexcept;
-		DCON_RELEASE_INLINE void set_big_array(int32_t i, float v) const noexcept;
-		DCON_RELEASE_INLINE void resize_big_array(uint32_t sz) const noexcept;
-		DCON_RELEASE_INLINE bool get_big_array_bf(int32_t i) const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_big_array_bf_size() const noexcept;
-		DCON_RELEASE_INLINE void set_big_array_bf(int32_t i, bool v) const noexcept;
-		DCON_RELEASE_INLINE void resize_big_array_bf(uint32_t sz) const noexcept;
+		DCON_RELEASE_INLINE c_struct_b& get_obj_value() const noexcept;
+		DCON_RELEASE_INLINE void set_obj_value(c_struct_b const& v) const noexcept;
 		DCON_RELEASE_INLINE c_struct& get_custom_struct() const noexcept;
 		DCON_RELEASE_INLINE void set_custom_struct(c_struct const& v) const noexcept;
 		template<typename T>
@@ -2625,17 +1802,7 @@ namespace os {
 		}
 		DCON_RELEASE_INLINE int16_t get_i_value() const noexcept;
 		DCON_RELEASE_INLINE float get_f_value() const noexcept;
-		DCON_RELEASE_INLINE bool get_bf_value() const noexcept;
-		DCON_RELEASE_INLINE std::vector<float> const& get_obj_value() const noexcept;
-		DCON_RELEASE_INLINE std::pair<int16_t*, int16_t*> get_pooled_v_range() const noexcept;
-		DCON_RELEASE_INLINE int16_t const& get_pooled_v_at(uint32_t inner_index) const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_pooled_v_capacity() const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_pooled_v_size() const noexcept;
-		DCON_RELEASE_INLINE bool pooled_v_contains(int16_t v) const noexcept;
-		DCON_RELEASE_INLINE float const& get_big_array(int32_t i) const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_big_array_size() const noexcept;
-		DCON_RELEASE_INLINE bool get_big_array_bf(int32_t i) const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_big_array_bf_size() const noexcept;
+		DCON_RELEASE_INLINE c_struct_b const& get_obj_value() const noexcept;
 		DCON_RELEASE_INLINE c_struct const& get_custom_struct() const noexcept;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_dummy_rel_as_left(T&& func) const;
@@ -2878,29 +2045,8 @@ namespace os {
 	DCON_RELEASE_INLINE void thingy_fat_id::set_i_value(int16_t v) const noexcept { container.thingy_set_i_value(id, v); }
 	DCON_RELEASE_INLINE float& thingy_fat_id::get_f_value() const noexcept { return container.thingy_get_f_value(id); }
 	DCON_RELEASE_INLINE void thingy_fat_id::set_f_value(float v) const noexcept { container.thingy_set_f_value(id, v); }
-	DCON_RELEASE_INLINE bool thingy_fat_id::get_bf_value() const noexcept { return container.thingy_get_bf_value(id); }
-	DCON_RELEASE_INLINE void thingy_fat_id::set_bf_value(bool v) const noexcept { container.thingy_set_bf_value(id, v); }
-	DCON_RELEASE_INLINE std::vector<float>& thingy_fat_id::get_obj_value() const noexcept { return container.thingy_get_obj_value(id); }
-	DCON_RELEASE_INLINE void thingy_fat_id::set_obj_value(std::vector<float> const& v) const noexcept { container.thingy_set_obj_value(id, v); }
-	DCON_RELEASE_INLINE std::pair<int16_t*, int16_t*> thingy_fat_id::get_pooled_v_range() const noexcept { return container.thingy_get_pooled_v_range(id); }
-	DCON_RELEASE_INLINE int16_t& thingy_fat_id::get_pooled_v_at(uint32_t inner_index) const noexcept { return container.thingy_get_pooled_v_at(id, inner_index); }
-	DCON_RELEASE_INLINE uint32_t thingy_fat_id::get_pooled_v_capacity() const noexcept { return container.thingy_get_pooled_v_capacity(id); }
-	DCON_RELEASE_INLINE uint32_t thingy_fat_id::get_pooled_v_size() const noexcept { return container.thingy_get_pooled_v_size(id); }
-	DCON_RELEASE_INLINE bool thingy_fat_id::pooled_v_contains(int16_t v) const noexcept { return container.thingy_pooled_v_contains(id, v); }
-	DCON_RELEASE_INLINE void thingy_fat_id::pooled_v_push_back(int16_t obj) const noexcept { container.thingy_pooled_v_push_back(id, obj); }
-	DCON_RELEASE_INLINE void thingy_fat_id::pooled_v_pop_back() const noexcept { container.thingy_pooled_v_pop_back(id); }
-	DCON_RELEASE_INLINE void thingy_fat_id::pooled_v_add_unique(int16_t obj) const noexcept { container.thingy_pooled_v_add_unique(id, obj); }
-	DCON_RELEASE_INLINE void thingy_fat_id::pooled_v_remove_unique(int16_t obj) const noexcept { container.thingy_pooled_v_remove_unique(id, obj); }
-	DCON_RELEASE_INLINE void thingy_fat_id::pooled_v_clear() const noexcept { container.thingy_pooled_v_clear(id); }
-	DCON_RELEASE_INLINE void thingy_fat_id::pooled_v_remove_at(uint32_t inner_index) const noexcept { container.thingy_pooled_v_remove_at(id, inner_index); }
-	DCON_RELEASE_INLINE float& thingy_fat_id::get_big_array(int32_t i) const noexcept { return container.thingy_get_big_array(id, i); }
-	DCON_RELEASE_INLINE uint32_t thingy_fat_id::get_big_array_size() const noexcept {return container.thingy_get_big_array_size();}
-	DCON_RELEASE_INLINE void thingy_fat_id::set_big_array(int32_t i, float v) const noexcept { container.thingy_set_big_array(id, i, v); }
-	DCON_RELEASE_INLINE void thingy_fat_id::resize_big_array(uint32_t sz) const noexcept {return container.thingy_resize_big_array(sz);}
-	DCON_RELEASE_INLINE bool thingy_fat_id::get_big_array_bf(int32_t i) const noexcept { return container.thingy_get_big_array_bf(id, i); }
-	DCON_RELEASE_INLINE uint32_t thingy_fat_id::get_big_array_bf_size() const noexcept {return container.thingy_get_big_array_bf_size();}
-	DCON_RELEASE_INLINE void thingy_fat_id::set_big_array_bf(int32_t i, bool v) const noexcept { container.thingy_set_big_array_bf(id, i, v); }
-	DCON_RELEASE_INLINE void thingy_fat_id::resize_big_array_bf(uint32_t sz) const noexcept {return container.thingy_resize_big_array_bf(sz);}
+	DCON_RELEASE_INLINE c_struct_b& thingy_fat_id::get_obj_value() const noexcept { return container.thingy_get_obj_value(id); }
+	DCON_RELEASE_INLINE void thingy_fat_id::set_obj_value(c_struct_b const& v) const noexcept { container.thingy_set_obj_value(id, v); }
 	DCON_RELEASE_INLINE c_struct& thingy_fat_id::get_custom_struct() const noexcept { return container.thingy_get_custom_struct(id); }
 	DCON_RELEASE_INLINE void thingy_fat_id::set_custom_struct(c_struct const& v) const noexcept { container.thingy_set_custom_struct(id, v); }
 	template<typename T>
@@ -2933,17 +2079,7 @@ namespace os {
 	
 	DCON_RELEASE_INLINE int16_t thingy_const_fat_id::get_i_value() const noexcept { return container.thingy_get_i_value(id); }
 	DCON_RELEASE_INLINE float thingy_const_fat_id::get_f_value() const noexcept { return container.thingy_get_f_value(id); }
-	DCON_RELEASE_INLINE bool thingy_const_fat_id::get_bf_value() const noexcept { return container.thingy_get_bf_value(id); }
-	DCON_RELEASE_INLINE std::vector<float> const& thingy_const_fat_id::get_obj_value() const noexcept { return container.thingy_get_obj_value(id); }
-	DCON_RELEASE_INLINE std::pair<int16_t*, int16_t*> thingy_const_fat_id::get_pooled_v_range() const noexcept { return container.thingy_get_pooled_v_range(id); }
-	DCON_RELEASE_INLINE int16_t const& thingy_const_fat_id::get_pooled_v_at(uint32_t inner_index) const noexcept { return container.thingy_get_pooled_v_at(id, inner_index); }
-	DCON_RELEASE_INLINE uint32_t thingy_const_fat_id::get_pooled_v_capacity() const noexcept { return container.thingy_get_pooled_v_capacity(id); }
-	DCON_RELEASE_INLINE uint32_t thingy_const_fat_id::get_pooled_v_size() const noexcept { return container.thingy_get_pooled_v_size(id); }
-	DCON_RELEASE_INLINE bool thingy_const_fat_id::pooled_v_contains(int16_t v) const noexcept { return container.thingy_pooled_v_contains(id, v); }
-	DCON_RELEASE_INLINE float const& thingy_const_fat_id::get_big_array(int32_t i) const noexcept { return container.thingy_get_big_array(id, i); }
-	DCON_RELEASE_INLINE uint32_t thingy_const_fat_id::get_big_array_size() const noexcept {return container.thingy_get_big_array_size();}
-	DCON_RELEASE_INLINE bool thingy_const_fat_id::get_big_array_bf(int32_t i) const noexcept { return container.thingy_get_big_array_bf(id, i); }
-	DCON_RELEASE_INLINE uint32_t thingy_const_fat_id::get_big_array_bf_size() const noexcept {return container.thingy_get_big_array_bf_size();}
+	DCON_RELEASE_INLINE c_struct_b const& thingy_const_fat_id::get_obj_value() const noexcept { return container.thingy_get_obj_value(id); }
 	DCON_RELEASE_INLINE c_struct const& thingy_const_fat_id::get_custom_struct() const noexcept { return container.thingy_get_custom_struct(id); }
 	template<typename T>
 	DCON_RELEASE_INLINE void thingy_const_fat_id::for_each_dummy_rel_as_left(T&& func) const {

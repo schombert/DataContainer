@@ -18,16 +18,17 @@
     <ClCompile Include="Catch_serialization_tests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="old_ser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="old_ser.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="new_ser.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="old_ser.txt" />
+    <CustomBuild Include="new_ser.txt" />
   </ItemGroup>
 </Project>

@@ -2735,18 +2735,16 @@ basic_builder& conversion_attempt(basic_builder& o, file_def const& parsed_file,
 				o + substitute{ "f_type", con.from };
 				o + "else if(header.is_type(\"@f_type@\"))" + block{
 					o + "std::byte const* icpy = input_buffer;";
-					o + "for(uint32_t i = 0; i < std::min(@obj@.size_used, uint32_t(header.record_size / sizeof(@f_type@))); ++i)" + block{
+					o + "for(uint32_t i = 0; icpy < input_buffer + header.record_size && i < @obj@.size_used; ++i)" + block{
 						o + "@f_type@ temp;";
 						o + "deserialize(icpy, temp, input_buffer + header.record_size);";
 						if(to_bitfield)
 							o + "dcon::bit_vector_set(@obj@.m_@prop@.vptr(@s_index@), i, convert_type(temp, (@to_type@*)nullptr));";
 						else
-							o + "@obj@.m_@prop@.vptr(@s_index@)[i] = convert_type(temp, (@to_type@*)nullptr));";
+							o + "@obj@.m_@prop@.vptr(@s_index@)[i] = std::move(convert_type(temp, (@to_type@*)nullptr));";
 					};
 					o + "serialize_selection.@obj@_@prop@ = true;";
 				};
-				
-				o + "\t}";
 			} else {
 				// from not an object
 				o + "else if(header.is_type(\"@f_type@\"))" + block{
@@ -2755,7 +2753,7 @@ basic_builder& conversion_attempt(basic_builder& o, file_def const& parsed_file,
 							o + "dcon::bit_vector_set(@obj@.m_@prop@.vptr(@s_index@), i, "
 								"convert_type(*(reinterpret_cast<@f_type@ const*>(input_buffer) + i), (@to_type@*)nullptr));";
 						else
-							o + "@obj@.m_@prop@.vptr(@s_index@)[i] = convert_type(*(reinterpret_cast<@f_type@ const*>(input_buffer) + i), (@to_type@*)nullptr));";
+							o + "@obj@.m_@prop@.vptr(@s_index@)[i] = std::move(convert_type(*(reinterpret_cast<@f_type@ const*>(input_buffer) + i), (@to_type@*)nullptr));";
 					};
 					o + "serialize_selection.@obj@_@prop@ = true;";
 				};
@@ -2958,7 +2956,7 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 														o + "for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii)" + block{
 															o + "@f_type@ temp;";
 															o + "deserialize(icpy, temp, input_buffer + header.record_size);";
-															o + "dcon::get(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[ix], ii) = convert_type(temp, (@type@*)nullptr);";
+															o + "dcon::get(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[ix], ii) = std::move(convert_type(temp, (@type@*)nullptr));";
 														};
 														o + "++ix;";
 													};
@@ -2980,7 +2978,7 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 														o + "dcon::resize(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[ix], sz);";
 														o + "for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii)" + block{
 															o + "dcon::get(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[ix], ii) = "
-																"convert_type(*(reinterpret_cast<@f_type@ const*>(icpy)), (@type@*)nullptr);";
+																"std::move(convert_type(*(reinterpret_cast<@f_type@ const*>(icpy)), (@type@*)nullptr));";
 															o + "icpy += sizeof(@f_type@);";
 														};
 														o + "++ix;";

@@ -68,17 +68,17 @@ struct relationship_object_def;
 struct related_object {
 	std::string property_name;
 	std::string type_name;
-	index_type index;
-	list_type ltype;
-	relationship_object_def* related_to;
+	index_type index = index_type::at_most_one;
+	list_type ltype = list_type::list;
+	relationship_object_def* related_to = nullptr;
 };
 
 struct in_relation_information {
 	std::string relation_name;
 	std::string property_name;
-	bool as_primary_key;
-	index_type indexed_as;
-	list_type listed_as;
+	bool as_primary_key = false;
+	index_type indexed_as = index_type::at_most_one;
+	list_type listed_as = list_type::list;
 	relationship_object_def const* rel_ptr;
 };
 

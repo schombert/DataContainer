@@ -129,7 +129,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Catch_serialization_tests.cpp" />
-    <ClCompile Include="old_ser.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="old_ser.txt">
@@ -142,7 +141,18 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="new_ser.hpp" />
     <ClInclude Include="old_ser.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="new_ser.txt">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)$(Platform)\$(Configuration)\DataContainerGenerator new_ser.txt</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">new_ser.hpp</Outputs>
+      <OutputItemType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ClInclude</OutputItemType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)$(Platform)\$(Configuration)\DataContainerGenerator new_ser.txt</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">new_ser.hpp</Outputs>
+      <OutputItemType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ClInclude</OutputItemType>
+    </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
