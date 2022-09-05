@@ -156,20 +156,21 @@ namespace dcon {
 		uint64_t serialize_size() {
 			return sizeof(uint64_t) + (type_name_end - type_name_start) + (object_name_end - object_name_start) + (property_name_end - property_name_start) + 3;
 		}
-		uint64_t serialize(std::byte*& output_buffer) {
+		void serialize(std::byte*& output_buffer) {
 			uint64_t* sz = reinterpret_cast<uint64_t*>(output_buffer);
 			*sz = record_size;
 
+
 			char* output = reinterpret_cast<char*>(output_buffer + sizeof(uint64_t));
-			memcpy(output + sizeof(uint64_t), type_name_start, type_name_end - type_name_start);
+			memcpy(output, type_name_start, type_name_end - type_name_start);
 			output += (type_name_end - type_name_start);
 			*output = 0;
 			++output;
-			memcpy(output + sizeof(uint64_t), object_name_start, object_name_end - object_name_start);
+			memcpy(output, object_name_start, object_name_end - object_name_start);
 			output += (object_name_end - object_name_start);
 			*output = 0;
 			++output;
-			memcpy(output + sizeof(uint64_t), property_name_start, property_name_end - property_name_start);
+			memcpy(output, property_name_start, property_name_end - property_name_start);
 			output += (property_name_end - property_name_start);
 			*output = 0;
 			++output;
@@ -190,7 +191,7 @@ namespace dcon {
 			}
 			uint64_t const* sz = reinterpret_cast<uint64_t const*>(input_buffer);
 			record_size = *sz;
-			input_buffer += 4;
+			input_buffer += sizeof(uint64_t);
 			type_name_start = reinterpret_cast<char const*>(input_buffer);
 			while(input_buffer < end && *input_buffer != std::byte(0)) {
 				++input_buffer;
@@ -221,7 +222,7 @@ namespace dcon {
 				++n;
 				++i;
 			}
-			return *n == 0;
+			return *i == *n;
 		}
 		bool is_object(char const* n) {
 			char const* i = object_name_start;
@@ -231,7 +232,7 @@ namespace dcon {
 				++n;
 				++i;
 			}
-			return *n == 0;
+			return *i == *n;
 		}
 		bool is_property(char const* n) {
 			char const* i = property_name_start;
@@ -241,7 +242,7 @@ namespace dcon {
 				++n;
 				++i;
 			}
-			return *n == 0;
+			return *i == *n;
 		}
 	};
 

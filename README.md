@@ -14,6 +14,10 @@ Since that sounds a lot like what `struct`s and `class`es in a C++ header file a
 - And yes, there are existing libraries for doing all of the above things (often quite good ones). However, the problems discussed above are all fundamentally about storing and managing the data that is structured into objects and relationships. Thus, using a library to solve one of these problems may very well make it harder to use a library to solve another of them. And so the approach of this project is to try to solve them all in one go, and thus to be able to hide the sometimes ugly details from the end user completely.
 - OK, but why a code generator? Some early iterations of these ideas were implemented with dark template magics, but doing so made compilation significantly slower. So while it is harder to initially integrate a code generator into your project, I think that ultimately it is the more user friendly solution.
 
+## Disclaimer
+
+Every effort will be made to find and eliminate bugs, and to keep them eliminated with tests. However, at this stage there are insufficient tests, and insufficient usage experience, to reasonably expect the generated files to be 100% bug free. DO NOT USE A GENERATED DATA CONTAINER IN SOFTWARE WHERE LIVES OR LIVELIHOODS MAY DEPEND ON THE CORRECT OPERATION.
+
 ## Documentation
 
 The following documentation explains all you need to know about how to generate and use data containers.

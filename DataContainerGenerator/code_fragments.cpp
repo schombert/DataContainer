@@ -2501,7 +2501,7 @@ basic_builder& make_serialize_size(basic_builder& o, file_def const& parsed_file
 				} else if(prop.type == property_type::special_vector) {
 					o + substitute{ "vtype_name_sz", std::to_string(prop.data_type.length() + 1) };
 					o + "if(serialize_selection.@obj@_@prop@)" + block{
-						o + "std::for_each(@obj@.m_@prop@.vptr(), @obj@.m_@prop@.vptr() + @obj@.size_used, [t = this, &total_size](stable_mk_2_tag obj)" + block{
+						o + "std::for_each(@obj@.m_@prop@.vptr(), @obj@.m_@prop@.vptr() + @obj@.size_used, [t = this, &total_size](dcon::stable_mk_2_tag obj)" + block{
 							o + "auto rng = dcon::get_range(t->@obj@.@prop@_storage, obj);";
 							o + "total_size += sizeof(uint16_t);";
 							o + "total_size += sizeof(@type@) * (rng.second - rng.first);";
@@ -2602,13 +2602,13 @@ void make_serialize_singe_object(basic_builder & o, const relationship_object_de
 			o + "if(serialize_selection.@obj@_@prop@)" + block{
 				o + "dcon::record_header header((@obj@.size_used + 7) / 8, \"bitfield\", \"@obj@\", \"@prop@\");";
 				o + "header.serialize(output_buffer);";
-				o + "std::memcpy(reinterpret_cast<bitfield_type*>(output_buffer), @obj@.m_@prop@.vptr(), (@obj@.size_used + 7) / 8);";
+				o + "std::memcpy(reinterpret_cast<dcon::bitfield_type*>(output_buffer), @obj@.m_@prop@.vptr(), (@obj@.size_used + 7) / 8);";
 				o + "output_buffer += (@obj@.size_used + 7) / 8;";
 			};
 		} else if(prop.type == property_type::special_vector) {
 			o + "if(serialize_selection.@obj@_@prop@)" + block{
 				o + "size_t total_size = 0;";
-				o + "std::for_each(@obj@.m_@prop@.vptr(), @obj@.m_@prop@.vptr() + @obj@.size_used, [t = this, &total_size](stable_mk_2_tag obj)" + block{
+				o + "std::for_each(@obj@.m_@prop@.vptr(), @obj@.m_@prop@.vptr() + @obj@.size_used, [t = this, &total_size](dcon::stable_mk_2_tag obj)" + block{
 					o + "auto rng = dcon::get_range(t->@obj@.@prop@_storage, obj);";
 					o + "total_size += sizeof(uint16_t) + sizeof(@type@) * (rng.second - rng.first);";
 				} +append{ ");" };
@@ -2622,7 +2622,7 @@ void make_serialize_singe_object(basic_builder & o, const relationship_object_de
 				o + "std::memcpy(reinterpret_cast<char*>(output_buffer), \"@type@\", @vname_sz@);";
 				o + "output_buffer += @vname_sz@;";
 
-				o + "std::for_each(@obj@.m_@prop@.vptr(), @obj@.m_@prop@.vptr() + @obj@.size_used, [t = this, &output_buffer](stable_mk_2_tag obj)" + block{
+				o + "std::for_each(@obj@.m_@prop@.vptr(), @obj@.m_@prop@.vptr() + @obj@.size_used, [t = this, &output_buffer](dcon::stable_mk_2_tag obj)" + block{
 					o + "auto rng = dcon::get_range(t->@obj@.@prop@_storage, obj);";
 					o + "*(reinterpret_cast<uint16_t*>(output_buffer)) = uint16_t(rng.second - rng.first);";
 					o + "output_buffer += sizeof(uint16_t);";
@@ -2643,10 +2643,10 @@ void make_serialize_singe_object(basic_builder & o, const relationship_object_de
 					"[t = this, &output_buffer](@type@ const& obj){ t->serialize(output_buffer, obj); });";
 				};
 		} else if(prop.type == property_type::array_bitfield) {
-			o + substitute{ "vtype_name_sz", std::to_string(strlen("bitfield") + 1) };
+			o + substitute{ "vname_sz", std::to_string(strlen("bitfield") + 1) };
 
 			o + "if(serialize_selection.@obj@_@prop@)" + block{
-				o + "dcon::record_header header(@vtype_name_sz@ + sizeof(uint16_t) + @obj@.m_@prop@.size * (@obj@.size_used + 7) / 8, \"$array\", \"@obj@\", \"@prop@\");";
+				o + "dcon::record_header header(@vname_sz@ + sizeof(uint16_t) + @obj@.m_@prop@.size * (@obj@.size_used + 7) / 8, \"$array\", \"@obj@\", \"@prop@\");";
 				o + "header.serialize(output_buffer);";
 
 				o + "std::memcpy(reinterpret_cast<char*>(output_buffer), \"bitfield\", @vname_sz@);";
@@ -2656,15 +2656,15 @@ void make_serialize_singe_object(basic_builder & o, const relationship_object_de
 				o + "output_buffer += sizeof(uint16_t);";
 
 				o + "for(int32_t s = 0; s < int32_t(@obj@.m_@prop@.size); ++s)" + block{
-					o + "std::memcpy(reinterpret_cast<bitfield_type*>(output_buffer), @obj@.m_@prop@.vptr(s), (@obj@.size_used + 7) / 8);";
+					o + "std::memcpy(reinterpret_cast<dcon::bitfield_type*>(output_buffer), @obj@.m_@prop@.vptr(s), (@obj@.size_used + 7) / 8);";
 					o + "output_buffer += (@obj@.size_used + 7) / 8;";
 				};
 			};
 		} else if(prop.type == property_type::array_vectorizable || prop.type == property_type::array_other) {
-			o + substitute{ "vtype_name_sz", std::to_string(prop.data_type.length() + 1) };
+			o + substitute{ "vname_sz", std::to_string(prop.data_type.length() + 1) };
 
 			o + "if(serialize_selection.@obj@_@prop@)" + block{
-				o + "dcon::record_header header(@vtype_name_sz@ + sizeof(uint16_t) + sizeof(@type@) * @obj@.size_used, \"$array\", \"@obj@\", \"@prop@\");";
+				o + "dcon::record_header header(@vname_sz@ + sizeof(uint16_t) + sizeof(@type@) * @obj@.m_@prop@.size * @obj@.size_used, \"$array\", \"@obj@\", \"@prop@\");";
 				o + "header.serialize(output_buffer);";
 
 				o + "std::memcpy(reinterpret_cast<char*>(output_buffer), \"@type@\", @vname_sz@);";
@@ -2909,7 +2909,7 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 
 								} else if(prop.type == property_type::bitfield) {
 									o + "if(header.is_type(\"bitfield\"))" + block{
-										o + "std::memcpy(@obj@.m_@prop@.vptr(), reinterpret_cast<bitfield_type const*>(input_buffer)"
+										o + "std::memcpy(@obj@.m_@prop@.vptr(), reinterpret_cast<dcon::bitfield_type const*>(input_buffer)"
 											", std::min(size_t(@obj@.size_used + 7) / 8, header.record_size));";
 										o + "serialize_selection.@obj@_@prop@ = true;";
 									};
@@ -2936,6 +2936,7 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 											o + "icpy += sz * sizeof(@type@);";
 											o + "++ix;";
 										};
+										o + "serialize_selection.@obj@_@prop@ = true;";
 									}; // end correct type
 									for(auto& con : parsed_file.conversion_list) {
 										if(con.to == prop.data_type) {
@@ -3042,7 +3043,7 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 													o + "@obj@.m_@prop@.resize(0, @obj@.size_used);";
 												};
 												o + "for(int32_t s = 0; s < int32_t(@obj@.m_@prop@.size) && icpy < input_buffer + header.record_size; ++s)" + block{
-													o + "std::memcpy(@obj@.m_@prop@.vptr(s), reinterpret_cast<bitfield_type const*>(icpy)"
+													o + "std::memcpy(@obj@.m_@prop@.vptr(s), reinterpret_cast<dcon::bitfield_type const*>(icpy)"
 														", std::min(size_t(@obj@.size_used + 7) / 8, size_t(input_buffer + header.record_size - icpy)));";
 													o + "icpy += (@obj@.size_used + 7) / 8;";
 												};
@@ -3544,12 +3545,17 @@ basic_builder& make_const_fat_id(basic_builder& o, relationship_object_def const
 					case property_type::bitfield:
 						o + "DCON_RELEASE_INLINE bool get_@prop@() const noexcept;";
 						break;
+					case property_type::object:
+						o + "DCON_RELEASE_INLINE @type@ get_@prop@() const noexcept;";
+						break;
 					case property_type::vectorizable:
-					case property_type::other:
 						if(upresult.has_value())
 							o + "DCON_RELEASE_INLINE @type@ get_@prop@() const noexcept;";
 						else
 							o + "DCON_RELEASE_INLINE @type@ get_@prop@() const noexcept;";
+						break;
+					case property_type::other:
+						o + "DCON_RELEASE_INLINE @type@ get_@prop@() const noexcept;";
 						break;
 					case property_type::array_bitfield:
 						o + "DCON_RELEASE_INLINE bool get_@prop@(@index_type@ i) const noexcept;";
@@ -3569,12 +3575,17 @@ basic_builder& make_const_fat_id(basic_builder& o, relationship_object_def const
 					case property_type::bitfield:
 						o + "DCON_RELEASE_INLINE bool get_@prop@() const noexcept;";
 						break;
+					case property_type::object:
+						o + "DCON_RELEASE_INLINE @type@ const& get_@prop@() const noexcept;";
+						break;
 					case property_type::vectorizable:
-					case property_type::other:
 						if(upresult.has_value())
 							o + "DCON_RELEASE_INLINE @type@ get_@prop@() const noexcept;";
 						else
-							o + "DCON_RELEASE_INLINE @type@ const& get_@prop@() const noexcept;";
+							o + "DCON_RELEASE_INLINE @type@ get_@prop@() const noexcept;";
+						break;
+					case property_type::other:
+						o + "DCON_RELEASE_INLINE @type@ const& get_@prop@() const noexcept;";
 						break;
 					case property_type::array_bitfield:
 						o + "DCON_RELEASE_INLINE bool get_@prop@(@index_type@ i) const noexcept;";
@@ -3772,12 +3783,17 @@ basic_builder& make_fat_id(basic_builder& o, relationship_object_def const& obj,
 					case property_type::bitfield:
 						o + "DCON_RELEASE_INLINE bool get_@prop@() const noexcept;";
 						break;
+					case property_type::object:
+						o + "DCON_RELEASE_INLINE @type@ get_@prop@() const noexcept;";
+						break;
 					case property_type::vectorizable:
-					case property_type::other:
 						if(upresult.has_value())
 							o + "DCON_RELEASE_INLINE @type@ get_@prop@() const noexcept;";
 						else
 							o + "DCON_RELEASE_INLINE @type@ get_@prop@() const noexcept;";
+						break;
+					case property_type::other:
+						o + "DCON_RELEASE_INLINE @type@ get_@prop@() const noexcept;";
 						break;
 					case property_type::array_bitfield:
 						o + "DCON_RELEASE_INLINE bool get_@prop@(@index_type@ i) const noexcept;";
@@ -3797,12 +3813,17 @@ basic_builder& make_fat_id(basic_builder& o, relationship_object_def const& obj,
 					case property_type::bitfield:
 						o + "DCON_RELEASE_INLINE bool get_@prop@() const noexcept;";
 						break;
+					case property_type::object:
+						o + "DCON_RELEASE_INLINE @type@& get_@prop@() const noexcept;";
+						break;
 					case property_type::vectorizable:
-					case property_type::other:
 						if(upresult.has_value())
 							o + "DCON_RELEASE_INLINE @type@ get_@prop@() const noexcept;";
 						else
 							o + "DCON_RELEASE_INLINE @type@& get_@prop@() const noexcept;";
+						break;
+					case property_type::other:
+						o + "DCON_RELEASE_INLINE @type@& get_@prop@() const noexcept;";
 						break;
 					case property_type::array_bitfield:
 						o + "DCON_RELEASE_INLINE bool get_@prop@(@index_type@ i) const noexcept;";
@@ -3837,6 +3858,7 @@ basic_builder& make_fat_id(basic_builder& o, relationship_object_def const& obj,
 						o + "DCON_RELEASE_INLINE void set_@prop@(@type@ v) const noexcept;";
 						break;
 					case property_type::other:
+					case property_type::object:
 						o + "DCON_RELEASE_INLINE void set_@prop@(@type@ const& v) const noexcept;";
 						break;
 					case property_type::array_bitfield:
@@ -4032,6 +4054,7 @@ basic_builder& make_const_fat_id_impl(basic_builder& o, relationship_object_def 
 						o + "DCON_RELEASE_INLINE bool @obj@_const_fat_id::get_@prop@() const noexcept { return container.@obj@_get_@prop@(id); }";
 						break;
 					case property_type::vectorizable:
+					case property_type::object:
 					case property_type::other:
 						if(upresult.has_value())
 							o + "DCON_RELEASE_INLINE @type@ @obj@_const_fat_id::get_@prop@() const noexcept { return @type@(container, container.@obj@_get_@prop@(id)); }";
@@ -4057,11 +4080,14 @@ basic_builder& make_const_fat_id_impl(basic_builder& o, relationship_object_def 
 						o + "DCON_RELEASE_INLINE bool @obj@_const_fat_id::get_@prop@() const noexcept { return container.@obj@_get_@prop@(id); }";
 						break;
 					case property_type::vectorizable:
-					case property_type::other:
 						if(upresult.has_value())
 							o + "DCON_RELEASE_INLINE @type@ @obj@_const_fat_id::get_@prop@() const noexcept { return @type@(container, container.@obj@_get_@prop@(id)); }";
 						else
-							o + "DCON_RELEASE_INLINE @type@ const& @obj@_const_fat_id::get_@prop@() const noexcept { return container.@obj@_get_@prop@(id); }";
+							o + "DCON_RELEASE_INLINE @type@ @obj@_const_fat_id::get_@prop@() const noexcept { return container.@obj@_get_@prop@(id); }";
+						break;
+					case property_type::other:
+					case property_type::object:
+						o + "DCON_RELEASE_INLINE @type@ const& @obj@_const_fat_id::get_@prop@() const noexcept { return container.@obj@_get_@prop@(id); }";
 						break;
 					case property_type::array_bitfield:
 						o + "DCON_RELEASE_INLINE bool @obj@_const_fat_id::get_@prop@(@index_type@ i) const noexcept { return container.@obj@_get_@prop@(id, i); }";
@@ -4250,6 +4276,7 @@ basic_builder& make_fat_id_impl(basic_builder& o, relationship_object_def const&
 						break;
 					case property_type::vectorizable:
 					case property_type::other:
+					case property_type::object:
 						if(upresult.has_value())
 							o + "DCON_RELEASE_INLINE @type@ @obj@_fat_id::get_@prop@() const noexcept { return @type@(container, container.@obj@_get_@prop@(id)); }";
 						else
@@ -4275,6 +4302,7 @@ basic_builder& make_fat_id_impl(basic_builder& o, relationship_object_def const&
 						break;
 					case property_type::vectorizable:
 					case property_type::other:
+					case property_type::object:
 						if(upresult.has_value())
 							o + "DCON_RELEASE_INLINE @type@ @obj@_fat_id::get_@prop@() const noexcept { return @type@(container, container.@obj@_get_@prop@(id)); }";
 						else
@@ -4314,6 +4342,7 @@ basic_builder& make_fat_id_impl(basic_builder& o, relationship_object_def const&
 						o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@(@type@ v) const noexcept { container.@obj@_set_@prop@(id, v); }";
 						break;
 					case property_type::other:
+					case property_type::object:
 						o + "DCON_RELEASE_INLINE void @obj@_fat_id::set_@prop@(@type@ const& v) const noexcept { container.@obj@_set_@prop@(id, v); }";
 						break;
 					case property_type::array_bitfield:

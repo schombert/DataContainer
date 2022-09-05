@@ -1,0 +1,104 @@
+namespace{os}
+
+object{
+	name{thingy}
+	storage_type{compactable}
+	size{1200}
+	
+	tag{left}
+
+	property{
+		name{i_value}
+		type{int16_t}
+		
+		tag{simple}
+	}
+	
+	property{
+		name{f_value}
+		type{float}
+		
+		tag{simple}
+	}
+
+	property{
+		name{bf_value}
+		type{bitfield}
+		
+		tag{simple}
+	}
+
+	property{
+		name{d_value}
+		type{derived{int32_t}}
+	}
+
+	property{
+		name{obj_value}
+		type{object{std::vector<float>}}
+	}
+
+	property{
+		name{pooled_v}
+		type{vector_pool{1000}{int16_t}}
+	}
+
+	property{
+		name{big_array}
+		type{array{int32_t}{float}}
+	}
+
+	property{
+		name{big_array_bf}
+		type{array{int32_t}{bitfield}}
+	}
+}
+
+object{
+	name{thingy2}
+	storage_type{compactable}
+	size{expandable}
+	
+	property{
+		name{some_value}
+		type{int32_t}
+	}
+}
+
+relationship{
+	name{dummy_rel}
+	
+	link{
+		object{thingy}
+		name{left}
+		type{unique}
+	}
+	link{
+		object{thingy2}
+		name{right}
+		type{many}
+		index_storage{std_vector}
+	}
+
+	composite_key{
+		name{joint}
+		index{left}
+		index{right}
+	}
+}
+
+load_save{
+	name{store_simple}
+	only_objects{left}
+	only_properties{simple}
+}
+
+load_save{
+	name{store_left}
+	only_objects{left}
+}
+
+load_save{
+	name{store_right}
+	exclude_objects{left}
+}

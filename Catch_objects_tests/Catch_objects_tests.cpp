@@ -38,7 +38,7 @@ TEST_CASE("property_types", "[objects_and_properties_tests]") {
 	ptr->create_thingy();
 	ptr->create_thingy();
 	ptr->create_thingy();
-	auto target = ptr->create_thingy();
+	auto target = fatten(*ptr, ptr->create_thingy());
 	ptr->create_thingy();
 	ptr->create_thingy();
 
@@ -55,6 +55,11 @@ TEST_CASE("property_types", "[objects_and_properties_tests]") {
 	ptr->thingy_resize_big_array(2);
 	ptr->thingy_resize_big_array_bf(4);
 
+	target.set_some_value(35);
+	REQUIRE(target.get_pooled_v_size() == 1);
+	target.pooled_v_push_back(3);
+	target.pooled_v_push_back(5);
+
 	REQUIRE(ptr->thingy_get_big_array_size() == 2);
 	REQUIRE(ptr->thingy_get_big_array_bf_size() == 4);
 
@@ -62,6 +67,11 @@ TEST_CASE("property_types", "[objects_and_properties_tests]") {
 	REQUIRE(ptr->thingy_get_big_array(target, 1) == 0.0f);
 
 	REQUIRE(ptr->thingy_get_big_array_bf(target, 3) == false);
+
+	REQUIRE(target.get_some_value() == 35);
+	REQUIRE(target.get_pooled_v_size() == 3);
+	REQUIRE(target.get_pooled_v_at(1) == 3);
+	REQUIRE(target.get_pooled_v_at(2) == 5);
 
 	ptr->thingy_set_big_array(target, 0, 1.5f);
 	ptr->thingy_set_big_array(target, 1, 3.5f);
@@ -71,7 +81,6 @@ TEST_CASE("property_types", "[objects_and_properties_tests]") {
 	REQUIRE(ptr->thingy_get_obj_value(target).size() == 2);
 	REQUIRE(ptr->thingy_get_obj_value(target)[1] == 4.0f);
 	REQUIRE(ptr->thingy_pooled_v_contains(target, -5i16) == true);
-	REQUIRE(ptr->thingy_get_pooled_v_size(target) == 1);
 	REQUIRE(ptr->thingy_get_big_array(target, 0) == 1.5f);
 	REQUIRE(ptr->thingy_get_big_array(target, 1) == 3.5f);
 	REQUIRE(ptr->thingy_get_big_array_bf(target, 3) == true);

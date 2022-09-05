@@ -248,6 +248,13 @@ int main(int argc, char *argv[]) {
 		basic_builder o;
 		//includes
 		output += "#pragma once\n";
+		output += "\n";
+		output += "//\n";
+		output += "// This file was automatically generated from: " + std::string(argv[1]) + "\n";
+		output += "// EDIT AT YOUR OWN RISK; all changes will be lost upon regeneration\n";
+		output += "// NOT SUITABLE FOR USE IN CRITICAL SOFTWARE WHERE LIVES OR LIVELIHOODS DEPEND ON THE CORRECT OPERATION\n";
+		output += "//\n";
+		output += "\n";
 		output += "#include <cstdint>\n";
 		output += "#include <cstddef>\n";
 		output += "#include <utility>\n";
