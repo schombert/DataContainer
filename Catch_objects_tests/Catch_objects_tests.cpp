@@ -3,7 +3,49 @@
 
 #include "catch.hpp"
 #include "common_types.hpp"
+
+struct my_struct {
+	float internal_val = 2.0f;
+};
+
 #include "objects_def.hpp"
+
+void dcon::data_container::on_create_thingy(thingy_id) {
+	++counter;
+}
+void dcon::data_container::on_delete_thingy(thingy_id) {
+	++counter;
+}
+void dcon::data_container::on_move_thingy(thingy_id, thingy_id) {
+	++counter;
+}
+
+int32_t dcon::data_container::thingy_get_d_value(thingy_id) const {
+	return 6;
+}
+
+void dcon::data_container::thingy_set_dbf_value(thingy_id, bool) {
+	++counter;
+}
+
+void dcon::oop_thingy_fat_id::reset_internal() {
+	set_pstruct(my_struct{4.0f});
+}
+int dcon::oop_thingy_const_fat_id::get_a_value(float offset) {
+	return int(get_pstruct().internal_val + get_pfloat() + offset);
+}
+
+TEST_CASE("oop case", "[objects_and_properties_tests]") {
+	auto ptr = std::make_unique< dcon::data_container >();
+
+	auto fid = fatten(*ptr, ptr->create_oop_thingy());
+
+	REQUIRE(fid.get_pstruct().internal_val == 2.0f);
+	fid.reset_internal();
+	REQUIRE(fid.get_pstruct().internal_val == 4.0f);
+
+	REQUIRE(fid.get_a_value(6.0f) == 10);
+}
 
 TEST_CASE("hooked_functions", "[objects_and_properties_tests]") {
 	auto ptr = std::make_unique< dcon::data_container >();

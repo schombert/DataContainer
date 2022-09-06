@@ -210,6 +210,10 @@ int main(int argc, char *argv[]) {
 					for(auto& ri : ob.indexed_objects) {
 						if(ri.property_name == k.property_name) {
 							k.object_type = ri.type_name;
+							if(ri.protection != protection_type::hidden && ri.protection != protection_type::super_hidden)
+								ri.protection = protection_type::super_read_only;
+							else
+								ri.protection = protection_type::super_hidden;
 						}
 					}
 
@@ -478,6 +482,16 @@ int main(int argc, char *argv[]) {
 		//close internal namespace
 		output += "\t}\n\n";
 
+		// write declarations for fat_ids
+		for(auto& obj : parsed_file.relationship_objects) {
+			output += "\tclass " + obj.name + "_const_fat_id;\n";
+			output += "\tclass " + obj.name + "_fat_id;\n";
+		}
+		for(auto& obj : parsed_file.relationship_objects) {
+			output += make_fat_id(o, obj, parsed_file).to_string(1);
+			output += make_const_fat_id(o, obj, parsed_file).to_string(1);
+		}
+
 		//class data_container begin
 		output += "\tclass alignas(64) data_container {\n";
 		output += "\t\tpublic:\n";
@@ -664,15 +678,7 @@ int main(int argc, char *argv[]) {
 		//class data_container end
 		output += "\t};\n\n";
 
-		for(auto& obj : parsed_file.relationship_objects) {
-			output += "\tclass " + obj.name + "_const_fat_id;\n";
-			output += "\tclass " + obj.name + "_fat_id;\n";
-
-		}
-		for(auto& obj : parsed_file.relationship_objects) {
-			output += make_fat_id(o, obj, parsed_file).to_string(1);
-			output += make_const_fat_id(o, obj, parsed_file).to_string(1);	
-		}
+		
 		for(auto& obj : parsed_file.relationship_objects) {
 			output += make_fat_id_impl(o, obj, parsed_file).to_string(1);
 			output += make_const_fat_id_impl(o, obj, parsed_file).to_string(1);

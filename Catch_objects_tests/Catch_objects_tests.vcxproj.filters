@@ -18,9 +18,6 @@
     <ClCompile Include="Catch_objects_tests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="objects_def.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="objects_def.hpp">

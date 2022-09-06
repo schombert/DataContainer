@@ -42,11 +42,20 @@ enum class storage_type { contiguous, erasable, compactable };
 enum class property_type { vectorizable, other, object, special_vector, bitfield,
 	array_vectorizable, array_bitfield, array_other
 };
+enum class protection_type { none, hidden, read_only, super_read_only, super_hidden };
+
+struct member_function_spec{
+	std::string signature;
+	std::string name;
+	std::vector<std::string> parameter_names;
+	bool is_const = false;
+};
 
 struct property_def {
 	std::string name;
 
 	property_type type = property_type::other;
+	protection_type protection = protection_type::none;
 	bool is_derived = false;
 
 	int special_pool_size = 1000;
@@ -70,6 +79,7 @@ struct related_object {
 	std::string type_name;
 	index_type index = index_type::at_most_one;
 	list_type ltype = list_type::list;
+	protection_type protection = protection_type::none;
 	relationship_object_def* related_to = nullptr;
 };
 
@@ -127,6 +137,7 @@ struct relationship_object_def {
 	std::vector<property_def> properties;
 	std::vector<in_relation_information> relationships_involved_in;
 	std::vector<composite_index_def> composite_indexes;
+	std::vector< member_function_spec> member_functions;
 
 	primary_key_type primary_key;
 };

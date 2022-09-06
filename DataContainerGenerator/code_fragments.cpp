@@ -2262,6 +2262,7 @@ basic_builder& make_const_fat_id(basic_builder& o, relationship_object_def const
 	o + substitute{ "obj", obj.name };
 
 	o + "class @obj@_const_fat_id" + class_block{
+		o + "friend class data_container;";
 		o + "public:";
 		o + "data_container const& container;";
 		o + "@obj@_id id;";
@@ -2331,6 +2332,7 @@ basic_builder& make_fat_id(basic_builder& o, relationship_object_def const& obj,
 	o + substitute{ "obj", obj.name };
 
 	o + "class @obj@_fat_id" + class_block{
+		o + "friend class data_container;";
 		o + "public:";
 		o + "data_container& container;";
 		o + "@obj@_id id;";

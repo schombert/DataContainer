@@ -111,4 +111,40 @@ relationship{
 	}
 }
 
+object{
+	name{oop_thingy}
+	storage_type{compactable}
+	size{1200}
+	
+	property{
+		protected
+		name{pstruct}
+		type{my_struct}
+	}
+
+	property{
+		private
+		name{pfloat}
+		type{float}
+	}
+
+	function{void @reset_internal()}
+	const_function{int @get_a_value(float @offset)}
+}
+
+relationship{
+	name{dummy_rel_B}
+
+	link{
+		object{oop_thingy}
+		name{left}
+		type{unique}
+	}
+	link{
+		object{oop_thingy}
+		name{right}
+		type{unique}
+	}
+}
+
 global{int32_t counter = 0;}

@@ -300,6 +300,379 @@ namespace ex1 {
 
 	}
 
+	class top_const_fat_id;
+	class top_fat_id;
+	class bottom_const_fat_id;
+	class bottom_fat_id;
+	class lr_relation_const_fat_id;
+	class lr_relation_fat_id;
+	class top_fat_id {
+		friend class data_container;
+		public:
+		data_container& container;
+		top_id id;
+		top_fat_id(data_container& c, top_id i) noexcept : container(c), id(i) {}
+		top_fat_id(top_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator top_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE top_fat_id& operator=(top_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE top_fat_id& operator=(top_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(top_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(top_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(top_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(top_id other) const noexcept {
+			return id != other;
+		}
+		explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE int32_t& get_wheels() const noexcept;
+		DCON_RELEASE_INLINE void set_wheels(int32_t v) const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_lr_relation_as_left(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation_as_left() const;
+		DCON_RELEASE_INLINE void remove_all_lr_relation_as_left() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_lr_relation(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation() const;
+		DCON_RELEASE_INLINE void remove_all_lr_relation() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_right_from_lr_relation(T&& func) const;
+		DCON_RELEASE_INLINE bool has_right_from_lr_relation(bottom_id target) const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_thingies_from_lr_relation(T&& func) const;
+		DCON_RELEASE_INLINE bool has_thingies_from_lr_relation(int32_t target) const;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE top_fat_id fatten(data_container& c, top_id id) noexcept {
+		return top_fat_id(c, id);
+	}
+	
+	class top_const_fat_id {
+		friend class data_container;
+		public:
+		data_container const& container;
+		top_id id;
+		top_const_fat_id(data_container const& c, top_id i) noexcept : container(c), id(i) {}
+		top_const_fat_id(top_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		top_const_fat_id(top_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator top_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE top_const_fat_id& operator=(top_const_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE top_const_fat_id& operator=(top_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE top_const_fat_id& operator=(top_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(top_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(top_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(top_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(top_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(top_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(top_id other) const noexcept {
+			return id != other;
+		}
+		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE int32_t get_wheels() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_lr_relation_as_left(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation_as_left() const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_lr_relation(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation() const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_right_from_lr_relation(T&& func) const;
+		DCON_RELEASE_INLINE bool has_right_from_lr_relation(bottom_id target) const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_thingies_from_lr_relation(T&& func) const;
+		DCON_RELEASE_INLINE bool has_thingies_from_lr_relation(int32_t target) const;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE bool operator==(top_fat_id const& l, top_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id == other.id;
+	}
+	DCON_RELEASE_INLINE bool operator!=(top_fat_id const& l, top_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id != other.id;
+	}
+	DCON_RELEASE_INLINE top_const_fat_id fatten(data_container const& c, top_id id) noexcept {
+		return top_const_fat_id(c, id);
+	}
+	
+	class bottom_fat_id {
+		friend class data_container;
+		public:
+		data_container& container;
+		bottom_id id;
+		bottom_fat_id(data_container& c, bottom_id i) noexcept : container(c), id(i) {}
+		bottom_fat_id(bottom_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator bottom_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE bottom_fat_id& operator=(bottom_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bottom_fat_id& operator=(bottom_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(bottom_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(bottom_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(bottom_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(bottom_id other) const noexcept {
+			return id != other;
+		}
+		explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE int32_t& get_legs() const noexcept;
+		DCON_RELEASE_INLINE void set_legs(int32_t v) const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_lr_relation_as_right(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation_as_right() const;
+		DCON_RELEASE_INLINE void remove_all_lr_relation_as_right() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_lr_relation(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation() const;
+		DCON_RELEASE_INLINE void remove_all_lr_relation() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_left_from_lr_relation(T&& func) const;
+		DCON_RELEASE_INLINE bool has_left_from_lr_relation(top_id target) const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_thingies_from_lr_relation(T&& func) const;
+		DCON_RELEASE_INLINE bool has_thingies_from_lr_relation(int32_t target) const;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE bottom_fat_id fatten(data_container& c, bottom_id id) noexcept {
+		return bottom_fat_id(c, id);
+	}
+	
+	class bottom_const_fat_id {
+		friend class data_container;
+		public:
+		data_container const& container;
+		bottom_id id;
+		bottom_const_fat_id(data_container const& c, bottom_id i) noexcept : container(c), id(i) {}
+		bottom_const_fat_id(bottom_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		bottom_const_fat_id(bottom_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator bottom_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE bottom_const_fat_id& operator=(bottom_const_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bottom_const_fat_id& operator=(bottom_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bottom_const_fat_id& operator=(bottom_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(bottom_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(bottom_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(bottom_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(bottom_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(bottom_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(bottom_id other) const noexcept {
+			return id != other;
+		}
+		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE int32_t get_legs() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_lr_relation_as_right(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation_as_right() const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_lr_relation(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation() const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_left_from_lr_relation(T&& func) const;
+		DCON_RELEASE_INLINE bool has_left_from_lr_relation(top_id target) const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_thingies_from_lr_relation(T&& func) const;
+		DCON_RELEASE_INLINE bool has_thingies_from_lr_relation(int32_t target) const;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE bool operator==(bottom_fat_id const& l, bottom_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id == other.id;
+	}
+	DCON_RELEASE_INLINE bool operator!=(bottom_fat_id const& l, bottom_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id != other.id;
+	}
+	DCON_RELEASE_INLINE bottom_const_fat_id fatten(data_container const& c, bottom_id id) noexcept {
+		return bottom_const_fat_id(c, id);
+	}
+	
+	class lr_relation_fat_id {
+		friend class data_container;
+		public:
+		data_container& container;
+		lr_relation_id id;
+		lr_relation_fat_id(data_container& c, lr_relation_id i) noexcept : container(c), id(i) {}
+		lr_relation_fat_id(lr_relation_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator lr_relation_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE lr_relation_fat_id& operator=(lr_relation_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE lr_relation_fat_id& operator=(lr_relation_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(lr_relation_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(lr_relation_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(lr_relation_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(lr_relation_id other) const noexcept {
+			return id != other;
+		}
+		explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE int32_t& get_thingies() const noexcept;
+		DCON_RELEASE_INLINE void set_thingies(int32_t v) const noexcept;
+		DCON_RELEASE_INLINE top_fat_id get_left() const noexcept;
+		DCON_RELEASE_INLINE void set_left(top_id val) const noexcept;
+		DCON_RELEASE_INLINE bottom_fat_id get_right() const noexcept;
+		DCON_RELEASE_INLINE void set_right(bottom_id val) const noexcept;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE lr_relation_fat_id fatten(data_container& c, lr_relation_id id) noexcept {
+		return lr_relation_fat_id(c, id);
+	}
+	
+	class lr_relation_const_fat_id {
+		friend class data_container;
+		public:
+		data_container const& container;
+		lr_relation_id id;
+		lr_relation_const_fat_id(data_container const& c, lr_relation_id i) noexcept : container(c), id(i) {}
+		lr_relation_const_fat_id(lr_relation_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		lr_relation_const_fat_id(lr_relation_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator lr_relation_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE lr_relation_const_fat_id& operator=(lr_relation_const_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE lr_relation_const_fat_id& operator=(lr_relation_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE lr_relation_const_fat_id& operator=(lr_relation_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(lr_relation_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(lr_relation_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(lr_relation_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(lr_relation_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(lr_relation_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(lr_relation_id other) const noexcept {
+			return id != other;
+		}
+		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE int32_t get_thingies() const noexcept;
+		DCON_RELEASE_INLINE top_const_fat_id get_left() const noexcept;
+		DCON_RELEASE_INLINE bottom_const_fat_id get_right() const noexcept;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE bool operator==(lr_relation_fat_id const& l, lr_relation_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id == other.id;
+	}
+	DCON_RELEASE_INLINE bool operator!=(lr_relation_fat_id const& l, lr_relation_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id != other.id;
+	}
+	DCON_RELEASE_INLINE lr_relation_const_fat_id fatten(data_container const& c, lr_relation_id id) noexcept {
+		return lr_relation_const_fat_id(c, id);
+	}
+	
 	class alignas(64) data_container {
 		public:
 		internal::top_class top;
@@ -310,7 +683,7 @@ namespace ex1 {
 		// Functions for top:
 		//
 		//
-		// getters for top: wheels
+		// accessors for top: wheels
 		//
 		DCON_RELEASE_INLINE int32_t const& top_get_wheels(top_id id) const noexcept {
 			return top.m_wheels.vptr()[id.index()];
@@ -419,7 +792,7 @@ namespace ex1 {
 		// Functions for bottom:
 		//
 		//
-		// getters for bottom: legs
+		// accessors for bottom: legs
 		//
 		DCON_RELEASE_INLINE int32_t const& bottom_get_legs(bottom_id id) const noexcept {
 			return bottom.m_legs.vptr()[id.index()];
@@ -528,7 +901,7 @@ namespace ex1 {
 		// Functions for lr_relation:
 		//
 		//
-		// getters for lr_relation: thingies
+		// accessors for lr_relation: thingies
 		//
 		DCON_RELEASE_INLINE int32_t const& lr_relation_get_thingies(lr_relation_id id) const noexcept {
 			return lr_relation.m_thingies.vptr()[id.index()];
@@ -1623,374 +1996,7 @@ namespace ex1 {
 
 	};
 
-	class top_const_fat_id;
-	class top_fat_id;
-	class bottom_const_fat_id;
-	class bottom_fat_id;
-	class lr_relation_const_fat_id;
-	class lr_relation_fat_id;
-	class top_fat_id {
-		public:
-		data_container& container;
-		top_id id;
-		top_fat_id(data_container& c, top_id i) noexcept : container(c), id(i) {}
-		top_fat_id(top_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		DCON_RELEASE_INLINE operator top_id() const noexcept { return id; }
-		DCON_RELEASE_INLINE top_fat_id& operator=(top_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE top_fat_id& operator=(top_id other) noexcept {
-			id = other;
-			return *this;
-		}
-		DCON_RELEASE_INLINE bool operator==(top_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(top_id other) const noexcept {
-			return id == other;
-		}
-		DCON_RELEASE_INLINE bool operator!=(top_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(top_id other) const noexcept {
-			return id != other;
-		}
-		explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE int32_t& get_wheels() const;
-		DCON_RELEASE_INLINE void set_wheels(int32_t v) const noexcept;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_lr_relation_as_left(T&& func) const;
-		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation_as_left() const;
-		DCON_RELEASE_INLINE void remove_all_lr_relation_as_left() const noexcept;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_lr_relation(T&& func) const;
-		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation() const;
-		DCON_RELEASE_INLINE void remove_all_lr_relation() const noexcept;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_right_from_lr_relation(T&& func) const;
-		DCON_RELEASE_INLINE bool has_right_from_lr_relation(bottom_id target) const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_thingies_from_lr_relation(T&& func) const;
-		DCON_RELEASE_INLINE bool has_thingies_from_lr_relation(int32_t target) const;
-		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
-	};
-	DCON_RELEASE_INLINE top_fat_id fatten(data_container& c, top_id id) noexcept {
-		return top_fat_id(c, id);
-	}
-	
-	class top_const_fat_id {
-		public:
-		data_container const& container;
-		top_id id;
-		top_const_fat_id(data_container const& c, top_id i) noexcept : container(c), id(i) {}
-		top_const_fat_id(top_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		top_const_fat_id(top_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		DCON_RELEASE_INLINE operator top_id() const noexcept { return id; }
-		DCON_RELEASE_INLINE top_const_fat_id& operator=(top_const_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE top_const_fat_id& operator=(top_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE top_const_fat_id& operator=(top_id other) noexcept {
-			id = other;
-			return *this;
-		}
-		DCON_RELEASE_INLINE bool operator==(top_const_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(top_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(top_id other) const noexcept {
-			return id == other;
-		}
-		DCON_RELEASE_INLINE bool operator!=(top_const_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(top_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(top_id other) const noexcept {
-			return id != other;
-		}
-		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE int32_t const& get_wheels() const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_lr_relation_as_left(T&& func) const;
-		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation_as_left() const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_lr_relation(T&& func) const;
-		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation() const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_right_from_lr_relation(T&& func) const;
-		DCON_RELEASE_INLINE bool has_right_from_lr_relation(bottom_id target) const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_thingies_from_lr_relation(T&& func) const;
-		DCON_RELEASE_INLINE bool has_thingies_from_lr_relation(int32_t target) const;
-		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
-	};
-	DCON_RELEASE_INLINE bool operator==(top_fat_id const& l, top_const_fat_id const& other) noexcept {
-		assert(&l.container == &other.container);
-		return l.id == other.id;
-	}
-	DCON_RELEASE_INLINE bool operator!=(top_fat_id const& l, top_const_fat_id const& other) noexcept {
-		assert(&l.container == &other.container);
-		return l.id != other.id;
-	}
-	DCON_RELEASE_INLINE top_const_fat_id fatten(data_container const& c, top_id id) noexcept {
-		return top_const_fat_id(c, id);
-	}
-	
-	class bottom_fat_id {
-		public:
-		data_container& container;
-		bottom_id id;
-		bottom_fat_id(data_container& c, bottom_id i) noexcept : container(c), id(i) {}
-		bottom_fat_id(bottom_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		DCON_RELEASE_INLINE operator bottom_id() const noexcept { return id; }
-		DCON_RELEASE_INLINE bottom_fat_id& operator=(bottom_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE bottom_fat_id& operator=(bottom_id other) noexcept {
-			id = other;
-			return *this;
-		}
-		DCON_RELEASE_INLINE bool operator==(bottom_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(bottom_id other) const noexcept {
-			return id == other;
-		}
-		DCON_RELEASE_INLINE bool operator!=(bottom_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(bottom_id other) const noexcept {
-			return id != other;
-		}
-		explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE int32_t& get_legs() const;
-		DCON_RELEASE_INLINE void set_legs(int32_t v) const noexcept;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_lr_relation_as_right(T&& func) const;
-		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation_as_right() const;
-		DCON_RELEASE_INLINE void remove_all_lr_relation_as_right() const noexcept;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_lr_relation(T&& func) const;
-		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation() const;
-		DCON_RELEASE_INLINE void remove_all_lr_relation() const noexcept;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_left_from_lr_relation(T&& func) const;
-		DCON_RELEASE_INLINE bool has_left_from_lr_relation(top_id target) const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_thingies_from_lr_relation(T&& func) const;
-		DCON_RELEASE_INLINE bool has_thingies_from_lr_relation(int32_t target) const;
-		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
-	};
-	DCON_RELEASE_INLINE bottom_fat_id fatten(data_container& c, bottom_id id) noexcept {
-		return bottom_fat_id(c, id);
-	}
-	
-	class bottom_const_fat_id {
-		public:
-		data_container const& container;
-		bottom_id id;
-		bottom_const_fat_id(data_container const& c, bottom_id i) noexcept : container(c), id(i) {}
-		bottom_const_fat_id(bottom_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		bottom_const_fat_id(bottom_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		DCON_RELEASE_INLINE operator bottom_id() const noexcept { return id; }
-		DCON_RELEASE_INLINE bottom_const_fat_id& operator=(bottom_const_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE bottom_const_fat_id& operator=(bottom_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE bottom_const_fat_id& operator=(bottom_id other) noexcept {
-			id = other;
-			return *this;
-		}
-		DCON_RELEASE_INLINE bool operator==(bottom_const_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(bottom_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(bottom_id other) const noexcept {
-			return id == other;
-		}
-		DCON_RELEASE_INLINE bool operator!=(bottom_const_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(bottom_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(bottom_id other) const noexcept {
-			return id != other;
-		}
-		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE int32_t const& get_legs() const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_lr_relation_as_right(T&& func) const;
-		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation_as_right() const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_lr_relation(T&& func) const;
-		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation() const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_left_from_lr_relation(T&& func) const;
-		DCON_RELEASE_INLINE bool has_left_from_lr_relation(top_id target) const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_thingies_from_lr_relation(T&& func) const;
-		DCON_RELEASE_INLINE bool has_thingies_from_lr_relation(int32_t target) const;
-		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
-	};
-	DCON_RELEASE_INLINE bool operator==(bottom_fat_id const& l, bottom_const_fat_id const& other) noexcept {
-		assert(&l.container == &other.container);
-		return l.id == other.id;
-	}
-	DCON_RELEASE_INLINE bool operator!=(bottom_fat_id const& l, bottom_const_fat_id const& other) noexcept {
-		assert(&l.container == &other.container);
-		return l.id != other.id;
-	}
-	DCON_RELEASE_INLINE bottom_const_fat_id fatten(data_container const& c, bottom_id id) noexcept {
-		return bottom_const_fat_id(c, id);
-	}
-	
-	class lr_relation_fat_id {
-		public:
-		data_container& container;
-		lr_relation_id id;
-		lr_relation_fat_id(data_container& c, lr_relation_id i) noexcept : container(c), id(i) {}
-		lr_relation_fat_id(lr_relation_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		DCON_RELEASE_INLINE operator lr_relation_id() const noexcept { return id; }
-		DCON_RELEASE_INLINE lr_relation_fat_id& operator=(lr_relation_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE lr_relation_fat_id& operator=(lr_relation_id other) noexcept {
-			id = other;
-			return *this;
-		}
-		DCON_RELEASE_INLINE bool operator==(lr_relation_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(lr_relation_id other) const noexcept {
-			return id == other;
-		}
-		DCON_RELEASE_INLINE bool operator!=(lr_relation_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(lr_relation_id other) const noexcept {
-			return id != other;
-		}
-		explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE int32_t& get_thingies() const;
-		DCON_RELEASE_INLINE void set_thingies(int32_t v) const noexcept;
-		DCON_RELEASE_INLINE top_fat_id get_left() const noexcept;
-		DCON_RELEASE_INLINE void set_left(top_id val) const noexcept;
-		DCON_RELEASE_INLINE bottom_fat_id get_right() const noexcept;
-		DCON_RELEASE_INLINE void set_right(bottom_id val) const noexcept;
-		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
-	};
-	DCON_RELEASE_INLINE lr_relation_fat_id fatten(data_container& c, lr_relation_id id) noexcept {
-		return lr_relation_fat_id(c, id);
-	}
-	
-	class lr_relation_const_fat_id {
-		public:
-		data_container const& container;
-		lr_relation_id id;
-		lr_relation_const_fat_id(data_container const& c, lr_relation_id i) noexcept : container(c), id(i) {}
-		lr_relation_const_fat_id(lr_relation_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		lr_relation_const_fat_id(lr_relation_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		DCON_RELEASE_INLINE operator lr_relation_id() const noexcept { return id; }
-		DCON_RELEASE_INLINE lr_relation_const_fat_id& operator=(lr_relation_const_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE lr_relation_const_fat_id& operator=(lr_relation_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE lr_relation_const_fat_id& operator=(lr_relation_id other) noexcept {
-			id = other;
-			return *this;
-		}
-		DCON_RELEASE_INLINE bool operator==(lr_relation_const_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(lr_relation_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(lr_relation_id other) const noexcept {
-			return id == other;
-		}
-		DCON_RELEASE_INLINE bool operator!=(lr_relation_const_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(lr_relation_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(lr_relation_id other) const noexcept {
-			return id != other;
-		}
-		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE int32_t const& get_thingies() const;
-		DCON_RELEASE_INLINE top_const_fat_id get_left() const noexcept;
-		DCON_RELEASE_INLINE bottom_const_fat_id get_right() const noexcept;
-		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
-	};
-	DCON_RELEASE_INLINE bool operator==(lr_relation_fat_id const& l, lr_relation_const_fat_id const& other) noexcept {
-		assert(&l.container == &other.container);
-		return l.id == other.id;
-	}
-	DCON_RELEASE_INLINE bool operator!=(lr_relation_fat_id const& l, lr_relation_const_fat_id const& other) noexcept {
-		assert(&l.container == &other.container);
-		return l.id != other.id;
-	}
-	DCON_RELEASE_INLINE lr_relation_const_fat_id fatten(data_container const& c, lr_relation_id id) noexcept {
-		return lr_relation_const_fat_id(c, id);
-	}
-	
-	DCON_RELEASE_INLINE int32_t& top_fat_id::get_wheels() const {
+	DCON_RELEASE_INLINE int32_t& top_fat_id::get_wheels() const noexcept {
 		return container.top_get_wheels(id);
 	}
 	DCON_RELEASE_INLINE void top_fat_id::set_wheels(int32_t v) const noexcept {
@@ -2034,7 +2040,7 @@ namespace ex1 {
 		return container.top_is_valid(id);
 	}
 	
-	DCON_RELEASE_INLINE int32_t const& top_const_fat_id::get_wheels() const {
+	DCON_RELEASE_INLINE int32_t top_const_fat_id::get_wheels() const noexcept {
 		return container.top_get_wheels(id);
 	}
 	template<typename T>
@@ -2069,7 +2075,7 @@ namespace ex1 {
 		return container.top_is_valid(id);
 	}
 	
-	DCON_RELEASE_INLINE int32_t& bottom_fat_id::get_legs() const {
+	DCON_RELEASE_INLINE int32_t& bottom_fat_id::get_legs() const noexcept {
 		return container.bottom_get_legs(id);
 	}
 	DCON_RELEASE_INLINE void bottom_fat_id::set_legs(int32_t v) const noexcept {
@@ -2113,7 +2119,7 @@ namespace ex1 {
 		return container.bottom_is_valid(id);
 	}
 	
-	DCON_RELEASE_INLINE int32_t const& bottom_const_fat_id::get_legs() const {
+	DCON_RELEASE_INLINE int32_t bottom_const_fat_id::get_legs() const noexcept {
 		return container.bottom_get_legs(id);
 	}
 	template<typename T>
@@ -2148,7 +2154,7 @@ namespace ex1 {
 		return container.bottom_is_valid(id);
 	}
 	
-	DCON_RELEASE_INLINE int32_t& lr_relation_fat_id::get_thingies() const {
+	DCON_RELEASE_INLINE int32_t& lr_relation_fat_id::get_thingies() const noexcept {
 		return container.lr_relation_get_thingies(id);
 	}
 	DCON_RELEASE_INLINE void lr_relation_fat_id::set_thingies(int32_t v) const noexcept {
@@ -2170,7 +2176,7 @@ namespace ex1 {
 		return container.lr_relation_is_valid(id);
 	}
 	
-	DCON_RELEASE_INLINE int32_t const& lr_relation_const_fat_id::get_thingies() const {
+	DCON_RELEASE_INLINE int32_t lr_relation_const_fat_id::get_thingies() const noexcept {
 		return container.lr_relation_get_thingies(id);
 	}
 	DCON_RELEASE_INLINE top_const_fat_id lr_relation_const_fat_id::get_left() const noexcept {

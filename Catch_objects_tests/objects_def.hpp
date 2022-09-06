@@ -54,6 +54,12 @@ namespace dcon {
 		bool dummy_rel : 1;
 		bool dummy_rel_left : 1;
 		bool dummy_rel_right : 1;
+		bool oop_thingy : 1;
+		bool oop_thingy_pstruct : 1;
+		bool oop_thingy_pfloat : 1;
+		bool dummy_rel_B : 1;
+		bool dummy_rel_B_left : 1;
+		bool dummy_rel_B_right : 1;
 		load_record() {
 			thingy = false;
 			thingy_some_value = false;
@@ -76,6 +82,12 @@ namespace dcon {
 			dummy_rel = false;
 			dummy_rel_left = false;
 			dummy_rel_right = false;
+			oop_thingy = false;
+			oop_thingy_pstruct = false;
+			oop_thingy_pfloat = false;
+			dummy_rel_B = false;
+			dummy_rel_B_left = false;
+			dummy_rel_B_right = false;
 		}
 	};
 	//
@@ -177,6 +189,72 @@ namespace dcon {
 	
 	DCON_RELEASE_INLINE bool is_valid_index(dummy_rel_id id) { return bool(id); }
 	
+	//
+	// definition of strongly typed index for oop_thingy_id
+	//
+	class oop_thingy_id {
+		public:
+		using value_base_t = uint16_t;
+		using zero_is_null_t = std::true_type;
+	
+		uint16_t value = 0;
+	
+		constexpr oop_thingy_id() noexcept = default;
+		explicit constexpr oop_thingy_id(uint16_t v) noexcept : value(v + 1) {}
+		constexpr oop_thingy_id(oop_thingy_id const& v) noexcept = default;
+		constexpr oop_thingy_id(oop_thingy_id&& v) noexcept = default;
+	
+		oop_thingy_id& operator=(oop_thingy_id const& v) noexcept = default;
+		oop_thingy_id& operator=(oop_thingy_id&& v) noexcept = default;
+		constexpr bool operator==(oop_thingy_id v) const noexcept { return value == v.value; }
+		constexpr bool operator!=(oop_thingy_id v) const noexcept { return value != v.value; }
+		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
+		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
+			return int32_t(value) - 1;
+		}
+	};
+	
+	class oop_thingy_id_pair {
+		public:
+		oop_thingy_id left;
+		oop_thingy_id right;
+	};
+	
+	DCON_RELEASE_INLINE bool is_valid_index(oop_thingy_id id) { return bool(id); }
+	
+	//
+	// definition of strongly typed index for dummy_rel_B_id
+	//
+	class dummy_rel_B_id {
+		public:
+		using value_base_t = uint16_t;
+		using zero_is_null_t = std::true_type;
+	
+		uint16_t value = 0;
+	
+		constexpr dummy_rel_B_id() noexcept = default;
+		explicit constexpr dummy_rel_B_id(uint16_t v) noexcept : value(v + 1) {}
+		constexpr dummy_rel_B_id(dummy_rel_B_id const& v) noexcept = default;
+		constexpr dummy_rel_B_id(dummy_rel_B_id&& v) noexcept = default;
+	
+		dummy_rel_B_id& operator=(dummy_rel_B_id const& v) noexcept = default;
+		dummy_rel_B_id& operator=(dummy_rel_B_id&& v) noexcept = default;
+		constexpr bool operator==(dummy_rel_B_id v) const noexcept { return value == v.value; }
+		constexpr bool operator!=(dummy_rel_B_id v) const noexcept { return value != v.value; }
+		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
+		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
+			return int32_t(value) - 1;
+		}
+	};
+	
+	class dummy_rel_B_id_pair {
+		public:
+		dummy_rel_B_id left;
+		dummy_rel_B_id right;
+	};
+	
+	DCON_RELEASE_INLINE bool is_valid_index(dummy_rel_B_id id) { return bool(id); }
+	
 }
 
 #ifndef DCON_NO_VE
@@ -194,6 +272,16 @@ namespace ve {
 	template<>
 	struct value_to_vector_type_s<dcon::dummy_rel_id> {
 		using type = tagged_vector<dcon::dummy_rel_id>;
+	};
+	
+	template<>
+	struct value_to_vector_type_s<dcon::oop_thingy_id> {
+		using type = tagged_vector<dcon::oop_thingy_id>;
+	};
+	
+	template<>
+	struct value_to_vector_type_s<dcon::dummy_rel_B_id> {
+		using type = tagged_vector<dcon::dummy_rel_B_id>;
 	};
 	
 }
@@ -502,19 +590,733 @@ namespace dcon {
 			friend class data_container;
 		};
 
+		class alignas(64) oop_thingy_class {
+			private:
+			//
+			// storage space for pstruct of type my_struct
+			//
+			struct alignas(64) dtype_pstruct {
+				uint8_t padding[(63 + sizeof(my_struct)) & ~63ui64];
+				my_struct values[(sizeof(my_struct) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(my_struct))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(my_struct)) - 1ui32) : uint32_t(1200))];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_pstruct() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(my_struct) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(my_struct))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(my_struct)) - 1ui32) : uint32_t(1200))); }
+			}
+			m_pstruct;
+			
+			//
+			// storage space for pfloat of type float
+			//
+			struct alignas(64) dtype_pfloat {
+				uint8_t padding[(63 + sizeof(float)) & ~63ui64];
+				float values[(sizeof(float) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(float))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(float)) - 1ui32) : uint32_t(1200))];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_pfloat() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(float) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(float))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(float)) - 1ui32) : uint32_t(1200))); }
+			}
+			m_pfloat;
+			
+			uint32_t size_used = 0;
+
+
+			public:
+			friend class data_container;
+		};
+
+		class alignas(64) dummy_rel_B_class {
+			private:
+			//
+			// storage space for left of type oop_thingy_id
+			//
+			struct alignas(64) dtype_left {
+				uint8_t padding[(63 + sizeof(oop_thingy_id)) & ~63ui64];
+				oop_thingy_id values[(sizeof(oop_thingy_id) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(oop_thingy_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(oop_thingy_id)) - 1ui32) : uint32_t(1200))];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_left() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(oop_thingy_id) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(oop_thingy_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(oop_thingy_id)) - 1ui32) : uint32_t(1200))); }
+			}
+			m_left;
+			
+			//
+			// storage space for link_back_left of type dummy_rel_B_id
+			//
+			struct alignas(64) dtype_link_back_left {
+				uint8_t padding[(63 + sizeof(dummy_rel_B_id)) & ~63ui64];
+				dummy_rel_B_id values[(sizeof(dummy_rel_B_id) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(dummy_rel_B_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(dummy_rel_B_id)) - 1ui32) : uint32_t(1200))];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_link_back_left() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(dummy_rel_B_id) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(dummy_rel_B_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(dummy_rel_B_id)) - 1ui32) : uint32_t(1200))); }
+			}
+			m_link_back_left;
+			
+			uint32_t size_used = 0;
+
+
+			public:
+			friend class data_container;
+		};
+
 	}
 
+	class thingy_const_fat_id;
+	class thingy_fat_id;
+	class thingy2_const_fat_id;
+	class thingy2_fat_id;
+	class dummy_rel_const_fat_id;
+	class dummy_rel_fat_id;
+	class oop_thingy_const_fat_id;
+	class oop_thingy_fat_id;
+	class dummy_rel_B_const_fat_id;
+	class dummy_rel_B_fat_id;
+	class thingy_fat_id {
+		friend class data_container;
+		public:
+		data_container& container;
+		thingy_id id;
+		thingy_fat_id(data_container& c, thingy_id i) noexcept : container(c), id(i) {}
+		thingy_fat_id(thingy_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator thingy_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE thingy_fat_id& operator=(thingy_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE thingy_fat_id& operator=(thingy_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(thingy_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(thingy_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(thingy_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(thingy_id other) const noexcept {
+			return id != other;
+		}
+		explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE int32_t& get_some_value() const noexcept;
+		DCON_RELEASE_INLINE void set_some_value(int32_t v) const noexcept;
+		DCON_RELEASE_INLINE bool get_bf_value() const noexcept;
+		DCON_RELEASE_INLINE void set_bf_value(bool v) const noexcept;
+		DCON_RELEASE_INLINE int32_t get_d_value() const;
+		DCON_RELEASE_INLINE void set_dbf_value(bool v) const;
+		DCON_RELEASE_INLINE std::vector<float>& get_obj_value() const noexcept;
+		DCON_RELEASE_INLINE void set_obj_value(std::vector<float> const& v) const noexcept;
+		DCON_RELEASE_INLINE std::pair<int16_t*, int16_t*> get_pooled_v_range() const noexcept;
+		DCON_RELEASE_INLINE int16_t& get_pooled_v_at(uint32_t inner_index) const noexcept;
+		DCON_RELEASE_INLINE uint32_t get_pooled_v_capacity() const noexcept;
+		DCON_RELEASE_INLINE uint32_t get_pooled_v_size() const noexcept;
+		DCON_RELEASE_INLINE bool pooled_v_contains(int16_t v) const noexcept;
+		DCON_RELEASE_INLINE void pooled_v_push_back(int16_t obj) const noexcept;
+		DCON_RELEASE_INLINE void pooled_v_pop_back() const noexcept;
+		DCON_RELEASE_INLINE void pooled_v_add_unique(int16_t obj) const noexcept;
+		DCON_RELEASE_INLINE void pooled_v_remove_unique(int16_t obj) const noexcept;
+		DCON_RELEASE_INLINE void pooled_v_clear() const noexcept;
+		DCON_RELEASE_INLINE void pooled_v_remove_at(uint32_t inner_index) const noexcept;
+		DCON_RELEASE_INLINE float& get_big_array(int32_t i) const noexcept;
+		DCON_RELEASE_INLINE uint32_t get_big_array_size() const noexcept;
+		DCON_RELEASE_INLINE void set_big_array(int32_t i, float v) const noexcept;
+		DCON_RELEASE_INLINE void resize_big_array(uint32_t sz) const noexcept;
+		DCON_RELEASE_INLINE bool get_big_array_bf(int32_t i) const noexcept;
+		DCON_RELEASE_INLINE uint32_t get_big_array_bf_size() const noexcept;
+		DCON_RELEASE_INLINE void set_big_array_bf(int32_t i, bool v) const noexcept;
+		DCON_RELEASE_INLINE void resize_big_array_bf(uint32_t sz) const noexcept;
+		DCON_RELEASE_INLINE dummy_rel_fat_id get_dummy_rel_as_left() const noexcept;
+		DCON_RELEASE_INLINE void remove_dummy_rel_as_left() const noexcept;
+		DCON_RELEASE_INLINE dummy_rel_fat_id get_dummy_rel() const noexcept;
+		DCON_RELEASE_INLINE void remove_dummy_rel() const noexcept;
+		DCON_RELEASE_INLINE thingy2_fat_id get_right_from_dummy_rel() const noexcept;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE thingy_fat_id fatten(data_container& c, thingy_id id) noexcept {
+		return thingy_fat_id(c, id);
+	}
+	
+	class thingy_const_fat_id {
+		friend class data_container;
+		public:
+		data_container const& container;
+		thingy_id id;
+		thingy_const_fat_id(data_container const& c, thingy_id i) noexcept : container(c), id(i) {}
+		thingy_const_fat_id(thingy_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		thingy_const_fat_id(thingy_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator thingy_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE thingy_const_fat_id& operator=(thingy_const_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE thingy_const_fat_id& operator=(thingy_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE thingy_const_fat_id& operator=(thingy_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(thingy_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(thingy_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(thingy_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(thingy_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(thingy_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(thingy_id other) const noexcept {
+			return id != other;
+		}
+		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE int32_t get_some_value() const noexcept;
+		DCON_RELEASE_INLINE bool get_bf_value() const noexcept;
+		DCON_RELEASE_INLINE int32_t get_d_value() const;
+		DCON_RELEASE_INLINE std::vector<float> const& get_obj_value() const noexcept;
+		DCON_RELEASE_INLINE std::pair<int16_t const*, int16_t const*> get_pooled_v_range() const noexcept;
+		DCON_RELEASE_INLINE int16_t const& get_pooled_v_at(uint32_t inner_index) const noexcept;
+		DCON_RELEASE_INLINE uint32_t get_pooled_v_capacity() const noexcept;
+		DCON_RELEASE_INLINE uint32_t get_pooled_v_size() const noexcept;
+		DCON_RELEASE_INLINE bool pooled_v_contains(int16_t v) const noexcept;
+		DCON_RELEASE_INLINE float get_big_array(int32_t i) const noexcept;
+		DCON_RELEASE_INLINE uint32_t get_big_array_size() const noexcept;
+		DCON_RELEASE_INLINE bool get_big_array_bf(int32_t i) const noexcept;
+		DCON_RELEASE_INLINE uint32_t get_big_array_bf_size() const noexcept;
+		DCON_RELEASE_INLINE dummy_rel_const_fat_id get_dummy_rel_as_left() const noexcept;
+		DCON_RELEASE_INLINE dummy_rel_const_fat_id get_dummy_rel() const noexcept;
+		DCON_RELEASE_INLINE thingy2_const_fat_id get_right_from_dummy_rel() const noexcept;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE bool operator==(thingy_fat_id const& l, thingy_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id == other.id;
+	}
+	DCON_RELEASE_INLINE bool operator!=(thingy_fat_id const& l, thingy_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id != other.id;
+	}
+	DCON_RELEASE_INLINE thingy_const_fat_id fatten(data_container const& c, thingy_id id) noexcept {
+		return thingy_const_fat_id(c, id);
+	}
+	
+	class thingy2_fat_id {
+		friend class data_container;
+		public:
+		data_container& container;
+		thingy2_id id;
+		thingy2_fat_id(data_container& c, thingy2_id i) noexcept : container(c), id(i) {}
+		thingy2_fat_id(thingy2_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator thingy2_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE thingy2_fat_id& operator=(thingy2_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE thingy2_fat_id& operator=(thingy2_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(thingy2_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(thingy2_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(thingy2_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(thingy2_id other) const noexcept {
+			return id != other;
+		}
+		explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE int32_t& get_some_value() const noexcept;
+		DCON_RELEASE_INLINE void set_some_value(int32_t v) const noexcept;
+		DCON_RELEASE_INLINE bool get_bf_value() const noexcept;
+		DCON_RELEASE_INLINE void set_bf_value(bool v) const noexcept;
+		DCON_RELEASE_INLINE std::vector<float>& get_obj_value() const noexcept;
+		DCON_RELEASE_INLINE void set_obj_value(std::vector<float> const& v) const noexcept;
+		DCON_RELEASE_INLINE std::pair<int16_t*, int16_t*> get_pooled_v_range() const noexcept;
+		DCON_RELEASE_INLINE int16_t& get_pooled_v_at(uint32_t inner_index) const noexcept;
+		DCON_RELEASE_INLINE uint32_t get_pooled_v_capacity() const noexcept;
+		DCON_RELEASE_INLINE uint32_t get_pooled_v_size() const noexcept;
+		DCON_RELEASE_INLINE bool pooled_v_contains(int16_t v) const noexcept;
+		DCON_RELEASE_INLINE void pooled_v_push_back(int16_t obj) const noexcept;
+		DCON_RELEASE_INLINE void pooled_v_pop_back() const noexcept;
+		DCON_RELEASE_INLINE void pooled_v_add_unique(int16_t obj) const noexcept;
+		DCON_RELEASE_INLINE void pooled_v_remove_unique(int16_t obj) const noexcept;
+		DCON_RELEASE_INLINE void pooled_v_clear() const noexcept;
+		DCON_RELEASE_INLINE void pooled_v_remove_at(uint32_t inner_index) const noexcept;
+		DCON_RELEASE_INLINE float& get_big_array(int32_t i) const noexcept;
+		DCON_RELEASE_INLINE uint32_t get_big_array_size() const noexcept;
+		DCON_RELEASE_INLINE void set_big_array(int32_t i, float v) const noexcept;
+		DCON_RELEASE_INLINE void resize_big_array(uint32_t sz) const noexcept;
+		DCON_RELEASE_INLINE bool get_big_array_bf(int32_t i) const noexcept;
+		DCON_RELEASE_INLINE uint32_t get_big_array_bf_size() const noexcept;
+		DCON_RELEASE_INLINE void set_big_array_bf(int32_t i, bool v) const noexcept;
+		DCON_RELEASE_INLINE void resize_big_array_bf(uint32_t sz) const noexcept;
+		DCON_RELEASE_INLINE dummy_rel_fat_id get_dummy_rel_as_right() const noexcept;
+		DCON_RELEASE_INLINE void remove_dummy_rel_as_right() const noexcept;
+		DCON_RELEASE_INLINE dummy_rel_fat_id get_dummy_rel() const noexcept;
+		DCON_RELEASE_INLINE void remove_dummy_rel() const noexcept;
+		DCON_RELEASE_INLINE thingy_fat_id get_left_from_dummy_rel() const noexcept;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE thingy2_fat_id fatten(data_container& c, thingy2_id id) noexcept {
+		return thingy2_fat_id(c, id);
+	}
+	
+	class thingy2_const_fat_id {
+		friend class data_container;
+		public:
+		data_container const& container;
+		thingy2_id id;
+		thingy2_const_fat_id(data_container const& c, thingy2_id i) noexcept : container(c), id(i) {}
+		thingy2_const_fat_id(thingy2_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		thingy2_const_fat_id(thingy2_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator thingy2_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE thingy2_const_fat_id& operator=(thingy2_const_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE thingy2_const_fat_id& operator=(thingy2_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE thingy2_const_fat_id& operator=(thingy2_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(thingy2_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(thingy2_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(thingy2_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(thingy2_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(thingy2_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(thingy2_id other) const noexcept {
+			return id != other;
+		}
+		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE int32_t get_some_value() const noexcept;
+		DCON_RELEASE_INLINE bool get_bf_value() const noexcept;
+		DCON_RELEASE_INLINE std::vector<float> const& get_obj_value() const noexcept;
+		DCON_RELEASE_INLINE std::pair<int16_t const*, int16_t const*> get_pooled_v_range() const noexcept;
+		DCON_RELEASE_INLINE int16_t const& get_pooled_v_at(uint32_t inner_index) const noexcept;
+		DCON_RELEASE_INLINE uint32_t get_pooled_v_capacity() const noexcept;
+		DCON_RELEASE_INLINE uint32_t get_pooled_v_size() const noexcept;
+		DCON_RELEASE_INLINE bool pooled_v_contains(int16_t v) const noexcept;
+		DCON_RELEASE_INLINE float get_big_array(int32_t i) const noexcept;
+		DCON_RELEASE_INLINE uint32_t get_big_array_size() const noexcept;
+		DCON_RELEASE_INLINE bool get_big_array_bf(int32_t i) const noexcept;
+		DCON_RELEASE_INLINE uint32_t get_big_array_bf_size() const noexcept;
+		DCON_RELEASE_INLINE dummy_rel_const_fat_id get_dummy_rel_as_right() const noexcept;
+		DCON_RELEASE_INLINE dummy_rel_const_fat_id get_dummy_rel() const noexcept;
+		DCON_RELEASE_INLINE thingy_const_fat_id get_left_from_dummy_rel() const noexcept;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE bool operator==(thingy2_fat_id const& l, thingy2_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id == other.id;
+	}
+	DCON_RELEASE_INLINE bool operator!=(thingy2_fat_id const& l, thingy2_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id != other.id;
+	}
+	DCON_RELEASE_INLINE thingy2_const_fat_id fatten(data_container const& c, thingy2_id id) noexcept {
+		return thingy2_const_fat_id(c, id);
+	}
+	
+	class dummy_rel_fat_id {
+		friend class data_container;
+		public:
+		data_container& container;
+		dummy_rel_id id;
+		dummy_rel_fat_id(data_container& c, dummy_rel_id i) noexcept : container(c), id(i) {}
+		dummy_rel_fat_id(dummy_rel_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator dummy_rel_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE dummy_rel_fat_id& operator=(dummy_rel_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE dummy_rel_fat_id& operator=(dummy_rel_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(dummy_rel_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(dummy_rel_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(dummy_rel_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(dummy_rel_id other) const noexcept {
+			return id != other;
+		}
+		explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE thingy_fat_id get_left() const noexcept;
+		DCON_RELEASE_INLINE void set_left(thingy_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_left(thingy_id val) const noexcept;
+		DCON_RELEASE_INLINE thingy2_fat_id get_right() const noexcept;
+		DCON_RELEASE_INLINE void set_right(thingy2_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_right(thingy2_id val) const noexcept;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE dummy_rel_fat_id fatten(data_container& c, dummy_rel_id id) noexcept {
+		return dummy_rel_fat_id(c, id);
+	}
+	
+	class dummy_rel_const_fat_id {
+		friend class data_container;
+		public:
+		data_container const& container;
+		dummy_rel_id id;
+		dummy_rel_const_fat_id(data_container const& c, dummy_rel_id i) noexcept : container(c), id(i) {}
+		dummy_rel_const_fat_id(dummy_rel_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		dummy_rel_const_fat_id(dummy_rel_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator dummy_rel_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE dummy_rel_const_fat_id& operator=(dummy_rel_const_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE dummy_rel_const_fat_id& operator=(dummy_rel_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE dummy_rel_const_fat_id& operator=(dummy_rel_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(dummy_rel_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(dummy_rel_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(dummy_rel_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(dummy_rel_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(dummy_rel_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(dummy_rel_id other) const noexcept {
+			return id != other;
+		}
+		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE thingy_const_fat_id get_left() const noexcept;
+		DCON_RELEASE_INLINE thingy2_const_fat_id get_right() const noexcept;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE bool operator==(dummy_rel_fat_id const& l, dummy_rel_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id == other.id;
+	}
+	DCON_RELEASE_INLINE bool operator!=(dummy_rel_fat_id const& l, dummy_rel_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id != other.id;
+	}
+	DCON_RELEASE_INLINE dummy_rel_const_fat_id fatten(data_container const& c, dummy_rel_id id) noexcept {
+		return dummy_rel_const_fat_id(c, id);
+	}
+	
+	class oop_thingy_fat_id {
+		friend class data_container;
+		public:
+		data_container& container;
+		oop_thingy_id id;
+		oop_thingy_fat_id(data_container& c, oop_thingy_id i) noexcept : container(c), id(i) {}
+		oop_thingy_fat_id(oop_thingy_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator oop_thingy_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE oop_thingy_fat_id& operator=(oop_thingy_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE oop_thingy_fat_id& operator=(oop_thingy_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(oop_thingy_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(oop_thingy_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(oop_thingy_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(oop_thingy_id other) const noexcept {
+			return id != other;
+		}
+		explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE my_struct const& get_pstruct() const noexcept;
+		private:
+		DCON_RELEASE_INLINE void set_pstruct(my_struct const& v) const noexcept;
+		public:
+		private:
+		DCON_RELEASE_INLINE float& get_pfloat() const noexcept;
+		public:
+		private:
+		DCON_RELEASE_INLINE void set_pfloat(float v) const noexcept;
+		public:
+		DCON_RELEASE_INLINE dummy_rel_B_fat_id get_dummy_rel_B_as_left() const noexcept;
+		DCON_RELEASE_INLINE void remove_dummy_rel_B_as_left() const noexcept;
+		DCON_RELEASE_INLINE dummy_rel_B_fat_id get_dummy_rel_B_as_right() const noexcept;
+		DCON_RELEASE_INLINE void remove_dummy_rel_B_as_right() const noexcept;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+		void reset_internal() ;
+		int get_a_value(float offset);
+	
+	};
+	DCON_RELEASE_INLINE oop_thingy_fat_id fatten(data_container& c, oop_thingy_id id) noexcept {
+		return oop_thingy_fat_id(c, id);
+	}
+	
+	class oop_thingy_const_fat_id {
+		friend class data_container;
+		public:
+		data_container const& container;
+		oop_thingy_id id;
+		oop_thingy_const_fat_id(data_container const& c, oop_thingy_id i) noexcept : container(c), id(i) {}
+		oop_thingy_const_fat_id(oop_thingy_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		oop_thingy_const_fat_id(oop_thingy_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator oop_thingy_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE oop_thingy_const_fat_id& operator=(oop_thingy_const_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE oop_thingy_const_fat_id& operator=(oop_thingy_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE oop_thingy_const_fat_id& operator=(oop_thingy_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(oop_thingy_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(oop_thingy_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(oop_thingy_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(oop_thingy_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(oop_thingy_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(oop_thingy_id other) const noexcept {
+			return id != other;
+		}
+		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE my_struct const& get_pstruct() const noexcept;
+		private:
+		public:
+		private:
+		DCON_RELEASE_INLINE float get_pfloat() const noexcept;
+		public:
+		private:
+		public:
+		DCON_RELEASE_INLINE dummy_rel_B_const_fat_id get_dummy_rel_B_as_left() const noexcept;
+		DCON_RELEASE_INLINE dummy_rel_B_const_fat_id get_dummy_rel_B_as_right() const noexcept;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+		int get_a_value(float offset) ;
+	
+	};
+	DCON_RELEASE_INLINE bool operator==(oop_thingy_fat_id const& l, oop_thingy_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id == other.id;
+	}
+	DCON_RELEASE_INLINE bool operator!=(oop_thingy_fat_id const& l, oop_thingy_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id != other.id;
+	}
+	DCON_RELEASE_INLINE oop_thingy_const_fat_id fatten(data_container const& c, oop_thingy_id id) noexcept {
+		return oop_thingy_const_fat_id(c, id);
+	}
+	
+	class dummy_rel_B_fat_id {
+		friend class data_container;
+		public:
+		data_container& container;
+		dummy_rel_B_id id;
+		dummy_rel_B_fat_id(data_container& c, dummy_rel_B_id i) noexcept : container(c), id(i) {}
+		dummy_rel_B_fat_id(dummy_rel_B_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator dummy_rel_B_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE dummy_rel_B_fat_id& operator=(dummy_rel_B_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE dummy_rel_B_fat_id& operator=(dummy_rel_B_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(dummy_rel_B_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(dummy_rel_B_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(dummy_rel_B_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(dummy_rel_B_id other) const noexcept {
+			return id != other;
+		}
+		explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE oop_thingy_fat_id get_left() const noexcept;
+		DCON_RELEASE_INLINE void set_left(oop_thingy_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_left(oop_thingy_id val) const noexcept;
+		DCON_RELEASE_INLINE oop_thingy_fat_id get_right() const noexcept;
+		DCON_RELEASE_INLINE void set_right(oop_thingy_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_right(oop_thingy_id val) const noexcept;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE dummy_rel_B_fat_id fatten(data_container& c, dummy_rel_B_id id) noexcept {
+		return dummy_rel_B_fat_id(c, id);
+	}
+	
+	class dummy_rel_B_const_fat_id {
+		friend class data_container;
+		public:
+		data_container const& container;
+		dummy_rel_B_id id;
+		dummy_rel_B_const_fat_id(data_container const& c, dummy_rel_B_id i) noexcept : container(c), id(i) {}
+		dummy_rel_B_const_fat_id(dummy_rel_B_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		dummy_rel_B_const_fat_id(dummy_rel_B_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator dummy_rel_B_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE dummy_rel_B_const_fat_id& operator=(dummy_rel_B_const_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE dummy_rel_B_const_fat_id& operator=(dummy_rel_B_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE dummy_rel_B_const_fat_id& operator=(dummy_rel_B_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(dummy_rel_B_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(dummy_rel_B_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(dummy_rel_B_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(dummy_rel_B_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(dummy_rel_B_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(dummy_rel_B_id other) const noexcept {
+			return id != other;
+		}
+		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE oop_thingy_const_fat_id get_left() const noexcept;
+		DCON_RELEASE_INLINE oop_thingy_const_fat_id get_right() const noexcept;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE bool operator==(dummy_rel_B_fat_id const& l, dummy_rel_B_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id == other.id;
+	}
+	DCON_RELEASE_INLINE bool operator!=(dummy_rel_B_fat_id const& l, dummy_rel_B_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id != other.id;
+	}
+	DCON_RELEASE_INLINE dummy_rel_B_const_fat_id fatten(data_container const& c, dummy_rel_B_id id) noexcept {
+		return dummy_rel_B_const_fat_id(c, id);
+	}
+	
 	class alignas(64) data_container {
 		public:
 		internal::thingy_class thingy;
 		internal::thingy2_class thingy2;
 		internal::dummy_rel_class dummy_rel;
+		internal::oop_thingy_class oop_thingy;
+		internal::dummy_rel_B_class dummy_rel_B;
 
 		//
 		// Functions for thingy:
 		//
 		//
-		// getters for thingy: some_value
+		// accessors for thingy: some_value
 		//
 		DCON_RELEASE_INLINE int32_t const& thingy_get_some_value(thingy_id id) const noexcept {
 			return thingy.m_some_value.vptr()[id.index()];
@@ -548,7 +1350,7 @@ namespace dcon {
 		}
 		#endif
 		//
-		// getters for thingy: bf_value
+		// accessors for thingy: bf_value
 		//
 		DCON_RELEASE_INLINE bool thingy_get_bf_value(thingy_id id) const noexcept {
 			return dcon::bit_vector_test(thingy.m_bf_value.vptr(), id.index());
@@ -579,7 +1381,7 @@ namespace dcon {
 		}
 		#endif
 		//
-		// getters for thingy: d_value
+		// accessors for thingy: d_value
 		//
 		int32_t thingy_get_d_value(thingy_id id) const;
 		#ifndef DCON_NO_VE
@@ -594,7 +1396,7 @@ namespace dcon {
 		}
 		#endif
 		//
-		// getters for thingy: dbf_value
+		// accessors for thingy: dbf_value
 		//
 		void thingy_set_dbf_value(thingy_id id, bool value);
 		#ifndef DCON_NO_VE
@@ -615,7 +1417,7 @@ namespace dcon {
 		}
 		#endif
 		//
-		// getters for thingy: obj_value
+		// accessors for thingy: obj_value
 		//
 		DCON_RELEASE_INLINE std::vector<float> const& thingy_get_obj_value(thingy_id id) const noexcept {
 			return thingy.m_obj_value.vptr()[id.index()];
@@ -627,12 +1429,18 @@ namespace dcon {
 			thingy.m_obj_value.vptr()[id.index()] = value;
 		}
 		//
-		// getters for thingy: pooled_v
+		// accessors for thingy: pooled_v
 		//
-		std::pair<int16_t*, int16_t*> thingy_get_pooled_v_range(thingy_id id) const noexcept {
+		std::pair<int16_t*, int16_t*> thingy_get_pooled_v_range(thingy_id id) noexcept {
 			return dcon::get_range(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[id.index()]);
 		}
-		int16_t& thingy_get_pooled_v_at(thingy_id id, uint32_t inner_index) const noexcept {
+		std::pair<int16_t const*, int16_t const*> thingy_get_pooled_v_range(thingy_id id) const noexcept {
+			return dcon::get_range(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[id.index()]);
+		}
+		int16_t& thingy_get_pooled_v_at(thingy_id id, uint32_t inner_index) noexcept {
+			return dcon::get(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[id.index()], inner_index);
+		}
+		int16_t const& thingy_get_pooled_v_at(thingy_id id, uint32_t inner_index) const noexcept {
 			return dcon::get(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[id.index()], inner_index);
 		}
 		uint32_t thingy_get_pooled_v_capacity(thingy_id id) const noexcept {
@@ -663,7 +1471,7 @@ namespace dcon {
 			dcon::remove_at(thingy.pooled_v_storage, thingy.m_pooled_v.vptr()[id.index()], inner_index);
 		}
 		//
-		// getters for thingy: big_array
+		// accessors for thingy: big_array
 		//
 		DCON_RELEASE_INLINE float const& thingy_get_big_array(thingy_id id, int32_t n) const noexcept {
 			return thingy.m_big_array.vptr(dcon::get_index(n))[id.index()];
@@ -703,7 +1511,7 @@ namespace dcon {
 		}
 		#endif
 		//
-		// getters for thingy: big_array_bf
+		// accessors for thingy: big_array_bf
 		//
 		DCON_RELEASE_INLINE bool thingy_get_big_array_bf(thingy_id id, int32_t n) const noexcept {
 			return dcon::bit_vector_test(thingy.m_big_array_bf.vptr(dcon::get_index(n)), id.index());
@@ -804,7 +1612,7 @@ namespace dcon {
 		// Functions for thingy2:
 		//
 		//
-		// getters for thingy2: some_value
+		// accessors for thingy2: some_value
 		//
 		DCON_RELEASE_INLINE int32_t const& thingy2_get_some_value(thingy2_id id) const noexcept {
 			return thingy2.m_some_value.vptr()[id.index()];
@@ -838,7 +1646,7 @@ namespace dcon {
 		}
 		#endif
 		//
-		// getters for thingy2: bf_value
+		// accessors for thingy2: bf_value
 		//
 		DCON_RELEASE_INLINE bool thingy2_get_bf_value(thingy2_id id) const noexcept {
 			return dcon::bit_vector_test(thingy2.m_bf_value.vptr(), id.index());
@@ -869,13 +1677,13 @@ namespace dcon {
 		}
 		#endif
 		//
-		// getters for thingy2: d_value
+		// accessors for thingy2: d_value
 		//
 		//
-		// getters for thingy2: dbf_value
+		// accessors for thingy2: dbf_value
 		//
 		//
-		// getters for thingy2: obj_value
+		// accessors for thingy2: obj_value
 		//
 		DCON_RELEASE_INLINE std::vector<float> const& thingy2_get_obj_value(thingy2_id id) const noexcept {
 			return thingy2.m_obj_value.vptr()[id.index()];
@@ -887,12 +1695,18 @@ namespace dcon {
 			thingy2.m_obj_value.vptr()[id.index()] = value;
 		}
 		//
-		// getters for thingy2: pooled_v
+		// accessors for thingy2: pooled_v
 		//
-		std::pair<int16_t*, int16_t*> thingy2_get_pooled_v_range(thingy2_id id) const noexcept {
+		std::pair<int16_t*, int16_t*> thingy2_get_pooled_v_range(thingy2_id id) noexcept {
 			return dcon::get_range(thingy2.pooled_v_storage, thingy2.m_pooled_v.vptr()[id.index()]);
 		}
-		int16_t& thingy2_get_pooled_v_at(thingy2_id id, uint32_t inner_index) const noexcept {
+		std::pair<int16_t const*, int16_t const*> thingy2_get_pooled_v_range(thingy2_id id) const noexcept {
+			return dcon::get_range(thingy2.pooled_v_storage, thingy2.m_pooled_v.vptr()[id.index()]);
+		}
+		int16_t& thingy2_get_pooled_v_at(thingy2_id id, uint32_t inner_index) noexcept {
+			return dcon::get(thingy2.pooled_v_storage, thingy2.m_pooled_v.vptr()[id.index()], inner_index);
+		}
+		int16_t const& thingy2_get_pooled_v_at(thingy2_id id, uint32_t inner_index) const noexcept {
 			return dcon::get(thingy2.pooled_v_storage, thingy2.m_pooled_v.vptr()[id.index()], inner_index);
 		}
 		uint32_t thingy2_get_pooled_v_capacity(thingy2_id id) const noexcept {
@@ -923,7 +1737,7 @@ namespace dcon {
 			dcon::remove_at(thingy2.pooled_v_storage, thingy2.m_pooled_v.vptr()[id.index()], inner_index);
 		}
 		//
-		// getters for thingy2: big_array
+		// accessors for thingy2: big_array
 		//
 		DCON_RELEASE_INLINE float const& thingy2_get_big_array(thingy2_id id, int32_t n) const noexcept {
 			return thingy2.m_big_array.vptr(dcon::get_index(n))[id.index()];
@@ -963,7 +1777,7 @@ namespace dcon {
 		}
 		#endif
 		//
-		// getters for thingy2: big_array_bf
+		// accessors for thingy2: big_array_bf
 		//
 		DCON_RELEASE_INLINE bool thingy2_get_big_array_bf(thingy2_id id, int32_t n) const noexcept {
 			return dcon::bit_vector_test(thingy2.m_big_array_bf.vptr(dcon::get_index(n)), id.index());
@@ -1138,6 +1952,185 @@ namespace dcon {
 		}
 		
 		uint32_t dummy_rel_size() const noexcept { return dummy_rel.size_used; }
+
+		//
+		// Functions for oop_thingy:
+		//
+		//
+		// accessors for oop_thingy: pstruct
+		//
+		DCON_RELEASE_INLINE my_struct const& oop_thingy_get_pstruct(oop_thingy_id id) const noexcept {
+			return oop_thingy.m_pstruct.vptr()[id.index()];
+		}
+		private:
+		DCON_RELEASE_INLINE void oop_thingy_set_pstruct(oop_thingy_id id, my_struct const& value) noexcept {
+			oop_thingy.m_pstruct.vptr()[id.index()] = value;
+		}
+		friend void oop_thingy_fat_id::set_pstruct(my_struct const&) const noexcept;
+		public:
+		//
+		// accessors for oop_thingy: pfloat
+		//
+		private:
+		DCON_RELEASE_INLINE float const& oop_thingy_get_pfloat(oop_thingy_id id) const noexcept {
+			return oop_thingy.m_pfloat.vptr()[id.index()];
+		}
+		DCON_RELEASE_INLINE float& oop_thingy_get_pfloat(oop_thingy_id id) noexcept {
+			return oop_thingy.m_pfloat.vptr()[id.index()];
+		}
+		friend float& oop_thingy_fat_id::get_pfloat() const noexcept;
+		friend float oop_thingy_const_fat_id::get_pfloat() const noexcept;
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE ve::value_to_vector_type<float> oop_thingy_get_pfloat(ve::contiguous_tags<oop_thingy_id> id) const noexcept {
+			return ve::load(id, oop_thingy.m_pfloat.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<float> oop_thingy_get_pfloat(ve::partial_contiguous_tags<oop_thingy_id> id) const noexcept {
+			return ve::load(id, oop_thingy.m_pfloat.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<float> oop_thingy_get_pfloat(ve::tagged_vector<oop_thingy_id> id) const noexcept {
+			return ve::load(id, oop_thingy.m_pfloat.vptr());
+		}
+		#endif
+		public:
+		private:
+		DCON_RELEASE_INLINE void oop_thingy_set_pfloat(oop_thingy_id id, float value) noexcept {
+			oop_thingy.m_pfloat.vptr()[id.index()] = value;
+		}
+		friend void oop_thingy_fat_id::set_pfloat(float) const noexcept;
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE void oop_thingy_set_pfloat(ve::contiguous_tags<oop_thingy_id> id, ve::value_to_vector_type<float> values) noexcept {
+			ve::store(id, oop_thingy.m_pfloat.vptr(), values);
+		}
+		DCON_RELEASE_INLINE void oop_thingy_set_pfloat(ve::partial_contiguous_tags<oop_thingy_id> id, ve::value_to_vector_type<float> values) noexcept {
+			ve::store(id, oop_thingy.m_pfloat.vptr(), values);
+		}
+		DCON_RELEASE_INLINE void oop_thingy_set_pfloat(ve::tagged_vector<oop_thingy_id> id, ve::value_to_vector_type<float> values) noexcept {
+			ve::store(id, oop_thingy.m_pfloat.vptr(), values);
+		}
+		#endif
+		public:
+		DCON_RELEASE_INLINE dummy_rel_B_id oop_thingy_get_dummy_rel_B_as_left(oop_thingy_id id) const noexcept {
+			return dummy_rel_B_id(dummy_rel_B_id::value_base_t(id.index()));
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE ve::contiguous_tags<dummy_rel_B_id> oop_thingy_get_dummy_rel_B_as_left(ve::contiguous_tags<oop_thingy_id> id) const noexcept {
+			return ve::contiguous_tags<dummy_rel_B_id>(id.value);
+		}
+		DCON_RELEASE_INLINE ve::partial_contiguous_tags<dummy_rel_B_id> oop_thingy_get_dummy_rel_B_as_left(ve::partial_contiguous_tags<oop_thingy_id> id) const noexcept {
+			return ve::partial_contiguous_tags<dummy_rel_B_id>(id.value, id.subcount);
+		}
+		DCON_RELEASE_INLINE ve::tagged_vector<dummy_rel_B_id> oop_thingy_get_dummy_rel_B_as_left(ve::tagged_vector<oop_thingy_id> id) const noexcept {
+			return ve::tagged_vector<dummy_rel_B_id>(id, std::true_type{});
+		}
+		#endif
+		DCON_RELEASE_INLINE void oop_thingy_remove_dummy_rel_B_as_left(oop_thingy_id id) noexcept {
+			if(dummy_rel_B_is_valid(dummy_rel_B_id(dummy_rel_B_id::value_base_t(id.index())))) {
+				delete_dummy_rel_B(dummy_rel_B_id(dummy_rel_B_id::value_base_t(id.index())));
+			}
+		}
+		DCON_RELEASE_INLINE dummy_rel_B_id oop_thingy_get_dummy_rel_B_as_right(oop_thingy_id id) const noexcept {
+			return dummy_rel_B_id(dummy_rel_B_id::value_base_t(id.index()));
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE ve::contiguous_tags<dummy_rel_B_id> oop_thingy_get_dummy_rel_B_as_right(ve::contiguous_tags<oop_thingy_id> id) const noexcept {
+			return ve::contiguous_tags<dummy_rel_B_id>(id.value);
+		}
+		DCON_RELEASE_INLINE ve::partial_contiguous_tags<dummy_rel_B_id> oop_thingy_get_dummy_rel_B_as_right(ve::partial_contiguous_tags<oop_thingy_id> id) const noexcept {
+			return ve::partial_contiguous_tags<dummy_rel_B_id>(id.value, id.subcount);
+		}
+		DCON_RELEASE_INLINE ve::tagged_vector<dummy_rel_B_id> oop_thingy_get_dummy_rel_B_as_right(ve::tagged_vector<oop_thingy_id> id) const noexcept {
+			return ve::tagged_vector<dummy_rel_B_id>(id, std::true_type{});
+		}
+		#endif
+		DCON_RELEASE_INLINE void oop_thingy_remove_dummy_rel_B_as_right(oop_thingy_id id) noexcept {
+			if(dummy_rel_B_is_valid(dummy_rel_B_id(dummy_rel_B_id::value_base_t(id.index())))) {
+				delete_dummy_rel_B(dummy_rel_B_id(dummy_rel_B_id::value_base_t(id.index())));
+			}
+		}
+		DCON_RELEASE_INLINE bool oop_thingy_is_valid(oop_thingy_id id) const noexcept {
+			return bool(id) && uint32_t(id.index()) < oop_thingy.size_used;
+		}
+		
+		uint32_t oop_thingy_size() const noexcept { return oop_thingy.size_used; }
+
+		//
+		// Functions for dummy_rel_B:
+		//
+		DCON_RELEASE_INLINE oop_thingy_id dummy_rel_B_get_left(dummy_rel_B_id id) const noexcept {
+			return dummy_rel_B.m_left.vptr()[id.index()];
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE ve::value_to_vector_type<oop_thingy_id> dummy_rel_B_get_left(ve::contiguous_tags<dummy_rel_B_id> id) const noexcept {
+			return ve::load(id, dummy_rel_B.m_left.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<oop_thingy_id> dummy_rel_B_get_left(ve::partial_contiguous_tags<dummy_rel_B_id> id) const noexcept {
+			return ve::load(id, dummy_rel_B.m_left.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<oop_thingy_id> dummy_rel_B_get_left(ve::tagged_vector<dummy_rel_B_id> id) const noexcept {
+			return ve::load(id, dummy_rel_B.m_left.vptr());
+		}
+		#endif
+		void dummy_rel_B_set_left(dummy_rel_B_id id, oop_thingy_id value) noexcept {
+			if(auto old_value = dummy_rel_B.m_left.vptr()[id.index()]; bool(old_value)) {
+				dummy_rel_B.m_link_back_left.vptr()[old_value.index()] = dummy_rel_B_id();
+			}
+			if(bool(value)) {
+				if(auto old_rel = dummy_rel_B.m_link_back_left.vptr()[value.index()]; bool(old_rel)) {
+					delete_dummy_rel_B(old_rel);
+				}
+				dummy_rel_B.m_link_back_left.vptr()[value.index()] = id;
+			}
+			dummy_rel_B.m_left.vptr()[id.index()] = value;
+		}
+		bool dummy_rel_B_try_set_left(dummy_rel_B_id id, oop_thingy_id value) noexcept {
+			if(bool(value)) {
+				if(auto old_rel = dummy_rel_B.m_link_back_left.vptr()[value.index()]; bool(old_rel)) {
+					return false;
+				}
+				dummy_rel_B.m_link_back_left.vptr()[value.index()] = id;
+			}
+			if(auto old_value = dummy_rel_B.m_left.vptr()[id.index()]; bool(old_value)) {
+				dummy_rel_B.m_link_back_left.vptr()[old_value.index()] = dummy_rel_B_id();
+			}
+			dummy_rel_B.m_left.vptr()[id.index()] = value;
+			return true;
+		}
+		DCON_RELEASE_INLINE oop_thingy_id dummy_rel_B_get_right(dummy_rel_B_id id) const noexcept {
+			return oop_thingy_id(oop_thingy_id::value_base_t(id.index()));
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE ve::contiguous_tags<oop_thingy_id> dummy_rel_B_get_right(ve::contiguous_tags<dummy_rel_B_id> id) const noexcept {
+			return ve::contiguous_tags<oop_thingy_id>(id.value);
+		}
+		DCON_RELEASE_INLINE ve::partial_contiguous_tags<oop_thingy_id> dummy_rel_B_get_right(ve::partial_contiguous_tags<dummy_rel_B_id> id) const noexcept {
+			return ve::partial_contiguous_tags<oop_thingy_id>(id.value, id.subcount);
+		}
+		DCON_RELEASE_INLINE ve::tagged_vector<oop_thingy_id> dummy_rel_B_get_right(ve::tagged_vector<dummy_rel_B_id> id) const noexcept {
+			return ve::tagged_vector<oop_thingy_id>(id, std::true_type{});
+		}
+		#endif
+		void dummy_rel_B_set_right(dummy_rel_B_id id, oop_thingy_id value) noexcept {
+			if(bool(value)) {
+				delete_dummy_rel_B( dummy_rel_B_id(dummy_rel_B_id::value_base_t(value.index())) );
+				internal_move_relationship_dummy_rel_B(id, dummy_rel_B_id(dummy_rel_B_id::value_base_t(value.index())) );
+			} else {
+				delete_dummy_rel_B(id);
+			}
+		}
+		bool dummy_rel_B_try_set_right(dummy_rel_B_id id, oop_thingy_id value) noexcept {
+			if(bool(value)) {
+				if(dummy_rel_B_is_valid( dummy_rel_B_id(dummy_rel_B_id::value_base_t(value.index())) )) return false;
+				internal_move_relationship_dummy_rel_B(id, dummy_rel_B_id(dummy_rel_B_id::value_base_t(value.index())) );
+			} else {
+				delete_dummy_rel_B(id);
+			}
+			return true;
+		}
+		DCON_RELEASE_INLINE bool dummy_rel_B_is_valid(dummy_rel_B_id id) const noexcept {
+			return bool(id) && uint32_t(id.index()) < dummy_rel_B.size_used && oop_thingy_is_valid(oop_thingy_id(oop_thingy_id::value_base_t(id.index()))) && (bool(dummy_rel_B.m_left.vptr()[id.index()]) || false);
+		}
+		
+		uint32_t dummy_rel_B_size() const noexcept { return dummy_rel_B.size_used; }
 
 
 		//
@@ -1412,6 +2405,148 @@ namespace dcon {
 			return new_id;
 		}
 		
+		//
+		// container pop_back for oop_thingy
+		//
+		void pop_back_oop_thingy() {
+			if(oop_thingy.size_used == 0) return;
+			oop_thingy_id id_removed(oop_thingy_id::value_base_t(oop_thingy.size_used - 1));
+			delete_dummy_rel_B(dummy_rel_B_id(dummy_rel_B_id::value_base_t(id_removed.index())));
+			dummy_rel_B.size_used = oop_thingy.size_used - 1;
+			delete_dummy_rel_B(dummy_rel_B_id(dummy_rel_B_id::value_base_t(id_removed.index())));
+			dummy_rel_B.size_used = oop_thingy.size_used - 1;
+			oop_thingy.m_pstruct.vptr()[id_removed.index()] = my_struct{};
+			oop_thingy.m_pfloat.vptr()[id_removed.index()] = float{};
+			--oop_thingy.size_used;
+		}
+		
+		//
+		// container resize for oop_thingy
+		//
+		void oop_thingy_resize(uint32_t new_size) {
+			#ifndef DCON_USE_EXCEPTIONS
+			if(new_size > 1200) std::abort();
+			#else
+			if(new_size > 1200) throw dcon::out_of_space{};
+			#endif
+			const uint32_t old_size = oop_thingy.size_used;
+			if(new_size < old_size) {
+				std::fill_n(oop_thingy.m_pstruct.vptr() + new_size, old_size - new_size, my_struct{});
+				std::fill_n(oop_thingy.m_pfloat.vptr() + new_size, old_size - new_size, float{});
+				dummy_rel_B_resize(std::min(new_size, dummy_rel_B.size_used));
+				dummy_rel_B_resize(std::min(new_size, dummy_rel_B.size_used));
+			} else if(new_size > old_size) {
+			}
+			oop_thingy.size_used = new_size;
+		}
+		
+		//
+		// container create for oop_thingy
+		//
+		oop_thingy_id create_oop_thingy() {
+			oop_thingy_id new_id(oop_thingy_id::value_base_t(oop_thingy.size_used));
+			#ifndef DCON_USE_EXCEPTIONS
+			if(oop_thingy.size_used >= 1200) std::abort();
+			#else
+			if(oop_thingy.size_used >= 1200) throw dcon::out_of_space{};
+			#endif
+			dummy_rel_B.size_used = oop_thingy.size_used + 1;
+			dummy_rel_B.size_used = oop_thingy.size_used + 1;
+			++oop_thingy.size_used;
+			return new_id;
+		}
+		
+		//
+		// container compactable delete for oop_thingy
+		//
+		void delete_oop_thingy(oop_thingy_id id) {
+			oop_thingy_id id_removed = id;
+			oop_thingy_id last_id(oop_thingy_id::value_base_t(oop_thingy.size_used - 1));
+			if(id_removed == last_id) { pop_back_oop_thingy(); return; }
+			delete_dummy_rel_B(dummy_rel_B_id(dummy_rel_B_id::value_base_t(id_removed.index())));
+			internal_move_relationship_dummy_rel_B(dummy_rel_B_id(dummy_rel_B_id::value_base_t(last_id.index())), dummy_rel_B_id(dummy_rel_B_id::value_base_t(id_removed.index())));
+			dummy_rel_B.size_used = oop_thingy.size_used - 1;
+			delete_dummy_rel_B(dummy_rel_B_id(dummy_rel_B_id::value_base_t(id_removed.index())));
+			internal_move_relationship_dummy_rel_B(dummy_rel_B_id(dummy_rel_B_id::value_base_t(last_id.index())), dummy_rel_B_id(dummy_rel_B_id::value_base_t(id_removed.index())));
+			dummy_rel_B.size_used = oop_thingy.size_used - 1;
+			oop_thingy.m_pstruct.vptr()[id_removed.index()] = std::move(oop_thingy.m_pstruct.vptr()[last_id.index()]);
+			oop_thingy.m_pstruct.vptr()[last_id.index()] = my_struct{};
+			oop_thingy.m_pfloat.vptr()[id_removed.index()] = std::move(oop_thingy.m_pfloat.vptr()[last_id.index()]);
+			oop_thingy.m_pfloat.vptr()[last_id.index()] = float{};
+			--oop_thingy.size_used;
+		}
+		
+		//
+		// container resize for dummy_rel_B
+		//
+		void dummy_rel_B_resize(uint32_t new_size) {
+			#ifndef DCON_USE_EXCEPTIONS
+			if(new_size > 1200) std::abort();
+			#else
+			if(new_size > 1200) throw dcon::out_of_space{};
+			#endif
+			const uint32_t old_size = dummy_rel_B.size_used;
+			if(new_size < old_size) {
+				std::fill_n(dummy_rel_B.m_left.vptr() + 0, old_size, oop_thingy_id{});
+				std::fill_n(dummy_rel_B.m_link_back_left.vptr() + 0, oop_thingy.size_used, dummy_rel_B_id{});
+			} else if(new_size > old_size) {
+			}
+			dummy_rel_B.size_used = new_size;
+		}
+		
+		//
+		// container delete for dummy_rel_B
+		//
+		void delete_dummy_rel_B(dummy_rel_B_id id_removed) {
+			dummy_rel_B_set_left(id_removed, oop_thingy_id());
+		}
+		
+		//
+		// container pop_back for dummy_rel_B
+		//
+		void pop_back_dummy_rel_B() {
+			if(dummy_rel_B.size_used == 0) return;
+			dummy_rel_B_id id_removed(dummy_rel_B_id::value_base_t(dummy_rel_B.size_used - 1));
+			dummy_rel_B_set_left(id_removed, oop_thingy_id());
+			--dummy_rel_B.size_used;
+		}
+		
+		private:
+		//
+		// container move relationship for dummy_rel_B
+		//
+		void internal_move_relationship_dummy_rel_B(dummy_rel_B_id last_id, dummy_rel_B_id id_removed) {
+			dummy_rel_B_set_left(id_removed, oop_thingy_id());
+			if(auto related = dummy_rel_B.m_left.vptr()[last_id.index()]; bool(related)) {
+				dummy_rel_B.m_link_back_left.vptr()[related.index()] = id_removed;
+			}
+			dummy_rel_B.m_left.vptr()[id_removed.index()] = std::move(dummy_rel_B.m_left.vptr()[last_id.index()]);
+			dummy_rel_B.m_left.vptr()[last_id.index()] = oop_thingy_id();
+		}
+		
+		public:
+		//
+		// container try create relationship for dummy_rel_B
+		//
+		dummy_rel_B_id try_create_dummy_rel_B(oop_thingy_id left_p, oop_thingy_id right_p) {
+			if(bool(left_p) && bool(dummy_rel_B.m_link_back_left.vptr()[left_p.index()])) return dummy_rel_B_id();
+			if(dummy_rel_B_is_valid(dummy_rel_B_id(dummy_rel_B_id::value_base_t(right_p.index())))) return dummy_rel_B_id();
+			dummy_rel_B_id new_id(dummy_rel_B_id::value_base_t(right_p.index()));
+			if(dummy_rel_B.size_used < uint32_t(right_p.value)) dummy_rel_B_resize(uint32_t(right_p.value));
+			dummy_rel_B_set_left(new_id, left_p);
+			return new_id;
+		}
+		
+		//
+		// container force create relationship for dummy_rel_B
+		//
+		dummy_rel_B_id force_create_dummy_rel_B(oop_thingy_id left_p, oop_thingy_id right_p) {
+			dummy_rel_B_id new_id(dummy_rel_B_id::value_base_t(right_p.index()));
+			if(dummy_rel_B.size_used < uint32_t(right_p.value)) dummy_rel_B_resize(uint32_t(right_p.value));
+			dummy_rel_B_set_left(new_id, left_p);
+			return new_id;
+		}
+		
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_thingy(T&& func) {
 			for(uint32_t i = 0; i < thingy.size_used; ++i) {
@@ -1436,6 +2571,22 @@ namespace dcon {
 			}
 		}
 		
+		template <typename T>
+		DCON_RELEASE_INLINE void for_each_oop_thingy(T&& func) {
+			for(uint32_t i = 0; i < oop_thingy.size_used; ++i) {
+				oop_thingy_id tmp(oop_thingy_id::value_base_t(i));
+				func(tmp);
+			}
+		}
+		
+		template <typename T>
+		DCON_RELEASE_INLINE void for_each_dummy_rel_B(T&& func) {
+			for(uint32_t i = 0; i < dummy_rel_B.size_used; ++i) {
+				dummy_rel_B_id tmp(dummy_rel_B_id::value_base_t(i));
+				func(tmp);
+			}
+		}
+		
 
 		uint64_t serialize_size(std::vector<float> const& obj) const;
 		void serialize(std::byte*& output_buffer, std::vector<float> const& obj) const;
@@ -1443,8 +2594,10 @@ namespace dcon {
 
 		void reset() {
 			dummy_rel_resize(0);
+			dummy_rel_B_resize(0);
 			thingy_resize(0);
 			thingy2_resize(0);
+			oop_thingy_resize(0);
 		}
 
 		#ifndef DCON_NO_VE
@@ -1496,6 +2649,38 @@ namespace dcon {
 			ve::execute_parallel_exact(dummy_rel.size_used, functor);
 		}
 #endif
+		ve::vectorizable_buffer<float, oop_thingy_id> oop_thingy_make_vectorizable_float_buffer() const noexcept {
+			return ve::vectorizable_buffer<float, oop_thingy_id>(oop_thingy.size_used);
+		}
+		ve::vectorizable_buffer<int32_t, oop_thingy_id> oop_thingy_make_vectorizable_int_buffer() const noexcept {
+			return ve::vectorizable_buffer<int32_t, oop_thingy_id>(oop_thingy.size_used);
+		}
+		template<typename F>
+		DCON_RELEASE_INLINE void execute_serial_over_oop_thingy(F&& functor) {
+			ve::execute_serial(oop_thingy.size_used, functor);
+		}
+#ifndef VE_NO_TBB
+		template<typename F>
+		DCON_RELEASE_INLINE void execute_parallel_over_oop_thingy(F&& functor) {
+			ve::execute_parallel_exact(oop_thingy.size_used, functor);
+		}
+#endif
+		ve::vectorizable_buffer<float, dummy_rel_B_id> dummy_rel_B_make_vectorizable_float_buffer() const noexcept {
+			return ve::vectorizable_buffer<float, dummy_rel_B_id>(dummy_rel_B.size_used);
+		}
+		ve::vectorizable_buffer<int32_t, dummy_rel_B_id> dummy_rel_B_make_vectorizable_int_buffer() const noexcept {
+			return ve::vectorizable_buffer<int32_t, dummy_rel_B_id>(dummy_rel_B.size_used);
+		}
+		template<typename F>
+		DCON_RELEASE_INLINE void execute_serial_over_dummy_rel_B(F&& functor) {
+			ve::execute_serial(dummy_rel_B.size_used, functor);
+		}
+#ifndef VE_NO_TBB
+		template<typename F>
+		DCON_RELEASE_INLINE void execute_parallel_over_dummy_rel_B(F&& functor) {
+			ve::execute_parallel_exact(dummy_rel_B.size_used, functor);
+		}
+#endif
 		#endif
 
 		load_record serialize_entire_container_record() const noexcept {
@@ -1521,6 +2706,12 @@ namespace dcon {
 			result.dummy_rel = true;
 			result.dummy_rel_left = true;
 			result.dummy_rel_right = true;
+			result.oop_thingy = true;
+			result.oop_thingy_pstruct = true;
+			result.oop_thingy_pfloat = true;
+			result.dummy_rel_B = true;
+			result.dummy_rel_B_left = true;
+			result.dummy_rel_B_right = true;
 			return result;
 		}
 		
@@ -1631,6 +2822,33 @@ namespace dcon {
 					total_size += sizeof(thingy2_id) * dummy_rel.size_used;
 				}
 				dcon::record_header headerb(0, "$", "dummy_rel", "$index_end");
+				total_size += headerb.serialize_size();
+			}
+			if(serialize_selection.oop_thingy) {
+				dcon::record_header header(0, "uint32_t", "oop_thingy", "$size");
+				total_size += header.serialize_size();
+				total_size += sizeof(uint32_t);
+			}
+			if(serialize_selection.oop_thingy_pstruct) {
+				dcon::record_header iheader(0, "my_struct", "oop_thingy", "pstruct");
+				total_size += iheader.serialize_size();
+				total_size += sizeof(my_struct) * oop_thingy.size_used;
+			}
+			if(serialize_selection.oop_thingy_pfloat) {
+				dcon::record_header iheader(0, "float", "oop_thingy", "pfloat");
+				total_size += iheader.serialize_size();
+				total_size += sizeof(float) * oop_thingy.size_used;
+			}
+			if(serialize_selection.dummy_rel_B) {
+				dcon::record_header header(0, "uint32_t", "dummy_rel_B", "$size");
+				total_size += header.serialize_size();
+				total_size += sizeof(uint32_t);
+				if(serialize_selection.dummy_rel_B_left) {
+					dcon::record_header iheader(0, "uint16_t", "dummy_rel_B", "left");
+					total_size += iheader.serialize_size();
+					total_size += sizeof(oop_thingy_id) * dummy_rel_B.size_used;
+				}
+				dcon::record_header headerb(0, "$", "dummy_rel_B", "$index_end");
 				total_size += headerb.serialize_size();
 			}
 			return total_size;
@@ -1780,6 +2998,24 @@ namespace dcon {
 					output_buffer += (thingy2.size_used + 7) / 8;
 				}
 			}
+			if(serialize_selection.oop_thingy) {
+				dcon::record_header header(sizeof(uint32_t), "uint32_t", "oop_thingy", "$size");
+				header.serialize(output_buffer);
+				*(reinterpret_cast<uint32_t*>(output_buffer)) = oop_thingy.size_used;
+				output_buffer += sizeof(uint32_t);
+			}
+			if(serialize_selection.oop_thingy_pstruct) {
+				dcon::record_header header(sizeof(my_struct) * oop_thingy.size_used, "my_struct", "oop_thingy", "pstruct");
+				header.serialize(output_buffer);
+				std::memcpy(reinterpret_cast<my_struct*>(output_buffer), oop_thingy.m_pstruct.vptr(), sizeof(my_struct) * oop_thingy.size_used);
+				output_buffer += sizeof(my_struct) * oop_thingy.size_used;
+			}
+			if(serialize_selection.oop_thingy_pfloat) {
+				dcon::record_header header(sizeof(float) * oop_thingy.size_used, "float", "oop_thingy", "pfloat");
+				header.serialize(output_buffer);
+				std::memcpy(reinterpret_cast<float*>(output_buffer), oop_thingy.m_pfloat.vptr(), sizeof(float) * oop_thingy.size_used);
+				output_buffer += sizeof(float) * oop_thingy.size_used;
+			}
 			if(serialize_selection.dummy_rel) {
 				dcon::record_header header(sizeof(uint32_t), "uint32_t", "dummy_rel", "$size");
 				header.serialize(output_buffer);
@@ -1792,6 +3028,20 @@ namespace dcon {
 					output_buffer += sizeof(thingy2_id) * dummy_rel.size_used;
 				}
 				dcon::record_header headerb(0, "$", "dummy_rel", "$index_end");
+				headerb.serialize(output_buffer);
+			}
+			if(serialize_selection.dummy_rel_B) {
+				dcon::record_header header(sizeof(uint32_t), "uint32_t", "dummy_rel_B", "$size");
+				header.serialize(output_buffer);
+				*(reinterpret_cast<uint32_t*>(output_buffer)) = dummy_rel_B.size_used;
+				output_buffer += sizeof(uint32_t);
+		 {
+					dcon::record_header iheader(sizeof(oop_thingy_id) * dummy_rel_B.size_used, "uint16_t", "dummy_rel_B", "left");
+					iheader.serialize(output_buffer);
+					std::memcpy(reinterpret_cast<oop_thingy_id*>(output_buffer), dummy_rel_B.m_left.vptr(), sizeof(oop_thingy_id) * dummy_rel_B.size_used);
+					output_buffer += sizeof(oop_thingy_id) * dummy_rel_B.size_used;
+				}
+				dcon::record_header headerb(0, "$", "dummy_rel_B", "$index_end");
 				headerb.serialize(output_buffer);
 			}
 		}
@@ -2408,6 +3658,114 @@ namespace dcon {
 									auto tmp = dummy_rel.m_right.vptr()[i];
 									dummy_rel.m_right.vptr()[i] = thingy2_id();
 									dummy_rel_set_right(dummy_rel_id(dummy_rel_id::value_base_t(i)), tmp);
+								}
+							}
+						}
+					} else
+					if(header.is_object("oop_thingy")) {
+						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+							oop_thingy_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+							serialize_selection.oop_thingy = true;
+						}
+						else if(header.is_property("pstruct")) {
+							if(header.is_type("my_struct")) {
+								std::memcpy(oop_thingy.m_pstruct.vptr(), reinterpret_cast<my_struct const*>(input_buffer), std::min(size_t(oop_thingy.size_used) * sizeof(my_struct), header.record_size));
+								serialize_selection.oop_thingy_pstruct = true;
+							}
+						}
+						else if(header.is_property("pfloat")) {
+							if(header.is_type("float")) {
+								std::memcpy(oop_thingy.m_pfloat.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(oop_thingy.size_used) * sizeof(float), header.record_size));
+								serialize_selection.oop_thingy_pfloat = true;
+							}
+							else if(header.is_type("int8_t")) {
+								for(uint32_t i = 0; i < std::min(oop_thingy.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
+									oop_thingy.m_pfloat.vptr()[i] = float(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.oop_thingy_pfloat = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(oop_thingy.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									oop_thingy.m_pfloat.vptr()[i] = float(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.oop_thingy_pfloat = true;
+							}
+							else if(header.is_type("int16_t")) {
+								for(uint32_t i = 0; i < std::min(oop_thingy.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
+									oop_thingy.m_pfloat.vptr()[i] = float(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+								}
+								serialize_selection.oop_thingy_pfloat = true;
+							}
+							else if(header.is_type("uint16_t")) {
+								for(uint32_t i = 0; i < std::min(oop_thingy.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+									oop_thingy.m_pfloat.vptr()[i] = float(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+								}
+								serialize_selection.oop_thingy_pfloat = true;
+							}
+							else if(header.is_type("int32_t")) {
+								for(uint32_t i = 0; i < std::min(oop_thingy.size_used, uint32_t(header.record_size / sizeof(int32_t))); ++i) {
+									oop_thingy.m_pfloat.vptr()[i] = float(*(reinterpret_cast<int32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.oop_thingy_pfloat = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(oop_thingy.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									oop_thingy.m_pfloat.vptr()[i] = float(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.oop_thingy_pfloat = true;
+							}
+							else if(header.is_type("int64_t")) {
+								for(uint32_t i = 0; i < std::min(oop_thingy.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
+									oop_thingy.m_pfloat.vptr()[i] = float(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+								}
+								serialize_selection.oop_thingy_pfloat = true;
+							}
+							else if(header.is_type("uint64_t")) {
+								for(uint32_t i = 0; i < std::min(oop_thingy.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
+									oop_thingy.m_pfloat.vptr()[i] = float(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+								}
+								serialize_selection.oop_thingy_pfloat = true;
+							}
+							else if(header.is_type("double")) {
+								for(uint32_t i = 0; i < std::min(oop_thingy.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
+									oop_thingy.m_pfloat.vptr()[i] = float(*(reinterpret_cast<double const*>(input_buffer) + i));
+								}
+								serialize_selection.oop_thingy_pfloat = true;
+							}
+						}
+					} else
+					if(header.is_object("dummy_rel_B")) {
+						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+							if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= dummy_rel_B.size_used) {
+								dummy_rel_B_resize(0);
+							}
+							dummy_rel_B_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+							serialize_selection.dummy_rel_B = true;
+						}
+						else if(header.is_property("left")) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(dummy_rel_B.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(dummy_rel_B.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.dummy_rel_B_left = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(dummy_rel_B.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									dummy_rel_B.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.dummy_rel_B_left = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(dummy_rel_B.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									dummy_rel_B.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.dummy_rel_B_left = true;
+							}
+						}
+						else if(header.is_property("$index_end")) {
+							if(serialize_selection.dummy_rel_B_left == true) {
+								for(uint32_t i = 0; i < dummy_rel_B.size_used; ++i) {
+									auto tmp = dummy_rel_B.m_left.vptr()[i];
+									dummy_rel_B.m_left.vptr()[i] = oop_thingy_id();
+									dummy_rel_B_set_left(dummy_rel_B_id(dummy_rel_B_id::value_base_t(i)), tmp);
 								}
 							}
 						}
@@ -3032,6 +4390,114 @@ namespace dcon {
 								}
 							}
 						}
+					} else
+					if(header.is_object("oop_thingy") && mask.oop_thingy) {
+						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+							oop_thingy_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+							serialize_selection.oop_thingy = true;
+						}
+						else if(header.is_property("pstruct") && mask.oop_thingy_pstruct) {
+							if(header.is_type("my_struct")) {
+								std::memcpy(oop_thingy.m_pstruct.vptr(), reinterpret_cast<my_struct const*>(input_buffer), std::min(size_t(oop_thingy.size_used) * sizeof(my_struct), header.record_size));
+								serialize_selection.oop_thingy_pstruct = true;
+							}
+						}
+						else if(header.is_property("pfloat") && mask.oop_thingy_pfloat) {
+							if(header.is_type("float")) {
+								std::memcpy(oop_thingy.m_pfloat.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(oop_thingy.size_used) * sizeof(float), header.record_size));
+								serialize_selection.oop_thingy_pfloat = true;
+							}
+							else if(header.is_type("int8_t")) {
+								for(uint32_t i = 0; i < std::min(oop_thingy.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
+									oop_thingy.m_pfloat.vptr()[i] = float(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.oop_thingy_pfloat = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(oop_thingy.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									oop_thingy.m_pfloat.vptr()[i] = float(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.oop_thingy_pfloat = true;
+							}
+							else if(header.is_type("int16_t")) {
+								for(uint32_t i = 0; i < std::min(oop_thingy.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
+									oop_thingy.m_pfloat.vptr()[i] = float(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+								}
+								serialize_selection.oop_thingy_pfloat = true;
+							}
+							else if(header.is_type("uint16_t")) {
+								for(uint32_t i = 0; i < std::min(oop_thingy.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+									oop_thingy.m_pfloat.vptr()[i] = float(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+								}
+								serialize_selection.oop_thingy_pfloat = true;
+							}
+							else if(header.is_type("int32_t")) {
+								for(uint32_t i = 0; i < std::min(oop_thingy.size_used, uint32_t(header.record_size / sizeof(int32_t))); ++i) {
+									oop_thingy.m_pfloat.vptr()[i] = float(*(reinterpret_cast<int32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.oop_thingy_pfloat = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(oop_thingy.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									oop_thingy.m_pfloat.vptr()[i] = float(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.oop_thingy_pfloat = true;
+							}
+							else if(header.is_type("int64_t")) {
+								for(uint32_t i = 0; i < std::min(oop_thingy.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
+									oop_thingy.m_pfloat.vptr()[i] = float(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+								}
+								serialize_selection.oop_thingy_pfloat = true;
+							}
+							else if(header.is_type("uint64_t")) {
+								for(uint32_t i = 0; i < std::min(oop_thingy.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
+									oop_thingy.m_pfloat.vptr()[i] = float(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+								}
+								serialize_selection.oop_thingy_pfloat = true;
+							}
+							else if(header.is_type("double")) {
+								for(uint32_t i = 0; i < std::min(oop_thingy.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
+									oop_thingy.m_pfloat.vptr()[i] = float(*(reinterpret_cast<double const*>(input_buffer) + i));
+								}
+								serialize_selection.oop_thingy_pfloat = true;
+							}
+						}
+					} else
+					if(header.is_object("dummy_rel_B") && mask.dummy_rel_B) {
+						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+							if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= dummy_rel_B.size_used) {
+								dummy_rel_B_resize(0);
+							}
+							dummy_rel_B_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+							serialize_selection.dummy_rel_B = true;
+						}
+						else if(header.is_property("left") && mask.dummy_rel_B_left) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(dummy_rel_B.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(dummy_rel_B.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.dummy_rel_B_left = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(dummy_rel_B.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									dummy_rel_B.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.dummy_rel_B_left = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(dummy_rel_B.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									dummy_rel_B.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.dummy_rel_B_left = true;
+							}
+						}
+						else if(header.is_property("$index_end") && mask.dummy_rel_B) {
+							if(serialize_selection.dummy_rel_B_left == true) {
+								for(uint32_t i = 0; i < dummy_rel_B.size_used; ++i) {
+									auto tmp = dummy_rel_B.m_left.vptr()[i];
+									dummy_rel_B.m_left.vptr()[i] = oop_thingy_id();
+									dummy_rel_B_set_left(dummy_rel_B_id(dummy_rel_B_id::value_base_t(i)), tmp);
+								}
+							}
+						}
 					}
 				}
 				input_buffer += header.record_size;
@@ -3042,408 +4508,7 @@ namespace dcon {
 		int32_t counter = 0;
 	};
 
-	class thingy_const_fat_id;
-	class thingy_fat_id;
-	class thingy2_const_fat_id;
-	class thingy2_fat_id;
-	class dummy_rel_const_fat_id;
-	class dummy_rel_fat_id;
-	class thingy_fat_id {
-		public:
-		data_container& container;
-		thingy_id id;
-		thingy_fat_id(data_container& c, thingy_id i) noexcept : container(c), id(i) {}
-		thingy_fat_id(thingy_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		DCON_RELEASE_INLINE operator thingy_id() const noexcept { return id; }
-		DCON_RELEASE_INLINE thingy_fat_id& operator=(thingy_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE thingy_fat_id& operator=(thingy_id other) noexcept {
-			id = other;
-			return *this;
-		}
-		DCON_RELEASE_INLINE bool operator==(thingy_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(thingy_id other) const noexcept {
-			return id == other;
-		}
-		DCON_RELEASE_INLINE bool operator!=(thingy_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(thingy_id other) const noexcept {
-			return id != other;
-		}
-		explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE int32_t& get_some_value() const;
-		DCON_RELEASE_INLINE void set_some_value(int32_t v) const noexcept;
-		DCON_RELEASE_INLINE bool get_bf_value() const noexcept;
-		DCON_RELEASE_INLINE void set_bf_value(bool v) const noexcept;
-		DCON_RELEASE_INLINE int32_t get_d_value() const;
-		DCON_RELEASE_INLINE void set_dbf_value(bool v) const;
-		DCON_RELEASE_INLINE std::vector<float>& get_obj_value() const;
-		DCON_RELEASE_INLINE void set_obj_value(std::vector<float> const& v) const noexcept;
-		DCON_RELEASE_INLINE std::pair<int16_t*, int16_t*> get_pooled_v_range() const noexcept;
-		DCON_RELEASE_INLINE int16_t& get_pooled_v_at(uint32_t inner_index) const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_pooled_v_capacity() const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_pooled_v_size() const noexcept;
-		DCON_RELEASE_INLINE bool pooled_v_contains(int16_t v) const noexcept;
-		DCON_RELEASE_INLINE void pooled_v_push_back(int16_t obj) const noexcept;
-		DCON_RELEASE_INLINE void pooled_v_pop_back() const noexcept;
-		DCON_RELEASE_INLINE void pooled_v_add_unique(int16_t obj) const noexcept;
-		DCON_RELEASE_INLINE void pooled_v_remove_unique(int16_t obj) const noexcept;
-		DCON_RELEASE_INLINE void pooled_v_clear() const noexcept;
-		DCON_RELEASE_INLINE void pooled_v_remove_at(uint32_t inner_index) const noexcept;
-		DCON_RELEASE_INLINE float& get_big_array(int32_t i) const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_big_array_size() const noexcept;
-		DCON_RELEASE_INLINE void set_big_array(int32_t i, float v) const noexcept;
-		DCON_RELEASE_INLINE void resize_big_array(uint32_t sz) const noexcept;
-		DCON_RELEASE_INLINE bool get_big_array_bf(int32_t i) const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_big_array_bf_size() const noexcept;
-		DCON_RELEASE_INLINE void set_big_array_bf(int32_t i, bool v) const noexcept;
-		DCON_RELEASE_INLINE void resize_big_array_bf(uint32_t sz) const noexcept;
-		DCON_RELEASE_INLINE dummy_rel_fat_id get_dummy_rel_as_left() const noexcept;
-		DCON_RELEASE_INLINE void remove_dummy_rel_as_left() const noexcept;
-		DCON_RELEASE_INLINE dummy_rel_fat_id get_dummy_rel() const noexcept;
-		DCON_RELEASE_INLINE void remove_dummy_rel() const noexcept;
-		DCON_RELEASE_INLINE thingy2_fat_id get_right_from_dummy_rel() const noexcept;
-		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
-	};
-	DCON_RELEASE_INLINE thingy_fat_id fatten(data_container& c, thingy_id id) noexcept {
-		return thingy_fat_id(c, id);
-	}
-	
-	class thingy_const_fat_id {
-		public:
-		data_container const& container;
-		thingy_id id;
-		thingy_const_fat_id(data_container const& c, thingy_id i) noexcept : container(c), id(i) {}
-		thingy_const_fat_id(thingy_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		thingy_const_fat_id(thingy_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		DCON_RELEASE_INLINE operator thingy_id() const noexcept { return id; }
-		DCON_RELEASE_INLINE thingy_const_fat_id& operator=(thingy_const_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE thingy_const_fat_id& operator=(thingy_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE thingy_const_fat_id& operator=(thingy_id other) noexcept {
-			id = other;
-			return *this;
-		}
-		DCON_RELEASE_INLINE bool operator==(thingy_const_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(thingy_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(thingy_id other) const noexcept {
-			return id == other;
-		}
-		DCON_RELEASE_INLINE bool operator!=(thingy_const_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(thingy_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(thingy_id other) const noexcept {
-			return id != other;
-		}
-		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE int32_t const& get_some_value() const;
-		DCON_RELEASE_INLINE bool get_bf_value() const noexcept;
-		DCON_RELEASE_INLINE int32_t get_d_value() const;
-		DCON_RELEASE_INLINE std::vector<float> const& get_obj_value() const;
-		DCON_RELEASE_INLINE std::pair<int16_t*, int16_t*> get_pooled_v_range() const noexcept;
-		DCON_RELEASE_INLINE int16_t& get_pooled_v_at(uint32_t inner_index) const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_pooled_v_capacity() const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_pooled_v_size() const noexcept;
-		DCON_RELEASE_INLINE bool pooled_v_contains(int16_t v) const noexcept;
-		DCON_RELEASE_INLINE float const& get_big_array(int32_t i) const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_big_array_size() const noexcept;
-		DCON_RELEASE_INLINE bool get_big_array_bf(int32_t i) const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_big_array_bf_size() const noexcept;
-		DCON_RELEASE_INLINE dummy_rel_const_fat_id get_dummy_rel_as_left() const noexcept;
-		DCON_RELEASE_INLINE dummy_rel_const_fat_id get_dummy_rel() const noexcept;
-		DCON_RELEASE_INLINE thingy2_const_fat_id get_right_from_dummy_rel() const noexcept;
-		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
-	};
-	DCON_RELEASE_INLINE bool operator==(thingy_fat_id const& l, thingy_const_fat_id const& other) noexcept {
-		assert(&l.container == &other.container);
-		return l.id == other.id;
-	}
-	DCON_RELEASE_INLINE bool operator!=(thingy_fat_id const& l, thingy_const_fat_id const& other) noexcept {
-		assert(&l.container == &other.container);
-		return l.id != other.id;
-	}
-	DCON_RELEASE_INLINE thingy_const_fat_id fatten(data_container const& c, thingy_id id) noexcept {
-		return thingy_const_fat_id(c, id);
-	}
-	
-	class thingy2_fat_id {
-		public:
-		data_container& container;
-		thingy2_id id;
-		thingy2_fat_id(data_container& c, thingy2_id i) noexcept : container(c), id(i) {}
-		thingy2_fat_id(thingy2_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		DCON_RELEASE_INLINE operator thingy2_id() const noexcept { return id; }
-		DCON_RELEASE_INLINE thingy2_fat_id& operator=(thingy2_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE thingy2_fat_id& operator=(thingy2_id other) noexcept {
-			id = other;
-			return *this;
-		}
-		DCON_RELEASE_INLINE bool operator==(thingy2_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(thingy2_id other) const noexcept {
-			return id == other;
-		}
-		DCON_RELEASE_INLINE bool operator!=(thingy2_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(thingy2_id other) const noexcept {
-			return id != other;
-		}
-		explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE int32_t& get_some_value() const;
-		DCON_RELEASE_INLINE void set_some_value(int32_t v) const noexcept;
-		DCON_RELEASE_INLINE bool get_bf_value() const noexcept;
-		DCON_RELEASE_INLINE void set_bf_value(bool v) const noexcept;
-		DCON_RELEASE_INLINE std::vector<float>& get_obj_value() const;
-		DCON_RELEASE_INLINE void set_obj_value(std::vector<float> const& v) const noexcept;
-		DCON_RELEASE_INLINE std::pair<int16_t*, int16_t*> get_pooled_v_range() const noexcept;
-		DCON_RELEASE_INLINE int16_t& get_pooled_v_at(uint32_t inner_index) const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_pooled_v_capacity() const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_pooled_v_size() const noexcept;
-		DCON_RELEASE_INLINE bool pooled_v_contains(int16_t v) const noexcept;
-		DCON_RELEASE_INLINE void pooled_v_push_back(int16_t obj) const noexcept;
-		DCON_RELEASE_INLINE void pooled_v_pop_back() const noexcept;
-		DCON_RELEASE_INLINE void pooled_v_add_unique(int16_t obj) const noexcept;
-		DCON_RELEASE_INLINE void pooled_v_remove_unique(int16_t obj) const noexcept;
-		DCON_RELEASE_INLINE void pooled_v_clear() const noexcept;
-		DCON_RELEASE_INLINE void pooled_v_remove_at(uint32_t inner_index) const noexcept;
-		DCON_RELEASE_INLINE float& get_big_array(int32_t i) const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_big_array_size() const noexcept;
-		DCON_RELEASE_INLINE void set_big_array(int32_t i, float v) const noexcept;
-		DCON_RELEASE_INLINE void resize_big_array(uint32_t sz) const noexcept;
-		DCON_RELEASE_INLINE bool get_big_array_bf(int32_t i) const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_big_array_bf_size() const noexcept;
-		DCON_RELEASE_INLINE void set_big_array_bf(int32_t i, bool v) const noexcept;
-		DCON_RELEASE_INLINE void resize_big_array_bf(uint32_t sz) const noexcept;
-		DCON_RELEASE_INLINE dummy_rel_fat_id get_dummy_rel_as_right() const noexcept;
-		DCON_RELEASE_INLINE void remove_dummy_rel_as_right() const noexcept;
-		DCON_RELEASE_INLINE dummy_rel_fat_id get_dummy_rel() const noexcept;
-		DCON_RELEASE_INLINE void remove_dummy_rel() const noexcept;
-		DCON_RELEASE_INLINE thingy_fat_id get_left_from_dummy_rel() const noexcept;
-		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
-	};
-	DCON_RELEASE_INLINE thingy2_fat_id fatten(data_container& c, thingy2_id id) noexcept {
-		return thingy2_fat_id(c, id);
-	}
-	
-	class thingy2_const_fat_id {
-		public:
-		data_container const& container;
-		thingy2_id id;
-		thingy2_const_fat_id(data_container const& c, thingy2_id i) noexcept : container(c), id(i) {}
-		thingy2_const_fat_id(thingy2_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		thingy2_const_fat_id(thingy2_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		DCON_RELEASE_INLINE operator thingy2_id() const noexcept { return id; }
-		DCON_RELEASE_INLINE thingy2_const_fat_id& operator=(thingy2_const_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE thingy2_const_fat_id& operator=(thingy2_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE thingy2_const_fat_id& operator=(thingy2_id other) noexcept {
-			id = other;
-			return *this;
-		}
-		DCON_RELEASE_INLINE bool operator==(thingy2_const_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(thingy2_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(thingy2_id other) const noexcept {
-			return id == other;
-		}
-		DCON_RELEASE_INLINE bool operator!=(thingy2_const_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(thingy2_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(thingy2_id other) const noexcept {
-			return id != other;
-		}
-		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE int32_t const& get_some_value() const;
-		DCON_RELEASE_INLINE bool get_bf_value() const noexcept;
-		DCON_RELEASE_INLINE std::vector<float> const& get_obj_value() const;
-		DCON_RELEASE_INLINE std::pair<int16_t*, int16_t*> get_pooled_v_range() const noexcept;
-		DCON_RELEASE_INLINE int16_t& get_pooled_v_at(uint32_t inner_index) const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_pooled_v_capacity() const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_pooled_v_size() const noexcept;
-		DCON_RELEASE_INLINE bool pooled_v_contains(int16_t v) const noexcept;
-		DCON_RELEASE_INLINE float const& get_big_array(int32_t i) const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_big_array_size() const noexcept;
-		DCON_RELEASE_INLINE bool get_big_array_bf(int32_t i) const noexcept;
-		DCON_RELEASE_INLINE uint32_t get_big_array_bf_size() const noexcept;
-		DCON_RELEASE_INLINE dummy_rel_const_fat_id get_dummy_rel_as_right() const noexcept;
-		DCON_RELEASE_INLINE dummy_rel_const_fat_id get_dummy_rel() const noexcept;
-		DCON_RELEASE_INLINE thingy_const_fat_id get_left_from_dummy_rel() const noexcept;
-		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
-	};
-	DCON_RELEASE_INLINE bool operator==(thingy2_fat_id const& l, thingy2_const_fat_id const& other) noexcept {
-		assert(&l.container == &other.container);
-		return l.id == other.id;
-	}
-	DCON_RELEASE_INLINE bool operator!=(thingy2_fat_id const& l, thingy2_const_fat_id const& other) noexcept {
-		assert(&l.container == &other.container);
-		return l.id != other.id;
-	}
-	DCON_RELEASE_INLINE thingy2_const_fat_id fatten(data_container const& c, thingy2_id id) noexcept {
-		return thingy2_const_fat_id(c, id);
-	}
-	
-	class dummy_rel_fat_id {
-		public:
-		data_container& container;
-		dummy_rel_id id;
-		dummy_rel_fat_id(data_container& c, dummy_rel_id i) noexcept : container(c), id(i) {}
-		dummy_rel_fat_id(dummy_rel_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		DCON_RELEASE_INLINE operator dummy_rel_id() const noexcept { return id; }
-		DCON_RELEASE_INLINE dummy_rel_fat_id& operator=(dummy_rel_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE dummy_rel_fat_id& operator=(dummy_rel_id other) noexcept {
-			id = other;
-			return *this;
-		}
-		DCON_RELEASE_INLINE bool operator==(dummy_rel_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(dummy_rel_id other) const noexcept {
-			return id == other;
-		}
-		DCON_RELEASE_INLINE bool operator!=(dummy_rel_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(dummy_rel_id other) const noexcept {
-			return id != other;
-		}
-		explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE thingy_fat_id get_left() const noexcept;
-		DCON_RELEASE_INLINE void set_left(thingy_id val) const noexcept;
-		DCON_RELEASE_INLINE bool try_set_left(thingy_id val) const noexcept;
-		DCON_RELEASE_INLINE thingy2_fat_id get_right() const noexcept;
-		DCON_RELEASE_INLINE void set_right(thingy2_id val) const noexcept;
-		DCON_RELEASE_INLINE bool try_set_right(thingy2_id val) const noexcept;
-		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
-	};
-	DCON_RELEASE_INLINE dummy_rel_fat_id fatten(data_container& c, dummy_rel_id id) noexcept {
-		return dummy_rel_fat_id(c, id);
-	}
-	
-	class dummy_rel_const_fat_id {
-		public:
-		data_container const& container;
-		dummy_rel_id id;
-		dummy_rel_const_fat_id(data_container const& c, dummy_rel_id i) noexcept : container(c), id(i) {}
-		dummy_rel_const_fat_id(dummy_rel_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		dummy_rel_const_fat_id(dummy_rel_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		DCON_RELEASE_INLINE operator dummy_rel_id() const noexcept { return id; }
-		DCON_RELEASE_INLINE dummy_rel_const_fat_id& operator=(dummy_rel_const_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE dummy_rel_const_fat_id& operator=(dummy_rel_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE dummy_rel_const_fat_id& operator=(dummy_rel_id other) noexcept {
-			id = other;
-			return *this;
-		}
-		DCON_RELEASE_INLINE bool operator==(dummy_rel_const_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(dummy_rel_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(dummy_rel_id other) const noexcept {
-			return id == other;
-		}
-		DCON_RELEASE_INLINE bool operator!=(dummy_rel_const_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(dummy_rel_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(dummy_rel_id other) const noexcept {
-			return id != other;
-		}
-		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE thingy_const_fat_id get_left() const noexcept;
-		DCON_RELEASE_INLINE thingy2_const_fat_id get_right() const noexcept;
-		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
-	};
-	DCON_RELEASE_INLINE bool operator==(dummy_rel_fat_id const& l, dummy_rel_const_fat_id const& other) noexcept {
-		assert(&l.container == &other.container);
-		return l.id == other.id;
-	}
-	DCON_RELEASE_INLINE bool operator!=(dummy_rel_fat_id const& l, dummy_rel_const_fat_id const& other) noexcept {
-		assert(&l.container == &other.container);
-		return l.id != other.id;
-	}
-	DCON_RELEASE_INLINE dummy_rel_const_fat_id fatten(data_container const& c, dummy_rel_id id) noexcept {
-		return dummy_rel_const_fat_id(c, id);
-	}
-	
-	DCON_RELEASE_INLINE int32_t& thingy_fat_id::get_some_value() const {
+	DCON_RELEASE_INLINE int32_t& thingy_fat_id::get_some_value() const noexcept {
 		return container.thingy_get_some_value(id);
 	}
 	DCON_RELEASE_INLINE void thingy_fat_id::set_some_value(int32_t v) const noexcept {
@@ -3461,7 +4526,7 @@ namespace dcon {
 	DCON_RELEASE_INLINE void thingy_fat_id::set_dbf_value(bool v) const {
 		container.thingy_set_dbf_value(id, v);
 	}
-	DCON_RELEASE_INLINE std::vector<float>& thingy_fat_id::get_obj_value() const {
+	DCON_RELEASE_INLINE std::vector<float>& thingy_fat_id::get_obj_value() const noexcept {
 		return container.thingy_get_obj_value(id);
 	}
 	DCON_RELEASE_INLINE void thingy_fat_id::set_obj_value(std::vector<float> const& v) const noexcept {
@@ -3543,7 +4608,7 @@ namespace dcon {
 		return container.thingy_is_valid(id);
 	}
 	
-	DCON_RELEASE_INLINE int32_t const& thingy_const_fat_id::get_some_value() const {
+	DCON_RELEASE_INLINE int32_t thingy_const_fat_id::get_some_value() const noexcept {
 		return container.thingy_get_some_value(id);
 	}
 	DCON_RELEASE_INLINE bool thingy_const_fat_id::get_bf_value() const noexcept {
@@ -3552,13 +4617,13 @@ namespace dcon {
 	DCON_RELEASE_INLINE int32_t thingy_const_fat_id::get_d_value() const {
 		return container.thingy_get_d_value(id);
 	}
-	DCON_RELEASE_INLINE std::vector<float> const& thingy_const_fat_id::get_obj_value() const {
+	DCON_RELEASE_INLINE std::vector<float> const& thingy_const_fat_id::get_obj_value() const noexcept {
 		return container.thingy_get_obj_value(id);
 	}
-	DCON_RELEASE_INLINE std::pair<int16_t*, int16_t*> thingy_const_fat_id::get_pooled_v_range() const noexcept {
+	DCON_RELEASE_INLINE std::pair<int16_t const*, int16_t const*> thingy_const_fat_id::get_pooled_v_range() const noexcept {
 		return container.thingy_get_pooled_v_range(id);
 	}
-	DCON_RELEASE_INLINE int16_t& thingy_const_fat_id::get_pooled_v_at(uint32_t inner_index) const noexcept {
+	DCON_RELEASE_INLINE int16_t const& thingy_const_fat_id::get_pooled_v_at(uint32_t inner_index) const noexcept {
 		return container.thingy_get_pooled_v_at(id, inner_index);
 	}
 	DCON_RELEASE_INLINE uint32_t thingy_const_fat_id::get_pooled_v_capacity() const noexcept {
@@ -3570,7 +4635,7 @@ namespace dcon {
 	DCON_RELEASE_INLINE bool thingy_const_fat_id::pooled_v_contains(int16_t v) const noexcept {
 		return container.thingy_pooled_v_contains(id, v);
 	}
-	DCON_RELEASE_INLINE float const& thingy_const_fat_id::get_big_array(int32_t i) const noexcept {
+	DCON_RELEASE_INLINE float thingy_const_fat_id::get_big_array(int32_t i) const noexcept {
 		return container.thingy_get_big_array(id, i);
 	}
 	DCON_RELEASE_INLINE uint32_t thingy_const_fat_id::get_big_array_size() const noexcept {
@@ -3595,7 +4660,7 @@ namespace dcon {
 		return container.thingy_is_valid(id);
 	}
 	
-	DCON_RELEASE_INLINE int32_t& thingy2_fat_id::get_some_value() const {
+	DCON_RELEASE_INLINE int32_t& thingy2_fat_id::get_some_value() const noexcept {
 		return container.thingy2_get_some_value(id);
 	}
 	DCON_RELEASE_INLINE void thingy2_fat_id::set_some_value(int32_t v) const noexcept {
@@ -3607,7 +4672,7 @@ namespace dcon {
 	DCON_RELEASE_INLINE void thingy2_fat_id::set_bf_value(bool v) const noexcept {
 		container.thingy2_set_bf_value(id, v);
 	}
-	DCON_RELEASE_INLINE std::vector<float>& thingy2_fat_id::get_obj_value() const {
+	DCON_RELEASE_INLINE std::vector<float>& thingy2_fat_id::get_obj_value() const noexcept {
 		return container.thingy2_get_obj_value(id);
 	}
 	DCON_RELEASE_INLINE void thingy2_fat_id::set_obj_value(std::vector<float> const& v) const noexcept {
@@ -3689,19 +4754,19 @@ namespace dcon {
 		return container.thingy2_is_valid(id);
 	}
 	
-	DCON_RELEASE_INLINE int32_t const& thingy2_const_fat_id::get_some_value() const {
+	DCON_RELEASE_INLINE int32_t thingy2_const_fat_id::get_some_value() const noexcept {
 		return container.thingy2_get_some_value(id);
 	}
 	DCON_RELEASE_INLINE bool thingy2_const_fat_id::get_bf_value() const noexcept {
 		return container.thingy2_get_bf_value(id);
 	}
-	DCON_RELEASE_INLINE std::vector<float> const& thingy2_const_fat_id::get_obj_value() const {
+	DCON_RELEASE_INLINE std::vector<float> const& thingy2_const_fat_id::get_obj_value() const noexcept {
 		return container.thingy2_get_obj_value(id);
 	}
-	DCON_RELEASE_INLINE std::pair<int16_t*, int16_t*> thingy2_const_fat_id::get_pooled_v_range() const noexcept {
+	DCON_RELEASE_INLINE std::pair<int16_t const*, int16_t const*> thingy2_const_fat_id::get_pooled_v_range() const noexcept {
 		return container.thingy2_get_pooled_v_range(id);
 	}
-	DCON_RELEASE_INLINE int16_t& thingy2_const_fat_id::get_pooled_v_at(uint32_t inner_index) const noexcept {
+	DCON_RELEASE_INLINE int16_t const& thingy2_const_fat_id::get_pooled_v_at(uint32_t inner_index) const noexcept {
 		return container.thingy2_get_pooled_v_at(id, inner_index);
 	}
 	DCON_RELEASE_INLINE uint32_t thingy2_const_fat_id::get_pooled_v_capacity() const noexcept {
@@ -3713,7 +4778,7 @@ namespace dcon {
 	DCON_RELEASE_INLINE bool thingy2_const_fat_id::pooled_v_contains(int16_t v) const noexcept {
 		return container.thingy2_pooled_v_contains(id, v);
 	}
-	DCON_RELEASE_INLINE float const& thingy2_const_fat_id::get_big_array(int32_t i) const noexcept {
+	DCON_RELEASE_INLINE float thingy2_const_fat_id::get_big_array(int32_t i) const noexcept {
 		return container.thingy2_get_big_array(id, i);
 	}
 	DCON_RELEASE_INLINE uint32_t thingy2_const_fat_id::get_big_array_size() const noexcept {
@@ -3768,6 +4833,85 @@ namespace dcon {
 	}
 	DCON_RELEASE_INLINE bool dummy_rel_const_fat_id::is_valid() const noexcept {
 		return container.dummy_rel_is_valid(id);
+	}
+	
+	DCON_RELEASE_INLINE my_struct const& oop_thingy_fat_id::get_pstruct() const noexcept {
+		return container.oop_thingy_get_pstruct(id);
+	}
+	DCON_RELEASE_INLINE void oop_thingy_fat_id::set_pstruct(my_struct const& v) const noexcept {
+		container.oop_thingy_set_pstruct(id, v);
+	}
+	DCON_RELEASE_INLINE float& oop_thingy_fat_id::get_pfloat() const noexcept {
+		return container.oop_thingy_get_pfloat(id);
+	}
+	DCON_RELEASE_INLINE void oop_thingy_fat_id::set_pfloat(float v) const noexcept {
+		container.oop_thingy_set_pfloat(id, v);
+	}
+	DCON_RELEASE_INLINE dummy_rel_B_fat_id oop_thingy_fat_id::get_dummy_rel_B_as_left() const noexcept {
+		return dummy_rel_B_fat_id(container, container.oop_thingy_get_dummy_rel_B_as_left(id));
+	}
+	DCON_RELEASE_INLINE void oop_thingy_fat_id::remove_dummy_rel_B_as_left() const noexcept {
+		container.oop_thingy_remove_dummy_rel_B_as_left(id);
+	}
+	DCON_RELEASE_INLINE dummy_rel_B_fat_id oop_thingy_fat_id::get_dummy_rel_B_as_right() const noexcept {
+		return dummy_rel_B_fat_id(container, container.oop_thingy_get_dummy_rel_B_as_right(id));
+	}
+	DCON_RELEASE_INLINE void oop_thingy_fat_id::remove_dummy_rel_B_as_right() const noexcept {
+		container.oop_thingy_remove_dummy_rel_B_as_right(id);
+	}
+	DCON_RELEASE_INLINE bool oop_thingy_fat_id::is_valid() const noexcept {
+		return container.oop_thingy_is_valid(id);
+	}
+	int oop_thingy_fat_id::get_a_value(float offset) {
+		return oop_thingy_const_fat_id(container, id).get_a_value(offset);
+	}
+	
+	DCON_RELEASE_INLINE my_struct const& oop_thingy_const_fat_id::get_pstruct() const noexcept {
+		return container.oop_thingy_get_pstruct(id);
+	}
+	DCON_RELEASE_INLINE float oop_thingy_const_fat_id::get_pfloat() const noexcept {
+		return container.oop_thingy_get_pfloat(id);
+	}
+	DCON_RELEASE_INLINE dummy_rel_B_const_fat_id oop_thingy_const_fat_id::get_dummy_rel_B_as_left() const noexcept {
+		return dummy_rel_B_const_fat_id(container, container.oop_thingy_get_dummy_rel_B_as_left(id));
+	}
+	DCON_RELEASE_INLINE dummy_rel_B_const_fat_id oop_thingy_const_fat_id::get_dummy_rel_B_as_right() const noexcept {
+		return dummy_rel_B_const_fat_id(container, container.oop_thingy_get_dummy_rel_B_as_right(id));
+	}
+	DCON_RELEASE_INLINE bool oop_thingy_const_fat_id::is_valid() const noexcept {
+		return container.oop_thingy_is_valid(id);
+	}
+	
+	DCON_RELEASE_INLINE oop_thingy_fat_id dummy_rel_B_fat_id::get_left() const noexcept {
+		return oop_thingy_fat_id(container, container.dummy_rel_B_get_left(id));
+	}
+	DCON_RELEASE_INLINE void dummy_rel_B_fat_id::set_left(oop_thingy_id val) const noexcept {
+		container.dummy_rel_B_set_left(id, val);
+	}
+	DCON_RELEASE_INLINE bool dummy_rel_B_fat_id::try_set_left(oop_thingy_id val) const noexcept {
+		return container.dummy_rel_B_try_set_left(id, val);
+	}
+	DCON_RELEASE_INLINE oop_thingy_fat_id dummy_rel_B_fat_id::get_right() const noexcept {
+		return oop_thingy_fat_id(container, container.dummy_rel_B_get_right(id));
+	}
+	DCON_RELEASE_INLINE void dummy_rel_B_fat_id::set_right(oop_thingy_id val) const noexcept {
+		container.dummy_rel_B_set_right(id, val);
+	}
+	DCON_RELEASE_INLINE bool dummy_rel_B_fat_id::try_set_right(oop_thingy_id val) const noexcept {
+		return container.dummy_rel_B_try_set_right(id, val);
+	}
+	DCON_RELEASE_INLINE bool dummy_rel_B_fat_id::is_valid() const noexcept {
+		return container.dummy_rel_B_is_valid(id);
+	}
+	
+	DCON_RELEASE_INLINE oop_thingy_const_fat_id dummy_rel_B_const_fat_id::get_left() const noexcept {
+		return oop_thingy_const_fat_id(container, container.dummy_rel_B_get_left(id));
+	}
+	DCON_RELEASE_INLINE oop_thingy_const_fat_id dummy_rel_B_const_fat_id::get_right() const noexcept {
+		return oop_thingy_const_fat_id(container, container.dummy_rel_B_get_right(id));
+	}
+	DCON_RELEASE_INLINE bool dummy_rel_B_const_fat_id::is_valid() const noexcept {
+		return container.dummy_rel_B_is_valid(id);
 	}
 	
 }

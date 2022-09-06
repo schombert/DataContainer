@@ -95,6 +95,8 @@ The `object` key expects a single parameter that will in turn be processed as a 
 - `tag{...}` with a single parameter. These tags are referenced by `load_save` to determine which objects will have their properties serialized.
 - `hook{...}` with a single parameter. The parameter must be one of `create`, `delete`, or `move`. This will result in the corresponding `void on_create_ ...`, `void on_delete_ ...`, or `void on_move_ ...` declarations for user-provided definition that will be called upon a corresponding event for this object. Multiple `hook` keys may appear in a single `object` to hook multiple of these functions.
 - `property{...}` with a single parameter. Each `property` key defines in its parameter a distinct property for the object. The contents of a `property` key parameter are defined in their own section below.
+- `function{...}` with a single parameter. The parameter contains a standard C++ function signature, except with the method name and every parameter name preceded by an `@`. (For example: `function{float @calculate_result(std::vector<int> const& @inputs)}`) This function will require a user-provided definition as a member of the appropriate `..._fat_id`.
+- `const_function{...}` with a single parameter. As above for `function`, except that the member function will only be available in a `const` context. This function will require a user-provided definition as a member of the appropriate `..._const_fat_id`.
 
 For example:
 
@@ -159,6 +161,8 @@ The `property` key expects a single parameter that will in turn be processed as 
 - `type{...}` with a single parameter. This parameter must itself by a key with zero or more parameters, which will determine the type of value stored in this property. Valid sub-keys are: `bitfield` with no parameters (for boolean values to be stored a packed bits), `derived{...}` with a single parameter (the single parameter defines the type of the value, but no storage will be allocated and it will require a hooked setter and/or getter to be usable), `vector_pool{...}{...}` with two parameters (the first a number determining the size of the memory pool backing the storage of the vectors, and the second the type of values stored in the vectors), `object{...}` with one parameter (which results in a property that stores value of the type named in the parameter and which are assumed to be *not* safe to `memcpy` and hence must have their constructors and destructors run and must be serialized and deserialized by custom routines), `array{...}{...}` with two parameters (the first the index type of this array and the second the type of value stored in it) or one parameter `array{...}` (with the parameter the type of values and the index type defaulting to `uint32_t`), and finally `other` with no parameters, where `other` is not one of the keys listed above (which will result in a property that stores values of type `other`).
 - `hook{...}` with a single parameter. The parameter must be either `get`, or `set`. This will result in the `... _get_ ...` or `... _set_ ...` function to require a user-provided definition. Multiple `hook` keys may appear in a single `property` to hook both get and set functions.
 - `tag{...}` with a single parameter. These tags are referenced by `load_save` to determine which properties in an object will be serialized.
+- `private` with no parameters. The standard getters and setters for this property will only be available within specially defined member functions.
+- `protected` with no parameters. Only the standard getters for this property will be available outside of specially defined member functions. (Note that this is *not* the same as semantics for the C++ keyword `protected`.)
 
 For example:
 
@@ -178,7 +182,8 @@ The `link` key expects a single parameter that will in turn be processed as a se
 - `object{...}` with a single parameter. This defines the object connected by this link.
 - `type{...}` with a single parameter. The parameter must be one of `unique`, `many`, or `unindexed`. 
 - `index_storage{...}` with a single parameter. The parameter must be one of `list`, `array`, or `std_vector`. This is only valid for links with type `many` and defines how the index from individual objects to the individual relationship(s) they are linked to will be stored.
-
+- `private` with no parameters. The standard getters and setters for this property will only be available within specially defined member functions.
+- `protected` with no parameters. Only the standard getters for this property will be available outside of specially defined member functions. (Note that this is *not* the same as semantics for the C++ keyword `protected`.)
 For example:
 
 ```

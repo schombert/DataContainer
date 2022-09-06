@@ -132,7 +132,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Catch_objects_tests.cpp" />
-    <ClCompile Include="objects_def.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="objects_def.txt">

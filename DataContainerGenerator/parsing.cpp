@@ -24,6 +24,39 @@ char const * advance_to_non_whitespace(char const * pos, char const * end) {
 	return pos;
 }
 
+char const * advance_to_identifier_end(char const * pos, char const * end) {
+	while(pos < end) {
+		if(*pos == ' ' || *pos == '\t' || *pos == '\n' || *pos == '\r'
+			|| *pos == ',' || *pos == '(' || *pos == ')' || *pos == '[' || *pos == ']' || *pos == '{'
+			|| *pos == '}' || *pos == ';')
+			return pos;
+		++pos;
+	}
+	return pos;
+}
+
+
+char const * advance_to_at(char const * pos, char const * end) {
+	while(pos < end) {
+		if(*pos == '@')
+			return pos;
+		++pos;
+	}
+	return pos;
+}
+
+std::string remove_ats(char const * pos, char const * end) {
+	std::string result;
+
+	while(pos < end) {
+		if(*pos != '@')
+			result += *pos;
+		++pos;
+	}
+
+	return result;
+}
+
 char const * advance_to_whitespace(char const * pos, char const * end) {
 	while(pos < end) {
 		if(*pos == ' ' || *pos == '\t' || *pos == '\n' || *pos == '\r')
@@ -214,6 +247,26 @@ related_object parse_link_def(char const * start, char const * end, char const *
 					err_out.add(std::string("unknown parameter \"") + extracted.values[0].to_string() + "\" passed to index_storage on line "
 						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
 				}
+			} else if(kstr == "private") {
+				if(extracted.values.size() != 0) {
+					err_out.add(std::string("wrong number of parameters for \"private\" on line ")
+						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				} else if(result.protection != protection_type::none) {
+					err_out.add(std::string("redefintion of access restriction on line ")
+						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				} else {
+					result.protection = protection_type::hidden;
+				}
+			} else if(kstr == "protected") {
+				if(extracted.values.size() != 0) {
+					err_out.add(std::string("wrong number of parameters for \"protected\" on line ")
+						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				} else if(result.protection != protection_type::none) {
+					err_out.add(std::string("redefintion of access restriction on line ")
+						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				} else {
+					result.protection = protection_type::read_only;
+				}
 			} else {
 				err_out.add(std::string("unexpected token \"") + kstr + "\" while parsing link defintion on line "
 					+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
@@ -362,6 +415,26 @@ property_def parse_property_def(char const * start, char const * end, char const
 				} else {
 					result.property_tags.push_back(extracted.values[0].to_string());
 				}
+			} else if(kstr == "private") {
+				if(extracted.values.size() != 0) {
+					err_out.add(std::string("wrong number of parameters for \"private\" on line ")
+						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				} else if(result.protection != protection_type::none) {
+					err_out.add(std::string("redefintion of access restriction on line ")
+						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				} else {
+					result.protection = protection_type::hidden;
+				}
+			} else if(kstr == "protected") {
+				if(extracted.values.size() != 0) {
+					err_out.add(std::string("wrong number of parameters for \"protected\" on line ")
+						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				} else if(result.protection != protection_type::none) {
+					err_out.add(std::string("redefintion of access restriction on line ")
+						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				} else {
+					result.protection = protection_type::read_only;
+				}
 			} else {
 				err_out.add(std::string("unexpected token \"") + kstr + "\" while parsing property defintion on line "
 					+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
@@ -456,6 +529,48 @@ relationship_object_def parse_relationship(char const * start, char const * end,
 				} else {
 					result.composite_indexes.push_back(
 						parse_composite_key(extracted.values[0].start, extracted.values[0].end, start, err_out));
+				}
+			} else if(kstr == "function") {
+				if(extracted.values.size() != 1) {
+					err_out.add(std::string("wrong number of parameters for \"function\" on line ")
+						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				} else {
+					member_function_spec ns;
+					ns.signature = remove_ats(extracted.values[0].start, extracted.values[0].end);
+					ns.is_const = false;
+					char const* pos = advance_to_at(extracted.values[0].start, extracted.values[0].end) + 1;
+					char const* id_end = advance_to_identifier_end(pos, extracted.values[0].end);
+					ns.name = std::string(pos, id_end);
+					pos = id_end;
+					while(pos < extracted.values[0].end) {
+						pos = advance_to_at(pos, extracted.values[0].end) + 1;
+						id_end = advance_to_identifier_end(pos, extracted.values[0].end);
+						if(id_end != pos)
+							ns.parameter_names.push_back(std::string(pos, id_end));
+						pos = id_end;
+					}
+					result.member_functions.push_back(ns);
+				}
+			} else if(kstr == "const_function") {
+				if(extracted.values.size() != 1) {
+					err_out.add(std::string("wrong number of parameters for \"const_function\" on line ")
+						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				} else {
+					member_function_spec ns;
+					ns.signature = remove_ats(extracted.values[0].start, extracted.values[0].end);
+					ns.is_const = true;
+					char const* pos = advance_to_at(extracted.values[0].start, extracted.values[0].end) + 1;
+					char const* id_end = advance_to_identifier_end(pos, extracted.values[0].end);
+					ns.name = std::string(pos, id_end);
+					pos = id_end;
+					while(pos < extracted.values[0].end) {
+						pos = advance_to_at(pos, extracted.values[0].end) + 1;
+						id_end = advance_to_identifier_end(pos, extracted.values[0].end);
+						if(id_end != pos)
+							ns.parameter_names.push_back(std::string(pos, id_end));
+						pos = id_end;
+					}
+					result.member_functions.push_back(ns);
 				}
 			} else if(kstr == "hook") {
 				if(extracted.values.size() != 1) {
@@ -556,6 +671,48 @@ relationship_object_def parse_object(char const * start, char const * end, char 
 				} else {
 					result.properties.push_back(
 						parse_property_def(extracted.values[0].start, extracted.values[0].end, start, err_out));
+				}
+			} else if(kstr == "function") {
+				if(extracted.values.size() != 1) {
+					err_out.add(std::string("wrong number of parameters for \"function\" on line ")
+						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				} else {
+					member_function_spec ns;
+					ns.signature = remove_ats(extracted.values[0].start, extracted.values[0].end);
+					ns.is_const = false;
+					char const* pos = advance_to_at(extracted.values[0].start, extracted.values[0].end) + 1;
+					char const* id_end = advance_to_identifier_end(pos, extracted.values[0].end);
+					ns.name = std::string(pos, id_end);
+					pos = id_end;
+					while(pos < extracted.values[0].end) {
+						pos = advance_to_at(pos, extracted.values[0].end) + 1;
+						id_end = advance_to_identifier_end(pos, extracted.values[0].end);
+						if(id_end != pos)
+							ns.parameter_names.push_back(std::string(pos, id_end));
+						pos = id_end;
+					}
+					result.member_functions.push_back(ns);
+				}
+			} else if(kstr == "const_function") {
+				if(extracted.values.size() != 1) {
+					err_out.add(std::string("wrong number of parameters for \"const_function\" on line ")
+						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				} else {
+					member_function_spec ns;
+					ns.signature = remove_ats(extracted.values[0].start, extracted.values[0].end);
+					ns.is_const = true;
+					char const* pos = advance_to_at(extracted.values[0].start, extracted.values[0].end) + 1;
+					char const* id_end = advance_to_identifier_end(pos, extracted.values[0].end);
+					ns.name = std::string(pos, id_end);
+					pos = id_end;
+					while(pos < extracted.values[0].end) {
+						pos = advance_to_at(pos, extracted.values[0].end) + 1;
+						id_end = advance_to_identifier_end(pos, extracted.values[0].end);
+						if(id_end != pos)
+							ns.parameter_names.push_back(std::string(pos, id_end));
+						pos = id_end;
+					}
+					result.member_functions.push_back(ns);
 				}
 			} else {
 				err_out.add(std::string("unexpected token \"") + kstr + "\" while parsing relationship defintion on line "

@@ -282,6 +282,368 @@ namespace cob2 {
 
 	}
 
+	class car_const_fat_id;
+	class car_fat_id;
+	class person_const_fat_id;
+	class person_fat_id;
+	class car_ownership_const_fat_id;
+	class car_ownership_fat_id;
+	class car_fat_id {
+		friend class data_container;
+		public:
+		data_container& container;
+		car_id id;
+		car_fat_id(data_container& c, car_id i) noexcept : container(c), id(i) {}
+		car_fat_id(car_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator car_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE car_fat_id& operator=(car_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE car_fat_id& operator=(car_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(car_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(car_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(car_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(car_id other) const noexcept {
+			return id != other;
+		}
+		explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE int32_t& get_wheels() const noexcept;
+		DCON_RELEASE_INLINE void set_wheels(int32_t v) const noexcept;
+		DCON_RELEASE_INLINE float& get_resale_value() const noexcept;
+		DCON_RELEASE_INLINE void set_resale_value(float v) const noexcept;
+		DCON_RELEASE_INLINE car_ownership_fat_id get_car_ownership_as_owned_car() const noexcept;
+		DCON_RELEASE_INLINE void remove_car_ownership_as_owned_car() const noexcept;
+		DCON_RELEASE_INLINE car_ownership_fat_id get_car_ownership() const noexcept;
+		DCON_RELEASE_INLINE void remove_car_ownership() const noexcept;
+		DCON_RELEASE_INLINE person_fat_id get_owner_from_car_ownership() const noexcept;
+		DCON_RELEASE_INLINE void set_ownership_date_from_car_ownership(int32_t v) const noexcept;
+		DCON_RELEASE_INLINE int32_t get_ownership_date_from_car_ownership() const noexcept;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE car_fat_id fatten(data_container& c, car_id id) noexcept {
+		return car_fat_id(c, id);
+	}
+	
+	class car_const_fat_id {
+		friend class data_container;
+		public:
+		data_container const& container;
+		car_id id;
+		car_const_fat_id(data_container const& c, car_id i) noexcept : container(c), id(i) {}
+		car_const_fat_id(car_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		car_const_fat_id(car_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator car_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE car_const_fat_id& operator=(car_const_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE car_const_fat_id& operator=(car_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE car_const_fat_id& operator=(car_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(car_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(car_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(car_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(car_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(car_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(car_id other) const noexcept {
+			return id != other;
+		}
+		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE int32_t get_wheels() const noexcept;
+		DCON_RELEASE_INLINE float get_resale_value() const noexcept;
+		DCON_RELEASE_INLINE car_ownership_const_fat_id get_car_ownership_as_owned_car() const noexcept;
+		DCON_RELEASE_INLINE car_ownership_const_fat_id get_car_ownership() const noexcept;
+		DCON_RELEASE_INLINE person_const_fat_id get_owner_from_car_ownership() const noexcept;
+		DCON_RELEASE_INLINE int32_t get_ownership_date_from_car_ownership() const noexcept;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE bool operator==(car_fat_id const& l, car_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id == other.id;
+	}
+	DCON_RELEASE_INLINE bool operator!=(car_fat_id const& l, car_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id != other.id;
+	}
+	DCON_RELEASE_INLINE car_const_fat_id fatten(data_container const& c, car_id id) noexcept {
+		return car_const_fat_id(c, id);
+	}
+	
+	class person_fat_id {
+		friend class data_container;
+		public:
+		data_container& container;
+		person_id id;
+		person_fat_id(data_container& c, person_id i) noexcept : container(c), id(i) {}
+		person_fat_id(person_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator person_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE person_fat_id& operator=(person_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE person_fat_id& operator=(person_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(person_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(person_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(person_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(person_id other) const noexcept {
+			return id != other;
+		}
+		explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE int32_t& get_age() const noexcept;
+		DCON_RELEASE_INLINE void set_age(int32_t v) const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_car_ownership_as_owner(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> range_of_car_ownership_as_owner() const;
+		DCON_RELEASE_INLINE void remove_all_car_ownership_as_owner() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_car_ownership(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> range_of_car_ownership() const;
+		DCON_RELEASE_INLINE void remove_all_car_ownership() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_owned_car_from_car_ownership(T&& func) const;
+		DCON_RELEASE_INLINE bool has_owned_car_from_car_ownership(car_id target) const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_ownership_date_from_car_ownership(T&& func) const;
+		DCON_RELEASE_INLINE bool has_ownership_date_from_car_ownership(int32_t target) const;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE person_fat_id fatten(data_container& c, person_id id) noexcept {
+		return person_fat_id(c, id);
+	}
+	
+	class person_const_fat_id {
+		friend class data_container;
+		public:
+		data_container const& container;
+		person_id id;
+		person_const_fat_id(data_container const& c, person_id i) noexcept : container(c), id(i) {}
+		person_const_fat_id(person_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		person_const_fat_id(person_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator person_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE person_const_fat_id& operator=(person_const_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE person_const_fat_id& operator=(person_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE person_const_fat_id& operator=(person_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(person_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(person_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(person_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(person_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(person_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(person_id other) const noexcept {
+			return id != other;
+		}
+		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE int32_t get_age() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_car_ownership_as_owner(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> range_of_car_ownership_as_owner() const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_car_ownership(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> range_of_car_ownership() const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_owned_car_from_car_ownership(T&& func) const;
+		DCON_RELEASE_INLINE bool has_owned_car_from_car_ownership(car_id target) const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_ownership_date_from_car_ownership(T&& func) const;
+		DCON_RELEASE_INLINE bool has_ownership_date_from_car_ownership(int32_t target) const;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE bool operator==(person_fat_id const& l, person_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id == other.id;
+	}
+	DCON_RELEASE_INLINE bool operator!=(person_fat_id const& l, person_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id != other.id;
+	}
+	DCON_RELEASE_INLINE person_const_fat_id fatten(data_container const& c, person_id id) noexcept {
+		return person_const_fat_id(c, id);
+	}
+	
+	class car_ownership_fat_id {
+		friend class data_container;
+		public:
+		data_container& container;
+		car_ownership_id id;
+		car_ownership_fat_id(data_container& c, car_ownership_id i) noexcept : container(c), id(i) {}
+		car_ownership_fat_id(car_ownership_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator car_ownership_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE car_ownership_fat_id& operator=(car_ownership_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE car_ownership_fat_id& operator=(car_ownership_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(car_ownership_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(car_ownership_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(car_ownership_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(car_ownership_id other) const noexcept {
+			return id != other;
+		}
+		explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE int32_t& get_ownership_date() const noexcept;
+		DCON_RELEASE_INLINE void set_ownership_date(int32_t v) const noexcept;
+		DCON_RELEASE_INLINE person_fat_id get_owner() const noexcept;
+		DCON_RELEASE_INLINE void set_owner(person_id val) const noexcept;
+		DCON_RELEASE_INLINE car_fat_id get_owned_car() const noexcept;
+		DCON_RELEASE_INLINE void set_owned_car(car_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_owned_car(car_id val) const noexcept;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE car_ownership_fat_id fatten(data_container& c, car_ownership_id id) noexcept {
+		return car_ownership_fat_id(c, id);
+	}
+	
+	class car_ownership_const_fat_id {
+		friend class data_container;
+		public:
+		data_container const& container;
+		car_ownership_id id;
+		car_ownership_const_fat_id(data_container const& c, car_ownership_id i) noexcept : container(c), id(i) {}
+		car_ownership_const_fat_id(car_ownership_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		car_ownership_const_fat_id(car_ownership_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator car_ownership_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE car_ownership_const_fat_id& operator=(car_ownership_const_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE car_ownership_const_fat_id& operator=(car_ownership_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE car_ownership_const_fat_id& operator=(car_ownership_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(car_ownership_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(car_ownership_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(car_ownership_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(car_ownership_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(car_ownership_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(car_ownership_id other) const noexcept {
+			return id != other;
+		}
+		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE int32_t get_ownership_date() const noexcept;
+		DCON_RELEASE_INLINE person_const_fat_id get_owner() const noexcept;
+		DCON_RELEASE_INLINE car_const_fat_id get_owned_car() const noexcept;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE bool operator==(car_ownership_fat_id const& l, car_ownership_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id == other.id;
+	}
+	DCON_RELEASE_INLINE bool operator!=(car_ownership_fat_id const& l, car_ownership_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id != other.id;
+	}
+	DCON_RELEASE_INLINE car_ownership_const_fat_id fatten(data_container const& c, car_ownership_id id) noexcept {
+		return car_ownership_const_fat_id(c, id);
+	}
+	
 	class alignas(64) data_container {
 		public:
 		internal::car_class car;
@@ -292,7 +654,7 @@ namespace cob2 {
 		// Functions for car:
 		//
 		//
-		// getters for car: wheels
+		// accessors for car: wheels
 		//
 		DCON_RELEASE_INLINE int32_t const& car_get_wheels(car_id id) const noexcept {
 			return car.m_wheels.vptr()[id.index()];
@@ -326,7 +688,7 @@ namespace cob2 {
 		}
 		#endif
 		//
-		// getters for car: resale_value
+		// accessors for car: resale_value
 		//
 		DCON_RELEASE_INLINE float const& car_get_resale_value(car_id id) const noexcept {
 			return car.m_resale_value.vptr()[id.index()];
@@ -438,7 +800,7 @@ namespace cob2 {
 		// Functions for person:
 		//
 		//
-		// getters for person: age
+		// accessors for person: age
 		//
 		DCON_RELEASE_INLINE int32_t const& person_get_age(person_id id) const noexcept {
 			return person.m_age.vptr()[id.index()];
@@ -547,7 +909,7 @@ namespace cob2 {
 		// Functions for car_ownership:
 		//
 		//
-		// getters for car_ownership: ownership_date
+		// accessors for car_ownership: ownership_date
 		//
 		DCON_RELEASE_INLINE int32_t const& car_ownership_get_ownership_date(car_ownership_id id) const noexcept {
 			return car_ownership.m_ownership_date.vptr()[id.index()];
@@ -1654,369 +2016,13 @@ namespace cob2 {
 
 	};
 
-	class car_const_fat_id;
-	class car_fat_id;
-	class person_const_fat_id;
-	class person_fat_id;
-	class car_ownership_const_fat_id;
-	class car_ownership_fat_id;
-	class car_fat_id {
-		public:
-		data_container& container;
-		car_id id;
-		car_fat_id(data_container& c, car_id i) noexcept : container(c), id(i) {}
-		car_fat_id(car_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		DCON_RELEASE_INLINE operator car_id() const noexcept { return id; }
-		DCON_RELEASE_INLINE car_fat_id& operator=(car_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE car_fat_id& operator=(car_id other) noexcept {
-			id = other;
-			return *this;
-		}
-		DCON_RELEASE_INLINE bool operator==(car_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(car_id other) const noexcept {
-			return id == other;
-		}
-		DCON_RELEASE_INLINE bool operator!=(car_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(car_id other) const noexcept {
-			return id != other;
-		}
-		explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE int32_t& get_wheels() const;
-		DCON_RELEASE_INLINE void set_wheels(int32_t v) const noexcept;
-		DCON_RELEASE_INLINE float& get_resale_value() const;
-		DCON_RELEASE_INLINE void set_resale_value(float v) const noexcept;
-		DCON_RELEASE_INLINE car_ownership_fat_id get_car_ownership_as_owned_car() const noexcept;
-		DCON_RELEASE_INLINE void remove_car_ownership_as_owned_car() const noexcept;
-		DCON_RELEASE_INLINE car_ownership_fat_id get_car_ownership() const noexcept;
-		DCON_RELEASE_INLINE void remove_car_ownership() const noexcept;
-		DCON_RELEASE_INLINE person_fat_id get_owner_from_car_ownership() const noexcept;
-		DCON_RELEASE_INLINE void set_ownership_date_from_car_ownership(int32_t v) const noexcept;
-		DCON_RELEASE_INLINE int32_t get_ownership_date_from_car_ownership() const noexcept;
-		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
-	};
-	DCON_RELEASE_INLINE car_fat_id fatten(data_container& c, car_id id) noexcept {
-		return car_fat_id(c, id);
-	}
-	
-	class car_const_fat_id {
-		public:
-		data_container const& container;
-		car_id id;
-		car_const_fat_id(data_container const& c, car_id i) noexcept : container(c), id(i) {}
-		car_const_fat_id(car_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		car_const_fat_id(car_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		DCON_RELEASE_INLINE operator car_id() const noexcept { return id; }
-		DCON_RELEASE_INLINE car_const_fat_id& operator=(car_const_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE car_const_fat_id& operator=(car_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE car_const_fat_id& operator=(car_id other) noexcept {
-			id = other;
-			return *this;
-		}
-		DCON_RELEASE_INLINE bool operator==(car_const_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(car_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(car_id other) const noexcept {
-			return id == other;
-		}
-		DCON_RELEASE_INLINE bool operator!=(car_const_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(car_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(car_id other) const noexcept {
-			return id != other;
-		}
-		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE int32_t const& get_wheels() const;
-		DCON_RELEASE_INLINE float const& get_resale_value() const;
-		DCON_RELEASE_INLINE car_ownership_const_fat_id get_car_ownership_as_owned_car() const noexcept;
-		DCON_RELEASE_INLINE car_ownership_const_fat_id get_car_ownership() const noexcept;
-		DCON_RELEASE_INLINE person_const_fat_id get_owner_from_car_ownership() const noexcept;
-		DCON_RELEASE_INLINE int32_t get_ownership_date_from_car_ownership() const noexcept;
-		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
-	};
-	DCON_RELEASE_INLINE bool operator==(car_fat_id const& l, car_const_fat_id const& other) noexcept {
-		assert(&l.container == &other.container);
-		return l.id == other.id;
-	}
-	DCON_RELEASE_INLINE bool operator!=(car_fat_id const& l, car_const_fat_id const& other) noexcept {
-		assert(&l.container == &other.container);
-		return l.id != other.id;
-	}
-	DCON_RELEASE_INLINE car_const_fat_id fatten(data_container const& c, car_id id) noexcept {
-		return car_const_fat_id(c, id);
-	}
-	
-	class person_fat_id {
-		public:
-		data_container& container;
-		person_id id;
-		person_fat_id(data_container& c, person_id i) noexcept : container(c), id(i) {}
-		person_fat_id(person_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		DCON_RELEASE_INLINE operator person_id() const noexcept { return id; }
-		DCON_RELEASE_INLINE person_fat_id& operator=(person_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE person_fat_id& operator=(person_id other) noexcept {
-			id = other;
-			return *this;
-		}
-		DCON_RELEASE_INLINE bool operator==(person_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(person_id other) const noexcept {
-			return id == other;
-		}
-		DCON_RELEASE_INLINE bool operator!=(person_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(person_id other) const noexcept {
-			return id != other;
-		}
-		explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE int32_t& get_age() const;
-		DCON_RELEASE_INLINE void set_age(int32_t v) const noexcept;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_car_ownership_as_owner(T&& func) const;
-		DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> range_of_car_ownership_as_owner() const;
-		DCON_RELEASE_INLINE void remove_all_car_ownership_as_owner() const noexcept;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_car_ownership(T&& func) const;
-		DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> range_of_car_ownership() const;
-		DCON_RELEASE_INLINE void remove_all_car_ownership() const noexcept;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_owned_car_from_car_ownership(T&& func) const;
-		DCON_RELEASE_INLINE bool has_owned_car_from_car_ownership(car_id target) const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_ownership_date_from_car_ownership(T&& func) const;
-		DCON_RELEASE_INLINE bool has_ownership_date_from_car_ownership(int32_t target) const;
-		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
-	};
-	DCON_RELEASE_INLINE person_fat_id fatten(data_container& c, person_id id) noexcept {
-		return person_fat_id(c, id);
-	}
-	
-	class person_const_fat_id {
-		public:
-		data_container const& container;
-		person_id id;
-		person_const_fat_id(data_container const& c, person_id i) noexcept : container(c), id(i) {}
-		person_const_fat_id(person_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		person_const_fat_id(person_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		DCON_RELEASE_INLINE operator person_id() const noexcept { return id; }
-		DCON_RELEASE_INLINE person_const_fat_id& operator=(person_const_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE person_const_fat_id& operator=(person_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE person_const_fat_id& operator=(person_id other) noexcept {
-			id = other;
-			return *this;
-		}
-		DCON_RELEASE_INLINE bool operator==(person_const_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(person_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(person_id other) const noexcept {
-			return id == other;
-		}
-		DCON_RELEASE_INLINE bool operator!=(person_const_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(person_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(person_id other) const noexcept {
-			return id != other;
-		}
-		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE int32_t const& get_age() const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_car_ownership_as_owner(T&& func) const;
-		DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> range_of_car_ownership_as_owner() const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_car_ownership(T&& func) const;
-		DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> range_of_car_ownership() const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_owned_car_from_car_ownership(T&& func) const;
-		DCON_RELEASE_INLINE bool has_owned_car_from_car_ownership(car_id target) const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_ownership_date_from_car_ownership(T&& func) const;
-		DCON_RELEASE_INLINE bool has_ownership_date_from_car_ownership(int32_t target) const;
-		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
-	};
-	DCON_RELEASE_INLINE bool operator==(person_fat_id const& l, person_const_fat_id const& other) noexcept {
-		assert(&l.container == &other.container);
-		return l.id == other.id;
-	}
-	DCON_RELEASE_INLINE bool operator!=(person_fat_id const& l, person_const_fat_id const& other) noexcept {
-		assert(&l.container == &other.container);
-		return l.id != other.id;
-	}
-	DCON_RELEASE_INLINE person_const_fat_id fatten(data_container const& c, person_id id) noexcept {
-		return person_const_fat_id(c, id);
-	}
-	
-	class car_ownership_fat_id {
-		public:
-		data_container& container;
-		car_ownership_id id;
-		car_ownership_fat_id(data_container& c, car_ownership_id i) noexcept : container(c), id(i) {}
-		car_ownership_fat_id(car_ownership_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		DCON_RELEASE_INLINE operator car_ownership_id() const noexcept { return id; }
-		DCON_RELEASE_INLINE car_ownership_fat_id& operator=(car_ownership_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE car_ownership_fat_id& operator=(car_ownership_id other) noexcept {
-			id = other;
-			return *this;
-		}
-		DCON_RELEASE_INLINE bool operator==(car_ownership_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(car_ownership_id other) const noexcept {
-			return id == other;
-		}
-		DCON_RELEASE_INLINE bool operator!=(car_ownership_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(car_ownership_id other) const noexcept {
-			return id != other;
-		}
-		explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE int32_t& get_ownership_date() const;
-		DCON_RELEASE_INLINE void set_ownership_date(int32_t v) const noexcept;
-		DCON_RELEASE_INLINE person_fat_id get_owner() const noexcept;
-		DCON_RELEASE_INLINE void set_owner(person_id val) const noexcept;
-		DCON_RELEASE_INLINE car_fat_id get_owned_car() const noexcept;
-		DCON_RELEASE_INLINE void set_owned_car(car_id val) const noexcept;
-		DCON_RELEASE_INLINE bool try_set_owned_car(car_id val) const noexcept;
-		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
-	};
-	DCON_RELEASE_INLINE car_ownership_fat_id fatten(data_container& c, car_ownership_id id) noexcept {
-		return car_ownership_fat_id(c, id);
-	}
-	
-	class car_ownership_const_fat_id {
-		public:
-		data_container const& container;
-		car_ownership_id id;
-		car_ownership_const_fat_id(data_container const& c, car_ownership_id i) noexcept : container(c), id(i) {}
-		car_ownership_const_fat_id(car_ownership_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		car_ownership_const_fat_id(car_ownership_fat_id const& o) noexcept : container(o.container), id(o.id) {}
-		DCON_RELEASE_INLINE operator car_ownership_id() const noexcept { return id; }
-		DCON_RELEASE_INLINE car_ownership_const_fat_id& operator=(car_ownership_const_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE car_ownership_const_fat_id& operator=(car_ownership_fat_id const& other) noexcept {
-			assert(&container == &other.container);
-			id = other.id;
-			return *this;
-		}
-		DCON_RELEASE_INLINE car_ownership_const_fat_id& operator=(car_ownership_id other) noexcept {
-			id = other;
-			return *this;
-		}
-		DCON_RELEASE_INLINE bool operator==(car_ownership_const_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(car_ownership_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id == other.id;
-		}
-		DCON_RELEASE_INLINE bool operator==(car_ownership_id other) const noexcept {
-			return id == other;
-		}
-		DCON_RELEASE_INLINE bool operator!=(car_ownership_const_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(car_ownership_fat_id const& other) const noexcept {
-			assert(&container == &other.container);
-			return id != other.id;
-		}
-		DCON_RELEASE_INLINE bool operator!=(car_ownership_id other) const noexcept {
-			return id != other;
-		}
-		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
-		DCON_RELEASE_INLINE int32_t const& get_ownership_date() const;
-		DCON_RELEASE_INLINE person_const_fat_id get_owner() const noexcept;
-		DCON_RELEASE_INLINE car_const_fat_id get_owned_car() const noexcept;
-		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
-	};
-	DCON_RELEASE_INLINE bool operator==(car_ownership_fat_id const& l, car_ownership_const_fat_id const& other) noexcept {
-		assert(&l.container == &other.container);
-		return l.id == other.id;
-	}
-	DCON_RELEASE_INLINE bool operator!=(car_ownership_fat_id const& l, car_ownership_const_fat_id const& other) noexcept {
-		assert(&l.container == &other.container);
-		return l.id != other.id;
-	}
-	DCON_RELEASE_INLINE car_ownership_const_fat_id fatten(data_container const& c, car_ownership_id id) noexcept {
-		return car_ownership_const_fat_id(c, id);
-	}
-	
-	DCON_RELEASE_INLINE int32_t& car_fat_id::get_wheels() const {
+	DCON_RELEASE_INLINE int32_t& car_fat_id::get_wheels() const noexcept {
 		return container.car_get_wheels(id);
 	}
 	DCON_RELEASE_INLINE void car_fat_id::set_wheels(int32_t v) const noexcept {
 		container.car_set_wheels(id, v);
 	}
-	DCON_RELEASE_INLINE float& car_fat_id::get_resale_value() const {
+	DCON_RELEASE_INLINE float& car_fat_id::get_resale_value() const noexcept {
 		return container.car_get_resale_value(id);
 	}
 	DCON_RELEASE_INLINE void car_fat_id::set_resale_value(float v) const noexcept {
@@ -2047,10 +2053,10 @@ namespace cob2 {
 		return container.car_is_valid(id);
 	}
 	
-	DCON_RELEASE_INLINE int32_t const& car_const_fat_id::get_wheels() const {
+	DCON_RELEASE_INLINE int32_t car_const_fat_id::get_wheels() const noexcept {
 		return container.car_get_wheels(id);
 	}
-	DCON_RELEASE_INLINE float const& car_const_fat_id::get_resale_value() const {
+	DCON_RELEASE_INLINE float car_const_fat_id::get_resale_value() const noexcept {
 		return container.car_get_resale_value(id);
 	}
 	DCON_RELEASE_INLINE car_ownership_const_fat_id car_const_fat_id::get_car_ownership_as_owned_car() const noexcept {
@@ -2069,7 +2075,7 @@ namespace cob2 {
 		return container.car_is_valid(id);
 	}
 	
-	DCON_RELEASE_INLINE int32_t& person_fat_id::get_age() const {
+	DCON_RELEASE_INLINE int32_t& person_fat_id::get_age() const noexcept {
 		return container.person_get_age(id);
 	}
 	DCON_RELEASE_INLINE void person_fat_id::set_age(int32_t v) const noexcept {
@@ -2113,7 +2119,7 @@ namespace cob2 {
 		return container.person_is_valid(id);
 	}
 	
-	DCON_RELEASE_INLINE int32_t const& person_const_fat_id::get_age() const {
+	DCON_RELEASE_INLINE int32_t person_const_fat_id::get_age() const noexcept {
 		return container.person_get_age(id);
 	}
 	template<typename T>
@@ -2148,7 +2154,7 @@ namespace cob2 {
 		return container.person_is_valid(id);
 	}
 	
-	DCON_RELEASE_INLINE int32_t& car_ownership_fat_id::get_ownership_date() const {
+	DCON_RELEASE_INLINE int32_t& car_ownership_fat_id::get_ownership_date() const noexcept {
 		return container.car_ownership_get_ownership_date(id);
 	}
 	DCON_RELEASE_INLINE void car_ownership_fat_id::set_ownership_date(int32_t v) const noexcept {
@@ -2173,7 +2179,7 @@ namespace cob2 {
 		return container.car_ownership_is_valid(id);
 	}
 	
-	DCON_RELEASE_INLINE int32_t const& car_ownership_const_fat_id::get_ownership_date() const {
+	DCON_RELEASE_INLINE int32_t car_ownership_const_fat_id::get_ownership_date() const noexcept {
 		return container.car_ownership_get_ownership_date(id);
 	}
 	DCON_RELEASE_INLINE person_const_fat_id car_ownership_const_fat_id::get_owner() const noexcept {
