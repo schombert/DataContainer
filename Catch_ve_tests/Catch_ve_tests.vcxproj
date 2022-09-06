@@ -120,6 +120,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -129,11 +130,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Catch_ve_tests.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\CommonIncludes\CommonIncludes.vcxproj">
-      <Project>{6ab3fa0b-e833-4828-a494-0cae6f640242}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

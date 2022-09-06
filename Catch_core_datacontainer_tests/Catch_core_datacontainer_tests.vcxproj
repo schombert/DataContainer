@@ -73,6 +73,9 @@
     <ExecutablePath>$(ExecutablePath)</ExecutablePath>
     <IncludePath>$(SolutionDir)\CommonIncludes\;$(IncludePath)</IncludePath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(SolutionDir)\CommonIncludes\;$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
@@ -120,6 +123,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -131,9 +135,6 @@
     <ClCompile Include="Catch_core_datacontainer_tests.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CommonIncludes\CommonIncludes.vcxproj">
-      <Project>{6ab3fa0b-e833-4828-a494-0cae6f640242}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\DataContainerGenerator\DataContainerGenerator.vcxproj">
       <Project>{ea045c4d-fcab-40dc-afb8-2a64f2b56354}</Project>
     </ProjectReference>
