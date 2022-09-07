@@ -181,6 +181,7 @@ The `link` key expects a single parameter that will in turn be processed as a se
 - `name{...}` with a single parameter. This defines the name of the link.
 - `object{...}` with a single parameter. This defines the object connected by this link.
 - `type{...}` with a single parameter. The parameter must be one of `unique`, `many`, or `unindexed`. 
+- `type{...}{optional}` with twp parameters. The first parameter must be one of `unique`, `many`, or `unindexed`. The second parameter must always be `optional`.
 - `index_storage{...}` with a single parameter. The parameter must be one of `list`, `array`, or `std_vector`. This is only valid for links with type `many` and defines how the index from individual object instances to the individual relationship instance(s) they are linked to will be stored.
 - `private` with no parameters. The standard getters and setters for this property will only be available within specially defined member functions.
 - `protected` with no parameters. Only the standard getters for this property will be available outside of specially defined member functions. (Note that this is *not* the same semantics as the C++ keyword `protected`.)

@@ -125,3 +125,42 @@ relationship{
 		index{F}
 	}
 }
+
+
+relationship{
+	name{relate_as_optional}
+	storage_type{erasable}
+	size{400}
+
+	link{
+		object{thingyA}
+		name{left}
+		type{many}
+		index_storage{array}
+	}
+	link{
+		object{thingyB}
+		name{right}
+		type{many}{optional}
+		index_storage{array}
+	}
+}
+
+relationship{
+	name{relate_as_non_optional}
+	storage_type{erasable}
+	size{400}
+
+	link{
+		object{thingyA}
+		name{left}
+		type{many}
+		index_storage{array}
+	}
+	link{
+		object{thingyB}
+		name{right}
+		type{many}
+		index_storage{array}
+	}
+}

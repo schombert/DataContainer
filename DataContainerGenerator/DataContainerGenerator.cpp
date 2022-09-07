@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
 					} else {
 						error_to_file(output_file_name, std::string("Could not find object named: ") + l.type_name + " in relationship: " + r.name);
 					}
-					if(l.index == index_type::at_most_one) {
+					if(l.index == index_type::at_most_one && !l.is_optional) {
 						r.primary_key.points_to = better_primary_key(r.primary_key.points_to, l.related_to);
 						if(r.primary_key.points_to == l.related_to)
 							r.primary_key.property_name = l.property_name;

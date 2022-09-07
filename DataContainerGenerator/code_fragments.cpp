@@ -1363,6 +1363,9 @@ basic_builder& make_relation_try_create(basic_builder& o, relationship_object_de
 	o + "@obj@_id try_create_@obj@(@params@)" + block{
 		for(auto& iob : cob.indexed_objects) {
 			o + substitute{ "prop", iob.property_name };
+			if(!iob.is_optional) {
+				o + "if(!bool(@prop@_p)) return @obj@_id();";
+			}
 			if(cob.primary_key != iob) {
 				if(iob.index == index_type::at_most_one) {
 					o + "if(bool(@prop@_p) && bool(@obj@.m_link_back_@prop@.vptr()[@prop@_p.index()])) return @obj@_id();";

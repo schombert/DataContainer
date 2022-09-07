@@ -57,6 +57,14 @@ namespace dcon {
 		bool many_many_E : 1;
 		bool many_many_F : 1;
 		bool many_many_ignore : 1;
+		bool relate_as_optional : 1;
+		bool relate_as_optional__index : 1;
+		bool relate_as_optional_left : 1;
+		bool relate_as_optional_right : 1;
+		bool relate_as_non_optional : 1;
+		bool relate_as_non_optional__index : 1;
+		bool relate_as_non_optional_left : 1;
+		bool relate_as_non_optional_right : 1;
 		load_record() {
 			thingyA = false;
 			thingyA_some_value = false;
@@ -81,6 +89,14 @@ namespace dcon {
 			many_many_E = false;
 			many_many_F = false;
 			many_many_ignore = false;
+			relate_as_optional = false;
+			relate_as_optional__index = false;
+			relate_as_optional_left = false;
+			relate_as_optional_right = false;
+			relate_as_non_optional = false;
+			relate_as_non_optional__index = false;
+			relate_as_non_optional_left = false;
+			relate_as_non_optional_right = false;
 		}
 	};
 	//
@@ -281,6 +297,72 @@ namespace dcon {
 	
 	DCON_RELEASE_INLINE bool is_valid_index(many_many_id id) { return bool(id); }
 	
+	//
+	// definition of strongly typed index for relate_as_optional_id
+	//
+	class relate_as_optional_id {
+		public:
+		using value_base_t = uint16_t;
+		using zero_is_null_t = std::true_type;
+	
+		uint16_t value = 0;
+	
+		constexpr relate_as_optional_id() noexcept = default;
+		explicit constexpr relate_as_optional_id(uint16_t v) noexcept : value(v + 1) {}
+		constexpr relate_as_optional_id(relate_as_optional_id const& v) noexcept = default;
+		constexpr relate_as_optional_id(relate_as_optional_id&& v) noexcept = default;
+	
+		relate_as_optional_id& operator=(relate_as_optional_id const& v) noexcept = default;
+		relate_as_optional_id& operator=(relate_as_optional_id&& v) noexcept = default;
+		constexpr bool operator==(relate_as_optional_id v) const noexcept { return value == v.value; }
+		constexpr bool operator!=(relate_as_optional_id v) const noexcept { return value != v.value; }
+		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
+		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
+			return int32_t(value) - 1;
+		}
+	};
+	
+	class relate_as_optional_id_pair {
+		public:
+		relate_as_optional_id left;
+		relate_as_optional_id right;
+	};
+	
+	DCON_RELEASE_INLINE bool is_valid_index(relate_as_optional_id id) { return bool(id); }
+	
+	//
+	// definition of strongly typed index for relate_as_non_optional_id
+	//
+	class relate_as_non_optional_id {
+		public:
+		using value_base_t = uint16_t;
+		using zero_is_null_t = std::true_type;
+	
+		uint16_t value = 0;
+	
+		constexpr relate_as_non_optional_id() noexcept = default;
+		explicit constexpr relate_as_non_optional_id(uint16_t v) noexcept : value(v + 1) {}
+		constexpr relate_as_non_optional_id(relate_as_non_optional_id const& v) noexcept = default;
+		constexpr relate_as_non_optional_id(relate_as_non_optional_id&& v) noexcept = default;
+	
+		relate_as_non_optional_id& operator=(relate_as_non_optional_id const& v) noexcept = default;
+		relate_as_non_optional_id& operator=(relate_as_non_optional_id&& v) noexcept = default;
+		constexpr bool operator==(relate_as_non_optional_id v) const noexcept { return value == v.value; }
+		constexpr bool operator!=(relate_as_non_optional_id v) const noexcept { return value != v.value; }
+		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
+		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
+			return int32_t(value) - 1;
+		}
+	};
+	
+	class relate_as_non_optional_id_pair {
+		public:
+		relate_as_non_optional_id left;
+		relate_as_non_optional_id right;
+	};
+	
+	DCON_RELEASE_INLINE bool is_valid_index(relate_as_non_optional_id id) { return bool(id); }
+	
 }
 
 #ifndef DCON_NO_VE
@@ -313,6 +395,16 @@ namespace ve {
 	template<>
 	struct value_to_vector_type_s<dcon::many_many_id> {
 		using type = tagged_vector<dcon::many_many_id>;
+	};
+	
+	template<>
+	struct value_to_vector_type_s<dcon::relate_as_optional_id> {
+		using type = tagged_vector<dcon::relate_as_optional_id>;
+	};
+	
+	template<>
+	struct value_to_vector_type_s<dcon::relate_as_non_optional_id> {
+		using type = tagged_vector<dcon::relate_as_non_optional_id>;
 	};
 	
 }
@@ -614,6 +706,156 @@ namespace dcon {
 			friend class data_container;
 		};
 
+		class alignas(64) relate_as_optional_class {
+			private:
+			//
+			// storage space for _index of type relate_as_optional_id
+			//
+			struct dtype__index {
+				relate_as_optional_id values[400];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype__index() { std::uninitialized_value_construct_n(values, 400); }
+			}
+			m__index;
+			
+			//
+			// storage space for left of type thingyA_id
+			//
+			struct alignas(64) dtype_left {
+				uint8_t padding[(63 + sizeof(thingyA_id)) & ~63ui64];
+				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(400) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(400))];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_left() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(400) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(400))); }
+			}
+			m_left;
+			
+			//
+			// storage space for array_left of type dcon::stable_mk_2_tag
+			//
+			struct dtype_array_left {
+				dcon::stable_mk_2_tag values[1200];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_array_left() { std::uninitialized_fill_n(values, 1200, std::numeric_limits<dcon::stable_mk_2_tag>::max()); }
+			}
+			m_array_left;
+			
+			dcon::stable_variable_vector_storage_mk_2<relate_as_optional_id, 8, 800 > left_storage;
+			//
+			// storage space for right of type thingyB_id
+			//
+			struct alignas(64) dtype_right {
+				uint8_t padding[(63 + sizeof(thingyB_id)) & ~63ui64];
+				thingyB_id values[(sizeof(thingyB_id) <= 64 ? (uint32_t(400) + (64ui32 / uint32_t(sizeof(thingyB_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyB_id)) - 1ui32) : uint32_t(400))];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyB_id) <= 64 ? (uint32_t(400) + (64ui32 / uint32_t(sizeof(thingyB_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyB_id)) - 1ui32) : uint32_t(400))); }
+			}
+			m_right;
+			
+			//
+			// storage space for array_right of type dcon::stable_mk_2_tag
+			//
+			struct dtype_array_right {
+				dcon::stable_mk_2_tag values[1200];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_array_right() { std::uninitialized_fill_n(values, 1200, std::numeric_limits<dcon::stable_mk_2_tag>::max()); }
+			}
+			m_array_right;
+			
+			dcon::stable_variable_vector_storage_mk_2<relate_as_optional_id, 8, 800 > right_storage;
+			relate_as_optional_id first_free = relate_as_optional_id();
+			uint32_t size_used = 0;
+
+
+			public:
+			relate_as_optional_class() {
+				for(int32_t i = 400 - 1; i >= 0; --i) {
+					m__index.vptr()[i] = first_free;
+					first_free = relate_as_optional_id(uint16_t(i));
+				}
+			}
+			friend class data_container;
+		};
+
+		class alignas(64) relate_as_non_optional_class {
+			private:
+			//
+			// storage space for _index of type relate_as_non_optional_id
+			//
+			struct dtype__index {
+				relate_as_non_optional_id values[400];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype__index() { std::uninitialized_value_construct_n(values, 400); }
+			}
+			m__index;
+			
+			//
+			// storage space for left of type thingyA_id
+			//
+			struct alignas(64) dtype_left {
+				uint8_t padding[(63 + sizeof(thingyA_id)) & ~63ui64];
+				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(400) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(400))];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_left() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(400) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(400))); }
+			}
+			m_left;
+			
+			//
+			// storage space for array_left of type dcon::stable_mk_2_tag
+			//
+			struct dtype_array_left {
+				dcon::stable_mk_2_tag values[1200];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_array_left() { std::uninitialized_fill_n(values, 1200, std::numeric_limits<dcon::stable_mk_2_tag>::max()); }
+			}
+			m_array_left;
+			
+			dcon::stable_variable_vector_storage_mk_2<relate_as_non_optional_id, 8, 800 > left_storage;
+			//
+			// storage space for right of type thingyB_id
+			//
+			struct alignas(64) dtype_right {
+				uint8_t padding[(63 + sizeof(thingyB_id)) & ~63ui64];
+				thingyB_id values[(sizeof(thingyB_id) <= 64 ? (uint32_t(400) + (64ui32 / uint32_t(sizeof(thingyB_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyB_id)) - 1ui32) : uint32_t(400))];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyB_id) <= 64 ? (uint32_t(400) + (64ui32 / uint32_t(sizeof(thingyB_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyB_id)) - 1ui32) : uint32_t(400))); }
+			}
+			m_right;
+			
+			//
+			// storage space for array_right of type dcon::stable_mk_2_tag
+			//
+			struct dtype_array_right {
+				dcon::stable_mk_2_tag values[1200];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_array_right() { std::uninitialized_fill_n(values, 1200, std::numeric_limits<dcon::stable_mk_2_tag>::max()); }
+			}
+			m_array_right;
+			
+			dcon::stable_variable_vector_storage_mk_2<relate_as_non_optional_id, 8, 800 > right_storage;
+			relate_as_non_optional_id first_free = relate_as_non_optional_id();
+			uint32_t size_used = 0;
+
+
+			public:
+			relate_as_non_optional_class() {
+				for(int32_t i = 400 - 1; i >= 0; --i) {
+					m__index.vptr()[i] = first_free;
+					first_free = relate_as_non_optional_id(uint16_t(i));
+				}
+			}
+			friend class data_container;
+		};
+
 	}
 
 	class thingyA_const_fat_id;
@@ -628,6 +870,10 @@ namespace dcon {
 	class relate_in_list_fat_id;
 	class many_many_const_fat_id;
 	class many_many_fat_id;
+	class relate_as_optional_const_fat_id;
+	class relate_as_optional_fat_id;
+	class relate_as_non_optional_const_fat_id;
+	class relate_as_non_optional_fat_id;
 	class thingyA_fat_id {
 		friend class data_container;
 		public:
@@ -669,11 +915,35 @@ namespace dcon {
 		DCON_RELEASE_INLINE relate_in_array_fat_id get_relate_in_array() const noexcept;
 		DCON_RELEASE_INLINE void remove_relate_in_array() const noexcept;
 		DCON_RELEASE_INLINE thingyB_fat_id get_right_from_relate_in_array() const noexcept;
+		DCON_RELEASE_INLINE void set_right_from_relate_in_array(thingyB_id v) const noexcept;
 		DCON_RELEASE_INLINE relate_in_list_fat_id get_relate_in_list_as_left() const noexcept;
 		DCON_RELEASE_INLINE void remove_relate_in_list_as_left() const noexcept;
 		DCON_RELEASE_INLINE relate_in_list_fat_id get_relate_in_list() const noexcept;
 		DCON_RELEASE_INLINE void remove_relate_in_list() const noexcept;
 		DCON_RELEASE_INLINE thingyB_fat_id get_right_from_relate_in_list() const noexcept;
+		DCON_RELEASE_INLINE void set_right_from_relate_in_list(thingyB_id v) const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_as_optional_as_left(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> range_of_relate_as_optional_as_left() const;
+		DCON_RELEASE_INLINE void remove_all_relate_as_optional_as_left() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_as_optional(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> range_of_relate_as_optional() const;
+		DCON_RELEASE_INLINE void remove_all_relate_as_optional() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_right_from_relate_as_optional(T&& func) const;
+		DCON_RELEASE_INLINE bool has_right_from_relate_as_optional(thingyB_id target) const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_as_non_optional_as_left(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> range_of_relate_as_non_optional_as_left() const;
+		DCON_RELEASE_INLINE void remove_all_relate_as_non_optional_as_left() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_as_non_optional(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> range_of_relate_as_non_optional() const;
+		DCON_RELEASE_INLINE void remove_all_relate_as_non_optional() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_right_from_relate_as_non_optional(T&& func) const;
+		DCON_RELEASE_INLINE bool has_right_from_relate_as_non_optional(thingyB_id target) const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 	
 	};
@@ -735,6 +1005,24 @@ namespace dcon {
 		DCON_RELEASE_INLINE relate_in_list_const_fat_id get_relate_in_list_as_left() const noexcept;
 		DCON_RELEASE_INLINE relate_in_list_const_fat_id get_relate_in_list() const noexcept;
 		DCON_RELEASE_INLINE thingyB_const_fat_id get_right_from_relate_in_list() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_as_optional_as_left(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> range_of_relate_as_optional_as_left() const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_as_optional(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> range_of_relate_as_optional() const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_right_from_relate_as_optional(T&& func) const;
+		DCON_RELEASE_INLINE bool has_right_from_relate_as_optional(thingyB_id target) const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_as_non_optional_as_left(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> range_of_relate_as_non_optional_as_left() const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_as_non_optional(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> range_of_relate_as_non_optional() const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_right_from_relate_as_non_optional(T&& func) const;
+		DCON_RELEASE_INLINE bool has_right_from_relate_as_non_optional(thingyB_id target) const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 	
 	};
@@ -804,6 +1092,28 @@ namespace dcon {
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_left_from_relate_in_list(T&& func) const;
 		DCON_RELEASE_INLINE bool has_left_from_relate_in_list(thingyA_id target) const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_as_optional_as_right(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> range_of_relate_as_optional_as_right() const;
+		DCON_RELEASE_INLINE void remove_all_relate_as_optional_as_right() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_as_optional(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> range_of_relate_as_optional() const;
+		DCON_RELEASE_INLINE void remove_all_relate_as_optional() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_left_from_relate_as_optional(T&& func) const;
+		DCON_RELEASE_INLINE bool has_left_from_relate_as_optional(thingyA_id target) const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_as_non_optional_as_right(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> range_of_relate_as_non_optional_as_right() const;
+		DCON_RELEASE_INLINE void remove_all_relate_as_non_optional_as_right() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_as_non_optional(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> range_of_relate_as_non_optional() const;
+		DCON_RELEASE_INLINE void remove_all_relate_as_non_optional() const noexcept;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_left_from_relate_as_non_optional(T&& func) const;
+		DCON_RELEASE_INLINE bool has_left_from_relate_as_non_optional(thingyA_id target) const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 	
 	};
@@ -874,6 +1184,24 @@ namespace dcon {
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_left_from_relate_in_list(T&& func) const;
 		DCON_RELEASE_INLINE bool has_left_from_relate_in_list(thingyA_id target) const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_as_optional_as_right(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> range_of_relate_as_optional_as_right() const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_as_optional(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> range_of_relate_as_optional() const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_left_from_relate_as_optional(T&& func) const;
+		DCON_RELEASE_INLINE bool has_left_from_relate_as_optional(thingyA_id target) const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_as_non_optional_as_right(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> range_of_relate_as_non_optional_as_right() const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_relate_as_non_optional(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> range_of_relate_as_non_optional() const;
+		template<typename T>
+		DCON_RELEASE_INLINE void for_each_left_from_relate_as_non_optional(T&& func) const;
+		DCON_RELEASE_INLINE bool has_left_from_relate_as_non_optional(thingyA_id target) const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 	
 	};
@@ -1341,6 +1669,222 @@ namespace dcon {
 		return many_many_const_fat_id(c, id);
 	}
 	
+	class relate_as_optional_fat_id {
+		friend class data_container;
+		public:
+		data_container& container;
+		relate_as_optional_id id;
+		relate_as_optional_fat_id(data_container& c, relate_as_optional_id i) noexcept : container(c), id(i) {}
+		relate_as_optional_fat_id(relate_as_optional_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator relate_as_optional_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE relate_as_optional_fat_id& operator=(relate_as_optional_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE relate_as_optional_fat_id& operator=(relate_as_optional_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(relate_as_optional_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(relate_as_optional_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(relate_as_optional_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(relate_as_optional_id other) const noexcept {
+			return id != other;
+		}
+		explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE thingyA_fat_id get_left() const noexcept;
+		DCON_RELEASE_INLINE void set_left(thingyA_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_left(thingyA_id val) const noexcept;
+		DCON_RELEASE_INLINE thingyB_fat_id get_right() const noexcept;
+		DCON_RELEASE_INLINE void set_right(thingyB_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_right(thingyB_id val) const noexcept;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE relate_as_optional_fat_id fatten(data_container& c, relate_as_optional_id id) noexcept {
+		return relate_as_optional_fat_id(c, id);
+	}
+	
+	class relate_as_optional_const_fat_id {
+		friend class data_container;
+		public:
+		data_container const& container;
+		relate_as_optional_id id;
+		relate_as_optional_const_fat_id(data_container const& c, relate_as_optional_id i) noexcept : container(c), id(i) {}
+		relate_as_optional_const_fat_id(relate_as_optional_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		relate_as_optional_const_fat_id(relate_as_optional_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator relate_as_optional_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE relate_as_optional_const_fat_id& operator=(relate_as_optional_const_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE relate_as_optional_const_fat_id& operator=(relate_as_optional_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE relate_as_optional_const_fat_id& operator=(relate_as_optional_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(relate_as_optional_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(relate_as_optional_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(relate_as_optional_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(relate_as_optional_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(relate_as_optional_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(relate_as_optional_id other) const noexcept {
+			return id != other;
+		}
+		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE thingyA_const_fat_id get_left() const noexcept;
+		DCON_RELEASE_INLINE thingyB_const_fat_id get_right() const noexcept;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE bool operator==(relate_as_optional_fat_id const& l, relate_as_optional_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id == other.id;
+	}
+	DCON_RELEASE_INLINE bool operator!=(relate_as_optional_fat_id const& l, relate_as_optional_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id != other.id;
+	}
+	DCON_RELEASE_INLINE relate_as_optional_const_fat_id fatten(data_container const& c, relate_as_optional_id id) noexcept {
+		return relate_as_optional_const_fat_id(c, id);
+	}
+	
+	class relate_as_non_optional_fat_id {
+		friend class data_container;
+		public:
+		data_container& container;
+		relate_as_non_optional_id id;
+		relate_as_non_optional_fat_id(data_container& c, relate_as_non_optional_id i) noexcept : container(c), id(i) {}
+		relate_as_non_optional_fat_id(relate_as_non_optional_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator relate_as_non_optional_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE relate_as_non_optional_fat_id& operator=(relate_as_non_optional_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE relate_as_non_optional_fat_id& operator=(relate_as_non_optional_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(relate_as_non_optional_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(relate_as_non_optional_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(relate_as_non_optional_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(relate_as_non_optional_id other) const noexcept {
+			return id != other;
+		}
+		explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE thingyA_fat_id get_left() const noexcept;
+		DCON_RELEASE_INLINE void set_left(thingyA_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_left(thingyA_id val) const noexcept;
+		DCON_RELEASE_INLINE thingyB_fat_id get_right() const noexcept;
+		DCON_RELEASE_INLINE void set_right(thingyB_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_right(thingyB_id val) const noexcept;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE relate_as_non_optional_fat_id fatten(data_container& c, relate_as_non_optional_id id) noexcept {
+		return relate_as_non_optional_fat_id(c, id);
+	}
+	
+	class relate_as_non_optional_const_fat_id {
+		friend class data_container;
+		public:
+		data_container const& container;
+		relate_as_non_optional_id id;
+		relate_as_non_optional_const_fat_id(data_container const& c, relate_as_non_optional_id i) noexcept : container(c), id(i) {}
+		relate_as_non_optional_const_fat_id(relate_as_non_optional_const_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		relate_as_non_optional_const_fat_id(relate_as_non_optional_fat_id const& o) noexcept : container(o.container), id(o.id) {}
+		DCON_RELEASE_INLINE operator relate_as_non_optional_id() const noexcept { return id; }
+		DCON_RELEASE_INLINE relate_as_non_optional_const_fat_id& operator=(relate_as_non_optional_const_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE relate_as_non_optional_const_fat_id& operator=(relate_as_non_optional_fat_id const& other) noexcept {
+			assert(&container == &other.container);
+			id = other.id;
+			return *this;
+		}
+		DCON_RELEASE_INLINE relate_as_non_optional_const_fat_id& operator=(relate_as_non_optional_id other) noexcept {
+			id = other;
+			return *this;
+		}
+		DCON_RELEASE_INLINE bool operator==(relate_as_non_optional_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(relate_as_non_optional_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id == other.id;
+		}
+		DCON_RELEASE_INLINE bool operator==(relate_as_non_optional_id other) const noexcept {
+			return id == other;
+		}
+		DCON_RELEASE_INLINE bool operator!=(relate_as_non_optional_const_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(relate_as_non_optional_fat_id const& other) const noexcept {
+			assert(&container == &other.container);
+			return id != other.id;
+		}
+		DCON_RELEASE_INLINE bool operator!=(relate_as_non_optional_id other) const noexcept {
+			return id != other;
+		}
+		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
+		DCON_RELEASE_INLINE thingyA_const_fat_id get_left() const noexcept;
+		DCON_RELEASE_INLINE thingyB_const_fat_id get_right() const noexcept;
+		DCON_RELEASE_INLINE bool is_valid() const noexcept;
+	
+	};
+	DCON_RELEASE_INLINE bool operator==(relate_as_non_optional_fat_id const& l, relate_as_non_optional_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id == other.id;
+	}
+	DCON_RELEASE_INLINE bool operator!=(relate_as_non_optional_fat_id const& l, relate_as_non_optional_const_fat_id const& other) noexcept {
+		assert(&l.container == &other.container);
+		return l.id != other.id;
+	}
+	DCON_RELEASE_INLINE relate_as_non_optional_const_fat_id fatten(data_container const& c, relate_as_non_optional_id id) noexcept {
+		return relate_as_non_optional_const_fat_id(c, id);
+	}
+	
 	class alignas(64) data_container {
 		public:
 		internal::thingyA_class thingyA;
@@ -1349,6 +1893,8 @@ namespace dcon {
 		internal::relate_in_array_class relate_in_array;
 		internal::relate_in_list_class relate_in_list;
 		internal::many_many_class many_many;
+		internal::relate_as_optional_class relate_as_optional;
+		internal::relate_as_non_optional_class relate_as_non_optional;
 
 		//
 		// Functions for thingyA:
@@ -1403,7 +1949,7 @@ namespace dcon {
 		#endif
 		DCON_RELEASE_INLINE void thingyA_remove_relate_same_as_left(thingyA_id id) noexcept {
 			if(relate_same_is_valid(relate_same_id(relate_same_id::value_base_t(id.index())))) {
-				delete_relate_same(relate_same_id(relate_same_id::value_base_t(id.index())));
+				relate_same_set_left(relate_same_id(relate_same_id::value_base_t(id.index())), thingyA_id());
 			}
 		}
 		DCON_RELEASE_INLINE relate_in_array_id thingyA_get_relate_in_array_as_left(thingyA_id id) const noexcept {
@@ -1422,7 +1968,7 @@ namespace dcon {
 		#endif
 		DCON_RELEASE_INLINE void thingyA_remove_relate_in_array_as_left(thingyA_id id) noexcept {
 			if(relate_in_array_is_valid(relate_in_array_id(relate_in_array_id::value_base_t(id.index())))) {
-				delete_relate_in_array(relate_in_array_id(relate_in_array_id::value_base_t(id.index())));
+				relate_in_array_set_left(relate_in_array_id(relate_in_array_id::value_base_t(id.index())), thingyA_id());
 			}
 		}
 		DCON_RELEASE_INLINE relate_in_array_id thingyA_get_relate_in_array(thingyA_id id) const noexcept {
@@ -1441,7 +1987,7 @@ namespace dcon {
 		#endif
 		DCON_RELEASE_INLINE void thingyA_remove_relate_in_array(thingyA_id id) noexcept {
 			if(relate_in_array_is_valid(relate_in_array_id(relate_in_array_id::value_base_t(id.index())))) {
-				delete_relate_in_array(relate_in_array_id(relate_in_array_id::value_base_t(id.index())));
+				relate_in_array_set_left(relate_in_array_id(relate_in_array_id::value_base_t(id.index())), thingyA_id());
 			}
 		}
 		DCON_RELEASE_INLINE thingyB_id thingyA_get_right_from_relate_in_array(thingyA_id ref_id) const {
@@ -1458,6 +2004,9 @@ namespace dcon {
 			return relate_in_array_get_right(ve::tagged_vector<relate_in_array_id>(ref_id, std::true_type{}));
 		}
 		#endif
+		void thingyA_set_right_from_relate_in_array(thingyA_id ref_id, thingyB_id val) {
+			relate_in_array_set_right(relate_in_array_id(relate_in_array_id::value_base_t(ref_id.index())), val);
+		}
 		DCON_RELEASE_INLINE relate_in_list_id thingyA_get_relate_in_list_as_left(thingyA_id id) const noexcept {
 			return relate_in_list_id(relate_in_list_id::value_base_t(id.index()));
 		}
@@ -1474,7 +2023,7 @@ namespace dcon {
 		#endif
 		DCON_RELEASE_INLINE void thingyA_remove_relate_in_list_as_left(thingyA_id id) noexcept {
 			if(relate_in_list_is_valid(relate_in_list_id(relate_in_list_id::value_base_t(id.index())))) {
-				delete_relate_in_list(relate_in_list_id(relate_in_list_id::value_base_t(id.index())));
+				relate_in_list_set_left(relate_in_list_id(relate_in_list_id::value_base_t(id.index())), thingyA_id());
 			}
 		}
 		DCON_RELEASE_INLINE relate_in_list_id thingyA_get_relate_in_list(thingyA_id id) const noexcept {
@@ -1493,7 +2042,7 @@ namespace dcon {
 		#endif
 		DCON_RELEASE_INLINE void thingyA_remove_relate_in_list(thingyA_id id) noexcept {
 			if(relate_in_list_is_valid(relate_in_list_id(relate_in_list_id::value_base_t(id.index())))) {
-				delete_relate_in_list(relate_in_list_id(relate_in_list_id::value_base_t(id.index())));
+				relate_in_list_set_left(relate_in_list_id(relate_in_list_id::value_base_t(id.index())), thingyA_id());
 			}
 		}
 		DCON_RELEASE_INLINE thingyB_id thingyA_get_right_from_relate_in_list(thingyA_id ref_id) const {
@@ -1510,6 +2059,115 @@ namespace dcon {
 			return relate_in_list_get_right(ve::tagged_vector<relate_in_list_id>(ref_id, std::true_type{}));
 		}
 		#endif
+		void thingyA_set_right_from_relate_in_list(thingyA_id ref_id, thingyB_id val) {
+			relate_in_list_set_right(relate_in_list_id(relate_in_list_id::value_base_t(ref_id.index())), val);
+		}
+		template<typename T>
+		DCON_RELEASE_INLINE void thingyA_for_each_relate_as_optional_as_left(thingyA_id id, T&& func) const {
+			if(bool(id)) {
+				auto vrange = dcon::get_range(relate_as_optional.left_storage, relate_as_optional.m_array_left.vptr()[id.index()]);
+				std::for_each(vrange.first, vrange.second, func);
+			}
+		}
+		DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> thingyA_range_of_relate_as_optional_as_left(thingyA_id id) const {
+			if(bool(id)) {
+				auto vrange = dcon::get_range(relate_as_optional.left_storage, relate_as_optional.m_array_left.vptr()[id.index()]);
+				return std::pair<relate_as_optional_id const*, relate_as_optional_id const*>(vrange.first, vrange.second);
+			} else {
+				return std::pair<relate_as_optional_id const*, relate_as_optional_id const*>(nullptr, nullptr);
+			}
+		}
+		void thingyA_remove_all_relate_as_optional_as_left(thingyA_id id) noexcept {
+			auto rng = thingyA_range_of_relate_as_optional_as_left(id);
+			dcon::local_vector<relate_as_optional_id> temp(rng.first, rng.second);
+			std::for_each(temp.begin(), temp.end(), [t = this](relate_as_optional_id i) { t->relate_as_optional_set_left(i, thingyA_id()); });
+		}
+		template<typename T>
+		DCON_RELEASE_INLINE void thingyA_for_each_relate_as_optional(thingyA_id id, T&& func) const {
+			if(bool(id)) {
+				auto vrange = dcon::get_range(relate_as_optional.left_storage, relate_as_optional.m_array_left.vptr()[id.index()]);
+				std::for_each(vrange.first, vrange.second, func);
+			}
+		}
+		DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> thingyA_range_of_relate_as_optional(thingyA_id id) const {
+			if(bool(id)) {
+				auto vrange = dcon::get_range(relate_as_optional.left_storage, relate_as_optional.m_array_left.vptr()[id.index()]);
+				return std::pair<relate_as_optional_id const*, relate_as_optional_id const*>(vrange.first, vrange.second);
+			} else {
+				return std::pair<relate_as_optional_id const*, relate_as_optional_id const*>(nullptr, nullptr);
+			}
+		}
+		void thingyA_remove_all_relate_as_optional(thingyA_id id) noexcept {
+			auto rng = thingyA_range_of_relate_as_optional_as_left(id);
+			dcon::local_vector<relate_as_optional_id> temp(rng.first, rng.second);
+			std::for_each(temp.begin(), temp.end(), [t = this](relate_as_optional_id i) { t->relate_as_optional_set_left(i, thingyA_id()); });
+		}
+		template<typename T>
+		void thingyA_for_each_right_from_relate_as_optional(thingyA_id id, T&& func) const {
+			thingyA_for_each_relate_as_optional_as_left(id, [&](relate_as_optional_id i) {
+				func(relate_as_optional_get_right(i));
+			} );
+		}
+		bool thingyA_has_right_from_relate_as_optional(thingyA_id id, thingyB_id target) const {
+			auto vrange = dcon::get_range(relate_as_optional.left_storage, relate_as_optional.m_array_left.vptr()[id.index()]);
+			for(auto pos = vrange.first; pos != vrange.second; ++pos) {
+				if(relate_as_optional.m_right.vptr()[pos->index()] == target) return true;
+			}
+			return false;
+		}
+		template<typename T>
+		DCON_RELEASE_INLINE void thingyA_for_each_relate_as_non_optional_as_left(thingyA_id id, T&& func) const {
+			if(bool(id)) {
+				auto vrange = dcon::get_range(relate_as_non_optional.left_storage, relate_as_non_optional.m_array_left.vptr()[id.index()]);
+				std::for_each(vrange.first, vrange.second, func);
+			}
+		}
+		DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> thingyA_range_of_relate_as_non_optional_as_left(thingyA_id id) const {
+			if(bool(id)) {
+				auto vrange = dcon::get_range(relate_as_non_optional.left_storage, relate_as_non_optional.m_array_left.vptr()[id.index()]);
+				return std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*>(vrange.first, vrange.second);
+			} else {
+				return std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*>(nullptr, nullptr);
+			}
+		}
+		void thingyA_remove_all_relate_as_non_optional_as_left(thingyA_id id) noexcept {
+			auto rng = thingyA_range_of_relate_as_non_optional_as_left(id);
+			dcon::local_vector<relate_as_non_optional_id> temp(rng.first, rng.second);
+			std::for_each(temp.begin(), temp.end(), [t = this](relate_as_non_optional_id i) { t->relate_as_non_optional_set_left(i, thingyA_id()); });
+		}
+		template<typename T>
+		DCON_RELEASE_INLINE void thingyA_for_each_relate_as_non_optional(thingyA_id id, T&& func) const {
+			if(bool(id)) {
+				auto vrange = dcon::get_range(relate_as_non_optional.left_storage, relate_as_non_optional.m_array_left.vptr()[id.index()]);
+				std::for_each(vrange.first, vrange.second, func);
+			}
+		}
+		DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> thingyA_range_of_relate_as_non_optional(thingyA_id id) const {
+			if(bool(id)) {
+				auto vrange = dcon::get_range(relate_as_non_optional.left_storage, relate_as_non_optional.m_array_left.vptr()[id.index()]);
+				return std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*>(vrange.first, vrange.second);
+			} else {
+				return std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*>(nullptr, nullptr);
+			}
+		}
+		void thingyA_remove_all_relate_as_non_optional(thingyA_id id) noexcept {
+			auto rng = thingyA_range_of_relate_as_non_optional_as_left(id);
+			dcon::local_vector<relate_as_non_optional_id> temp(rng.first, rng.second);
+			std::for_each(temp.begin(), temp.end(), [t = this](relate_as_non_optional_id i) { t->relate_as_non_optional_set_left(i, thingyA_id()); });
+		}
+		template<typename T>
+		void thingyA_for_each_right_from_relate_as_non_optional(thingyA_id id, T&& func) const {
+			thingyA_for_each_relate_as_non_optional_as_left(id, [&](relate_as_non_optional_id i) {
+				func(relate_as_non_optional_get_right(i));
+			} );
+		}
+		bool thingyA_has_right_from_relate_as_non_optional(thingyA_id id, thingyB_id target) const {
+			auto vrange = dcon::get_range(relate_as_non_optional.left_storage, relate_as_non_optional.m_array_left.vptr()[id.index()]);
+			for(auto pos = vrange.first; pos != vrange.second; ++pos) {
+				if(relate_as_non_optional.m_right.vptr()[pos->index()] == target) return true;
+			}
+			return false;
+		}
 		DCON_RELEASE_INLINE bool thingyA_is_valid(thingyA_id id) const noexcept {
 			return bool(id) && uint32_t(id.index()) < thingyA.size_used;
 		}
@@ -1571,7 +2229,7 @@ namespace dcon {
 		void thingyB_remove_all_relate_in_array_as_right(thingyB_id id) noexcept {
 			auto rng = thingyB_range_of_relate_in_array_as_right(id);
 			dcon::local_vector<relate_in_array_id> temp(rng.first, rng.second);
-			std::for_each(temp.begin(), temp.end(), [t = this](relate_in_array_id i) { t->delete_relate_in_array(i); });
+			std::for_each(temp.begin(), temp.end(), [t = this](relate_in_array_id i) { t->relate_in_array_set_right(i, thingyB_id()); });
 		}
 		template<typename T>
 		DCON_RELEASE_INLINE void thingyB_for_each_relate_in_array(thingyB_id id, T&& func) const {
@@ -1591,7 +2249,7 @@ namespace dcon {
 		void thingyB_remove_all_relate_in_array(thingyB_id id) noexcept {
 			auto rng = thingyB_range_of_relate_in_array_as_right(id);
 			dcon::local_vector<relate_in_array_id> temp(rng.first, rng.second);
-			std::for_each(temp.begin(), temp.end(), [t = this](relate_in_array_id i) { t->delete_relate_in_array(i); });
+			std::for_each(temp.begin(), temp.end(), [t = this](relate_in_array_id i) { t->relate_in_array_set_right(i, thingyB_id()); });
 		}
 		template<typename T>
 		void thingyB_for_each_left_from_relate_in_array(thingyB_id id, T&& func) const {
@@ -1617,7 +2275,7 @@ namespace dcon {
 		void thingyB_remove_all_relate_in_list_as_right(thingyB_id id) noexcept {
 			dcon::local_vector<relate_in_list_id> temp;
 			thingyB_for_each_relate_in_list_as_right(id, [&](relate_in_list_id j) { temp.push_back(j); });
-			std::for_each(temp.begin(), temp.end(), [t = this](relate_in_list_id i) { t->delete_relate_in_list(i); });
+			std::for_each(temp.begin(), temp.end(), [t = this](relate_in_list_id i) { t->relate_in_list_set_right(i, thingyB_id()); });
 		}
 		template<typename T>
 		DCON_RELEASE_INLINE void thingyB_for_each_relate_in_list(thingyB_id id, T&& func) const {
@@ -1630,7 +2288,7 @@ namespace dcon {
 		void thingyB_remove_all_relate_in_list(thingyB_id id) noexcept {
 			dcon::local_vector<relate_in_list_id> temp;
 			thingyB_for_each_relate_in_list_as_right(id, [&](relate_in_list_id j) { temp.push_back(j); });
-			std::for_each(temp.begin(), temp.end(), [t = this](relate_in_list_id i) { t->delete_relate_in_list(i); });
+			std::for_each(temp.begin(), temp.end(), [t = this](relate_in_list_id i) { t->relate_in_list_set_right(i, thingyB_id()); });
 		}
 		template<typename T>
 		void thingyB_for_each_left_from_relate_in_list(thingyB_id id, T&& func) const {
@@ -1641,6 +2299,112 @@ namespace dcon {
 		bool thingyB_has_left_from_relate_in_list(thingyB_id id, thingyA_id target) const {
 			for(auto list_pos = relate_in_list.m_head_back_right.vptr()[id.index()]; bool(list_pos); list_pos = relate_in_list.m_link_right.vptr()[list_pos.index()].right) {
 				if(list_pos.index() == target.index()) return true;
+			}
+			return false;
+		}
+		template<typename T>
+		DCON_RELEASE_INLINE void thingyB_for_each_relate_as_optional_as_right(thingyB_id id, T&& func) const {
+			if(bool(id)) {
+				auto vrange = dcon::get_range(relate_as_optional.right_storage, relate_as_optional.m_array_right.vptr()[id.index()]);
+				std::for_each(vrange.first, vrange.second, func);
+			}
+		}
+		DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> thingyB_range_of_relate_as_optional_as_right(thingyB_id id) const {
+			if(bool(id)) {
+				auto vrange = dcon::get_range(relate_as_optional.right_storage, relate_as_optional.m_array_right.vptr()[id.index()]);
+				return std::pair<relate_as_optional_id const*, relate_as_optional_id const*>(vrange.first, vrange.second);
+			} else {
+				return std::pair<relate_as_optional_id const*, relate_as_optional_id const*>(nullptr, nullptr);
+			}
+		}
+		void thingyB_remove_all_relate_as_optional_as_right(thingyB_id id) noexcept {
+			auto rng = thingyB_range_of_relate_as_optional_as_right(id);
+			dcon::local_vector<relate_as_optional_id> temp(rng.first, rng.second);
+			std::for_each(temp.begin(), temp.end(), [t = this](relate_as_optional_id i) { t->relate_as_optional_set_right(i, thingyB_id()); });
+		}
+		template<typename T>
+		DCON_RELEASE_INLINE void thingyB_for_each_relate_as_optional(thingyB_id id, T&& func) const {
+			if(bool(id)) {
+				auto vrange = dcon::get_range(relate_as_optional.right_storage, relate_as_optional.m_array_right.vptr()[id.index()]);
+				std::for_each(vrange.first, vrange.second, func);
+			}
+		}
+		DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> thingyB_range_of_relate_as_optional(thingyB_id id) const {
+			if(bool(id)) {
+				auto vrange = dcon::get_range(relate_as_optional.right_storage, relate_as_optional.m_array_right.vptr()[id.index()]);
+				return std::pair<relate_as_optional_id const*, relate_as_optional_id const*>(vrange.first, vrange.second);
+			} else {
+				return std::pair<relate_as_optional_id const*, relate_as_optional_id const*>(nullptr, nullptr);
+			}
+		}
+		void thingyB_remove_all_relate_as_optional(thingyB_id id) noexcept {
+			auto rng = thingyB_range_of_relate_as_optional_as_right(id);
+			dcon::local_vector<relate_as_optional_id> temp(rng.first, rng.second);
+			std::for_each(temp.begin(), temp.end(), [t = this](relate_as_optional_id i) { t->relate_as_optional_set_right(i, thingyB_id()); });
+		}
+		template<typename T>
+		void thingyB_for_each_left_from_relate_as_optional(thingyB_id id, T&& func) const {
+			thingyB_for_each_relate_as_optional_as_right(id, [&](relate_as_optional_id i) {
+				func(relate_as_optional_get_left(i));
+			} );
+		}
+		bool thingyB_has_left_from_relate_as_optional(thingyB_id id, thingyA_id target) const {
+			auto vrange = dcon::get_range(relate_as_optional.right_storage, relate_as_optional.m_array_right.vptr()[id.index()]);
+			for(auto pos = vrange.first; pos != vrange.second; ++pos) {
+				if(relate_as_optional.m_left.vptr()[pos->index()] == target) return true;
+			}
+			return false;
+		}
+		template<typename T>
+		DCON_RELEASE_INLINE void thingyB_for_each_relate_as_non_optional_as_right(thingyB_id id, T&& func) const {
+			if(bool(id)) {
+				auto vrange = dcon::get_range(relate_as_non_optional.right_storage, relate_as_non_optional.m_array_right.vptr()[id.index()]);
+				std::for_each(vrange.first, vrange.second, func);
+			}
+		}
+		DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> thingyB_range_of_relate_as_non_optional_as_right(thingyB_id id) const {
+			if(bool(id)) {
+				auto vrange = dcon::get_range(relate_as_non_optional.right_storage, relate_as_non_optional.m_array_right.vptr()[id.index()]);
+				return std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*>(vrange.first, vrange.second);
+			} else {
+				return std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*>(nullptr, nullptr);
+			}
+		}
+		void thingyB_remove_all_relate_as_non_optional_as_right(thingyB_id id) noexcept {
+			auto rng = thingyB_range_of_relate_as_non_optional_as_right(id);
+			dcon::local_vector<relate_as_non_optional_id> temp(rng.first, rng.second);
+			std::for_each(temp.begin(), temp.end(), [t = this](relate_as_non_optional_id i) { t->relate_as_non_optional_set_right(i, thingyB_id()); });
+		}
+		template<typename T>
+		DCON_RELEASE_INLINE void thingyB_for_each_relate_as_non_optional(thingyB_id id, T&& func) const {
+			if(bool(id)) {
+				auto vrange = dcon::get_range(relate_as_non_optional.right_storage, relate_as_non_optional.m_array_right.vptr()[id.index()]);
+				std::for_each(vrange.first, vrange.second, func);
+			}
+		}
+		DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> thingyB_range_of_relate_as_non_optional(thingyB_id id) const {
+			if(bool(id)) {
+				auto vrange = dcon::get_range(relate_as_non_optional.right_storage, relate_as_non_optional.m_array_right.vptr()[id.index()]);
+				return std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*>(vrange.first, vrange.second);
+			} else {
+				return std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*>(nullptr, nullptr);
+			}
+		}
+		void thingyB_remove_all_relate_as_non_optional(thingyB_id id) noexcept {
+			auto rng = thingyB_range_of_relate_as_non_optional_as_right(id);
+			dcon::local_vector<relate_as_non_optional_id> temp(rng.first, rng.second);
+			std::for_each(temp.begin(), temp.end(), [t = this](relate_as_non_optional_id i) { t->relate_as_non_optional_set_right(i, thingyB_id()); });
+		}
+		template<typename T>
+		void thingyB_for_each_left_from_relate_as_non_optional(thingyB_id id, T&& func) const {
+			thingyB_for_each_relate_as_non_optional_as_right(id, [&](relate_as_non_optional_id i) {
+				func(relate_as_non_optional_get_left(i));
+			} );
+		}
+		bool thingyB_has_left_from_relate_as_non_optional(thingyB_id id, thingyA_id target) const {
+			auto vrange = dcon::get_range(relate_as_non_optional.right_storage, relate_as_non_optional.m_array_right.vptr()[id.index()]);
+			for(auto pos = vrange.first; pos != vrange.second; ++pos) {
+				if(relate_as_non_optional.m_left.vptr()[pos->index()] == target) return true;
 			}
 			return false;
 		}
@@ -1687,10 +2451,10 @@ namespace dcon {
 			if(bool(value)) {
 				if(relate_same_is_valid( relate_same_id(relate_same_id::value_base_t(value.index())) )) return false;
 				internal_move_relationship_relate_same(id, relate_same_id(relate_same_id::value_base_t(value.index())) );
+				return true;
 			} else {
-				delete_relate_same(id);
+				return false;
 			}
-			return true;
 		}
 		DCON_RELEASE_INLINE thingyA_id relate_same_get_right(relate_same_id id) const noexcept {
 			return relate_same.m_right.vptr()[id.index()];
@@ -1773,10 +2537,10 @@ namespace dcon {
 			if(bool(value)) {
 				if(relate_in_array_is_valid( relate_in_array_id(relate_in_array_id::value_base_t(value.index())) )) return false;
 				internal_move_relationship_relate_in_array(id, relate_in_array_id(relate_in_array_id::value_base_t(value.index())) );
+				return true;
 			} else {
-				delete_relate_in_array(id);
+				return false;
 			}
-			return true;
 		}
 		DCON_RELEASE_INLINE thingyB_id relate_in_array_get_right(relate_in_array_id id) const noexcept {
 			return relate_in_array.m_right.vptr()[id.index()];
@@ -1861,10 +2625,10 @@ namespace dcon {
 			if(bool(value)) {
 				if(relate_in_list_is_valid( relate_in_list_id(relate_in_list_id::value_base_t(value.index())) )) return false;
 				internal_move_relationship_relate_in_list(id, relate_in_list_id(relate_in_list_id::value_base_t(value.index())) );
+				return true;
 			} else {
-				delete_relate_in_list(id);
+				return false;
 			}
-			return true;
 		}
 		DCON_RELEASE_INLINE thingyB_id relate_in_list_get_right(relate_in_list_id id) const noexcept {
 			return relate_in_list.m_right.vptr()[id.index()];
@@ -2214,6 +2978,177 @@ namespace dcon {
 		
 		uint32_t many_many_size() const noexcept { return many_many.size_used; }
 
+		//
+		// Functions for relate_as_optional:
+		//
+		DCON_RELEASE_INLINE thingyA_id relate_as_optional_get_left(relate_as_optional_id id) const noexcept {
+			return relate_as_optional.m_left.vptr()[id.index()];
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> relate_as_optional_get_left(ve::contiguous_tags<relate_as_optional_id> id) const noexcept {
+			return ve::load(id, relate_as_optional.m_left.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> relate_as_optional_get_left(ve::partial_contiguous_tags<relate_as_optional_id> id) const noexcept {
+			return ve::load(id, relate_as_optional.m_left.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> relate_as_optional_get_left(ve::tagged_vector<relate_as_optional_id> id) const noexcept {
+			return ve::load(id, relate_as_optional.m_left.vptr());
+		}
+		#endif
+		private:
+		void internal_relate_as_optional_set_left(relate_as_optional_id id, thingyA_id value) noexcept {
+			if(auto old_value = relate_as_optional.m_left.vptr()[id.index()]; bool(old_value)) {
+				auto& vref = relate_as_optional.m_array_left.vptr()[old_value.index()];
+				dcon::remove_unique_item(relate_as_optional.left_storage, vref, id);
+			}
+			if(bool(value)) {
+				dcon::push_back(relate_as_optional.left_storage, relate_as_optional.m_array_left.vptr()[value.index()], id);
+			}
+			relate_as_optional.m_left.vptr()[id.index()] = value;
+		}
+		public:
+		void relate_as_optional_set_left(relate_as_optional_id id, thingyA_id value) noexcept {
+			if(!bool(value)) {
+				delete_relate_as_optional(id);
+				return;
+			}
+			internal_relate_as_optional_set_left(id, value);
+		}
+		bool relate_as_optional_try_set_left(relate_as_optional_id id, thingyA_id value) noexcept {
+			if(!bool(value)) {
+				return false;
+			}
+			internal_relate_as_optional_set_left(id, value);
+			return true;
+		}
+		DCON_RELEASE_INLINE thingyB_id relate_as_optional_get_right(relate_as_optional_id id) const noexcept {
+			return relate_as_optional.m_right.vptr()[id.index()];
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyB_id> relate_as_optional_get_right(ve::contiguous_tags<relate_as_optional_id> id) const noexcept {
+			return ve::load(id, relate_as_optional.m_right.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyB_id> relate_as_optional_get_right(ve::partial_contiguous_tags<relate_as_optional_id> id) const noexcept {
+			return ve::load(id, relate_as_optional.m_right.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyB_id> relate_as_optional_get_right(ve::tagged_vector<relate_as_optional_id> id) const noexcept {
+			return ve::load(id, relate_as_optional.m_right.vptr());
+		}
+		#endif
+		private:
+		void internal_relate_as_optional_set_right(relate_as_optional_id id, thingyB_id value) noexcept {
+			if(auto old_value = relate_as_optional.m_right.vptr()[id.index()]; bool(old_value)) {
+				auto& vref = relate_as_optional.m_array_right.vptr()[old_value.index()];
+				dcon::remove_unique_item(relate_as_optional.right_storage, vref, id);
+			}
+			if(bool(value)) {
+				dcon::push_back(relate_as_optional.right_storage, relate_as_optional.m_array_right.vptr()[value.index()], id);
+			}
+			relate_as_optional.m_right.vptr()[id.index()] = value;
+		}
+		public:
+		void relate_as_optional_set_right(relate_as_optional_id id, thingyB_id value) noexcept {
+			internal_relate_as_optional_set_right(id, value);
+		}
+		bool relate_as_optional_try_set_right(relate_as_optional_id id, thingyB_id value) noexcept {
+			internal_relate_as_optional_set_right(id, value);
+			return true;
+		}
+		DCON_RELEASE_INLINE bool relate_as_optional_is_valid(relate_as_optional_id id) const noexcept {
+			return bool(id) && uint32_t(id.index()) < relate_as_optional.size_used && relate_as_optional.m__index.vptr()[id.index()] == id;
+		}
+		
+		uint32_t relate_as_optional_size() const noexcept { return relate_as_optional.size_used; }
+
+		//
+		// Functions for relate_as_non_optional:
+		//
+		DCON_RELEASE_INLINE thingyA_id relate_as_non_optional_get_left(relate_as_non_optional_id id) const noexcept {
+			return relate_as_non_optional.m_left.vptr()[id.index()];
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> relate_as_non_optional_get_left(ve::contiguous_tags<relate_as_non_optional_id> id) const noexcept {
+			return ve::load(id, relate_as_non_optional.m_left.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> relate_as_non_optional_get_left(ve::partial_contiguous_tags<relate_as_non_optional_id> id) const noexcept {
+			return ve::load(id, relate_as_non_optional.m_left.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyA_id> relate_as_non_optional_get_left(ve::tagged_vector<relate_as_non_optional_id> id) const noexcept {
+			return ve::load(id, relate_as_non_optional.m_left.vptr());
+		}
+		#endif
+		private:
+		void internal_relate_as_non_optional_set_left(relate_as_non_optional_id id, thingyA_id value) noexcept {
+			if(auto old_value = relate_as_non_optional.m_left.vptr()[id.index()]; bool(old_value)) {
+				auto& vref = relate_as_non_optional.m_array_left.vptr()[old_value.index()];
+				dcon::remove_unique_item(relate_as_non_optional.left_storage, vref, id);
+			}
+			if(bool(value)) {
+				dcon::push_back(relate_as_non_optional.left_storage, relate_as_non_optional.m_array_left.vptr()[value.index()], id);
+			}
+			relate_as_non_optional.m_left.vptr()[id.index()] = value;
+		}
+		public:
+		void relate_as_non_optional_set_left(relate_as_non_optional_id id, thingyA_id value) noexcept {
+			if(!bool(value)) {
+				delete_relate_as_non_optional(id);
+				return;
+			}
+			internal_relate_as_non_optional_set_left(id, value);
+		}
+		bool relate_as_non_optional_try_set_left(relate_as_non_optional_id id, thingyA_id value) noexcept {
+			if(!bool(value)) {
+				return false;
+			}
+			internal_relate_as_non_optional_set_left(id, value);
+			return true;
+		}
+		DCON_RELEASE_INLINE thingyB_id relate_as_non_optional_get_right(relate_as_non_optional_id id) const noexcept {
+			return relate_as_non_optional.m_right.vptr()[id.index()];
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyB_id> relate_as_non_optional_get_right(ve::contiguous_tags<relate_as_non_optional_id> id) const noexcept {
+			return ve::load(id, relate_as_non_optional.m_right.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyB_id> relate_as_non_optional_get_right(ve::partial_contiguous_tags<relate_as_non_optional_id> id) const noexcept {
+			return ve::load(id, relate_as_non_optional.m_right.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<thingyB_id> relate_as_non_optional_get_right(ve::tagged_vector<relate_as_non_optional_id> id) const noexcept {
+			return ve::load(id, relate_as_non_optional.m_right.vptr());
+		}
+		#endif
+		private:
+		void internal_relate_as_non_optional_set_right(relate_as_non_optional_id id, thingyB_id value) noexcept {
+			if(auto old_value = relate_as_non_optional.m_right.vptr()[id.index()]; bool(old_value)) {
+				auto& vref = relate_as_non_optional.m_array_right.vptr()[old_value.index()];
+				dcon::remove_unique_item(relate_as_non_optional.right_storage, vref, id);
+			}
+			if(bool(value)) {
+				dcon::push_back(relate_as_non_optional.right_storage, relate_as_non_optional.m_array_right.vptr()[value.index()], id);
+			}
+			relate_as_non_optional.m_right.vptr()[id.index()] = value;
+		}
+		public:
+		void relate_as_non_optional_set_right(relate_as_non_optional_id id, thingyB_id value) noexcept {
+			if(!bool(value)) {
+				delete_relate_as_non_optional(id);
+				return;
+			}
+			internal_relate_as_non_optional_set_right(id, value);
+		}
+		bool relate_as_non_optional_try_set_right(relate_as_non_optional_id id, thingyB_id value) noexcept {
+			if(!bool(value)) {
+				return false;
+			}
+			internal_relate_as_non_optional_set_right(id, value);
+			return true;
+		}
+		DCON_RELEASE_INLINE bool relate_as_non_optional_is_valid(relate_as_non_optional_id id) const noexcept {
+			return bool(id) && uint32_t(id.index()) < relate_as_non_optional.size_used && relate_as_non_optional.m__index.vptr()[id.index()] == id;
+		}
+		
+		uint32_t relate_as_non_optional_size() const noexcept { return relate_as_non_optional.size_used; }
+
 
 		//
 		// container pop_back for thingyA
@@ -2227,6 +3162,8 @@ namespace dcon {
 			relate_in_array.size_used = thingyA.size_used - 1;
 			delete_relate_in_list(relate_in_list_id(relate_in_list_id::value_base_t(id_removed.index())));
 			relate_in_list.size_used = thingyA.size_used - 1;
+			thingyA_remove_all_relate_as_optional_as_left(id_removed);
+			thingyA_remove_all_relate_as_non_optional_as_left(id_removed);
 			thingyA.m_some_value.vptr()[id_removed.index()] = int32_t{};
 			--thingyA.size_used;
 		}
@@ -2246,6 +3183,8 @@ namespace dcon {
 				relate_same_resize(std::min(new_size, relate_same.size_used));
 				relate_in_array_resize(std::min(new_size, relate_in_array.size_used));
 				relate_in_list_resize(std::min(new_size, relate_in_list.size_used));
+				relate_as_optional_resize(0);
+				relate_as_non_optional_resize(0);
 			} else if(new_size > old_size) {
 			}
 			thingyA.size_used = new_size;
@@ -2284,6 +3223,16 @@ namespace dcon {
 			delete_relate_in_list(relate_in_list_id(relate_in_list_id::value_base_t(id_removed.index())));
 			internal_move_relationship_relate_in_list(relate_in_list_id(relate_in_list_id::value_base_t(last_id.index())), relate_in_list_id(relate_in_list_id::value_base_t(id_removed.index())));
 			relate_in_list.size_used = thingyA.size_used - 1;
+			thingyA_remove_all_relate_as_optional_as_left(id_removed);
+			thingyA_for_each_relate_as_optional_as_left(last_id, [t = this, id_removed](relate_as_optional_id i){ t->relate_as_optional.m_left.vptr()[i.index()] = id_removed; });
+			relate_as_optional.left_storage.release(relate_as_optional.m_array_left.vptr()[id_removed.index()]);
+			relate_as_optional.m_array_left.vptr()[id_removed.index()] = std::move(relate_as_optional.m_array_left.vptr()[last_id.index()]);
+			relate_as_optional.m_array_left.vptr()[last_id.index()] = std::numeric_limits<dcon::stable_mk_2_tag>::max();
+			thingyA_remove_all_relate_as_non_optional_as_left(id_removed);
+			thingyA_for_each_relate_as_non_optional_as_left(last_id, [t = this, id_removed](relate_as_non_optional_id i){ t->relate_as_non_optional.m_left.vptr()[i.index()] = id_removed; });
+			relate_as_non_optional.left_storage.release(relate_as_non_optional.m_array_left.vptr()[id_removed.index()]);
+			relate_as_non_optional.m_array_left.vptr()[id_removed.index()] = std::move(relate_as_non_optional.m_array_left.vptr()[last_id.index()]);
+			relate_as_non_optional.m_array_left.vptr()[last_id.index()] = std::numeric_limits<dcon::stable_mk_2_tag>::max();
 			thingyA.m_some_value.vptr()[id_removed.index()] = std::move(thingyA.m_some_value.vptr()[last_id.index()]);
 			thingyA.m_some_value.vptr()[last_id.index()] = int32_t{};
 			--thingyA.size_used;
@@ -2301,6 +3250,8 @@ namespace dcon {
 			}
 			thingyB_remove_all_relate_in_array_as_right(id_removed);
 			thingyB_remove_all_relate_in_list_as_right(id_removed);
+			thingyB_remove_all_relate_as_optional_as_right(id_removed);
+			thingyB_remove_all_relate_as_non_optional_as_right(id_removed);
 			thingyB.m_some_value.vptr()[id_removed.index()] = int32_t{};
 		}
 		
@@ -2346,6 +3297,8 @@ namespace dcon {
 				std::fill_n(thingyB.m_some_value.vptr() + new_size, old_size - new_size, int32_t{});
 				relate_in_array_resize(0);
 				relate_in_list_resize(0);
+				relate_as_optional_resize(0);
+				relate_as_non_optional_resize(0);
 			} else if(new_size > old_size) {
 				thingyB.first_free = thingyB_id();
 				int32_t i = int32_t(1200 - 1);
@@ -2418,7 +3371,9 @@ namespace dcon {
 		// container try create relationship for relate_same
 		//
 		relate_same_id try_create_relate_same(thingyA_id left_p, thingyA_id right_p) {
+			if(!bool(left_p)) return relate_same_id();
 			if(relate_same_is_valid(relate_same_id(relate_same_id::value_base_t(left_p.index())))) return relate_same_id();
+			if(!bool(right_p)) return relate_same_id();
 			relate_same_id new_id(relate_same_id::value_base_t(left_p.index()));
 			if(relate_same.size_used < uint32_t(left_p.value)) relate_same_resize(uint32_t(left_p.value));
 			internal_relate_same_set_right(new_id, right_p);
@@ -2496,7 +3451,9 @@ namespace dcon {
 		// container try create relationship for relate_in_array
 		//
 		relate_in_array_id try_create_relate_in_array(thingyA_id left_p, thingyB_id right_p) {
+			if(!bool(left_p)) return relate_in_array_id();
 			if(relate_in_array_is_valid(relate_in_array_id(relate_in_array_id::value_base_t(left_p.index())))) return relate_in_array_id();
+			if(!bool(right_p)) return relate_in_array_id();
 			relate_in_array_id new_id(relate_in_array_id::value_base_t(left_p.index()));
 			if(relate_in_array.size_used < uint32_t(left_p.value)) relate_in_array_resize(uint32_t(left_p.value));
 			internal_relate_in_array_set_right(new_id, right_p);
@@ -2579,7 +3536,9 @@ namespace dcon {
 		// container try create relationship for relate_in_list
 		//
 		relate_in_list_id try_create_relate_in_list(thingyA_id left_p, thingyB_id right_p) {
+			if(!bool(left_p)) return relate_in_list_id();
 			if(relate_in_list_is_valid(relate_in_list_id(relate_in_list_id::value_base_t(left_p.index())))) return relate_in_list_id();
+			if(!bool(right_p)) return relate_in_list_id();
 			relate_in_list_id new_id(relate_in_list_id::value_base_t(left_p.index()));
 			if(relate_in_list.size_used < uint32_t(left_p.value)) relate_in_list_resize(uint32_t(left_p.value));
 			internal_relate_in_list_set_right(new_id, right_p);
@@ -2668,6 +3627,13 @@ namespace dcon {
 		// container try create relationship for many_many
 		//
 		many_many_id try_create_many_many(thingyA_id A_p, thingyA_id B_p, thingyA_id C_p, thingyA_id D_p, thingyA_id E_p, thingyA_id F_p, thingyA_id ignore_p) {
+			if(!bool(A_p)) return many_many_id();
+			if(!bool(B_p)) return many_many_id();
+			if(!bool(C_p)) return many_many_id();
+			if(!bool(D_p)) return many_many_id();
+			if(!bool(E_p)) return many_many_id();
+			if(!bool(F_p)) return many_many_id();
+			if(!bool(ignore_p)) return many_many_id();
 			if(many_many.hashm_joint.contains(many_many.to_joint_keydata(A_p, B_p, C_p, D_p, E_p, F_p))) return many_many_id();
 			#ifndef DCON_USE_EXCEPTIONS
 			if(!bool(many_many.first_free)) std::abort();
@@ -2719,6 +3685,197 @@ namespace dcon {
 			return new_id;
 		}
 		
+		//
+		// container delete for relate_as_optional
+		//
+		void delete_relate_as_optional(relate_as_optional_id id_removed) {
+			if(!relate_as_optional_is_valid(id_removed)) return;
+			relate_as_optional.m__index.vptr()[id_removed.index()] = relate_as_optional.first_free;
+			relate_as_optional.first_free = id_removed;
+			if(int32_t(relate_as_optional.size_used) - 1 == id_removed.index()) {
+				for( ; relate_as_optional.size_used > 0 && relate_as_optional.m__index.vptr()[relate_as_optional.size_used - 1] != relate_as_optional_id(relate_as_optional_id::value_base_t(relate_as_optional.size_used - 1));  --relate_as_optional.size_used) ;
+			}
+			internal_relate_as_optional_set_left(id_removed, thingyA_id());
+			internal_relate_as_optional_set_right(id_removed, thingyB_id());
+		}
+		
+		//
+		// container resize for relate_as_optional
+		//
+		void relate_as_optional_resize(uint32_t new_size) {
+			#ifndef DCON_USE_EXCEPTIONS
+			if(new_size > 400) std::abort();
+			#else
+			if(new_size > 400) throw dcon::out_of_space{};
+			#endif
+			const uint32_t old_size = relate_as_optional.size_used;
+			if(new_size < old_size) {
+				relate_as_optional.first_free = relate_as_optional_id();
+				int32_t i = int32_t(400 - 1);
+				for(; i >= int32_t(new_size); --i) {
+					relate_as_optional.m__index.vptr()[i] = relate_as_optional.first_free;
+					relate_as_optional.first_free = relate_as_optional_id(relate_as_optional_id::value_base_t(i));
+				}
+				for(; i >= 0; --i) {
+					if(relate_as_optional.m__index.vptr()[i] != relate_as_optional_id(relate_as_optional_id::value_base_t(i))) {
+						relate_as_optional.m__index.vptr()[i] = relate_as_optional.first_free;
+						relate_as_optional.first_free = relate_as_optional_id(relate_as_optional_id::value_base_t(i));
+					}
+				}
+				std::fill_n(relate_as_optional.m_left.vptr() + 0, old_size, thingyA_id{});
+				std::for_each(relate_as_optional.m_array_left.vptr() + 0, relate_as_optional.m_array_left.vptr() + 0 + thingyA.size_used, [t = this](dcon::stable_mk_2_tag& i){ t->relate_as_optional.left_storage.release(i); });
+				std::fill_n(relate_as_optional.m_right.vptr() + 0, old_size, thingyB_id{});
+				std::for_each(relate_as_optional.m_array_right.vptr() + 0, relate_as_optional.m_array_right.vptr() + 0 + thingyB.size_used, [t = this](dcon::stable_mk_2_tag& i){ t->relate_as_optional.right_storage.release(i); });
+			} else if(new_size > old_size) {
+				relate_as_optional.first_free = relate_as_optional_id();
+				int32_t i = int32_t(400 - 1);
+				for(; i >= int32_t(old_size); --i) {
+					relate_as_optional.m__index.vptr()[i] = relate_as_optional.first_free;
+					relate_as_optional.first_free = relate_as_optional_id(relate_as_optional_id::value_base_t(i));
+				}
+				for(; i >= 0; --i) {
+					if(relate_as_optional.m__index.vptr()[i] != relate_as_optional_id(relate_as_optional_id::value_base_t(i))) {
+						relate_as_optional.m__index.vptr()[i] = relate_as_optional.first_free;
+						relate_as_optional.first_free = relate_as_optional_id(relate_as_optional_id::value_base_t(i));
+					}
+				}
+			}
+			relate_as_optional.size_used = new_size;
+		}
+		
+		//
+		// container try create relationship for relate_as_optional
+		//
+		relate_as_optional_id try_create_relate_as_optional(thingyA_id left_p, thingyB_id right_p) {
+			if(!bool(left_p)) return relate_as_optional_id();
+			#ifndef DCON_USE_EXCEPTIONS
+			if(!bool(relate_as_optional.first_free)) std::abort();
+			#else
+			if(!bool(relate_as_optional.first_free)) throw dcon::out_of_space{};
+			#endif
+			relate_as_optional_id new_id = relate_as_optional.first_free;
+			relate_as_optional.first_free = relate_as_optional.m__index.vptr()[relate_as_optional.first_free.index()];
+			relate_as_optional.m__index.vptr()[new_id.index()] = new_id;
+			relate_as_optional.size_used = std::max(relate_as_optional.size_used, uint32_t(new_id.index() + 1));
+			internal_relate_as_optional_set_left(new_id, left_p);
+			internal_relate_as_optional_set_right(new_id, right_p);
+			return new_id;
+		}
+		
+		//
+		// container force create relationship for relate_as_optional
+		//
+		relate_as_optional_id force_create_relate_as_optional(thingyA_id left_p, thingyB_id right_p) {
+			#ifndef DCON_USE_EXCEPTIONS
+			if(!bool(relate_as_optional.first_free)) std::abort();
+			#else
+			if(!bool(relate_as_optional.first_free)) throw dcon::out_of_space{};
+			#endif
+			relate_as_optional_id new_id = relate_as_optional.first_free;
+			relate_as_optional.first_free = relate_as_optional.m__index.vptr()[relate_as_optional.first_free.index()];
+			relate_as_optional.m__index.vptr()[new_id.index()] = new_id;
+			relate_as_optional.size_used = std::max(relate_as_optional.size_used, uint32_t(new_id.index() + 1));
+			internal_relate_as_optional_set_left(new_id, left_p);
+			internal_relate_as_optional_set_right(new_id, right_p);
+			return new_id;
+		}
+		
+		//
+		// container delete for relate_as_non_optional
+		//
+		void delete_relate_as_non_optional(relate_as_non_optional_id id_removed) {
+			if(!relate_as_non_optional_is_valid(id_removed)) return;
+			relate_as_non_optional.m__index.vptr()[id_removed.index()] = relate_as_non_optional.first_free;
+			relate_as_non_optional.first_free = id_removed;
+			if(int32_t(relate_as_non_optional.size_used) - 1 == id_removed.index()) {
+				for( ; relate_as_non_optional.size_used > 0 && relate_as_non_optional.m__index.vptr()[relate_as_non_optional.size_used - 1] != relate_as_non_optional_id(relate_as_non_optional_id::value_base_t(relate_as_non_optional.size_used - 1));  --relate_as_non_optional.size_used) ;
+			}
+			internal_relate_as_non_optional_set_left(id_removed, thingyA_id());
+			internal_relate_as_non_optional_set_right(id_removed, thingyB_id());
+		}
+		
+		//
+		// container resize for relate_as_non_optional
+		//
+		void relate_as_non_optional_resize(uint32_t new_size) {
+			#ifndef DCON_USE_EXCEPTIONS
+			if(new_size > 400) std::abort();
+			#else
+			if(new_size > 400) throw dcon::out_of_space{};
+			#endif
+			const uint32_t old_size = relate_as_non_optional.size_used;
+			if(new_size < old_size) {
+				relate_as_non_optional.first_free = relate_as_non_optional_id();
+				int32_t i = int32_t(400 - 1);
+				for(; i >= int32_t(new_size); --i) {
+					relate_as_non_optional.m__index.vptr()[i] = relate_as_non_optional.first_free;
+					relate_as_non_optional.first_free = relate_as_non_optional_id(relate_as_non_optional_id::value_base_t(i));
+				}
+				for(; i >= 0; --i) {
+					if(relate_as_non_optional.m__index.vptr()[i] != relate_as_non_optional_id(relate_as_non_optional_id::value_base_t(i))) {
+						relate_as_non_optional.m__index.vptr()[i] = relate_as_non_optional.first_free;
+						relate_as_non_optional.first_free = relate_as_non_optional_id(relate_as_non_optional_id::value_base_t(i));
+					}
+				}
+				std::fill_n(relate_as_non_optional.m_left.vptr() + 0, old_size, thingyA_id{});
+				std::for_each(relate_as_non_optional.m_array_left.vptr() + 0, relate_as_non_optional.m_array_left.vptr() + 0 + thingyA.size_used, [t = this](dcon::stable_mk_2_tag& i){ t->relate_as_non_optional.left_storage.release(i); });
+				std::fill_n(relate_as_non_optional.m_right.vptr() + 0, old_size, thingyB_id{});
+				std::for_each(relate_as_non_optional.m_array_right.vptr() + 0, relate_as_non_optional.m_array_right.vptr() + 0 + thingyB.size_used, [t = this](dcon::stable_mk_2_tag& i){ t->relate_as_non_optional.right_storage.release(i); });
+			} else if(new_size > old_size) {
+				relate_as_non_optional.first_free = relate_as_non_optional_id();
+				int32_t i = int32_t(400 - 1);
+				for(; i >= int32_t(old_size); --i) {
+					relate_as_non_optional.m__index.vptr()[i] = relate_as_non_optional.first_free;
+					relate_as_non_optional.first_free = relate_as_non_optional_id(relate_as_non_optional_id::value_base_t(i));
+				}
+				for(; i >= 0; --i) {
+					if(relate_as_non_optional.m__index.vptr()[i] != relate_as_non_optional_id(relate_as_non_optional_id::value_base_t(i))) {
+						relate_as_non_optional.m__index.vptr()[i] = relate_as_non_optional.first_free;
+						relate_as_non_optional.first_free = relate_as_non_optional_id(relate_as_non_optional_id::value_base_t(i));
+					}
+				}
+			}
+			relate_as_non_optional.size_used = new_size;
+		}
+		
+		//
+		// container try create relationship for relate_as_non_optional
+		//
+		relate_as_non_optional_id try_create_relate_as_non_optional(thingyA_id left_p, thingyB_id right_p) {
+			if(!bool(left_p)) return relate_as_non_optional_id();
+			if(!bool(right_p)) return relate_as_non_optional_id();
+			#ifndef DCON_USE_EXCEPTIONS
+			if(!bool(relate_as_non_optional.first_free)) std::abort();
+			#else
+			if(!bool(relate_as_non_optional.first_free)) throw dcon::out_of_space{};
+			#endif
+			relate_as_non_optional_id new_id = relate_as_non_optional.first_free;
+			relate_as_non_optional.first_free = relate_as_non_optional.m__index.vptr()[relate_as_non_optional.first_free.index()];
+			relate_as_non_optional.m__index.vptr()[new_id.index()] = new_id;
+			relate_as_non_optional.size_used = std::max(relate_as_non_optional.size_used, uint32_t(new_id.index() + 1));
+			internal_relate_as_non_optional_set_left(new_id, left_p);
+			internal_relate_as_non_optional_set_right(new_id, right_p);
+			return new_id;
+		}
+		
+		//
+		// container force create relationship for relate_as_non_optional
+		//
+		relate_as_non_optional_id force_create_relate_as_non_optional(thingyA_id left_p, thingyB_id right_p) {
+			#ifndef DCON_USE_EXCEPTIONS
+			if(!bool(relate_as_non_optional.first_free)) std::abort();
+			#else
+			if(!bool(relate_as_non_optional.first_free)) throw dcon::out_of_space{};
+			#endif
+			relate_as_non_optional_id new_id = relate_as_non_optional.first_free;
+			relate_as_non_optional.first_free = relate_as_non_optional.m__index.vptr()[relate_as_non_optional.first_free.index()];
+			relate_as_non_optional.m__index.vptr()[new_id.index()] = new_id;
+			relate_as_non_optional.size_used = std::max(relate_as_non_optional.size_used, uint32_t(new_id.index() + 1));
+			internal_relate_as_non_optional_set_left(new_id, left_p);
+			internal_relate_as_non_optional_set_right(new_id, right_p);
+			return new_id;
+		}
+		
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_thingyA(T&& func) {
 			for(uint32_t i = 0; i < thingyA.size_used; ++i) {
@@ -2767,6 +3924,22 @@ namespace dcon {
 			}
 		}
 		
+		template <typename T>
+		DCON_RELEASE_INLINE void for_each_relate_as_optional(T&& func) {
+			for(uint32_t i = 0; i < relate_as_optional.size_used; ++i) {
+				relate_as_optional_id tmp(relate_as_optional_id::value_base_t(i));
+				if(relate_as_optional.m__index.vptr()[tmp.index()] == tmp) func(tmp);
+			}
+		}
+		
+		template <typename T>
+		DCON_RELEASE_INLINE void for_each_relate_as_non_optional(T&& func) {
+			for(uint32_t i = 0; i < relate_as_non_optional.size_used; ++i) {
+				relate_as_non_optional_id tmp(relate_as_non_optional_id::value_base_t(i));
+				if(relate_as_non_optional.m__index.vptr()[tmp.index()] == tmp) func(tmp);
+			}
+		}
+		
 
 
 		void reset() {
@@ -2774,6 +3947,8 @@ namespace dcon {
 			relate_in_array_resize(0);
 			relate_in_list_resize(0);
 			many_many_resize(0);
+			relate_as_optional_resize(0);
+			relate_as_non_optional_resize(0);
 			thingyA_resize(0);
 			thingyB_resize(0);
 		}
@@ -2887,6 +4062,38 @@ namespace dcon {
 			ve::execute_parallel_exact(many_many.size_used, functor);
 		}
 #endif
+		ve::vectorizable_buffer<float, relate_as_optional_id> relate_as_optional_make_vectorizable_float_buffer() const noexcept {
+			return ve::vectorizable_buffer<float, relate_as_optional_id>(relate_as_optional.size_used);
+		}
+		ve::vectorizable_buffer<int32_t, relate_as_optional_id> relate_as_optional_make_vectorizable_int_buffer() const noexcept {
+			return ve::vectorizable_buffer<int32_t, relate_as_optional_id>(relate_as_optional.size_used);
+		}
+		template<typename F>
+		DCON_RELEASE_INLINE void execute_serial_over_relate_as_optional(F&& functor) {
+			ve::execute_serial(relate_as_optional.size_used, functor);
+		}
+#ifndef VE_NO_TBB
+		template<typename F>
+		DCON_RELEASE_INLINE void execute_parallel_over_relate_as_optional(F&& functor) {
+			ve::execute_parallel_exact(relate_as_optional.size_used, functor);
+		}
+#endif
+		ve::vectorizable_buffer<float, relate_as_non_optional_id> relate_as_non_optional_make_vectorizable_float_buffer() const noexcept {
+			return ve::vectorizable_buffer<float, relate_as_non_optional_id>(relate_as_non_optional.size_used);
+		}
+		ve::vectorizable_buffer<int32_t, relate_as_non_optional_id> relate_as_non_optional_make_vectorizable_int_buffer() const noexcept {
+			return ve::vectorizable_buffer<int32_t, relate_as_non_optional_id>(relate_as_non_optional.size_used);
+		}
+		template<typename F>
+		DCON_RELEASE_INLINE void execute_serial_over_relate_as_non_optional(F&& functor) {
+			ve::execute_serial(relate_as_non_optional.size_used, functor);
+		}
+#ifndef VE_NO_TBB
+		template<typename F>
+		DCON_RELEASE_INLINE void execute_parallel_over_relate_as_non_optional(F&& functor) {
+			ve::execute_parallel_exact(relate_as_non_optional.size_used, functor);
+		}
+#endif
 		#endif
 
 		load_record serialize_entire_container_record() const noexcept {
@@ -2914,6 +4121,14 @@ namespace dcon {
 			result.many_many_F = true;
 			result.many_many_ignore = true;
 			result.many_many__index = true;
+			result.relate_as_optional = true;
+			result.relate_as_optional_left = true;
+			result.relate_as_optional_right = true;
+			result.relate_as_optional__index = true;
+			result.relate_as_non_optional = true;
+			result.relate_as_non_optional_left = true;
+			result.relate_as_non_optional_right = true;
+			result.relate_as_non_optional__index = true;
 			return result;
 		}
 		
@@ -3029,6 +4244,50 @@ namespace dcon {
 				dcon::record_header iheader(0, "uint16_t", "many_many", "_index");
 				total_size += iheader.serialize_size();
 				total_size += sizeof(many_many_id) * many_many.size_used;
+			}
+			if(serialize_selection.relate_as_optional) {
+				dcon::record_header header(0, "uint32_t", "relate_as_optional", "$size");
+				total_size += header.serialize_size();
+				total_size += sizeof(uint32_t);
+				if(serialize_selection.relate_as_optional_left) {
+					dcon::record_header iheader(0, "uint16_t", "relate_as_optional", "left");
+					total_size += iheader.serialize_size();
+					total_size += sizeof(thingyA_id) * relate_as_optional.size_used;
+				}
+				if(serialize_selection.relate_as_optional_right) {
+					dcon::record_header iheader(0, "uint16_t", "relate_as_optional", "right");
+					total_size += iheader.serialize_size();
+					total_size += sizeof(thingyB_id) * relate_as_optional.size_used;
+				}
+				dcon::record_header headerb(0, "$", "relate_as_optional", "$index_end");
+				total_size += headerb.serialize_size();
+			}
+			if(serialize_selection.relate_as_optional__index) {
+				dcon::record_header iheader(0, "uint16_t", "relate_as_optional", "_index");
+				total_size += iheader.serialize_size();
+				total_size += sizeof(relate_as_optional_id) * relate_as_optional.size_used;
+			}
+			if(serialize_selection.relate_as_non_optional) {
+				dcon::record_header header(0, "uint32_t", "relate_as_non_optional", "$size");
+				total_size += header.serialize_size();
+				total_size += sizeof(uint32_t);
+				if(serialize_selection.relate_as_non_optional_left) {
+					dcon::record_header iheader(0, "uint16_t", "relate_as_non_optional", "left");
+					total_size += iheader.serialize_size();
+					total_size += sizeof(thingyA_id) * relate_as_non_optional.size_used;
+				}
+				if(serialize_selection.relate_as_non_optional_right) {
+					dcon::record_header iheader(0, "uint16_t", "relate_as_non_optional", "right");
+					total_size += iheader.serialize_size();
+					total_size += sizeof(thingyB_id) * relate_as_non_optional.size_used;
+				}
+				dcon::record_header headerb(0, "$", "relate_as_non_optional", "$index_end");
+				total_size += headerb.serialize_size();
+			}
+			if(serialize_selection.relate_as_non_optional__index) {
+				dcon::record_header iheader(0, "uint16_t", "relate_as_non_optional", "_index");
+				total_size += iheader.serialize_size();
+				total_size += sizeof(relate_as_non_optional_id) * relate_as_non_optional.size_used;
 			}
 			return total_size;
 		}
@@ -3164,6 +4423,58 @@ namespace dcon {
 				header.serialize(output_buffer);
 				std::memcpy(reinterpret_cast<many_many_id*>(output_buffer), many_many.m__index.vptr(), sizeof(many_many_id) * many_many.size_used);
 				output_buffer += sizeof(many_many_id) * many_many.size_used;
+			}
+			if(serialize_selection.relate_as_optional) {
+				dcon::record_header header(sizeof(uint32_t), "uint32_t", "relate_as_optional", "$size");
+				header.serialize(output_buffer);
+				*(reinterpret_cast<uint32_t*>(output_buffer)) = relate_as_optional.size_used;
+				output_buffer += sizeof(uint32_t);
+		 {
+					dcon::record_header iheader(sizeof(thingyA_id) * relate_as_optional.size_used, "uint16_t", "relate_as_optional", "left");
+					iheader.serialize(output_buffer);
+					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), relate_as_optional.m_left.vptr(), sizeof(thingyA_id) * relate_as_optional.size_used);
+					output_buffer += sizeof(thingyA_id) * relate_as_optional.size_used;
+				}
+		 {
+					dcon::record_header iheader(sizeof(thingyB_id) * relate_as_optional.size_used, "uint16_t", "relate_as_optional", "right");
+					iheader.serialize(output_buffer);
+					std::memcpy(reinterpret_cast<thingyB_id*>(output_buffer), relate_as_optional.m_right.vptr(), sizeof(thingyB_id) * relate_as_optional.size_used);
+					output_buffer += sizeof(thingyB_id) * relate_as_optional.size_used;
+				}
+				dcon::record_header headerb(0, "$", "relate_as_optional", "$index_end");
+				headerb.serialize(output_buffer);
+			}
+			if(serialize_selection.relate_as_optional__index) {
+				dcon::record_header header(sizeof(relate_as_optional_id) * relate_as_optional.size_used, "uint16_t", "relate_as_optional", "_index");
+				header.serialize(output_buffer);
+				std::memcpy(reinterpret_cast<relate_as_optional_id*>(output_buffer), relate_as_optional.m__index.vptr(), sizeof(relate_as_optional_id) * relate_as_optional.size_used);
+				output_buffer += sizeof(relate_as_optional_id) * relate_as_optional.size_used;
+			}
+			if(serialize_selection.relate_as_non_optional) {
+				dcon::record_header header(sizeof(uint32_t), "uint32_t", "relate_as_non_optional", "$size");
+				header.serialize(output_buffer);
+				*(reinterpret_cast<uint32_t*>(output_buffer)) = relate_as_non_optional.size_used;
+				output_buffer += sizeof(uint32_t);
+		 {
+					dcon::record_header iheader(sizeof(thingyA_id) * relate_as_non_optional.size_used, "uint16_t", "relate_as_non_optional", "left");
+					iheader.serialize(output_buffer);
+					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), relate_as_non_optional.m_left.vptr(), sizeof(thingyA_id) * relate_as_non_optional.size_used);
+					output_buffer += sizeof(thingyA_id) * relate_as_non_optional.size_used;
+				}
+		 {
+					dcon::record_header iheader(sizeof(thingyB_id) * relate_as_non_optional.size_used, "uint16_t", "relate_as_non_optional", "right");
+					iheader.serialize(output_buffer);
+					std::memcpy(reinterpret_cast<thingyB_id*>(output_buffer), relate_as_non_optional.m_right.vptr(), sizeof(thingyB_id) * relate_as_non_optional.size_used);
+					output_buffer += sizeof(thingyB_id) * relate_as_non_optional.size_used;
+				}
+				dcon::record_header headerb(0, "$", "relate_as_non_optional", "$index_end");
+				headerb.serialize(output_buffer);
+			}
+			if(serialize_selection.relate_as_non_optional__index) {
+				dcon::record_header header(sizeof(relate_as_non_optional_id) * relate_as_non_optional.size_used, "uint16_t", "relate_as_non_optional", "_index");
+				header.serialize(output_buffer);
+				std::memcpy(reinterpret_cast<relate_as_non_optional_id*>(output_buffer), relate_as_non_optional.m__index.vptr(), sizeof(relate_as_non_optional_id) * relate_as_non_optional.size_used);
+				output_buffer += sizeof(relate_as_non_optional_id) * relate_as_non_optional.size_used;
 			}
 		}
 		
@@ -3677,6 +4988,188 @@ namespace dcon {
 										delete_many_many(it->second);
 									}
 									many_many.hashm_joint.insert_or_assign(key_dat, this_key);
+								}
+							}
+						}
+					} else
+					if(header.is_object("relate_as_optional")) {
+						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+							if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_as_optional.size_used) {
+								relate_as_optional_resize(0);
+							}
+							relate_as_optional_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+							serialize_selection.relate_as_optional = true;
+						}
+						else if(header.is_property("__index")) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(relate_as_optional.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_optional.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.relate_as_optional__index = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									relate_as_optional.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_optional__index = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									relate_as_optional.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_optional__index = true;
+							}
+							if(serialize_selection.relate_as_optional__index == true) {
+								relate_as_optional.size_used = 0;
+								relate_as_optional.first_free = relate_as_optional_id();
+								for(int32_t j = 400 - 1; j > 0; --j) {
+									if(relate_as_optional.m__index.vptr()[j] != relate_as_optional_id(uint16_t(j))) {
+										relate_as_optional.m__index.vptr()[j] = relate_as_optional.first_free;
+										relate_as_optional.first_free = relate_as_optional_id(uint16_t(j));
+									} else {
+										relate_as_optional.size_used = std::max(relate_as_optional.size_used, uint32_t(j));
+									}
+								}
+							}
+						}
+						else if(header.is_property("left")) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(relate_as_optional.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_optional.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.relate_as_optional_left = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									relate_as_optional.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_optional_left = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									relate_as_optional.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_optional_left = true;
+							}
+						}
+						else if(header.is_property("right")) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(relate_as_optional.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_optional.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.relate_as_optional_right = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									relate_as_optional.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_optional_right = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									relate_as_optional.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_optional_right = true;
+							}
+						}
+						else if(header.is_property("$index_end")) {
+							if(serialize_selection.relate_as_optional_left == true) {
+								for(uint32_t i = 0; i < relate_as_optional.size_used; ++i) {
+									auto tmp = relate_as_optional.m_left.vptr()[i];
+									relate_as_optional.m_left.vptr()[i] = thingyA_id();
+									internal_relate_as_optional_set_left(relate_as_optional_id(relate_as_optional_id::value_base_t(i)), tmp);
+								}
+							}
+							if(serialize_selection.relate_as_optional_right == true) {
+								for(uint32_t i = 0; i < relate_as_optional.size_used; ++i) {
+									auto tmp = relate_as_optional.m_right.vptr()[i];
+									relate_as_optional.m_right.vptr()[i] = thingyB_id();
+									internal_relate_as_optional_set_right(relate_as_optional_id(relate_as_optional_id::value_base_t(i)), tmp);
+								}
+							}
+						}
+					} else
+					if(header.is_object("relate_as_non_optional")) {
+						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+							if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_as_non_optional.size_used) {
+								relate_as_non_optional_resize(0);
+							}
+							relate_as_non_optional_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+							serialize_selection.relate_as_non_optional = true;
+						}
+						else if(header.is_property("__index")) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(relate_as_non_optional.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_non_optional.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.relate_as_non_optional__index = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									relate_as_non_optional.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_non_optional__index = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									relate_as_non_optional.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_non_optional__index = true;
+							}
+							if(serialize_selection.relate_as_non_optional__index == true) {
+								relate_as_non_optional.size_used = 0;
+								relate_as_non_optional.first_free = relate_as_non_optional_id();
+								for(int32_t j = 400 - 1; j > 0; --j) {
+									if(relate_as_non_optional.m__index.vptr()[j] != relate_as_non_optional_id(uint16_t(j))) {
+										relate_as_non_optional.m__index.vptr()[j] = relate_as_non_optional.first_free;
+										relate_as_non_optional.first_free = relate_as_non_optional_id(uint16_t(j));
+									} else {
+										relate_as_non_optional.size_used = std::max(relate_as_non_optional.size_used, uint32_t(j));
+									}
+								}
+							}
+						}
+						else if(header.is_property("left")) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(relate_as_non_optional.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_non_optional.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.relate_as_non_optional_left = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									relate_as_non_optional.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_non_optional_left = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									relate_as_non_optional.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_non_optional_left = true;
+							}
+						}
+						else if(header.is_property("right")) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(relate_as_non_optional.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_non_optional.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.relate_as_non_optional_right = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									relate_as_non_optional.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_non_optional_right = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									relate_as_non_optional.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_non_optional_right = true;
+							}
+						}
+						else if(header.is_property("$index_end")) {
+							if(serialize_selection.relate_as_non_optional_left == true) {
+								for(uint32_t i = 0; i < relate_as_non_optional.size_used; ++i) {
+									auto tmp = relate_as_non_optional.m_left.vptr()[i];
+									relate_as_non_optional.m_left.vptr()[i] = thingyA_id();
+									internal_relate_as_non_optional_set_left(relate_as_non_optional_id(relate_as_non_optional_id::value_base_t(i)), tmp);
+								}
+							}
+							if(serialize_selection.relate_as_non_optional_right == true) {
+								for(uint32_t i = 0; i < relate_as_non_optional.size_used; ++i) {
+									auto tmp = relate_as_non_optional.m_right.vptr()[i];
+									relate_as_non_optional.m_right.vptr()[i] = thingyB_id();
+									internal_relate_as_non_optional_set_right(relate_as_non_optional_id(relate_as_non_optional_id::value_base_t(i)), tmp);
 								}
 							}
 						}
@@ -4199,6 +5692,188 @@ namespace dcon {
 								}
 							}
 						}
+					} else
+					if(header.is_object("relate_as_optional") && mask.relate_as_optional) {
+						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+							if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_as_optional.size_used) {
+								relate_as_optional_resize(0);
+							}
+							relate_as_optional_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+							serialize_selection.relate_as_optional = true;
+						}
+						else if(header.is_property("__index") && mask.relate_as_optional__index) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(relate_as_optional.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_optional.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.relate_as_optional__index = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									relate_as_optional.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_optional__index = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									relate_as_optional.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_optional__index = true;
+							}
+							if(serialize_selection.relate_as_optional__index == true) {
+								relate_as_optional.size_used = 0;
+								relate_as_optional.first_free = relate_as_optional_id();
+								for(int32_t j = 400 - 1; j > 0; --j) {
+									if(relate_as_optional.m__index.vptr()[j] != relate_as_optional_id(uint16_t(j))) {
+										relate_as_optional.m__index.vptr()[j] = relate_as_optional.first_free;
+										relate_as_optional.first_free = relate_as_optional_id(uint16_t(j));
+									} else {
+										relate_as_optional.size_used = std::max(relate_as_optional.size_used, uint32_t(j));
+									}
+								}
+							}
+						}
+						else if(header.is_property("left") && mask.relate_as_optional_left) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(relate_as_optional.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_optional.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.relate_as_optional_left = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									relate_as_optional.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_optional_left = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									relate_as_optional.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_optional_left = true;
+							}
+						}
+						else if(header.is_property("right") && mask.relate_as_optional_right) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(relate_as_optional.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_optional.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.relate_as_optional_right = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									relate_as_optional.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_optional_right = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									relate_as_optional.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_optional_right = true;
+							}
+						}
+						else if(header.is_property("$index_end") && mask.relate_as_optional) {
+							if(serialize_selection.relate_as_optional_left == true) {
+								for(uint32_t i = 0; i < relate_as_optional.size_used; ++i) {
+									auto tmp = relate_as_optional.m_left.vptr()[i];
+									relate_as_optional.m_left.vptr()[i] = thingyA_id();
+									internal_relate_as_optional_set_left(relate_as_optional_id(relate_as_optional_id::value_base_t(i)), tmp);
+								}
+							}
+							if(serialize_selection.relate_as_optional_right == true) {
+								for(uint32_t i = 0; i < relate_as_optional.size_used; ++i) {
+									auto tmp = relate_as_optional.m_right.vptr()[i];
+									relate_as_optional.m_right.vptr()[i] = thingyB_id();
+									internal_relate_as_optional_set_right(relate_as_optional_id(relate_as_optional_id::value_base_t(i)), tmp);
+								}
+							}
+						}
+					} else
+					if(header.is_object("relate_as_non_optional") && mask.relate_as_non_optional) {
+						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+							if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_as_non_optional.size_used) {
+								relate_as_non_optional_resize(0);
+							}
+							relate_as_non_optional_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+							serialize_selection.relate_as_non_optional = true;
+						}
+						else if(header.is_property("__index") && mask.relate_as_non_optional__index) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(relate_as_non_optional.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_non_optional.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.relate_as_non_optional__index = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									relate_as_non_optional.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_non_optional__index = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									relate_as_non_optional.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_non_optional__index = true;
+							}
+							if(serialize_selection.relate_as_non_optional__index == true) {
+								relate_as_non_optional.size_used = 0;
+								relate_as_non_optional.first_free = relate_as_non_optional_id();
+								for(int32_t j = 400 - 1; j > 0; --j) {
+									if(relate_as_non_optional.m__index.vptr()[j] != relate_as_non_optional_id(uint16_t(j))) {
+										relate_as_non_optional.m__index.vptr()[j] = relate_as_non_optional.first_free;
+										relate_as_non_optional.first_free = relate_as_non_optional_id(uint16_t(j));
+									} else {
+										relate_as_non_optional.size_used = std::max(relate_as_non_optional.size_used, uint32_t(j));
+									}
+								}
+							}
+						}
+						else if(header.is_property("left") && mask.relate_as_non_optional_left) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(relate_as_non_optional.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_non_optional.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.relate_as_non_optional_left = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									relate_as_non_optional.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_non_optional_left = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									relate_as_non_optional.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_non_optional_left = true;
+							}
+						}
+						else if(header.is_property("right") && mask.relate_as_non_optional_right) {
+							if(header.is_type("uint16_t")) {
+								std::memcpy(relate_as_non_optional.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_non_optional.size_used) * sizeof(uint16_t), header.record_size));
+								serialize_selection.relate_as_non_optional_right = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									relate_as_non_optional.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_non_optional_right = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									relate_as_non_optional.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.relate_as_non_optional_right = true;
+							}
+						}
+						else if(header.is_property("$index_end") && mask.relate_as_non_optional) {
+							if(serialize_selection.relate_as_non_optional_left == true) {
+								for(uint32_t i = 0; i < relate_as_non_optional.size_used; ++i) {
+									auto tmp = relate_as_non_optional.m_left.vptr()[i];
+									relate_as_non_optional.m_left.vptr()[i] = thingyA_id();
+									internal_relate_as_non_optional_set_left(relate_as_non_optional_id(relate_as_non_optional_id::value_base_t(i)), tmp);
+								}
+							}
+							if(serialize_selection.relate_as_non_optional_right == true) {
+								for(uint32_t i = 0; i < relate_as_non_optional.size_used; ++i) {
+									auto tmp = relate_as_non_optional.m_right.vptr()[i];
+									relate_as_non_optional.m_right.vptr()[i] = thingyB_id();
+									internal_relate_as_non_optional_set_right(relate_as_non_optional_id(relate_as_non_optional_id::value_base_t(i)), tmp);
+								}
+							}
+						}
 					}
 				}
 				input_buffer += header.record_size;
@@ -4235,6 +5910,9 @@ namespace dcon {
 	DCON_RELEASE_INLINE thingyB_fat_id thingyA_fat_id::get_right_from_relate_in_array() const noexcept {
 		return thingyB_fat_id(container, container.thingyA_get_right_from_relate_in_array(id));
 	}
+	DCON_RELEASE_INLINE void thingyA_fat_id::set_right_from_relate_in_array(thingyB_id v) const noexcept {
+		container.thingyA_set_right_from_relate_in_array(id, v);
+	}
 	DCON_RELEASE_INLINE relate_in_list_fat_id thingyA_fat_id::get_relate_in_list_as_left() const noexcept {
 		return relate_in_list_fat_id(container, container.thingyA_get_relate_in_list_as_left(id));
 	}
@@ -4249,6 +5927,63 @@ namespace dcon {
 	}
 	DCON_RELEASE_INLINE thingyB_fat_id thingyA_fat_id::get_right_from_relate_in_list() const noexcept {
 		return thingyB_fat_id(container, container.thingyA_get_right_from_relate_in_list(id));
+	}
+	DCON_RELEASE_INLINE void thingyA_fat_id::set_right_from_relate_in_list(thingyB_id v) const noexcept {
+		container.thingyA_set_right_from_relate_in_list(id, v);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyA_fat_id::for_each_relate_as_optional_as_left(T&& func) const {
+		container.thingyA_for_each_relate_as_optional_as_left(id, [&, t = this](relate_as_optional_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> thingyA_fat_id::range_of_relate_as_optional_as_left() const {
+		return container.thingyA_range_of_relate_as_optional_as_left(id);
+	}
+	DCON_RELEASE_INLINE void thingyA_fat_id::remove_all_relate_as_optional_as_left() const noexcept {
+		container.thingyA_remove_all_relate_as_optional_as_left(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyA_fat_id::for_each_relate_as_optional(T&& func) const {
+		container.thingyA_for_each_relate_as_optional(id, [&, t = this](relate_as_optional_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> thingyA_fat_id::range_of_relate_as_optional() const {
+		return container.thingyA_range_of_relate_as_optional(id);
+	}
+	DCON_RELEASE_INLINE void thingyA_fat_id::remove_all_relate_as_optional() const noexcept {
+		container.thingyA_remove_all_relate_as_optional(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyA_fat_id::for_each_right_from_relate_as_optional(T&& func) const {
+		container.thingyA_for_each_right_from_relate_as_optional(id, [&, t = this](thingyB_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE bool thingyA_fat_id::has_right_from_relate_as_optional(thingyB_id target) const {
+		return container.thingyA_has_right_from_relate_as_optional(id, target);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyA_fat_id::for_each_relate_as_non_optional_as_left(T&& func) const {
+		container.thingyA_for_each_relate_as_non_optional_as_left(id, [&, t = this](relate_as_non_optional_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> thingyA_fat_id::range_of_relate_as_non_optional_as_left() const {
+		return container.thingyA_range_of_relate_as_non_optional_as_left(id);
+	}
+	DCON_RELEASE_INLINE void thingyA_fat_id::remove_all_relate_as_non_optional_as_left() const noexcept {
+		container.thingyA_remove_all_relate_as_non_optional_as_left(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyA_fat_id::for_each_relate_as_non_optional(T&& func) const {
+		container.thingyA_for_each_relate_as_non_optional(id, [&, t = this](relate_as_non_optional_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> thingyA_fat_id::range_of_relate_as_non_optional() const {
+		return container.thingyA_range_of_relate_as_non_optional(id);
+	}
+	DCON_RELEASE_INLINE void thingyA_fat_id::remove_all_relate_as_non_optional() const noexcept {
+		container.thingyA_remove_all_relate_as_non_optional(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyA_fat_id::for_each_right_from_relate_as_non_optional(T&& func) const {
+		container.thingyA_for_each_right_from_relate_as_non_optional(id, [&, t = this](thingyB_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE bool thingyA_fat_id::has_right_from_relate_as_non_optional(thingyB_id target) const {
+		return container.thingyA_has_right_from_relate_as_non_optional(id, target);
 	}
 	DCON_RELEASE_INLINE bool thingyA_fat_id::is_valid() const noexcept {
 		return container.thingyA_is_valid(id);
@@ -4277,6 +6012,48 @@ namespace dcon {
 	}
 	DCON_RELEASE_INLINE thingyB_const_fat_id thingyA_const_fat_id::get_right_from_relate_in_list() const noexcept {
 		return thingyB_const_fat_id(container, container.thingyA_get_right_from_relate_in_list(id));
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyA_const_fat_id::for_each_relate_as_optional_as_left(T&& func) const {
+		container.thingyA_for_each_relate_as_optional_as_left(id, [&, t = this](relate_as_optional_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> thingyA_const_fat_id::range_of_relate_as_optional_as_left() const {
+		return container.thingyA_range_of_relate_as_optional_as_left(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyA_const_fat_id::for_each_relate_as_optional(T&& func) const {
+		container.thingyA_for_each_relate_as_optional(id, [&, t = this](relate_as_optional_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> thingyA_const_fat_id::range_of_relate_as_optional() const {
+		return container.thingyA_range_of_relate_as_optional(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyA_const_fat_id::for_each_right_from_relate_as_optional(T&& func) const {
+		container.thingyA_for_each_right_from_relate_as_optional(id, [&, t = this](thingyB_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE bool thingyA_const_fat_id::has_right_from_relate_as_optional(thingyB_id target) const {
+		return container.thingyA_has_right_from_relate_as_optional(id, target);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyA_const_fat_id::for_each_relate_as_non_optional_as_left(T&& func) const {
+		container.thingyA_for_each_relate_as_non_optional_as_left(id, [&, t = this](relate_as_non_optional_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> thingyA_const_fat_id::range_of_relate_as_non_optional_as_left() const {
+		return container.thingyA_range_of_relate_as_non_optional_as_left(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyA_const_fat_id::for_each_relate_as_non_optional(T&& func) const {
+		container.thingyA_for_each_relate_as_non_optional(id, [&, t = this](relate_as_non_optional_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> thingyA_const_fat_id::range_of_relate_as_non_optional() const {
+		return container.thingyA_range_of_relate_as_non_optional(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyA_const_fat_id::for_each_right_from_relate_as_non_optional(T&& func) const {
+		container.thingyA_for_each_right_from_relate_as_non_optional(id, [&, t = this](thingyB_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE bool thingyA_const_fat_id::has_right_from_relate_as_non_optional(thingyB_id target) const {
+		return container.thingyA_has_right_from_relate_as_non_optional(id, target);
 	}
 	DCON_RELEASE_INLINE bool thingyA_const_fat_id::is_valid() const noexcept {
 		return container.thingyA_is_valid(id);
@@ -4336,6 +6113,60 @@ namespace dcon {
 	DCON_RELEASE_INLINE bool thingyB_fat_id::has_left_from_relate_in_list(thingyA_id target) const {
 		return container.thingyB_has_left_from_relate_in_list(id, target);
 	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_fat_id::for_each_relate_as_optional_as_right(T&& func) const {
+		container.thingyB_for_each_relate_as_optional_as_right(id, [&, t = this](relate_as_optional_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> thingyB_fat_id::range_of_relate_as_optional_as_right() const {
+		return container.thingyB_range_of_relate_as_optional_as_right(id);
+	}
+	DCON_RELEASE_INLINE void thingyB_fat_id::remove_all_relate_as_optional_as_right() const noexcept {
+		container.thingyB_remove_all_relate_as_optional_as_right(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_fat_id::for_each_relate_as_optional(T&& func) const {
+		container.thingyB_for_each_relate_as_optional(id, [&, t = this](relate_as_optional_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> thingyB_fat_id::range_of_relate_as_optional() const {
+		return container.thingyB_range_of_relate_as_optional(id);
+	}
+	DCON_RELEASE_INLINE void thingyB_fat_id::remove_all_relate_as_optional() const noexcept {
+		container.thingyB_remove_all_relate_as_optional(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_fat_id::for_each_left_from_relate_as_optional(T&& func) const {
+		container.thingyB_for_each_left_from_relate_as_optional(id, [&, t = this](thingyA_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE bool thingyB_fat_id::has_left_from_relate_as_optional(thingyA_id target) const {
+		return container.thingyB_has_left_from_relate_as_optional(id, target);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_fat_id::for_each_relate_as_non_optional_as_right(T&& func) const {
+		container.thingyB_for_each_relate_as_non_optional_as_right(id, [&, t = this](relate_as_non_optional_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> thingyB_fat_id::range_of_relate_as_non_optional_as_right() const {
+		return container.thingyB_range_of_relate_as_non_optional_as_right(id);
+	}
+	DCON_RELEASE_INLINE void thingyB_fat_id::remove_all_relate_as_non_optional_as_right() const noexcept {
+		container.thingyB_remove_all_relate_as_non_optional_as_right(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_fat_id::for_each_relate_as_non_optional(T&& func) const {
+		container.thingyB_for_each_relate_as_non_optional(id, [&, t = this](relate_as_non_optional_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> thingyB_fat_id::range_of_relate_as_non_optional() const {
+		return container.thingyB_range_of_relate_as_non_optional(id);
+	}
+	DCON_RELEASE_INLINE void thingyB_fat_id::remove_all_relate_as_non_optional() const noexcept {
+		container.thingyB_remove_all_relate_as_non_optional(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_fat_id::for_each_left_from_relate_as_non_optional(T&& func) const {
+		container.thingyB_for_each_left_from_relate_as_non_optional(id, [&, t = this](thingyA_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE bool thingyB_fat_id::has_left_from_relate_as_non_optional(thingyA_id target) const {
+		return container.thingyB_has_left_from_relate_as_non_optional(id, target);
+	}
 	DCON_RELEASE_INLINE bool thingyB_fat_id::is_valid() const noexcept {
 		return container.thingyB_is_valid(id);
 	}
@@ -4378,6 +6209,48 @@ namespace dcon {
 	}
 	DCON_RELEASE_INLINE bool thingyB_const_fat_id::has_left_from_relate_in_list(thingyA_id target) const {
 		return container.thingyB_has_left_from_relate_in_list(id, target);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_const_fat_id::for_each_relate_as_optional_as_right(T&& func) const {
+		container.thingyB_for_each_relate_as_optional_as_right(id, [&, t = this](relate_as_optional_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> thingyB_const_fat_id::range_of_relate_as_optional_as_right() const {
+		return container.thingyB_range_of_relate_as_optional_as_right(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_const_fat_id::for_each_relate_as_optional(T&& func) const {
+		container.thingyB_for_each_relate_as_optional(id, [&, t = this](relate_as_optional_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> thingyB_const_fat_id::range_of_relate_as_optional() const {
+		return container.thingyB_range_of_relate_as_optional(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_const_fat_id::for_each_left_from_relate_as_optional(T&& func) const {
+		container.thingyB_for_each_left_from_relate_as_optional(id, [&, t = this](thingyA_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE bool thingyB_const_fat_id::has_left_from_relate_as_optional(thingyA_id target) const {
+		return container.thingyB_has_left_from_relate_as_optional(id, target);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_const_fat_id::for_each_relate_as_non_optional_as_right(T&& func) const {
+		container.thingyB_for_each_relate_as_non_optional_as_right(id, [&, t = this](relate_as_non_optional_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> thingyB_const_fat_id::range_of_relate_as_non_optional_as_right() const {
+		return container.thingyB_range_of_relate_as_non_optional_as_right(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_const_fat_id::for_each_relate_as_non_optional(T&& func) const {
+		container.thingyB_for_each_relate_as_non_optional(id, [&, t = this](relate_as_non_optional_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> thingyB_const_fat_id::range_of_relate_as_non_optional() const {
+		return container.thingyB_range_of_relate_as_non_optional(id);
+	}
+	template<typename T>
+	DCON_RELEASE_INLINE void thingyB_const_fat_id::for_each_left_from_relate_as_non_optional(T&& func) const {
+		container.thingyB_for_each_left_from_relate_as_non_optional(id, [&, t = this](thingyA_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE bool thingyB_const_fat_id::has_left_from_relate_as_non_optional(thingyA_id target) const {
+		return container.thingyB_has_left_from_relate_as_non_optional(id, target);
 	}
 	DCON_RELEASE_INLINE bool thingyB_const_fat_id::is_valid() const noexcept {
 		return container.thingyB_is_valid(id);
@@ -4569,6 +6442,70 @@ namespace dcon {
 	}
 	DCON_RELEASE_INLINE bool many_many_const_fat_id::is_valid() const noexcept {
 		return container.many_many_is_valid(id);
+	}
+	
+	DCON_RELEASE_INLINE thingyA_fat_id relate_as_optional_fat_id::get_left() const noexcept {
+		return thingyA_fat_id(container, container.relate_as_optional_get_left(id));
+	}
+	DCON_RELEASE_INLINE void relate_as_optional_fat_id::set_left(thingyA_id val) const noexcept {
+		container.relate_as_optional_set_left(id, val);
+	}
+	DCON_RELEASE_INLINE bool relate_as_optional_fat_id::try_set_left(thingyA_id val) const noexcept {
+		return container.relate_as_optional_try_set_left(id, val);
+	}
+	DCON_RELEASE_INLINE thingyB_fat_id relate_as_optional_fat_id::get_right() const noexcept {
+		return thingyB_fat_id(container, container.relate_as_optional_get_right(id));
+	}
+	DCON_RELEASE_INLINE void relate_as_optional_fat_id::set_right(thingyB_id val) const noexcept {
+		container.relate_as_optional_set_right(id, val);
+	}
+	DCON_RELEASE_INLINE bool relate_as_optional_fat_id::try_set_right(thingyB_id val) const noexcept {
+		return container.relate_as_optional_try_set_right(id, val);
+	}
+	DCON_RELEASE_INLINE bool relate_as_optional_fat_id::is_valid() const noexcept {
+		return container.relate_as_optional_is_valid(id);
+	}
+	
+	DCON_RELEASE_INLINE thingyA_const_fat_id relate_as_optional_const_fat_id::get_left() const noexcept {
+		return thingyA_const_fat_id(container, container.relate_as_optional_get_left(id));
+	}
+	DCON_RELEASE_INLINE thingyB_const_fat_id relate_as_optional_const_fat_id::get_right() const noexcept {
+		return thingyB_const_fat_id(container, container.relate_as_optional_get_right(id));
+	}
+	DCON_RELEASE_INLINE bool relate_as_optional_const_fat_id::is_valid() const noexcept {
+		return container.relate_as_optional_is_valid(id);
+	}
+	
+	DCON_RELEASE_INLINE thingyA_fat_id relate_as_non_optional_fat_id::get_left() const noexcept {
+		return thingyA_fat_id(container, container.relate_as_non_optional_get_left(id));
+	}
+	DCON_RELEASE_INLINE void relate_as_non_optional_fat_id::set_left(thingyA_id val) const noexcept {
+		container.relate_as_non_optional_set_left(id, val);
+	}
+	DCON_RELEASE_INLINE bool relate_as_non_optional_fat_id::try_set_left(thingyA_id val) const noexcept {
+		return container.relate_as_non_optional_try_set_left(id, val);
+	}
+	DCON_RELEASE_INLINE thingyB_fat_id relate_as_non_optional_fat_id::get_right() const noexcept {
+		return thingyB_fat_id(container, container.relate_as_non_optional_get_right(id));
+	}
+	DCON_RELEASE_INLINE void relate_as_non_optional_fat_id::set_right(thingyB_id val) const noexcept {
+		container.relate_as_non_optional_set_right(id, val);
+	}
+	DCON_RELEASE_INLINE bool relate_as_non_optional_fat_id::try_set_right(thingyB_id val) const noexcept {
+		return container.relate_as_non_optional_try_set_right(id, val);
+	}
+	DCON_RELEASE_INLINE bool relate_as_non_optional_fat_id::is_valid() const noexcept {
+		return container.relate_as_non_optional_is_valid(id);
+	}
+	
+	DCON_RELEASE_INLINE thingyA_const_fat_id relate_as_non_optional_const_fat_id::get_left() const noexcept {
+		return thingyA_const_fat_id(container, container.relate_as_non_optional_get_left(id));
+	}
+	DCON_RELEASE_INLINE thingyB_const_fat_id relate_as_non_optional_const_fat_id::get_right() const noexcept {
+		return thingyB_const_fat_id(container, container.relate_as_non_optional_get_right(id));
+	}
+	DCON_RELEASE_INLINE bool relate_as_non_optional_const_fat_id::is_valid() const noexcept {
+		return container.relate_as_non_optional_is_valid(id);
 	}
 	
 }

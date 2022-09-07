@@ -447,5 +447,72 @@ TEST_CASE("many many relation test", "[relationships_tests]") {
 	REQUIRE(r3.is_valid() == false);
 	REQUIRE(ptr->get_many_many_by_joint(o1, o2, o1, o3, o1, o2) == r5);
 
+	REQUIRE(r5.try_set_B(o3));
+	REQUIRE(ptr->get_many_many_by_joint(o1, o3, o1, o3, o1, o2) == r5);
+	REQUIRE(ptr->get_many_many_by_joint(o1, o3, o1, o3, o1, o2) == r5);
+
+	REQUIRE(!r4.try_set_F(o2));
+
 	REQUIRE(r5.get_ignore() == o3);
+
+	r4.set_F(o2);
+	REQUIRE(r4.get_F() == o2);
+	REQUIRE(!r1.is_valid());
+	REQUIRE(ptr->get_many_many_by_joint(o1, o2, o1, o3, o3, o2) == r4);
+}
+
+TEST_CASE("non optional behavior (vs optional)", "[relationships_tests]") {
+
+	auto ptr = std::make_unique< dcon::data_container >();
+
+	auto o1 = fatten(*ptr, ptr->create_thingyA());
+	auto o2 = fatten(*ptr, ptr->create_thingyA());
+	auto o3 = fatten(*ptr, ptr->create_thingyA());
+	auto o4 = fatten(*ptr, ptr->create_thingyA());
+
+	auto p1 = fatten(*ptr, ptr->create_thingyB());
+	auto p2 = fatten(*ptr, ptr->create_thingyB());
+	auto p3 = fatten(*ptr, ptr->create_thingyB());
+	auto p4 = fatten(*ptr, ptr->create_thingyB());
+
+	auto r1 = fatten(*ptr, ptr->try_create_relate_as_non_optional(o1, p4));
+	auto r2 = fatten(*ptr, ptr->try_create_relate_as_non_optional(o2, p3));
+	auto r3 = fatten(*ptr, ptr->try_create_relate_as_non_optional(o3, p1));
+	auto r4 = fatten(*ptr, ptr->try_create_relate_as_non_optional(o1, dcon::thingyB_id()));
+
+	REQUIRE(!bool(r4));
+	p1.remove_all_relate_as_non_optional();
+	REQUIRE(!r3.is_valid());
+	r2.set_right(dcon::thingyB_id());
+	REQUIRE(!r2.is_valid());
+	ptr->delete_thingyB(p4);
+	REQUIRE(!r1.is_valid());
+}
+
+TEST_CASE("optional behavior (vs non optional)", "[relationships_tests]") {
+
+	auto ptr = std::make_unique< dcon::data_container >();
+
+	auto o1 = fatten(*ptr, ptr->create_thingyA());
+	auto o2 = fatten(*ptr, ptr->create_thingyA());
+	auto o3 = fatten(*ptr, ptr->create_thingyA());
+	auto o4 = fatten(*ptr, ptr->create_thingyA());
+
+	auto p1 = fatten(*ptr, ptr->create_thingyB());
+	auto p2 = fatten(*ptr, ptr->create_thingyB());
+	auto p3 = fatten(*ptr, ptr->create_thingyB());
+	auto p4 = fatten(*ptr, ptr->create_thingyB());
+
+	auto r1 = fatten(*ptr, ptr->try_create_relate_as_optional(o1, p4));
+	auto r2 = fatten(*ptr, ptr->try_create_relate_as_optional(o2, p3));
+	auto r3 = fatten(*ptr, ptr->try_create_relate_as_optional(o3, p1));
+	auto r4 = fatten(*ptr, ptr->try_create_relate_as_optional(o1, dcon::thingyB_id()));
+
+	REQUIRE(bool(r4));
+	p1.remove_all_relate_as_non_optional();
+	REQUIRE(r3.is_valid());
+	r2.set_right(dcon::thingyB_id());
+	REQUIRE(r2.is_valid());
+	ptr->delete_thingyB(p4);
+	REQUIRE(r1.is_valid());
 }

@@ -732,6 +732,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE dummy_rel_fat_id get_dummy_rel() const noexcept;
 		DCON_RELEASE_INLINE void remove_dummy_rel() const noexcept;
 		DCON_RELEASE_INLINE thingy2_fat_id get_right_from_dummy_rel() const noexcept;
+		DCON_RELEASE_INLINE void set_right_from_dummy_rel(thingy2_id v) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 	
 	};
@@ -878,6 +879,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE dummy_rel_fat_id get_dummy_rel() const noexcept;
 		DCON_RELEASE_INLINE void remove_dummy_rel() const noexcept;
 		DCON_RELEASE_INLINE thingy_fat_id get_left_from_dummy_rel() const noexcept;
+		DCON_RELEASE_INLINE void set_left_from_dummy_rel(thingy_id v) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 	
 	};
@@ -1563,7 +1565,7 @@ namespace dcon {
 		#endif
 		DCON_RELEASE_INLINE void thingy_remove_dummy_rel_as_left(thingy_id id) noexcept {
 			if(dummy_rel_is_valid(dummy_rel_id(dummy_rel_id::value_base_t(id.index())))) {
-				delete_dummy_rel(dummy_rel_id(dummy_rel_id::value_base_t(id.index())));
+				dummy_rel_set_left(dummy_rel_id(dummy_rel_id::value_base_t(id.index())), thingy_id());
 			}
 		}
 		DCON_RELEASE_INLINE dummy_rel_id thingy_get_dummy_rel(thingy_id id) const noexcept {
@@ -1582,7 +1584,7 @@ namespace dcon {
 		#endif
 		DCON_RELEASE_INLINE void thingy_remove_dummy_rel(thingy_id id) noexcept {
 			if(dummy_rel_is_valid(dummy_rel_id(dummy_rel_id::value_base_t(id.index())))) {
-				delete_dummy_rel(dummy_rel_id(dummy_rel_id::value_base_t(id.index())));
+				dummy_rel_set_left(dummy_rel_id(dummy_rel_id::value_base_t(id.index())), thingy_id());
 			}
 		}
 		DCON_RELEASE_INLINE thingy2_id thingy_get_right_from_dummy_rel(thingy_id ref_id) const {
@@ -1599,6 +1601,9 @@ namespace dcon {
 			return dummy_rel_get_right(ve::tagged_vector<dummy_rel_id>(ref_id, std::true_type{}));
 		}
 		#endif
+		void thingy_set_right_from_dummy_rel(thingy_id ref_id, thingy2_id val) {
+			dummy_rel_set_right(dummy_rel_id(dummy_rel_id::value_base_t(ref_id.index())), val);
+		}
 		DCON_RELEASE_INLINE bool thingy_is_valid(thingy_id id) const noexcept {
 			return bool(id) && uint32_t(id.index()) < thingy.size_used;
 		}
@@ -1829,7 +1834,7 @@ namespace dcon {
 		#endif
 		DCON_RELEASE_INLINE void thingy2_remove_dummy_rel_as_right(thingy2_id id) noexcept {
 			if(auto backid = dummy_rel.m_link_back_right.vptr()[id.index()]; bool(backid)) {
-				delete_dummy_rel(backid);
+				dummy_rel_set_right(backid, thingy2_id());
 			}
 		}
 		DCON_RELEASE_INLINE dummy_rel_id thingy2_get_dummy_rel(thingy2_id id) const noexcept {
@@ -1848,7 +1853,7 @@ namespace dcon {
 		#endif
 		DCON_RELEASE_INLINE void thingy2_remove_dummy_rel(thingy2_id id) noexcept {
 			if(auto backid = dummy_rel.m_link_back_right.vptr()[id.index()]; bool(backid)) {
-				delete_dummy_rel(backid);
+				dummy_rel_set_right(backid, thingy2_id());
 			}
 		}
 		thingy_id thingy2_get_left_from_dummy_rel(thingy2_id id) const {
@@ -1868,6 +1873,11 @@ namespace dcon {
 			return dummy_rel_get_left(ref_id);
 		}
 		#endif
+		void thingy2_set_left_from_dummy_rel(thingy2_id id, thingy_id val) {
+			if(auto ref_id = dummy_rel.m_link_back_right.vptr()[id.index()]; bool(ref_id)) {
+				dummy_rel_set_left(ref_id, val);
+			}
+		}
 		DCON_RELEASE_INLINE bool thingy2_is_valid(thingy2_id id) const noexcept {
 			return bool(id) && uint32_t(id.index()) < thingy2.size_used;
 		}
@@ -1911,10 +1921,10 @@ namespace dcon {
 			if(bool(value)) {
 				if(dummy_rel_is_valid( dummy_rel_id(dummy_rel_id::value_base_t(value.index())) )) return false;
 				internal_move_relationship_dummy_rel(id, dummy_rel_id(dummy_rel_id::value_base_t(value.index())) );
+				return true;
 			} else {
-				delete_dummy_rel(id);
+				return false;
 			}
-			return true;
 		}
 		DCON_RELEASE_INLINE thingy2_id dummy_rel_get_right(dummy_rel_id id) const noexcept {
 			return dummy_rel.m_right.vptr()[id.index()];
@@ -2050,7 +2060,7 @@ namespace dcon {
 		#endif
 		DCON_RELEASE_INLINE void oop_thingy_remove_dummy_rel_B_as_left(oop_thingy_id id) noexcept {
 			if(dummy_rel_B_is_valid(dummy_rel_B_id(dummy_rel_B_id::value_base_t(id.index())))) {
-				delete_dummy_rel_B(dummy_rel_B_id(dummy_rel_B_id::value_base_t(id.index())));
+				dummy_rel_B_set_left(dummy_rel_B_id(dummy_rel_B_id::value_base_t(id.index())), oop_thingy_id());
 			}
 		}
 		DCON_RELEASE_INLINE dummy_rel_B_id oop_thingy_get_dummy_rel_B_as_right(oop_thingy_id id) const noexcept {
@@ -2069,7 +2079,7 @@ namespace dcon {
 		#endif
 		DCON_RELEASE_INLINE void oop_thingy_remove_dummy_rel_B_as_right(oop_thingy_id id) noexcept {
 			if(dummy_rel_B_is_valid(dummy_rel_B_id(dummy_rel_B_id::value_base_t(id.index())))) {
-				delete_dummy_rel_B(dummy_rel_B_id(dummy_rel_B_id::value_base_t(id.index())));
+				dummy_rel_B_set_right(dummy_rel_B_id(dummy_rel_B_id::value_base_t(id.index())), oop_thingy_id());
 			}
 		}
 		DCON_RELEASE_INLINE bool oop_thingy_is_valid(oop_thingy_id id) const noexcept {
@@ -2171,10 +2181,10 @@ namespace dcon {
 			if(bool(value)) {
 				if(dummy_rel_B_is_valid( dummy_rel_B_id(dummy_rel_B_id::value_base_t(value.index())) )) return false;
 				internal_move_relationship_dummy_rel_B(id, dummy_rel_B_id(dummy_rel_B_id::value_base_t(value.index())) );
+				return true;
 			} else {
-				delete_dummy_rel_B(id);
+				return false;
 			}
-			return true;
 		}
 		DCON_RELEASE_INLINE bool dummy_rel_B_is_valid(dummy_rel_B_id id) const noexcept {
 			return bool(id) && uint32_t(id.index()) < dummy_rel_B.size_used && oop_thingy_is_valid(oop_thingy_id(oop_thingy_id::value_base_t(id.index()))) && (bool(dummy_rel_B.m_left.vptr()[id.index()]) || false);
@@ -2437,7 +2447,9 @@ namespace dcon {
 		// container try create relationship for dummy_rel
 		//
 		dummy_rel_id try_create_dummy_rel(thingy_id left_p, thingy2_id right_p) {
+			if(!bool(left_p)) return dummy_rel_id();
 			if(dummy_rel_is_valid(dummy_rel_id(dummy_rel_id::value_base_t(left_p.index())))) return dummy_rel_id();
+			if(!bool(right_p)) return dummy_rel_id();
 			if(bool(right_p) && bool(dummy_rel.m_link_back_right.vptr()[right_p.index()])) return dummy_rel_id();
 			dummy_rel_id new_id(dummy_rel_id::value_base_t(left_p.index()));
 			if(dummy_rel.size_used < uint32_t(left_p.value)) dummy_rel_resize(uint32_t(left_p.value));
@@ -2579,7 +2591,9 @@ namespace dcon {
 		// container try create relationship for dummy_rel_B
 		//
 		dummy_rel_B_id try_create_dummy_rel_B(oop_thingy_id left_p, oop_thingy_id right_p) {
+			if(!bool(left_p)) return dummy_rel_B_id();
 			if(bool(left_p) && bool(dummy_rel_B.m_link_back_left.vptr()[left_p.index()])) return dummy_rel_B_id();
+			if(!bool(right_p)) return dummy_rel_B_id();
 			if(dummy_rel_B_is_valid(dummy_rel_B_id(dummy_rel_B_id::value_base_t(right_p.index())))) return dummy_rel_B_id();
 			dummy_rel_B_id new_id(dummy_rel_B_id::value_base_t(right_p.index()));
 			if(dummy_rel_B.size_used < uint32_t(right_p.value)) dummy_rel_B_resize(uint32_t(right_p.value));
@@ -4654,6 +4668,9 @@ namespace dcon {
 	DCON_RELEASE_INLINE thingy2_fat_id thingy_fat_id::get_right_from_dummy_rel() const noexcept {
 		return thingy2_fat_id(container, container.thingy_get_right_from_dummy_rel(id));
 	}
+	DCON_RELEASE_INLINE void thingy_fat_id::set_right_from_dummy_rel(thingy2_id v) const noexcept {
+		container.thingy_set_right_from_dummy_rel(id, v);
+	}
 	DCON_RELEASE_INLINE bool thingy_fat_id::is_valid() const noexcept {
 		return container.thingy_is_valid(id);
 	}
@@ -4799,6 +4816,9 @@ namespace dcon {
 	}
 	DCON_RELEASE_INLINE thingy_fat_id thingy2_fat_id::get_left_from_dummy_rel() const noexcept {
 		return thingy_fat_id(container, container.thingy2_get_left_from_dummy_rel(id));
+	}
+	DCON_RELEASE_INLINE void thingy2_fat_id::set_left_from_dummy_rel(thingy_id v) const noexcept {
+		container.thingy2_set_left_from_dummy_rel(id, v);
 	}
 	DCON_RELEASE_INLINE bool thingy2_fat_id::is_valid() const noexcept {
 		return container.thingy2_is_valid(id);
