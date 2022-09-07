@@ -147,7 +147,7 @@ int main(int argc, char *argv[]) {
 				for(auto& link : r.indexed_objects) {
 					if(link.index != index_type::none)
 						link.related_to->relationships_involved_in.push_back(in_relation_information{ r.name, link.property_name,
-							r.primary_key.points_to == link.related_to, link.index, link.ltype, &r });
+							r.primary_key.points_to == link.related_to, link.is_optional, link.index, link.ltype, &r });
 				}
 
 				if(r.primary_key.points_to) {
@@ -210,10 +210,7 @@ int main(int argc, char *argv[]) {
 					for(auto& ri : ob.indexed_objects) {
 						if(ri.property_name == k.property_name) {
 							k.object_type = ri.type_name;
-							if(ri.protection != protection_type::hidden && ri.protection != protection_type::super_hidden)
-								ri.protection = protection_type::super_read_only;
-							else
-								ri.protection = protection_type::super_hidden;
+							ri.is_covered_by_composite_key = true;
 						}
 					}
 

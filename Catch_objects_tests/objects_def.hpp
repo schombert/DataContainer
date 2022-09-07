@@ -1891,6 +1891,14 @@ namespace dcon {
 			return ve::tagged_vector<thingy_id>(id, std::true_type{});
 		}
 		#endif
+		private:
+		void internal_dummy_rel_set_left(dummy_rel_id id, thingy_id value) noexcept {
+			if(bool(value)) {
+				delete_dummy_rel( dummy_rel_id(dummy_rel_id::value_base_t(value.index())) );
+				internal_move_relationship_dummy_rel(id, dummy_rel_id(dummy_rel_id::value_base_t(value.index())) );
+			}
+		}
+		public:
 		void dummy_rel_set_left(dummy_rel_id id, thingy_id value) noexcept {
 			if(bool(value)) {
 				delete_dummy_rel( dummy_rel_id(dummy_rel_id::value_base_t(value.index())) );
@@ -1922,7 +1930,8 @@ namespace dcon {
 			return ve::load(id, dummy_rel.m_right.vptr());
 		}
 		#endif
-		void dummy_rel_set_right(dummy_rel_id id, thingy2_id value) noexcept {
+		private:
+		void internal_dummy_rel_set_right(dummy_rel_id id, thingy2_id value) noexcept {
 			if(auto old_value = dummy_rel.m_right.vptr()[id.index()]; bool(old_value)) {
 				dummy_rel.m_link_back_right.vptr()[old_value.index()] = dummy_rel_id();
 			}
@@ -1934,7 +1943,23 @@ namespace dcon {
 			}
 			dummy_rel.m_right.vptr()[id.index()] = value;
 		}
+		public:
+		void dummy_rel_set_right(dummy_rel_id id, thingy2_id value) noexcept {
+			if(auto old_value = dummy_rel.m_right.vptr()[id.index()]; bool(old_value)) {
+				dummy_rel.m_link_back_right.vptr()[old_value.index()] = dummy_rel_id();
+			}
+			if(bool(value)) {
+				if(auto old_rel = dummy_rel.m_link_back_right.vptr()[value.index()]; bool(old_rel)) {
+					delete_dummy_rel(old_rel);
+				}
+				dummy_rel.m_link_back_right.vptr()[value.index()] = id;
+				dummy_rel.m_right.vptr()[id.index()] = value;
+			} else {
+				delete_dummy_rel(id);
+			}
+		}
 		bool dummy_rel_try_set_right(dummy_rel_id id, thingy2_id value) noexcept {
+			if(!bool(value)) return false;
 			if(bool(value)) {
 				if(auto old_rel = dummy_rel.m_link_back_right.vptr()[value.index()]; bool(old_rel)) {
 					return false;
@@ -2070,7 +2095,8 @@ namespace dcon {
 			return ve::load(id, dummy_rel_B.m_left.vptr());
 		}
 		#endif
-		void dummy_rel_B_set_left(dummy_rel_B_id id, oop_thingy_id value) noexcept {
+		private:
+		void internal_dummy_rel_B_set_left(dummy_rel_B_id id, oop_thingy_id value) noexcept {
 			if(auto old_value = dummy_rel_B.m_left.vptr()[id.index()]; bool(old_value)) {
 				dummy_rel_B.m_link_back_left.vptr()[old_value.index()] = dummy_rel_B_id();
 			}
@@ -2082,7 +2108,23 @@ namespace dcon {
 			}
 			dummy_rel_B.m_left.vptr()[id.index()] = value;
 		}
+		public:
+		void dummy_rel_B_set_left(dummy_rel_B_id id, oop_thingy_id value) noexcept {
+			if(auto old_value = dummy_rel_B.m_left.vptr()[id.index()]; bool(old_value)) {
+				dummy_rel_B.m_link_back_left.vptr()[old_value.index()] = dummy_rel_B_id();
+			}
+			if(bool(value)) {
+				if(auto old_rel = dummy_rel_B.m_link_back_left.vptr()[value.index()]; bool(old_rel)) {
+					delete_dummy_rel_B(old_rel);
+				}
+				dummy_rel_B.m_link_back_left.vptr()[value.index()] = id;
+				dummy_rel_B.m_left.vptr()[id.index()] = value;
+			} else {
+				delete_dummy_rel_B(id);
+			}
+		}
 		bool dummy_rel_B_try_set_left(dummy_rel_B_id id, oop_thingy_id value) noexcept {
+			if(!bool(value)) return false;
 			if(bool(value)) {
 				if(auto old_rel = dummy_rel_B.m_link_back_left.vptr()[value.index()]; bool(old_rel)) {
 					return false;
@@ -2109,6 +2151,14 @@ namespace dcon {
 			return ve::tagged_vector<oop_thingy_id>(id, std::true_type{});
 		}
 		#endif
+		private:
+		void internal_dummy_rel_B_set_right(dummy_rel_B_id id, oop_thingy_id value) noexcept {
+			if(bool(value)) {
+				delete_dummy_rel_B( dummy_rel_B_id(dummy_rel_B_id::value_base_t(value.index())) );
+				internal_move_relationship_dummy_rel_B(id, dummy_rel_B_id(dummy_rel_B_id::value_base_t(value.index())) );
+			}
+		}
+		public:
 		void dummy_rel_B_set_right(dummy_rel_B_id id, oop_thingy_id value) noexcept {
 			if(bool(value)) {
 				delete_dummy_rel_B( dummy_rel_B_id(dummy_rel_B_id::value_base_t(value.index())) );
@@ -2356,7 +2406,7 @@ namespace dcon {
 		// container delete for dummy_rel
 		//
 		void delete_dummy_rel(dummy_rel_id id_removed) {
-			dummy_rel_set_right(id_removed, thingy2_id());
+			internal_dummy_rel_set_right(id_removed, thingy2_id());
 		}
 		
 		//
@@ -2365,7 +2415,7 @@ namespace dcon {
 		void pop_back_dummy_rel() {
 			if(dummy_rel.size_used == 0) return;
 			dummy_rel_id id_removed(dummy_rel_id::value_base_t(dummy_rel.size_used - 1));
-			dummy_rel_set_right(id_removed, thingy2_id());
+			internal_dummy_rel_set_right(id_removed, thingy2_id());
 			--dummy_rel.size_used;
 		}
 		
@@ -2374,7 +2424,7 @@ namespace dcon {
 		// container move relationship for dummy_rel
 		//
 		void internal_move_relationship_dummy_rel(dummy_rel_id last_id, dummy_rel_id id_removed) {
-			dummy_rel_set_right(id_removed, thingy2_id());
+			internal_dummy_rel_set_right(id_removed, thingy2_id());
 			if(auto related = dummy_rel.m_right.vptr()[last_id.index()]; bool(related)) {
 				dummy_rel.m_link_back_right.vptr()[related.index()] = id_removed;
 			}
@@ -2391,7 +2441,7 @@ namespace dcon {
 			if(bool(right_p) && bool(dummy_rel.m_link_back_right.vptr()[right_p.index()])) return dummy_rel_id();
 			dummy_rel_id new_id(dummy_rel_id::value_base_t(left_p.index()));
 			if(dummy_rel.size_used < uint32_t(left_p.value)) dummy_rel_resize(uint32_t(left_p.value));
-			dummy_rel_set_right(new_id, right_p);
+			internal_dummy_rel_set_right(new_id, right_p);
 			return new_id;
 		}
 		
@@ -2401,7 +2451,7 @@ namespace dcon {
 		dummy_rel_id force_create_dummy_rel(thingy_id left_p, thingy2_id right_p) {
 			dummy_rel_id new_id(dummy_rel_id::value_base_t(left_p.index()));
 			if(dummy_rel.size_used < uint32_t(left_p.value)) dummy_rel_resize(uint32_t(left_p.value));
-			dummy_rel_set_right(new_id, right_p);
+			internal_dummy_rel_set_right(new_id, right_p);
 			return new_id;
 		}
 		
@@ -2498,7 +2548,7 @@ namespace dcon {
 		// container delete for dummy_rel_B
 		//
 		void delete_dummy_rel_B(dummy_rel_B_id id_removed) {
-			dummy_rel_B_set_left(id_removed, oop_thingy_id());
+			internal_dummy_rel_B_set_left(id_removed, oop_thingy_id());
 		}
 		
 		//
@@ -2507,7 +2557,7 @@ namespace dcon {
 		void pop_back_dummy_rel_B() {
 			if(dummy_rel_B.size_used == 0) return;
 			dummy_rel_B_id id_removed(dummy_rel_B_id::value_base_t(dummy_rel_B.size_used - 1));
-			dummy_rel_B_set_left(id_removed, oop_thingy_id());
+			internal_dummy_rel_B_set_left(id_removed, oop_thingy_id());
 			--dummy_rel_B.size_used;
 		}
 		
@@ -2516,7 +2566,7 @@ namespace dcon {
 		// container move relationship for dummy_rel_B
 		//
 		void internal_move_relationship_dummy_rel_B(dummy_rel_B_id last_id, dummy_rel_B_id id_removed) {
-			dummy_rel_B_set_left(id_removed, oop_thingy_id());
+			internal_dummy_rel_B_set_left(id_removed, oop_thingy_id());
 			if(auto related = dummy_rel_B.m_left.vptr()[last_id.index()]; bool(related)) {
 				dummy_rel_B.m_link_back_left.vptr()[related.index()] = id_removed;
 			}
@@ -2533,7 +2583,7 @@ namespace dcon {
 			if(dummy_rel_B_is_valid(dummy_rel_B_id(dummy_rel_B_id::value_base_t(right_p.index())))) return dummy_rel_B_id();
 			dummy_rel_B_id new_id(dummy_rel_B_id::value_base_t(right_p.index()));
 			if(dummy_rel_B.size_used < uint32_t(right_p.value)) dummy_rel_B_resize(uint32_t(right_p.value));
-			dummy_rel_B_set_left(new_id, left_p);
+			internal_dummy_rel_B_set_left(new_id, left_p);
 			return new_id;
 		}
 		
@@ -2543,7 +2593,7 @@ namespace dcon {
 		dummy_rel_B_id force_create_dummy_rel_B(oop_thingy_id left_p, oop_thingy_id right_p) {
 			dummy_rel_B_id new_id(dummy_rel_B_id::value_base_t(right_p.index()));
 			if(dummy_rel_B.size_used < uint32_t(right_p.value)) dummy_rel_B_resize(uint32_t(right_p.value));
-			dummy_rel_B_set_left(new_id, left_p);
+			internal_dummy_rel_B_set_left(new_id, left_p);
 			return new_id;
 		}
 		
@@ -3657,7 +3707,7 @@ namespace dcon {
 								for(uint32_t i = 0; i < dummy_rel.size_used; ++i) {
 									auto tmp = dummy_rel.m_right.vptr()[i];
 									dummy_rel.m_right.vptr()[i] = thingy2_id();
-									dummy_rel_set_right(dummy_rel_id(dummy_rel_id::value_base_t(i)), tmp);
+									internal_dummy_rel_set_right(dummy_rel_id(dummy_rel_id::value_base_t(i)), tmp);
 								}
 							}
 						}
@@ -3765,7 +3815,7 @@ namespace dcon {
 								for(uint32_t i = 0; i < dummy_rel_B.size_used; ++i) {
 									auto tmp = dummy_rel_B.m_left.vptr()[i];
 									dummy_rel_B.m_left.vptr()[i] = oop_thingy_id();
-									dummy_rel_B_set_left(dummy_rel_B_id(dummy_rel_B_id::value_base_t(i)), tmp);
+									internal_dummy_rel_B_set_left(dummy_rel_B_id(dummy_rel_B_id::value_base_t(i)), tmp);
 								}
 							}
 						}
@@ -4386,7 +4436,7 @@ namespace dcon {
 								for(uint32_t i = 0; i < dummy_rel.size_used; ++i) {
 									auto tmp = dummy_rel.m_right.vptr()[i];
 									dummy_rel.m_right.vptr()[i] = thingy2_id();
-									dummy_rel_set_right(dummy_rel_id(dummy_rel_id::value_base_t(i)), tmp);
+									internal_dummy_rel_set_right(dummy_rel_id(dummy_rel_id::value_base_t(i)), tmp);
 								}
 							}
 						}
@@ -4494,7 +4544,7 @@ namespace dcon {
 								for(uint32_t i = 0; i < dummy_rel_B.size_used; ++i) {
 									auto tmp = dummy_rel_B.m_left.vptr()[i];
 									dummy_rel_B.m_left.vptr()[i] = oop_thingy_id();
-									dummy_rel_B_set_left(dummy_rel_B_id(dummy_rel_B_id::value_base_t(i)), tmp);
+									internal_dummy_rel_B_set_left(dummy_rel_B_id(dummy_rel_B_id::value_base_t(i)), tmp);
 								}
 							}
 						}

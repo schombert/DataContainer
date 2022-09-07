@@ -600,8 +600,10 @@ namespace ex1 {
 		DCON_RELEASE_INLINE void set_thingies(int32_t v) const noexcept;
 		DCON_RELEASE_INLINE top_fat_id get_left() const noexcept;
 		DCON_RELEASE_INLINE void set_left(top_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_left(top_id val) const noexcept;
 		DCON_RELEASE_INLINE bottom_fat_id get_right() const noexcept;
 		DCON_RELEASE_INLINE void set_right(bottom_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_right(bottom_id val) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 	
 	};
@@ -948,7 +950,8 @@ namespace ex1 {
 			return ve::load(id, lr_relation.m_left.vptr());
 		}
 		#endif
-		void lr_relation_set_left(lr_relation_id id, top_id value) noexcept {
+		private:
+		void internal_lr_relation_set_left(lr_relation_id id, top_id value) noexcept {
 			if(auto old_value = lr_relation.m_left.vptr()[id.index()]; bool(old_value)) {
 				auto& vref = lr_relation.m_array_left.vptr()[old_value.index()];
 				if(auto it = std::find(vref.begin(), vref.end(), id); it != vref.end()) {
@@ -960,6 +963,21 @@ namespace ex1 {
 				lr_relation.m_array_left.vptr()[value.index()].push_back(id);
 			}
 			lr_relation.m_left.vptr()[id.index()] = value;
+		}
+		public:
+		void lr_relation_set_left(lr_relation_id id, top_id value) noexcept {
+			if(!bool(value)) {
+				delete_lr_relation(id);
+				return;
+			}
+			internal_lr_relation_set_left(id, value);
+		}
+		bool lr_relation_try_set_left(lr_relation_id id, top_id value) noexcept {
+			if(!bool(value)) {
+				return false;
+			}
+			internal_lr_relation_set_left(id, value);
+			return true;
 		}
 		DCON_RELEASE_INLINE bottom_id lr_relation_get_right(lr_relation_id id) const noexcept {
 			return lr_relation.m_right.vptr()[id.index()];
@@ -975,7 +993,8 @@ namespace ex1 {
 			return ve::load(id, lr_relation.m_right.vptr());
 		}
 		#endif
-		void lr_relation_set_right(lr_relation_id id, bottom_id value) noexcept {
+		private:
+		void internal_lr_relation_set_right(lr_relation_id id, bottom_id value) noexcept {
 			if(auto old_value = lr_relation.m_right.vptr()[id.index()]; bool(old_value)) {
 				auto& vref = lr_relation.m_array_right.vptr()[old_value.index()];
 				if(auto it = std::find(vref.begin(), vref.end(), id); it != vref.end()) {
@@ -987,6 +1006,21 @@ namespace ex1 {
 				lr_relation.m_array_right.vptr()[value.index()].push_back(id);
 			}
 			lr_relation.m_right.vptr()[id.index()] = value;
+		}
+		public:
+		void lr_relation_set_right(lr_relation_id id, bottom_id value) noexcept {
+			if(!bool(value)) {
+				delete_lr_relation(id);
+				return;
+			}
+			internal_lr_relation_set_right(id, value);
+		}
+		bool lr_relation_try_set_right(lr_relation_id id, bottom_id value) noexcept {
+			if(!bool(value)) {
+				return false;
+			}
+			internal_lr_relation_set_right(id, value);
+			return true;
 		}
 		DCON_RELEASE_INLINE bool lr_relation_is_valid(lr_relation_id id) const noexcept {
 			return bool(id) && uint32_t(id.index()) < lr_relation.size_used && lr_relation.m__index.vptr()[id.index()] == id;
@@ -1097,8 +1131,8 @@ namespace ex1 {
 			if(int32_t(lr_relation.size_used) - 1 == id_removed.index()) {
 				for( ; lr_relation.size_used > 0 && lr_relation.m__index.vptr()[lr_relation.size_used - 1] != lr_relation_id(lr_relation_id::value_base_t(lr_relation.size_used - 1));  --lr_relation.size_used) ;
 			}
-			lr_relation_set_left(id_removed, top_id());
-			lr_relation_set_right(id_removed, bottom_id());
+			internal_lr_relation_set_left(id_removed, top_id());
+			internal_lr_relation_set_right(id_removed, bottom_id());
 			lr_relation.m_thingies.vptr()[id_removed.index()] = int32_t{};
 		}
 		
@@ -1159,8 +1193,8 @@ namespace ex1 {
 				lr_relation.m__index.vptr()[new_id.index()] = new_id;
 				lr_relation.size_used = std::max(lr_relation.size_used, uint32_t(new_id.index() + 1));
 			}
-			lr_relation_set_left(new_id, left_p);
-			lr_relation_set_right(new_id, right_p);
+			internal_lr_relation_set_left(new_id, left_p);
+			internal_lr_relation_set_right(new_id, right_p);
 			return new_id;
 		}
 		
@@ -1182,8 +1216,8 @@ namespace ex1 {
 				lr_relation.m__index.vptr()[new_id.index()] = new_id;
 				lr_relation.size_used = std::max(lr_relation.size_used, uint32_t(new_id.index() + 1));
 			}
-			lr_relation_set_left(new_id, left_p);
-			lr_relation_set_right(new_id, right_p);
+			internal_lr_relation_set_left(new_id, left_p);
+			internal_lr_relation_set_right(new_id, right_p);
 			return new_id;
 		}
 		
@@ -1620,14 +1654,14 @@ namespace ex1 {
 								for(uint32_t i = 0; i < lr_relation.size_used; ++i) {
 									auto tmp = lr_relation.m_left.vptr()[i];
 									lr_relation.m_left.vptr()[i] = top_id();
-									lr_relation_set_left(lr_relation_id(lr_relation_id::value_base_t(i)), tmp);
+									internal_lr_relation_set_left(lr_relation_id(lr_relation_id::value_base_t(i)), tmp);
 								}
 							}
 							if(serialize_selection.lr_relation_right == true) {
 								for(uint32_t i = 0; i < lr_relation.size_used; ++i) {
 									auto tmp = lr_relation.m_right.vptr()[i];
 									lr_relation.m_right.vptr()[i] = bottom_id();
-									lr_relation_set_right(lr_relation_id(lr_relation_id::value_base_t(i)), tmp);
+									internal_lr_relation_set_right(lr_relation_id(lr_relation_id::value_base_t(i)), tmp);
 								}
 							}
 						}
@@ -1916,14 +1950,14 @@ namespace ex1 {
 								for(uint32_t i = 0; i < lr_relation.size_used; ++i) {
 									auto tmp = lr_relation.m_left.vptr()[i];
 									lr_relation.m_left.vptr()[i] = top_id();
-									lr_relation_set_left(lr_relation_id(lr_relation_id::value_base_t(i)), tmp);
+									internal_lr_relation_set_left(lr_relation_id(lr_relation_id::value_base_t(i)), tmp);
 								}
 							}
 							if(serialize_selection.lr_relation_right == true) {
 								for(uint32_t i = 0; i < lr_relation.size_used; ++i) {
 									auto tmp = lr_relation.m_right.vptr()[i];
 									lr_relation.m_right.vptr()[i] = bottom_id();
-									lr_relation_set_right(lr_relation_id(lr_relation_id::value_base_t(i)), tmp);
+									internal_lr_relation_set_right(lr_relation_id(lr_relation_id::value_base_t(i)), tmp);
 								}
 							}
 						}
@@ -2166,11 +2200,17 @@ namespace ex1 {
 	DCON_RELEASE_INLINE void lr_relation_fat_id::set_left(top_id val) const noexcept {
 		container.lr_relation_set_left(id, val);
 	}
+	DCON_RELEASE_INLINE bool lr_relation_fat_id::try_set_left(top_id val) const noexcept {
+		return container.lr_relation_try_set_left(id, val);
+	}
 	DCON_RELEASE_INLINE bottom_fat_id lr_relation_fat_id::get_right() const noexcept {
 		return bottom_fat_id(container, container.lr_relation_get_right(id));
 	}
 	DCON_RELEASE_INLINE void lr_relation_fat_id::set_right(bottom_id val) const noexcept {
 		container.lr_relation_set_right(id, val);
+	}
+	DCON_RELEASE_INLINE bool lr_relation_fat_id::try_set_right(bottom_id val) const noexcept {
+		return container.lr_relation_try_set_right(id, val);
 	}
 	DCON_RELEASE_INLINE bool lr_relation_fat_id::is_valid() const noexcept {
 		return container.lr_relation_is_valid(id);

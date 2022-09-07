@@ -344,7 +344,7 @@ basic_builder& make_pop_back(basic_builder& o, relationship_object_def const& co
 		for(auto& iob : cob.indexed_objects) {
 			o + substitute{ "i_prop_name", iob.property_name } +substitute{ "i_type_name", iob.type_name };
 			if(cob.primary_key != iob) {
-				o + "@obj@_set_@i_prop_name@(id_removed, @i_type_name@_id());";
+				o + "internal_@obj@_set_@i_prop_name@(id_removed, @i_type_name@_id());";
 				if(cob.is_expandable) {
 					o + "@obj@.m_@i_prop_name@.values.pop_back();";
 					if(iob.ltype == list_type::list)
@@ -751,7 +751,7 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 		for(auto& iob : cob.indexed_objects) {
 			o + substitute{ "i_prop_name", iob.property_name } +substitute{ "i_type_name", iob.type_name };
 
-			o + "@obj@_set_@i_prop_name@(id_removed, @i_type_name@_id());";
+			o + "internal_@obj@_set_@i_prop_name@(id_removed, @i_type_name@_id());";
 
 			if(iob.index == index_type::at_most_one) {
 				o + "if(auto related = @obj@.m_@i_prop@.vptr()[last_id.index()]; bool(related))" + block{
@@ -829,7 +829,7 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 		for(auto& io : cob.indexed_objects) {
 			if(cob.primary_key != io) {
 				o + substitute{ "i_prop", io.property_name } +substitute{ "i_type", io.type_name };
-				o + "@obj@_set_@i_prop@(id_removed, @i_type@_id());";
+				o + "internal_@obj@_set_@i_prop@(id_removed, @i_type@_id());";
 
 				if(io.index == index_type::at_most_one) {
 					o + "if(auto related = @obj@.m_@i_prop@.vptr()[last_id.index()]; bool(related))" + block{
@@ -1084,7 +1084,7 @@ basic_builder& make_clearing_delete(basic_builder& o, relationship_object_def co
 		for(auto& io : cob.indexed_objects) {
 			if(cob.primary_key != io) {
 				o + substitute{ "i_prop", io.property_name } +substitute{ "i_type", io.type_name };
-				o + "@obj@_set_@i_prop@(id_removed, @i_type@_id());";
+				o + "internal_@obj@_set_@i_prop@(id_removed, @i_type@_id());";
 			}
 		}
 		for(auto& cr : cob.relationships_involved_in) {
@@ -1142,7 +1142,7 @@ basic_builder& make_erasable_delete(basic_builder& o, relationship_object_def co
 		for(auto& io : cob.indexed_objects) {
 			if(cob.primary_key != io) {
 				o + substitute{ "i_prop", io.property_name } +substitute{ "i_type", io.type_name };
-				o + "@obj@_set_@i_prop@(id_removed, @i_type@_id());";
+				o + "internal_@obj@_set_@i_prop@(id_removed, @i_type@_id());";
 			}
 		}
 		for(auto& cr : cob.relationships_involved_in) {
@@ -1244,7 +1244,7 @@ basic_builder& make_internal_move_relationship(basic_builder& o, relationship_ob
 		for(auto& io : cob.indexed_objects) {
 			if(cob.primary_key != io) {
 				o + substitute{ "i_prop", io.property_name } +substitute{ "i_type", io.type_name };
-				o + "@obj@_set_@i_prop@(id_removed, @i_type@_id());";
+				o + "internal_@obj@_set_@i_prop@(id_removed, @i_type@_id());";
 
 				if(io.index == index_type::at_most_one) {
 					o + "if(auto related = @obj@.m_@i_prop@.vptr()[last_id.index()]; bool(related))" + block{
@@ -1414,7 +1414,7 @@ basic_builder& make_relation_try_create(basic_builder& o, relationship_object_de
 		for(auto& iob : cob.indexed_objects) {
 			o + substitute{ "prop", iob.property_name };
 			if( cob.primary_key != iob)  {
-				o + "@obj@_set_@prop@(new_id, @prop@_p);";
+				o + "internal_@obj@_set_@prop@(new_id, @prop@_p);";
 			}
 		}
 
@@ -1490,7 +1490,7 @@ basic_builder& make_relation_force_create(basic_builder& o, relationship_object_
 		for(auto& iob : cob.indexed_objects) {
 			o + substitute{ "prop", iob.property_name };
 			if( cob.primary_key != iob) {
-				o + "@obj@_set_@prop@(new_id, @prop@_p);";
+				o + "internal_@obj@_set_@prop@(new_id, @prop@_p);";
 			}
 		}
 
@@ -2000,7 +2000,7 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 											o + "for(uint32_t i = 0; i < @obj@.size_used; ++i)" + block{
 												o + "auto tmp = @obj@.m_@prop@.vptr()[i];";
 												o + "@obj@.m_@prop@.vptr()[i] = @type@_id();";
-												o + "@obj@_set_@prop@(@obj@_id(@obj@_id::value_base_t(i)), tmp);";
+												o + "internal_@obj@_set_@prop@(@obj@_id(@obj@_id::value_base_t(i)), tmp);";
 											};
 										};
 									}

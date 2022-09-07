@@ -42,7 +42,7 @@ enum class storage_type { contiguous, erasable, compactable };
 enum class property_type { vectorizable, other, object, special_vector, bitfield,
 	array_vectorizable, array_bitfield, array_other
 };
-enum class protection_type { none, hidden, read_only, super_read_only, super_hidden };
+enum class protection_type { none, hidden, read_only };
 
 struct member_function_spec{
 	std::string signature;
@@ -79,6 +79,8 @@ struct related_object {
 	std::string type_name;
 	index_type index = index_type::at_most_one;
 	list_type ltype = list_type::list;
+	bool is_optional = false;
+	bool is_covered_by_composite_key = false;
 	protection_type protection = protection_type::none;
 	relationship_object_def* related_to = nullptr;
 };
@@ -87,6 +89,7 @@ struct in_relation_information {
 	std::string relation_name;
 	std::string property_name;
 	bool as_primary_key = false;
+	bool as_optional = false;
 	index_type indexed_as = index_type::at_most_one;
 	list_type listed_as = list_type::list;
 	relationship_object_def const* rel_ptr;

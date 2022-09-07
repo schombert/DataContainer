@@ -922,7 +922,11 @@ namespace dcon {
 		}
 		explicit operator bool() const noexcept { return bool(id); }
 		DCON_RELEASE_INLINE thingyA_fat_id get_left() const noexcept;
+		DCON_RELEASE_INLINE void set_left(thingyA_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_left(thingyA_id val) const noexcept;
 		DCON_RELEASE_INLINE thingyA_fat_id get_right() const noexcept;
+		DCON_RELEASE_INLINE void set_right(thingyA_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_right(thingyA_id val) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 	
 	};
@@ -1030,6 +1034,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE bool try_set_left(thingyA_id val) const noexcept;
 		DCON_RELEASE_INLINE thingyB_fat_id get_right() const noexcept;
 		DCON_RELEASE_INLINE void set_right(thingyB_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_right(thingyB_id val) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 	
 	};
@@ -1137,6 +1142,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE bool try_set_left(thingyA_id val) const noexcept;
 		DCON_RELEASE_INLINE thingyB_fat_id get_right() const noexcept;
 		DCON_RELEASE_INLINE void set_right(thingyB_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_right(thingyB_id val) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 	
 	};
@@ -1240,13 +1246,26 @@ namespace dcon {
 		}
 		explicit operator bool() const noexcept { return bool(id); }
 		DCON_RELEASE_INLINE thingyA_fat_id get_A() const noexcept;
+		DCON_RELEASE_INLINE void set_A(thingyA_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_A(thingyA_id val) const noexcept;
 		DCON_RELEASE_INLINE thingyA_fat_id get_B() const noexcept;
+		DCON_RELEASE_INLINE void set_B(thingyA_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_B(thingyA_id val) const noexcept;
 		DCON_RELEASE_INLINE thingyA_fat_id get_C() const noexcept;
+		DCON_RELEASE_INLINE void set_C(thingyA_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_C(thingyA_id val) const noexcept;
 		DCON_RELEASE_INLINE thingyA_fat_id get_D() const noexcept;
+		DCON_RELEASE_INLINE void set_D(thingyA_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_D(thingyA_id val) const noexcept;
 		DCON_RELEASE_INLINE thingyA_fat_id get_E() const noexcept;
+		DCON_RELEASE_INLINE void set_E(thingyA_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_E(thingyA_id val) const noexcept;
 		DCON_RELEASE_INLINE thingyA_fat_id get_F() const noexcept;
+		DCON_RELEASE_INLINE void set_F(thingyA_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_F(thingyA_id val) const noexcept;
 		DCON_RELEASE_INLINE thingyA_fat_id get_ignore() const noexcept;
 		DCON_RELEASE_INLINE void set_ignore(thingyA_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_ignore(thingyA_id val) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 	
 	};
@@ -1649,6 +1668,13 @@ namespace dcon {
 		}
 		#endif
 		private:
+		void internal_relate_same_set_left(relate_same_id id, thingyA_id value) noexcept {
+			if(bool(value)) {
+				delete_relate_same( relate_same_id(relate_same_id::value_base_t(value.index())) );
+				internal_move_relationship_relate_same(id, relate_same_id(relate_same_id::value_base_t(value.index())) );
+			}
+		}
+		public:
 		void relate_same_set_left(relate_same_id id, thingyA_id value) noexcept {
 			if(bool(value)) {
 				delete_relate_same( relate_same_id(relate_same_id::value_base_t(value.index())) );
@@ -1666,7 +1692,6 @@ namespace dcon {
 			}
 			return true;
 		}
-		public:
 		DCON_RELEASE_INLINE thingyA_id relate_same_get_right(relate_same_id id) const noexcept {
 			return relate_same.m_right.vptr()[id.index()];
 		}
@@ -1682,21 +1707,29 @@ namespace dcon {
 		}
 		#endif
 		private:
-		DCON_RELEASE_INLINE void relate_same_set_right(relate_same_id id, thingyA_id value) noexcept {
+		DCON_RELEASE_INLINE void internal_relate_same_set_right(relate_same_id id, thingyA_id value) noexcept {
 			relate_same.m_right.vptr()[id.index()] = value;
 		}
-		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE void relate_same_set_right(ve::contiguous_tags<relate_same_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
-			ve::store(id, relate_same.m_right.vptr(), values);
-		}
-		DCON_RELEASE_INLINE void relate_same_set_right(ve::partial_contiguous_tags<relate_same_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
-			ve::store(id, relate_same.m_right.vptr(), values);
-		}
-		DCON_RELEASE_INLINE void relate_same_set_right(ve::tagged_vector<relate_same_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
-			ve::store(id, relate_same.m_right.vptr(), values);
-		}
-		#endif
 		public:
+		void relate_same_set_right(relate_same_id id, thingyA_id value) noexcept {
+			if(!bool(value)) {
+				delete_relate_same(id);
+				return;
+			}
+			relate_same.hashm_joint.erase( relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(id.index())), relate_same.m_right.vptr()[id.index()]) );
+			relate_same.m_right.vptr()[id.index()] = value;
+			if(auto it = relate_same.hashm_joint.find( relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(id.index())), relate_same.m_right.vptr()[id.index()]) ); it != relate_same.hashm_joint.end()) {
+				delete_relate_same(it->second);
+			}
+			relate_same.hashm_joint.insert_or_assign(relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(id.index())), relate_same.m_right.vptr()[id.index()]), id);
+		}
+		bool relate_same_try_set_right(relate_same_id id, thingyA_id value) noexcept {
+			if(!bool(value)) return false;
+			if(relate_same.hashm_joint.find( relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(id.index())), value) ) != relate_same.hashm_joint.end()) return false;
+			relate_same.m_right.vptr()[id.index()] = value;
+			relate_same.hashm_joint.insert_or_assign(relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(id.index())), relate_same.m_right.vptr()[id.index()]), id);
+			return true;
+		}
 		DCON_RELEASE_INLINE bool relate_same_is_valid(relate_same_id id) const noexcept {
 			return bool(id) && uint32_t(id.index()) < relate_same.size_used && thingyA_is_valid(thingyA_id(thingyA_id::value_base_t(id.index()))) && (bool(relate_same.m_right.vptr()[id.index()]) || false);
 		}
@@ -1720,6 +1753,14 @@ namespace dcon {
 			return ve::tagged_vector<thingyA_id>(id, std::true_type{});
 		}
 		#endif
+		private:
+		void internal_relate_in_array_set_left(relate_in_array_id id, thingyA_id value) noexcept {
+			if(bool(value)) {
+				delete_relate_in_array( relate_in_array_id(relate_in_array_id::value_base_t(value.index())) );
+				internal_move_relationship_relate_in_array(id, relate_in_array_id(relate_in_array_id::value_base_t(value.index())) );
+			}
+		}
+		public:
 		void relate_in_array_set_left(relate_in_array_id id, thingyA_id value) noexcept {
 			if(bool(value)) {
 				delete_relate_in_array( relate_in_array_id(relate_in_array_id::value_base_t(value.index())) );
@@ -1751,7 +1792,8 @@ namespace dcon {
 			return ve::load(id, relate_in_array.m_right.vptr());
 		}
 		#endif
-		void relate_in_array_set_right(relate_in_array_id id, thingyB_id value) noexcept {
+		private:
+		void internal_relate_in_array_set_right(relate_in_array_id id, thingyB_id value) noexcept {
 			if(auto old_value = relate_in_array.m_right.vptr()[id.index()]; bool(old_value)) {
 				auto& vref = relate_in_array.m_array_right.vptr()[old_value.index()];
 				dcon::remove_unique_item(relate_in_array.right_storage, vref, id);
@@ -1760,6 +1802,21 @@ namespace dcon {
 				dcon::push_back(relate_in_array.right_storage, relate_in_array.m_array_right.vptr()[value.index()], id);
 			}
 			relate_in_array.m_right.vptr()[id.index()] = value;
+		}
+		public:
+		void relate_in_array_set_right(relate_in_array_id id, thingyB_id value) noexcept {
+			if(!bool(value)) {
+				delete_relate_in_array(id);
+				return;
+			}
+			internal_relate_in_array_set_right(id, value);
+		}
+		bool relate_in_array_try_set_right(relate_in_array_id id, thingyB_id value) noexcept {
+			if(!bool(value)) {
+				return false;
+			}
+			internal_relate_in_array_set_right(id, value);
+			return true;
 		}
 		DCON_RELEASE_INLINE bool relate_in_array_is_valid(relate_in_array_id id) const noexcept {
 			return bool(id) && uint32_t(id.index()) < relate_in_array.size_used && thingyA_is_valid(thingyA_id(thingyA_id::value_base_t(id.index()))) && (bool(relate_in_array.m_right.vptr()[id.index()]) || false);
@@ -1784,6 +1841,14 @@ namespace dcon {
 			return ve::tagged_vector<thingyA_id>(id, std::true_type{});
 		}
 		#endif
+		private:
+		void internal_relate_in_list_set_left(relate_in_list_id id, thingyA_id value) noexcept {
+			if(bool(value)) {
+				delete_relate_in_list( relate_in_list_id(relate_in_list_id::value_base_t(value.index())) );
+				internal_move_relationship_relate_in_list(id, relate_in_list_id(relate_in_list_id::value_base_t(value.index())) );
+			}
+		}
+		public:
 		void relate_in_list_set_left(relate_in_list_id id, thingyA_id value) noexcept {
 			if(bool(value)) {
 				delete_relate_in_list( relate_in_list_id(relate_in_list_id::value_base_t(value.index())) );
@@ -1815,7 +1880,8 @@ namespace dcon {
 			return ve::load(id, relate_in_list.m_right.vptr());
 		}
 		#endif
-		void relate_in_list_set_right(relate_in_list_id id, thingyB_id value) noexcept {
+		private:
+		void internal_relate_in_list_set_right(relate_in_list_id id, thingyB_id value) noexcept {
 			if(auto old_value = relate_in_list.m_right.vptr()[id.index()]; bool(old_value)) {
 				if(auto old_left = relate_in_list.m_link_right.vptr()[id.index()].left; bool(old_left)) {
 					relate_in_list.m_link_right.vptr()[old_left.index()].right = relate_in_list.m_link_right.vptr()[id.index()].right;
@@ -1848,6 +1914,21 @@ namespace dcon {
 			}
 			relate_in_list.m_right.vptr()[id.index()] = value;
 		}
+		public:
+		void relate_in_list_set_right(relate_in_list_id id, thingyB_id value) noexcept {
+			if(!bool(value)) {
+				delete_relate_in_list(id);
+				return;
+			}
+			internal_relate_in_list_set_right(id, value);
+		}
+		bool relate_in_list_try_set_right(relate_in_list_id id, thingyB_id value) noexcept {
+			if(!bool(value)) {
+				return false;
+			}
+			internal_relate_in_list_set_right(id, value);
+			return true;
+		}
 		DCON_RELEASE_INLINE bool relate_in_list_is_valid(relate_in_list_id id) const noexcept {
 			return bool(id) && uint32_t(id.index()) < relate_in_list.size_used && thingyA_is_valid(thingyA_id(thingyA_id::value_base_t(id.index()))) && (bool(relate_in_list.m_right.vptr()[id.index()]) || false);
 		}
@@ -1872,21 +1953,29 @@ namespace dcon {
 		}
 		#endif
 		private:
-		DCON_RELEASE_INLINE void many_many_set_A(many_many_id id, thingyA_id value) noexcept {
+		DCON_RELEASE_INLINE void internal_many_many_set_A(many_many_id id, thingyA_id value) noexcept {
 			many_many.m_A.vptr()[id.index()] = value;
 		}
-		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE void many_many_set_A(ve::contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
-			ve::store(id, many_many.m_A.vptr(), values);
-		}
-		DCON_RELEASE_INLINE void many_many_set_A(ve::partial_contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
-			ve::store(id, many_many.m_A.vptr(), values);
-		}
-		DCON_RELEASE_INLINE void many_many_set_A(ve::tagged_vector<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
-			ve::store(id, many_many.m_A.vptr(), values);
-		}
-		#endif
 		public:
+		void many_many_set_A(many_many_id id, thingyA_id value) noexcept {
+			if(!bool(value)) {
+				delete_many_many(id);
+				return;
+			}
+			many_many.hashm_joint.erase( many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]) );
+			many_many.m_A.vptr()[id.index()] = value;
+			if(auto it = many_many.hashm_joint.find( many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]) ); it != many_many.hashm_joint.end()) {
+				delete_many_many(it->second);
+			}
+			many_many.hashm_joint.insert_or_assign(many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]), id);
+		}
+		bool many_many_try_set_A(many_many_id id, thingyA_id value) noexcept {
+			if(!bool(value)) return false;
+			if(many_many.hashm_joint.find( many_many.to_joint_keydata(value, many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]) ) != many_many.hashm_joint.end()) return false;
+			many_many.m_A.vptr()[id.index()] = value;
+			many_many.hashm_joint.insert_or_assign(many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]), id);
+			return true;
+		}
 		DCON_RELEASE_INLINE thingyA_id many_many_get_B(many_many_id id) const noexcept {
 			return many_many.m_B.vptr()[id.index()];
 		}
@@ -1902,21 +1991,29 @@ namespace dcon {
 		}
 		#endif
 		private:
-		DCON_RELEASE_INLINE void many_many_set_B(many_many_id id, thingyA_id value) noexcept {
+		DCON_RELEASE_INLINE void internal_many_many_set_B(many_many_id id, thingyA_id value) noexcept {
 			many_many.m_B.vptr()[id.index()] = value;
 		}
-		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE void many_many_set_B(ve::contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
-			ve::store(id, many_many.m_B.vptr(), values);
-		}
-		DCON_RELEASE_INLINE void many_many_set_B(ve::partial_contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
-			ve::store(id, many_many.m_B.vptr(), values);
-		}
-		DCON_RELEASE_INLINE void many_many_set_B(ve::tagged_vector<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
-			ve::store(id, many_many.m_B.vptr(), values);
-		}
-		#endif
 		public:
+		void many_many_set_B(many_many_id id, thingyA_id value) noexcept {
+			if(!bool(value)) {
+				delete_many_many(id);
+				return;
+			}
+			many_many.hashm_joint.erase( many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]) );
+			many_many.m_B.vptr()[id.index()] = value;
+			if(auto it = many_many.hashm_joint.find( many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]) ); it != many_many.hashm_joint.end()) {
+				delete_many_many(it->second);
+			}
+			many_many.hashm_joint.insert_or_assign(many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]), id);
+		}
+		bool many_many_try_set_B(many_many_id id, thingyA_id value) noexcept {
+			if(!bool(value)) return false;
+			if(many_many.hashm_joint.find( many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], value, many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]) ) != many_many.hashm_joint.end()) return false;
+			many_many.m_B.vptr()[id.index()] = value;
+			many_many.hashm_joint.insert_or_assign(many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]), id);
+			return true;
+		}
 		DCON_RELEASE_INLINE thingyA_id many_many_get_C(many_many_id id) const noexcept {
 			return many_many.m_C.vptr()[id.index()];
 		}
@@ -1932,21 +2029,29 @@ namespace dcon {
 		}
 		#endif
 		private:
-		DCON_RELEASE_INLINE void many_many_set_C(many_many_id id, thingyA_id value) noexcept {
+		DCON_RELEASE_INLINE void internal_many_many_set_C(many_many_id id, thingyA_id value) noexcept {
 			many_many.m_C.vptr()[id.index()] = value;
 		}
-		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE void many_many_set_C(ve::contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
-			ve::store(id, many_many.m_C.vptr(), values);
-		}
-		DCON_RELEASE_INLINE void many_many_set_C(ve::partial_contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
-			ve::store(id, many_many.m_C.vptr(), values);
-		}
-		DCON_RELEASE_INLINE void many_many_set_C(ve::tagged_vector<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
-			ve::store(id, many_many.m_C.vptr(), values);
-		}
-		#endif
 		public:
+		void many_many_set_C(many_many_id id, thingyA_id value) noexcept {
+			if(!bool(value)) {
+				delete_many_many(id);
+				return;
+			}
+			many_many.hashm_joint.erase( many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]) );
+			many_many.m_C.vptr()[id.index()] = value;
+			if(auto it = many_many.hashm_joint.find( many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]) ); it != many_many.hashm_joint.end()) {
+				delete_many_many(it->second);
+			}
+			many_many.hashm_joint.insert_or_assign(many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]), id);
+		}
+		bool many_many_try_set_C(many_many_id id, thingyA_id value) noexcept {
+			if(!bool(value)) return false;
+			if(many_many.hashm_joint.find( many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], value, many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]) ) != many_many.hashm_joint.end()) return false;
+			many_many.m_C.vptr()[id.index()] = value;
+			many_many.hashm_joint.insert_or_assign(many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]), id);
+			return true;
+		}
 		DCON_RELEASE_INLINE thingyA_id many_many_get_D(many_many_id id) const noexcept {
 			return many_many.m_D.vptr()[id.index()];
 		}
@@ -1962,21 +2067,29 @@ namespace dcon {
 		}
 		#endif
 		private:
-		DCON_RELEASE_INLINE void many_many_set_D(many_many_id id, thingyA_id value) noexcept {
+		DCON_RELEASE_INLINE void internal_many_many_set_D(many_many_id id, thingyA_id value) noexcept {
 			many_many.m_D.vptr()[id.index()] = value;
 		}
-		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE void many_many_set_D(ve::contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
-			ve::store(id, many_many.m_D.vptr(), values);
-		}
-		DCON_RELEASE_INLINE void many_many_set_D(ve::partial_contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
-			ve::store(id, many_many.m_D.vptr(), values);
-		}
-		DCON_RELEASE_INLINE void many_many_set_D(ve::tagged_vector<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
-			ve::store(id, many_many.m_D.vptr(), values);
-		}
-		#endif
 		public:
+		void many_many_set_D(many_many_id id, thingyA_id value) noexcept {
+			if(!bool(value)) {
+				delete_many_many(id);
+				return;
+			}
+			many_many.hashm_joint.erase( many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]) );
+			many_many.m_D.vptr()[id.index()] = value;
+			if(auto it = many_many.hashm_joint.find( many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]) ); it != many_many.hashm_joint.end()) {
+				delete_many_many(it->second);
+			}
+			many_many.hashm_joint.insert_or_assign(many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]), id);
+		}
+		bool many_many_try_set_D(many_many_id id, thingyA_id value) noexcept {
+			if(!bool(value)) return false;
+			if(many_many.hashm_joint.find( many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], value, many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]) ) != many_many.hashm_joint.end()) return false;
+			many_many.m_D.vptr()[id.index()] = value;
+			many_many.hashm_joint.insert_or_assign(many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]), id);
+			return true;
+		}
 		DCON_RELEASE_INLINE thingyA_id many_many_get_E(many_many_id id) const noexcept {
 			return many_many.m_E.vptr()[id.index()];
 		}
@@ -1992,21 +2105,29 @@ namespace dcon {
 		}
 		#endif
 		private:
-		DCON_RELEASE_INLINE void many_many_set_E(many_many_id id, thingyA_id value) noexcept {
+		DCON_RELEASE_INLINE void internal_many_many_set_E(many_many_id id, thingyA_id value) noexcept {
 			many_many.m_E.vptr()[id.index()] = value;
 		}
-		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE void many_many_set_E(ve::contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
-			ve::store(id, many_many.m_E.vptr(), values);
-		}
-		DCON_RELEASE_INLINE void many_many_set_E(ve::partial_contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
-			ve::store(id, many_many.m_E.vptr(), values);
-		}
-		DCON_RELEASE_INLINE void many_many_set_E(ve::tagged_vector<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
-			ve::store(id, many_many.m_E.vptr(), values);
-		}
-		#endif
 		public:
+		void many_many_set_E(many_many_id id, thingyA_id value) noexcept {
+			if(!bool(value)) {
+				delete_many_many(id);
+				return;
+			}
+			many_many.hashm_joint.erase( many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]) );
+			many_many.m_E.vptr()[id.index()] = value;
+			if(auto it = many_many.hashm_joint.find( many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]) ); it != many_many.hashm_joint.end()) {
+				delete_many_many(it->second);
+			}
+			many_many.hashm_joint.insert_or_assign(many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]), id);
+		}
+		bool many_many_try_set_E(many_many_id id, thingyA_id value) noexcept {
+			if(!bool(value)) return false;
+			if(many_many.hashm_joint.find( many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], value, many_many.m_F.vptr()[id.index()]) ) != many_many.hashm_joint.end()) return false;
+			many_many.m_E.vptr()[id.index()] = value;
+			many_many.hashm_joint.insert_or_assign(many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]), id);
+			return true;
+		}
 		DCON_RELEASE_INLINE thingyA_id many_many_get_F(many_many_id id) const noexcept {
 			return many_many.m_F.vptr()[id.index()];
 		}
@@ -2022,21 +2143,29 @@ namespace dcon {
 		}
 		#endif
 		private:
-		DCON_RELEASE_INLINE void many_many_set_F(many_many_id id, thingyA_id value) noexcept {
+		DCON_RELEASE_INLINE void internal_many_many_set_F(many_many_id id, thingyA_id value) noexcept {
 			many_many.m_F.vptr()[id.index()] = value;
 		}
-		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE void many_many_set_F(ve::contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
-			ve::store(id, many_many.m_F.vptr(), values);
-		}
-		DCON_RELEASE_INLINE void many_many_set_F(ve::partial_contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
-			ve::store(id, many_many.m_F.vptr(), values);
-		}
-		DCON_RELEASE_INLINE void many_many_set_F(ve::tagged_vector<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
-			ve::store(id, many_many.m_F.vptr(), values);
-		}
-		#endif
 		public:
+		void many_many_set_F(many_many_id id, thingyA_id value) noexcept {
+			if(!bool(value)) {
+				delete_many_many(id);
+				return;
+			}
+			many_many.hashm_joint.erase( many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]) );
+			many_many.m_F.vptr()[id.index()] = value;
+			if(auto it = many_many.hashm_joint.find( many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]) ); it != many_many.hashm_joint.end()) {
+				delete_many_many(it->second);
+			}
+			many_many.hashm_joint.insert_or_assign(many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]), id);
+		}
+		bool many_many_try_set_F(many_many_id id, thingyA_id value) noexcept {
+			if(!bool(value)) return false;
+			if(many_many.hashm_joint.find( many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], value) ) != many_many.hashm_joint.end()) return false;
+			many_many.m_F.vptr()[id.index()] = value;
+			many_many.hashm_joint.insert_or_assign(many_many.to_joint_keydata(many_many.m_A.vptr()[id.index()], many_many.m_B.vptr()[id.index()], many_many.m_C.vptr()[id.index()], many_many.m_D.vptr()[id.index()], many_many.m_E.vptr()[id.index()], many_many.m_F.vptr()[id.index()]), id);
+			return true;
+		}
 		DCON_RELEASE_INLINE thingyA_id many_many_get_ignore(many_many_id id) const noexcept {
 			return many_many.m_ignore.vptr()[id.index()];
 		}
@@ -2051,8 +2180,22 @@ namespace dcon {
 			return ve::load(id, many_many.m_ignore.vptr());
 		}
 		#endif
-		DCON_RELEASE_INLINE void many_many_set_ignore(many_many_id id, thingyA_id value) noexcept {
+		private:
+		DCON_RELEASE_INLINE void internal_many_many_set_ignore(many_many_id id, thingyA_id value) noexcept {
 			many_many.m_ignore.vptr()[id.index()] = value;
+		}
+		public:
+		void many_many_set_ignore(many_many_id id, thingyA_id value) noexcept {
+			if(!bool(value)) {
+				delete_many_many(id);
+				return;
+			}
+			many_many.m_ignore.vptr()[id.index()] = value;
+		}
+		bool many_many_try_set_ignore(many_many_id id, thingyA_id value) noexcept {
+			if(!bool(value)) return false;
+			many_many.m_ignore.vptr()[id.index()] = value;
+			return true;
 		}
 		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE void many_many_set_ignore(ve::contiguous_tags<many_many_id> id, ve::value_to_vector_type<thingyA_id> values) noexcept {
@@ -2243,7 +2386,7 @@ namespace dcon {
 		//
 		void delete_relate_same(relate_same_id id_removed) {
 			relate_same.hashm_joint.erase( relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(id_removed.index())), relate_same.m_right.vptr()[id_removed.index()]) );
-			relate_same_set_right(id_removed, thingyA_id());
+			internal_relate_same_set_right(id_removed, thingyA_id());
 		}
 		
 		//
@@ -2253,7 +2396,7 @@ namespace dcon {
 			if(relate_same.size_used == 0) return;
 			relate_same_id id_removed(relate_same_id::value_base_t(relate_same.size_used - 1));
 			relate_same.hashm_joint.erase( relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(id_removed.index())), relate_same.m_right.vptr()[id_removed.index()]) );
-			relate_same_set_right(id_removed, thingyA_id());
+			internal_relate_same_set_right(id_removed, thingyA_id());
 			--relate_same.size_used;
 		}
 		
@@ -2263,7 +2406,7 @@ namespace dcon {
 		//
 		void internal_move_relationship_relate_same(relate_same_id last_id, relate_same_id id_removed) {
 			relate_same.hashm_joint.erase(relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(last_id.index())), relate_same.m_right.vptr()[last_id.index()]));
-			relate_same_set_right(id_removed, thingyA_id());
+			internal_relate_same_set_right(id_removed, thingyA_id());
 			relate_same.m_right.vptr()[id_removed.index()] = std::move(relate_same.m_right.vptr()[last_id.index()]);
 			relate_same.m_right.vptr()[last_id.index()] = thingyA_id();
 			relate_same.hashm_joint.erase(relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(last_id.index())), relate_same.m_right.vptr()[id_removed.index()]));
@@ -2278,7 +2421,7 @@ namespace dcon {
 			if(relate_same_is_valid(relate_same_id(relate_same_id::value_base_t(left_p.index())))) return relate_same_id();
 			relate_same_id new_id(relate_same_id::value_base_t(left_p.index()));
 			if(relate_same.size_used < uint32_t(left_p.value)) relate_same_resize(uint32_t(left_p.value));
-			relate_same_set_right(new_id, right_p);
+			internal_relate_same_set_right(new_id, right_p);
 			relate_same.hashm_joint.insert_or_assign(relate_same.to_joint_keydata(left_p, right_p), new_id);
 			return new_id;
 		}
@@ -2296,7 +2439,7 @@ namespace dcon {
 				}
 				relate_same.hashm_joint.insert_or_assign(key_dat, new_id);
 			}
-			relate_same_set_right(new_id, right_p);
+			internal_relate_same_set_right(new_id, right_p);
 			return new_id;
 		}
 		
@@ -2322,7 +2465,7 @@ namespace dcon {
 		// container delete for relate_in_array
 		//
 		void delete_relate_in_array(relate_in_array_id id_removed) {
-			relate_in_array_set_right(id_removed, thingyB_id());
+			internal_relate_in_array_set_right(id_removed, thingyB_id());
 		}
 		
 		//
@@ -2331,7 +2474,7 @@ namespace dcon {
 		void pop_back_relate_in_array() {
 			if(relate_in_array.size_used == 0) return;
 			relate_in_array_id id_removed(relate_in_array_id::value_base_t(relate_in_array.size_used - 1));
-			relate_in_array_set_right(id_removed, thingyB_id());
+			internal_relate_in_array_set_right(id_removed, thingyB_id());
 			--relate_in_array.size_used;
 		}
 		
@@ -2340,7 +2483,7 @@ namespace dcon {
 		// container move relationship for relate_in_array
 		//
 		void internal_move_relationship_relate_in_array(relate_in_array_id last_id, relate_in_array_id id_removed) {
-			relate_in_array_set_right(id_removed, thingyB_id());
+			internal_relate_in_array_set_right(id_removed, thingyB_id());
 			if(auto tmp = relate_in_array.m_right.vptr()[last_id.index()]; bool(tmp)) {
 				dcon::replace_unique_item(relate_in_array.right_storage, relate_in_array.m_array_right.vptr()[tmp.index()], last_id, id_removed);
 			}
@@ -2356,7 +2499,7 @@ namespace dcon {
 			if(relate_in_array_is_valid(relate_in_array_id(relate_in_array_id::value_base_t(left_p.index())))) return relate_in_array_id();
 			relate_in_array_id new_id(relate_in_array_id::value_base_t(left_p.index()));
 			if(relate_in_array.size_used < uint32_t(left_p.value)) relate_in_array_resize(uint32_t(left_p.value));
-			relate_in_array_set_right(new_id, right_p);
+			internal_relate_in_array_set_right(new_id, right_p);
 			return new_id;
 		}
 		
@@ -2366,7 +2509,7 @@ namespace dcon {
 		relate_in_array_id force_create_relate_in_array(thingyA_id left_p, thingyB_id right_p) {
 			relate_in_array_id new_id(relate_in_array_id::value_base_t(left_p.index()));
 			if(relate_in_array.size_used < uint32_t(left_p.value)) relate_in_array_resize(uint32_t(left_p.value));
-			relate_in_array_set_right(new_id, right_p);
+			internal_relate_in_array_set_right(new_id, right_p);
 			return new_id;
 		}
 		
@@ -2393,7 +2536,7 @@ namespace dcon {
 		// container delete for relate_in_list
 		//
 		void delete_relate_in_list(relate_in_list_id id_removed) {
-			relate_in_list_set_right(id_removed, thingyB_id());
+			internal_relate_in_list_set_right(id_removed, thingyB_id());
 		}
 		
 		//
@@ -2402,7 +2545,7 @@ namespace dcon {
 		void pop_back_relate_in_list() {
 			if(relate_in_list.size_used == 0) return;
 			relate_in_list_id id_removed(relate_in_list_id::value_base_t(relate_in_list.size_used - 1));
-			relate_in_list_set_right(id_removed, thingyB_id());
+			internal_relate_in_list_set_right(id_removed, thingyB_id());
 			--relate_in_list.size_used;
 		}
 		
@@ -2411,7 +2554,7 @@ namespace dcon {
 		// container move relationship for relate_in_list
 		//
 		void internal_move_relationship_relate_in_list(relate_in_list_id last_id, relate_in_list_id id_removed) {
-			relate_in_list_set_right(id_removed, thingyB_id());
+			internal_relate_in_list_set_right(id_removed, thingyB_id());
 			if(bool(relate_in_list.m_right.vptr()[last_id.index()])) {
 				auto tmp = relate_in_list.m_link_right.vptr()[last_id.index()];
 				if(bool(tmp.left)) {
@@ -2439,7 +2582,7 @@ namespace dcon {
 			if(relate_in_list_is_valid(relate_in_list_id(relate_in_list_id::value_base_t(left_p.index())))) return relate_in_list_id();
 			relate_in_list_id new_id(relate_in_list_id::value_base_t(left_p.index()));
 			if(relate_in_list.size_used < uint32_t(left_p.value)) relate_in_list_resize(uint32_t(left_p.value));
-			relate_in_list_set_right(new_id, right_p);
+			internal_relate_in_list_set_right(new_id, right_p);
 			return new_id;
 		}
 		
@@ -2449,7 +2592,7 @@ namespace dcon {
 		relate_in_list_id force_create_relate_in_list(thingyA_id left_p, thingyB_id right_p) {
 			relate_in_list_id new_id(relate_in_list_id::value_base_t(left_p.index()));
 			if(relate_in_list.size_used < uint32_t(left_p.value)) relate_in_list_resize(uint32_t(left_p.value));
-			relate_in_list_set_right(new_id, right_p);
+			internal_relate_in_list_set_right(new_id, right_p);
 			return new_id;
 		}
 		
@@ -2464,13 +2607,13 @@ namespace dcon {
 				for( ; many_many.size_used > 0 && many_many.m__index.vptr()[many_many.size_used - 1] != many_many_id(many_many_id::value_base_t(many_many.size_used - 1));  --many_many.size_used) ;
 			}
 			many_many.hashm_joint.erase( many_many.to_joint_keydata(many_many.m_A.vptr()[id_removed.index()], many_many.m_B.vptr()[id_removed.index()], many_many.m_C.vptr()[id_removed.index()], many_many.m_D.vptr()[id_removed.index()], many_many.m_E.vptr()[id_removed.index()], many_many.m_F.vptr()[id_removed.index()]) );
-			many_many_set_A(id_removed, thingyA_id());
-			many_many_set_B(id_removed, thingyA_id());
-			many_many_set_C(id_removed, thingyA_id());
-			many_many_set_D(id_removed, thingyA_id());
-			many_many_set_E(id_removed, thingyA_id());
-			many_many_set_F(id_removed, thingyA_id());
-			many_many_set_ignore(id_removed, thingyA_id());
+			internal_many_many_set_A(id_removed, thingyA_id());
+			internal_many_many_set_B(id_removed, thingyA_id());
+			internal_many_many_set_C(id_removed, thingyA_id());
+			internal_many_many_set_D(id_removed, thingyA_id());
+			internal_many_many_set_E(id_removed, thingyA_id());
+			internal_many_many_set_F(id_removed, thingyA_id());
+			internal_many_many_set_ignore(id_removed, thingyA_id());
 		}
 		
 		//
@@ -2535,13 +2678,13 @@ namespace dcon {
 			many_many.first_free = many_many.m__index.vptr()[many_many.first_free.index()];
 			many_many.m__index.vptr()[new_id.index()] = new_id;
 			many_many.size_used = std::max(many_many.size_used, uint32_t(new_id.index() + 1));
-			many_many_set_A(new_id, A_p);
-			many_many_set_B(new_id, B_p);
-			many_many_set_C(new_id, C_p);
-			many_many_set_D(new_id, D_p);
-			many_many_set_E(new_id, E_p);
-			many_many_set_F(new_id, F_p);
-			many_many_set_ignore(new_id, ignore_p);
+			internal_many_many_set_A(new_id, A_p);
+			internal_many_many_set_B(new_id, B_p);
+			internal_many_many_set_C(new_id, C_p);
+			internal_many_many_set_D(new_id, D_p);
+			internal_many_many_set_E(new_id, E_p);
+			internal_many_many_set_F(new_id, F_p);
+			internal_many_many_set_ignore(new_id, ignore_p);
 			many_many.hashm_joint.insert_or_assign(many_many.to_joint_keydata(A_p, B_p, C_p, D_p, E_p, F_p), new_id);
 			return new_id;
 		}
@@ -2566,13 +2709,13 @@ namespace dcon {
 				}
 				many_many.hashm_joint.insert_or_assign(key_dat, new_id);
 			}
-			many_many_set_A(new_id, A_p);
-			many_many_set_B(new_id, B_p);
-			many_many_set_C(new_id, C_p);
-			many_many_set_D(new_id, D_p);
-			many_many_set_E(new_id, E_p);
-			many_many_set_F(new_id, F_p);
-			many_many_set_ignore(new_id, ignore_p);
+			internal_many_many_set_A(new_id, A_p);
+			internal_many_many_set_B(new_id, B_p);
+			internal_many_many_set_C(new_id, C_p);
+			internal_many_many_set_D(new_id, D_p);
+			internal_many_many_set_E(new_id, E_p);
+			internal_many_many_set_F(new_id, F_p);
+			internal_many_many_set_ignore(new_id, ignore_p);
 			return new_id;
 		}
 		
@@ -3225,7 +3368,7 @@ namespace dcon {
 								for(uint32_t i = 0; i < relate_same.size_used; ++i) {
 									auto tmp = relate_same.m_right.vptr()[i];
 									relate_same.m_right.vptr()[i] = thingyA_id();
-									relate_same_set_right(relate_same_id(relate_same_id::value_base_t(i)), tmp);
+									internal_relate_same_set_right(relate_same_id(relate_same_id::value_base_t(i)), tmp);
 								}
 							}
 							for(uint32_t idx = 0; idx < relate_same.size_used; ++idx) {
@@ -3271,7 +3414,7 @@ namespace dcon {
 								for(uint32_t i = 0; i < relate_in_array.size_used; ++i) {
 									auto tmp = relate_in_array.m_right.vptr()[i];
 									relate_in_array.m_right.vptr()[i] = thingyB_id();
-									relate_in_array_set_right(relate_in_array_id(relate_in_array_id::value_base_t(i)), tmp);
+									internal_relate_in_array_set_right(relate_in_array_id(relate_in_array_id::value_base_t(i)), tmp);
 								}
 							}
 						}
@@ -3307,7 +3450,7 @@ namespace dcon {
 								for(uint32_t i = 0; i < relate_in_list.size_used; ++i) {
 									auto tmp = relate_in_list.m_right.vptr()[i];
 									relate_in_list.m_right.vptr()[i] = thingyB_id();
-									relate_in_list_set_right(relate_in_list_id(relate_in_list_id::value_base_t(i)), tmp);
+									internal_relate_in_list_set_right(relate_in_list_id(relate_in_list_id::value_base_t(i)), tmp);
 								}
 							}
 						}
@@ -3481,49 +3624,49 @@ namespace dcon {
 								for(uint32_t i = 0; i < many_many.size_used; ++i) {
 									auto tmp = many_many.m_A.vptr()[i];
 									many_many.m_A.vptr()[i] = thingyA_id();
-									many_many_set_A(many_many_id(many_many_id::value_base_t(i)), tmp);
+									internal_many_many_set_A(many_many_id(many_many_id::value_base_t(i)), tmp);
 								}
 							}
 							if(serialize_selection.many_many_B == true) {
 								for(uint32_t i = 0; i < many_many.size_used; ++i) {
 									auto tmp = many_many.m_B.vptr()[i];
 									many_many.m_B.vptr()[i] = thingyA_id();
-									many_many_set_B(many_many_id(many_many_id::value_base_t(i)), tmp);
+									internal_many_many_set_B(many_many_id(many_many_id::value_base_t(i)), tmp);
 								}
 							}
 							if(serialize_selection.many_many_C == true) {
 								for(uint32_t i = 0; i < many_many.size_used; ++i) {
 									auto tmp = many_many.m_C.vptr()[i];
 									many_many.m_C.vptr()[i] = thingyA_id();
-									many_many_set_C(many_many_id(many_many_id::value_base_t(i)), tmp);
+									internal_many_many_set_C(many_many_id(many_many_id::value_base_t(i)), tmp);
 								}
 							}
 							if(serialize_selection.many_many_D == true) {
 								for(uint32_t i = 0; i < many_many.size_used; ++i) {
 									auto tmp = many_many.m_D.vptr()[i];
 									many_many.m_D.vptr()[i] = thingyA_id();
-									many_many_set_D(many_many_id(many_many_id::value_base_t(i)), tmp);
+									internal_many_many_set_D(many_many_id(many_many_id::value_base_t(i)), tmp);
 								}
 							}
 							if(serialize_selection.many_many_E == true) {
 								for(uint32_t i = 0; i < many_many.size_used; ++i) {
 									auto tmp = many_many.m_E.vptr()[i];
 									many_many.m_E.vptr()[i] = thingyA_id();
-									many_many_set_E(many_many_id(many_many_id::value_base_t(i)), tmp);
+									internal_many_many_set_E(many_many_id(many_many_id::value_base_t(i)), tmp);
 								}
 							}
 							if(serialize_selection.many_many_F == true) {
 								for(uint32_t i = 0; i < many_many.size_used; ++i) {
 									auto tmp = many_many.m_F.vptr()[i];
 									many_many.m_F.vptr()[i] = thingyA_id();
-									many_many_set_F(many_many_id(many_many_id::value_base_t(i)), tmp);
+									internal_many_many_set_F(many_many_id(many_many_id::value_base_t(i)), tmp);
 								}
 							}
 							if(serialize_selection.many_many_ignore == true) {
 								for(uint32_t i = 0; i < many_many.size_used; ++i) {
 									auto tmp = many_many.m_ignore.vptr()[i];
 									many_many.m_ignore.vptr()[i] = thingyA_id();
-									many_many_set_ignore(many_many_id(many_many_id::value_base_t(i)), tmp);
+									internal_many_many_set_ignore(many_many_id(many_many_id::value_base_t(i)), tmp);
 								}
 							}
 							for(uint32_t idx = 0; idx < many_many.size_used; ++idx) {
@@ -3744,7 +3887,7 @@ namespace dcon {
 								for(uint32_t i = 0; i < relate_same.size_used; ++i) {
 									auto tmp = relate_same.m_right.vptr()[i];
 									relate_same.m_right.vptr()[i] = thingyA_id();
-									relate_same_set_right(relate_same_id(relate_same_id::value_base_t(i)), tmp);
+									internal_relate_same_set_right(relate_same_id(relate_same_id::value_base_t(i)), tmp);
 								}
 							}
 							for(uint32_t idx = 0; idx < relate_same.size_used; ++idx) {
@@ -3790,7 +3933,7 @@ namespace dcon {
 								for(uint32_t i = 0; i < relate_in_array.size_used; ++i) {
 									auto tmp = relate_in_array.m_right.vptr()[i];
 									relate_in_array.m_right.vptr()[i] = thingyB_id();
-									relate_in_array_set_right(relate_in_array_id(relate_in_array_id::value_base_t(i)), tmp);
+									internal_relate_in_array_set_right(relate_in_array_id(relate_in_array_id::value_base_t(i)), tmp);
 								}
 							}
 						}
@@ -3826,7 +3969,7 @@ namespace dcon {
 								for(uint32_t i = 0; i < relate_in_list.size_used; ++i) {
 									auto tmp = relate_in_list.m_right.vptr()[i];
 									relate_in_list.m_right.vptr()[i] = thingyB_id();
-									relate_in_list_set_right(relate_in_list_id(relate_in_list_id::value_base_t(i)), tmp);
+									internal_relate_in_list_set_right(relate_in_list_id(relate_in_list_id::value_base_t(i)), tmp);
 								}
 							}
 						}
@@ -4000,49 +4143,49 @@ namespace dcon {
 								for(uint32_t i = 0; i < many_many.size_used; ++i) {
 									auto tmp = many_many.m_A.vptr()[i];
 									many_many.m_A.vptr()[i] = thingyA_id();
-									many_many_set_A(many_many_id(many_many_id::value_base_t(i)), tmp);
+									internal_many_many_set_A(many_many_id(many_many_id::value_base_t(i)), tmp);
 								}
 							}
 							if(serialize_selection.many_many_B == true) {
 								for(uint32_t i = 0; i < many_many.size_used; ++i) {
 									auto tmp = many_many.m_B.vptr()[i];
 									many_many.m_B.vptr()[i] = thingyA_id();
-									many_many_set_B(many_many_id(many_many_id::value_base_t(i)), tmp);
+									internal_many_many_set_B(many_many_id(many_many_id::value_base_t(i)), tmp);
 								}
 							}
 							if(serialize_selection.many_many_C == true) {
 								for(uint32_t i = 0; i < many_many.size_used; ++i) {
 									auto tmp = many_many.m_C.vptr()[i];
 									many_many.m_C.vptr()[i] = thingyA_id();
-									many_many_set_C(many_many_id(many_many_id::value_base_t(i)), tmp);
+									internal_many_many_set_C(many_many_id(many_many_id::value_base_t(i)), tmp);
 								}
 							}
 							if(serialize_selection.many_many_D == true) {
 								for(uint32_t i = 0; i < many_many.size_used; ++i) {
 									auto tmp = many_many.m_D.vptr()[i];
 									many_many.m_D.vptr()[i] = thingyA_id();
-									many_many_set_D(many_many_id(many_many_id::value_base_t(i)), tmp);
+									internal_many_many_set_D(many_many_id(many_many_id::value_base_t(i)), tmp);
 								}
 							}
 							if(serialize_selection.many_many_E == true) {
 								for(uint32_t i = 0; i < many_many.size_used; ++i) {
 									auto tmp = many_many.m_E.vptr()[i];
 									many_many.m_E.vptr()[i] = thingyA_id();
-									many_many_set_E(many_many_id(many_many_id::value_base_t(i)), tmp);
+									internal_many_many_set_E(many_many_id(many_many_id::value_base_t(i)), tmp);
 								}
 							}
 							if(serialize_selection.many_many_F == true) {
 								for(uint32_t i = 0; i < many_many.size_used; ++i) {
 									auto tmp = many_many.m_F.vptr()[i];
 									many_many.m_F.vptr()[i] = thingyA_id();
-									many_many_set_F(many_many_id(many_many_id::value_base_t(i)), tmp);
+									internal_many_many_set_F(many_many_id(many_many_id::value_base_t(i)), tmp);
 								}
 							}
 							if(serialize_selection.many_many_ignore == true) {
 								for(uint32_t i = 0; i < many_many.size_used; ++i) {
 									auto tmp = many_many.m_ignore.vptr()[i];
 									many_many.m_ignore.vptr()[i] = thingyA_id();
-									many_many_set_ignore(many_many_id(many_many_id::value_base_t(i)), tmp);
+									internal_many_many_set_ignore(many_many_id(many_many_id::value_base_t(i)), tmp);
 								}
 							}
 							for(uint32_t idx = 0; idx < many_many.size_used; ++idx) {
@@ -4243,8 +4386,20 @@ namespace dcon {
 	DCON_RELEASE_INLINE thingyA_fat_id relate_same_fat_id::get_left() const noexcept {
 		return thingyA_fat_id(container, container.relate_same_get_left(id));
 	}
+	DCON_RELEASE_INLINE void relate_same_fat_id::set_left(thingyA_id val) const noexcept {
+		container.relate_same_set_left(id, val);
+	}
+	DCON_RELEASE_INLINE bool relate_same_fat_id::try_set_left(thingyA_id val) const noexcept {
+		return container.relate_same_try_set_left(id, val);
+	}
 	DCON_RELEASE_INLINE thingyA_fat_id relate_same_fat_id::get_right() const noexcept {
 		return thingyA_fat_id(container, container.relate_same_get_right(id));
+	}
+	DCON_RELEASE_INLINE void relate_same_fat_id::set_right(thingyA_id val) const noexcept {
+		container.relate_same_set_right(id, val);
+	}
+	DCON_RELEASE_INLINE bool relate_same_fat_id::try_set_right(thingyA_id val) const noexcept {
+		return container.relate_same_try_set_right(id, val);
 	}
 	DCON_RELEASE_INLINE bool relate_same_fat_id::is_valid() const noexcept {
 		return container.relate_same_is_valid(id);
@@ -4275,6 +4430,9 @@ namespace dcon {
 	DCON_RELEASE_INLINE void relate_in_array_fat_id::set_right(thingyB_id val) const noexcept {
 		container.relate_in_array_set_right(id, val);
 	}
+	DCON_RELEASE_INLINE bool relate_in_array_fat_id::try_set_right(thingyB_id val) const noexcept {
+		return container.relate_in_array_try_set_right(id, val);
+	}
 	DCON_RELEASE_INLINE bool relate_in_array_fat_id::is_valid() const noexcept {
 		return container.relate_in_array_is_valid(id);
 	}
@@ -4304,6 +4462,9 @@ namespace dcon {
 	DCON_RELEASE_INLINE void relate_in_list_fat_id::set_right(thingyB_id val) const noexcept {
 		container.relate_in_list_set_right(id, val);
 	}
+	DCON_RELEASE_INLINE bool relate_in_list_fat_id::try_set_right(thingyB_id val) const noexcept {
+		return container.relate_in_list_try_set_right(id, val);
+	}
 	DCON_RELEASE_INLINE bool relate_in_list_fat_id::is_valid() const noexcept {
 		return container.relate_in_list_is_valid(id);
 	}
@@ -4321,26 +4482,65 @@ namespace dcon {
 	DCON_RELEASE_INLINE thingyA_fat_id many_many_fat_id::get_A() const noexcept {
 		return thingyA_fat_id(container, container.many_many_get_A(id));
 	}
+	DCON_RELEASE_INLINE void many_many_fat_id::set_A(thingyA_id val) const noexcept {
+		container.many_many_set_A(id, val);
+	}
+	DCON_RELEASE_INLINE bool many_many_fat_id::try_set_A(thingyA_id val) const noexcept {
+		return container.many_many_try_set_A(id, val);
+	}
 	DCON_RELEASE_INLINE thingyA_fat_id many_many_fat_id::get_B() const noexcept {
 		return thingyA_fat_id(container, container.many_many_get_B(id));
+	}
+	DCON_RELEASE_INLINE void many_many_fat_id::set_B(thingyA_id val) const noexcept {
+		container.many_many_set_B(id, val);
+	}
+	DCON_RELEASE_INLINE bool many_many_fat_id::try_set_B(thingyA_id val) const noexcept {
+		return container.many_many_try_set_B(id, val);
 	}
 	DCON_RELEASE_INLINE thingyA_fat_id many_many_fat_id::get_C() const noexcept {
 		return thingyA_fat_id(container, container.many_many_get_C(id));
 	}
+	DCON_RELEASE_INLINE void many_many_fat_id::set_C(thingyA_id val) const noexcept {
+		container.many_many_set_C(id, val);
+	}
+	DCON_RELEASE_INLINE bool many_many_fat_id::try_set_C(thingyA_id val) const noexcept {
+		return container.many_many_try_set_C(id, val);
+	}
 	DCON_RELEASE_INLINE thingyA_fat_id many_many_fat_id::get_D() const noexcept {
 		return thingyA_fat_id(container, container.many_many_get_D(id));
+	}
+	DCON_RELEASE_INLINE void many_many_fat_id::set_D(thingyA_id val) const noexcept {
+		container.many_many_set_D(id, val);
+	}
+	DCON_RELEASE_INLINE bool many_many_fat_id::try_set_D(thingyA_id val) const noexcept {
+		return container.many_many_try_set_D(id, val);
 	}
 	DCON_RELEASE_INLINE thingyA_fat_id many_many_fat_id::get_E() const noexcept {
 		return thingyA_fat_id(container, container.many_many_get_E(id));
 	}
+	DCON_RELEASE_INLINE void many_many_fat_id::set_E(thingyA_id val) const noexcept {
+		container.many_many_set_E(id, val);
+	}
+	DCON_RELEASE_INLINE bool many_many_fat_id::try_set_E(thingyA_id val) const noexcept {
+		return container.many_many_try_set_E(id, val);
+	}
 	DCON_RELEASE_INLINE thingyA_fat_id many_many_fat_id::get_F() const noexcept {
 		return thingyA_fat_id(container, container.many_many_get_F(id));
+	}
+	DCON_RELEASE_INLINE void many_many_fat_id::set_F(thingyA_id val) const noexcept {
+		container.many_many_set_F(id, val);
+	}
+	DCON_RELEASE_INLINE bool many_many_fat_id::try_set_F(thingyA_id val) const noexcept {
+		return container.many_many_try_set_F(id, val);
 	}
 	DCON_RELEASE_INLINE thingyA_fat_id many_many_fat_id::get_ignore() const noexcept {
 		return thingyA_fat_id(container, container.many_many_get_ignore(id));
 	}
 	DCON_RELEASE_INLINE void many_many_fat_id::set_ignore(thingyA_id val) const noexcept {
 		container.many_many_set_ignore(id, val);
+	}
+	DCON_RELEASE_INLINE bool many_many_fat_id::try_set_ignore(thingyA_id val) const noexcept {
+		return container.many_many_try_set_ignore(id, val);
 	}
 	DCON_RELEASE_INLINE bool many_many_fat_id::is_valid() const noexcept {
 		return container.many_many_is_valid(id);

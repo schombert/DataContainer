@@ -735,7 +735,11 @@ namespace os {
 		}
 		explicit operator bool() const noexcept { return bool(id); }
 		DCON_RELEASE_INLINE thingy_fat_id get_left() const noexcept;
+		DCON_RELEASE_INLINE void set_left(thingy_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_left(thingy_id val) const noexcept;
 		DCON_RELEASE_INLINE thingy2_fat_id get_right() const noexcept;
+		DCON_RELEASE_INLINE void set_right(thingy2_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_right(thingy2_id val) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 	
 	};
@@ -1232,7 +1236,7 @@ namespace os {
 		}
 		#endif
 		private:
-		void dummy_rel_set_left(dummy_rel_id id, thingy_id value) noexcept {
+		void internal_dummy_rel_set_left(dummy_rel_id id, thingy_id value) noexcept {
 			if(auto old_value = dummy_rel.m_left.vptr()[id.index()]; bool(old_value)) {
 				auto& vref = dummy_rel.m_array_left.vptr()[old_value.index()];
 				if(auto it = std::find(vref.begin(), vref.end(), id); it != vref.end()) {
@@ -1246,6 +1250,27 @@ namespace os {
 			dummy_rel.m_left.vptr()[id.index()] = value;
 		}
 		public:
+		void dummy_rel_set_left(dummy_rel_id id, thingy_id value) noexcept {
+			if(!bool(value)) {
+				delete_dummy_rel(id);
+				return;
+			}
+			dummy_rel.hashm_joint.erase( dummy_rel.to_joint_keydata(dummy_rel.m_left.vptr()[id.index()], thingy2_id(thingy2_id::value_base_t(id.index()))) );
+			internal_dummy_rel_set_left(id, value);
+			if(auto it = dummy_rel.hashm_joint.find( dummy_rel.to_joint_keydata(dummy_rel.m_left.vptr()[id.index()], thingy2_id(thingy2_id::value_base_t(id.index()))) ); it != dummy_rel.hashm_joint.end()) {
+				delete_dummy_rel(it->second);
+			}
+			dummy_rel.hashm_joint.insert_or_assign(dummy_rel.to_joint_keydata(dummy_rel.m_left.vptr()[id.index()], thingy2_id(thingy2_id::value_base_t(id.index()))), id);
+		}
+		bool dummy_rel_try_set_left(dummy_rel_id id, thingy_id value) noexcept {
+			if(!bool(value)) {
+				return false;
+			}
+			if(dummy_rel.hashm_joint.find( dummy_rel.to_joint_keydata(value, thingy2_id(thingy2_id::value_base_t(id.index()))) ) != dummy_rel.hashm_joint.end()) return false;
+			internal_dummy_rel_set_left(id, value);
+			dummy_rel.hashm_joint.insert_or_assign(dummy_rel.to_joint_keydata(dummy_rel.m_left.vptr()[id.index()], thingy2_id(thingy2_id::value_base_t(id.index()))), id);
+			return true;
+		}
 		DCON_RELEASE_INLINE thingy2_id dummy_rel_get_right(dummy_rel_id id) const noexcept {
 			return thingy2_id(thingy2_id::value_base_t(id.index()));
 		}
@@ -1261,6 +1286,13 @@ namespace os {
 		}
 		#endif
 		private:
+		void internal_dummy_rel_set_right(dummy_rel_id id, thingy2_id value) noexcept {
+			if(bool(value)) {
+				delete_dummy_rel( dummy_rel_id(dummy_rel_id::value_base_t(value.index())) );
+				internal_move_relationship_dummy_rel(id, dummy_rel_id(dummy_rel_id::value_base_t(value.index())) );
+			}
+		}
+		public:
 		void dummy_rel_set_right(dummy_rel_id id, thingy2_id value) noexcept {
 			if(bool(value)) {
 				delete_dummy_rel( dummy_rel_id(dummy_rel_id::value_base_t(value.index())) );
@@ -1278,7 +1310,6 @@ namespace os {
 			}
 			return true;
 		}
-		public:
 		DCON_RELEASE_INLINE bool dummy_rel_is_valid(dummy_rel_id id) const noexcept {
 			return bool(id) && uint32_t(id.index()) < dummy_rel.size_used && thingy2_is_valid(thingy2_id(thingy2_id::value_base_t(id.index()))) && (bool(dummy_rel.m_left.vptr()[id.index()]) || false);
 		}
@@ -1469,7 +1500,7 @@ namespace os {
 		//
 		void delete_dummy_rel(dummy_rel_id id_removed) {
 			dummy_rel.hashm_joint.erase( dummy_rel.to_joint_keydata(dummy_rel.m_left.vptr()[id_removed.index()], thingy2_id(thingy2_id::value_base_t(id_removed.index()))) );
-			dummy_rel_set_left(id_removed, thingy_id());
+			internal_dummy_rel_set_left(id_removed, thingy_id());
 		}
 		
 		//
@@ -1479,7 +1510,7 @@ namespace os {
 			if(dummy_rel.size_used == 0) return;
 			dummy_rel_id id_removed(dummy_rel_id::value_base_t(dummy_rel.size_used - 1));
 			dummy_rel.hashm_joint.erase( dummy_rel.to_joint_keydata(dummy_rel.m_left.vptr()[id_removed.index()], thingy2_id(thingy2_id::value_base_t(id_removed.index()))) );
-			dummy_rel_set_left(id_removed, thingy_id());
+			internal_dummy_rel_set_left(id_removed, thingy_id());
 			--dummy_rel.size_used;
 		}
 		
@@ -1489,7 +1520,7 @@ namespace os {
 		//
 		void internal_move_relationship_dummy_rel(dummy_rel_id last_id, dummy_rel_id id_removed) {
 			dummy_rel.hashm_joint.erase(dummy_rel.to_joint_keydata(dummy_rel.m_left.vptr()[last_id.index()], thingy2_id(thingy2_id::value_base_t(last_id.index()))));
-			dummy_rel_set_left(id_removed, thingy_id());
+			internal_dummy_rel_set_left(id_removed, thingy_id());
 			if(auto tmp = dummy_rel.m_left.vptr()[last_id.index()]; bool(tmp)) {
 				auto& vref = dummy_rel.m_array_left.vptr()[tmp.index()];
 				if(auto pos = std::find(vref.begin(), vref.end(), last_id); pos != vref.end()) {
@@ -1510,7 +1541,7 @@ namespace os {
 			if(dummy_rel_is_valid(dummy_rel_id(dummy_rel_id::value_base_t(right_p.index())))) return dummy_rel_id();
 			dummy_rel_id new_id(dummy_rel_id::value_base_t(right_p.index()));
 			if(dummy_rel.size_used < uint32_t(right_p.value)) dummy_rel_resize(uint32_t(right_p.value));
-			dummy_rel_set_left(new_id, left_p);
+			internal_dummy_rel_set_left(new_id, left_p);
 			dummy_rel.hashm_joint.insert_or_assign(dummy_rel.to_joint_keydata(left_p, right_p), new_id);
 			return new_id;
 		}
@@ -1528,7 +1559,7 @@ namespace os {
 				}
 				dummy_rel.hashm_joint.insert_or_assign(key_dat, new_id);
 			}
-			dummy_rel_set_left(new_id, left_p);
+			internal_dummy_rel_set_left(new_id, left_p);
 			return new_id;
 		}
 		
@@ -2333,7 +2364,7 @@ namespace os {
 								for(uint32_t i = 0; i < dummy_rel.size_used; ++i) {
 									auto tmp = dummy_rel.m_left.vptr()[i];
 									dummy_rel.m_left.vptr()[i] = thingy_id();
-									dummy_rel_set_left(dummy_rel_id(dummy_rel_id::value_base_t(i)), tmp);
+									internal_dummy_rel_set_left(dummy_rel_id(dummy_rel_id::value_base_t(i)), tmp);
 								}
 							}
 							for(uint32_t idx = 0; idx < dummy_rel.size_used; ++idx) {
@@ -2808,7 +2839,7 @@ namespace os {
 								for(uint32_t i = 0; i < dummy_rel.size_used; ++i) {
 									auto tmp = dummy_rel.m_left.vptr()[i];
 									dummy_rel.m_left.vptr()[i] = thingy_id();
-									dummy_rel_set_left(dummy_rel_id(dummy_rel_id::value_base_t(i)), tmp);
+									internal_dummy_rel_set_left(dummy_rel_id(dummy_rel_id::value_base_t(i)), tmp);
 								}
 							}
 							for(uint32_t idx = 0; idx < dummy_rel.size_used; ++idx) {
@@ -3060,8 +3091,20 @@ namespace os {
 	DCON_RELEASE_INLINE thingy_fat_id dummy_rel_fat_id::get_left() const noexcept {
 		return thingy_fat_id(container, container.dummy_rel_get_left(id));
 	}
+	DCON_RELEASE_INLINE void dummy_rel_fat_id::set_left(thingy_id val) const noexcept {
+		container.dummy_rel_set_left(id, val);
+	}
+	DCON_RELEASE_INLINE bool dummy_rel_fat_id::try_set_left(thingy_id val) const noexcept {
+		return container.dummy_rel_try_set_left(id, val);
+	}
 	DCON_RELEASE_INLINE thingy2_fat_id dummy_rel_fat_id::get_right() const noexcept {
 		return thingy2_fat_id(container, container.dummy_rel_get_right(id));
+	}
+	DCON_RELEASE_INLINE void dummy_rel_fat_id::set_right(thingy2_id val) const noexcept {
+		container.dummy_rel_set_right(id, val);
+	}
+	DCON_RELEASE_INLINE bool dummy_rel_fat_id::try_set_right(thingy2_id val) const noexcept {
+		return container.dummy_rel_try_set_right(id, val);
 	}
 	DCON_RELEASE_INLINE bool dummy_rel_fat_id::is_valid() const noexcept {
 		return container.dummy_rel_is_valid(id);

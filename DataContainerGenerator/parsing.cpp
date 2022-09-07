@@ -213,15 +213,39 @@ related_object parse_link_def(char const * start, char const * end, char const *
 					result.property_name = extracted.values[0].to_string();
 				}
 			} else if(kstr == "type") {
-				if(extracted.values.size() != 1) {
+				if(extracted.values.size() == 0 || extracted.values.size() > 2) {
 					err_out.add(std::string("wrong number of parameters for \"type\" on line ")
 						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
 				} else if(extracted.values[0].to_string() == "unique") {
 					result.index = index_type::at_most_one;
+					if(extracted.values.size() > 1) {
+						if(extracted.values[1].to_string() == "optional") {
+							result.is_optional = true;
+						} else {
+							err_out.add(std::string("unknown parameter \"") + extracted.values[1].to_string() + "\" passed to type on line "
+								+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+						}
+					}
 				} else if(extracted.values[0].to_string() == "many") {
 					result.index = index_type::many;
+					if(extracted.values.size() > 1) {
+						if(extracted.values[1].to_string() == "optional") {
+							result.is_optional = true;
+						} else {
+							err_out.add(std::string("unknown parameter \"") + extracted.values[1].to_string() + "\" passed to type on line "
+								+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+						}
+					}
 				} else if(extracted.values[0].to_string() == "unindexed") {
 					result.index = index_type::none;
+					if(extracted.values.size() > 1) {
+						if(extracted.values[1].to_string() == "optional") {
+							result.is_optional = true;
+						} else {
+							err_out.add(std::string("unknown parameter \"") + extracted.values[1].to_string() + "\" passed to type on line "
+								+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+						}
+					}
 				} else {
 					err_out.add(std::string("unknown parameter \"") + extracted.values[0].to_string() + "\" passed to type on line "
 						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));

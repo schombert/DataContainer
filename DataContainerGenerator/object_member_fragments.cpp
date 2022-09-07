@@ -984,6 +984,111 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 	}
 }
 
+void make_delete_current_composite_keys_text(basic_builder& o, std::string const& target_id, relationship_object_def const& obj, related_object const& i) {
+	o + substitute{ "target_id", target_id };
+	if(i.is_covered_by_composite_key) {
+		std::string params;
+		bool needs_adjust = false;
+		for(auto& cc : obj.composite_indexes) {
+			for(auto& idx : cc.component_indexes) {
+				if(idx.property_name == i.property_name) {
+					needs_adjust = true;
+				}
+				if(params.length() > 0)
+					params += ", ";
+				if(idx.property_name == obj.primary_key.property_name)
+					params += idx.object_type + "_id(" + idx.object_type + "_id::value_base_t(" + target_id + ".index()))";
+				else
+					params += obj.name + ".m_" + idx.property_name + ".vptr()[" + target_id + ".index()]";
+			}
+			if(needs_adjust) {
+				o + substitute{ "params", params } +substitute{ "ckname", cc.name };
+				o + "@obj@.hashm_@ckname@.erase( @obj@.to_@ckname@_keydata(@params@) );";
+			}
+		}
+	}
+}
+
+void make_try_current_composite_keys_text(basic_builder& o, std::string const& target_id, relationship_object_def const& obj, related_object const& i) {
+	o + substitute{ "target_id", target_id };
+	if(i.is_covered_by_composite_key) {
+		std::string params;
+		bool needs_adjust = false;
+		for(auto& cc : obj.composite_indexes) {
+			for(auto& idx : cc.component_indexes) {
+				if(idx.property_name == i.property_name) {
+					needs_adjust = true;
+				}
+				if(params.length() > 0)
+					params += ", ";
+				if(idx.property_name == obj.primary_key.property_name)
+					params += idx.object_type + "_id(" + idx.object_type + "_id::value_base_t(" + target_id + ".index()))";
+				else if(idx.property_name == i.property_name)
+					params += "value";
+				else
+					params += obj.name + ".m_" + idx.property_name + ".vptr()[" + target_id + ".index()]";
+			}
+			if(needs_adjust) {
+				o + substitute{ "params", params } +substitute{ "ckname", cc.name };
+				o + "if(@obj@.hashm_@ckname@.find( @obj@.to_@ckname@_keydata(@params@) ) != @obj@.hashm_@ckname@.end()) return false;";
+			}
+		}
+	}
+}
+
+void make_remove_add_current_composite_keys_text(basic_builder& o, std::string const& target_id, relationship_object_def const& obj, related_object const& i) {
+	o + substitute{ "target_id", target_id };
+	if(i.is_covered_by_composite_key) {
+		std::string params;
+		bool needs_adjust = false;
+		for(auto& cc : obj.composite_indexes) {
+			for(auto& idx : cc.component_indexes) {
+				if(idx.property_name == i.property_name) {
+					needs_adjust = true;
+				}
+				if(params.length() > 0)
+					params += ", ";
+				if(idx.property_name == obj.primary_key.property_name)
+					params += idx.object_type + "_id(" + idx.object_type + "_id::value_base_t(" + target_id + ".index()))";
+				else
+					params += obj.name + ".m_" + idx.property_name + ".vptr()[" + target_id + ".index()]";
+			}
+			if(needs_adjust) {
+				o + substitute{ "params", params } +substitute{ "ckname", cc.name };
+				o + "if(auto it = @obj@.hashm_@ckname@.find( @obj@.to_@ckname@_keydata(@params@) ); it != @obj@.hashm_@ckname@.end())" + block{
+					o + "delete_@obj@(it->second);";
+				};
+				o + "@obj@.hashm_@ckname@.insert_or_assign(@obj@.to_@ckname@_keydata(@params@), @target_id@);";
+			}
+		}
+	}
+}
+
+void make_force_add_current_composite_keys_text(basic_builder& o, std::string const& target_id, relationship_object_def const& obj, related_object const& i) {
+	o + substitute{ "target_id", target_id };
+	if(i.is_covered_by_composite_key) {
+		std::string params;
+		bool needs_adjust = false;
+		for(auto& cc : obj.composite_indexes) {
+			for(auto& idx : cc.component_indexes) {
+				if(idx.property_name == i.property_name) {
+					needs_adjust = true;
+				}
+				if(params.length() > 0)
+					params += ", ";
+				if(idx.property_name == obj.primary_key.property_name)
+					params += idx.object_type + "_id(" + idx.object_type + "_id::value_base_t(" + target_id +".index()))";
+				else
+					params += obj.name + ".m_" + idx.property_name + ".vptr()[" + target_id + ".index()]";
+			}
+			if(needs_adjust) {
+				o + substitute{ "params", params } +substitute{ "ckname", cc.name };
+				o + "@obj@.hashm_@ckname@.insert_or_assign(@obj@.to_@ckname@_keydata(@params@), @target_id@);";
+			}
+		}
+	}
+}
+
 void make_link_member_declarations(basic_builder& o, file_def const& parsed_file, relationship_object_def const& obj,
 	related_object const& i, bool add_prefix, std::string const& namesp, bool const_mode) {
 
@@ -993,30 +1098,28 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 		o + substitute{ "namesp", namesp };
 		
 
-		if(( o.declaration_mode) && (i.protection == protection_type::hidden
-			||  i.protection == protection_type::super_hidden))
+		if(o.declaration_mode && i.protection == protection_type::hidden)
 			o + "private:";
 
 		o + "DCON_RELEASE_INLINE @rtype@ @namesp@get_@prop@() const noexcept" + block{
 				o + "return @rtype@(container, container.@obj@_get_@prop@(id));";
 		};
-		if((o.declaration_mode) && (i.protection == protection_type::hidden ||
-			 i.protection == protection_type::super_hidden))
+		if(o.declaration_mode && i.protection == protection_type::hidden)
 			o + "public:";
 
-		if(!const_mode &&  i.protection != protection_type::super_read_only && i.protection != protection_type::super_hidden) {
+		if(!const_mode) {
 			if((o.declaration_mode) && 
 				(i.protection == protection_type::read_only || i.protection == protection_type::hidden))
 				o + "private:";
 
 			o + "DCON_RELEASE_INLINE void @namesp@set_@prop@(@prtype@ val) const noexcept" + block{
-					o + "container.@obj@_set_@prop@(id, val);";
+				o + "container.@obj@_set_@prop@(id, val);";
 			};
-			if(i.index == index_type::at_most_one) {
-				o + "DCON_RELEASE_INLINE bool @namesp@try_set_@prop@(@prtype@ val) const noexcept" + block{
-						o + "return container.@obj@_try_set_@prop@(id, val);";
-				};
-			}
+			
+			o + "DCON_RELEASE_INLINE bool @namesp@try_set_@prop@(@prtype@ val) const noexcept" + block{
+				o + "return container.@obj@_try_set_@prop@(id, val);";
+			};
+			
 
 			if((o.declaration_mode) && 
 				(i.protection == protection_type::read_only || i.protection == protection_type::hidden))
@@ -1027,8 +1130,7 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 			o + substitute{ "rel", obj.name } +substitute{ "prop", i.property_name } +substitute{ "prop_type", i.type_name } +
 				substitute{ "vector_position", obj.is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags" };
 
-			if(i.protection == protection_type::hidden
-				|| i.protection == protection_type::super_hidden) {
+			if(i.protection == protection_type::hidden) {
 				o + "private:";
 				o + "friend @rtype@ @obj@_fat_id::get_@prop@() const noexcept;";
 				o + "friend @rtype@ @obj@_const_fat_id::get_@prop@() const noexcept;";
@@ -1052,15 +1154,21 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 			};
 			o + "#endif";
 
-			if(i.protection == protection_type::hidden
-				|| i.protection == protection_type::super_hidden)
+			if(i.protection == protection_type::hidden)
 				o + "public:";
 
-			if(i.protection == protection_type::read_only || i.protection == protection_type::hidden
-				|| i.protection == protection_type::super_read_only || i.protection == protection_type::super_hidden) {
+			o + "private:";
+			o + "void internal_@rel@_set_@prop@(@rel@_id id, @prop_type@_id value) noexcept" + block{
+				o + "if(bool(value))" + block{
+					o + "delete_@rel@( @rel@_id(@rel@_id::value_base_t(value.index())) );";
+					o + "internal_move_relationship_@rel@(id, @rel@_id(@rel@_id::value_base_t(value.index())) );";
+				};
+			};
+			o + "public:";
+
+			if(i.protection == protection_type::read_only || i.protection == protection_type::hidden) {
 				o + "private:";
-				if(i.protection == protection_type::read_only || i.protection == protection_type::hidden)
-					o + "friend void @obj@_fat_id::set_@prop@( @prop_type@_id) const noexcept;";
+				o + "friend void @obj@_fat_id::set_@prop@( @prop_type@_id) const noexcept;";
 			}
 
 			o + "void @rel@_set_@prop@(@rel@_id id, @prop_type@_id value) noexcept" + block{
@@ -1068,7 +1176,9 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 					o + "delete_@rel@( @rel@_id(@rel@_id::value_base_t(value.index())) );";
 					o + "internal_move_relationship_@rel@(id, @rel@_id(@rel@_id::value_base_t(value.index())) );";
 				} +append{"else"} +block{
-					o + "delete_@rel@(id);";
+					if(!i.is_optional) {
+						o + "delete_@rel@(id);";
+					}
 				};
 			};
 
@@ -1077,13 +1187,15 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 					o + "if(@rel@_is_valid( @rel@_id(@rel@_id::value_base_t(value.index())) )) return false;";
 					o + "internal_move_relationship_@rel@(id, @rel@_id(@rel@_id::value_base_t(value.index())) );";
 				} +append{"else"} +block{
-					o + "delete_@rel@(id);";
+					if(!i.is_optional)
+						o + "delete_@rel@(id);";
+					else
+						o + "return false;";
 				};
 				o + "return true;";
 			};
 
-			if(i.protection == protection_type::read_only || i.protection == protection_type::hidden
-				|| i.protection == protection_type::super_read_only || i.protection == protection_type::super_hidden)
+			if(i.protection == protection_type::read_only || i.protection == protection_type::hidden)
 				o + "public:";
 
 		} else if(i.index == index_type::at_most_one) {
@@ -1091,8 +1203,7 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 			o + substitute{ "obj", obj.name } +substitute{ "prop", i.property_name } +substitute{ "type", i.type_name + "_id" };
 			o + substitute{ "vector_position", obj.is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags" };
 			
-			if(i.protection == protection_type::hidden
-				|| i.protection == protection_type::super_hidden) {
+			if(i.protection == protection_type::hidden) {
 				o + "private:";
 				o + "friend @rtype@ @obj@_fat_id::get_@prop@() const noexcept;";
 				o + "friend @rtype@ @obj@_const_fat_id::get_@prop@() const noexcept;";
@@ -1114,16 +1225,34 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 			};
 			o + "#endif";
 
-			if(i.protection == protection_type::hidden
-				|| i.protection == protection_type::super_hidden) {
+			if(i.protection == protection_type::hidden) {
 				o + "public:";
 			}
 
-			if(i.protection == protection_type::read_only || i.protection == protection_type::hidden
-				|| i.protection == protection_type::super_read_only || i.protection == protection_type::super_hidden) {
+			o + "private:";
+			o + "void internal_@obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
+				o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()]; bool(old_value))" + block{
+					o + "@obj@.m_link_back_@prop@.vptr()[old_value.index()] = @obj@_id();";
+				};
+				o + "if(bool(value))" + block{
+					if(!i.is_optional) {
+						o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
+							o + "delete_@obj@(old_rel);";
+						};
+					} else {
+						o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
+							o + "@obj@.m_@prop@.vptr()[old_rel.index()] = @obj@_id();";
+						};
+					}
+					o + "@obj@.m_link_back_@prop@.vptr()[value.index()] = id;";
+				};
+				o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
+			};
+			o + "public:";
+
+			if(i.protection == protection_type::read_only || i.protection == protection_type::hidden) {
 				o + "private:";
-				if(i.protection == protection_type::read_only || i.protection == protection_type::hidden)
-					o + "friend void @obj@_fat_id::set_@prop@( @prop_type@_id) const noexcept;";
+				o + "friend void @obj@_fat_id::set_@prop@( @prop_type@_id) const noexcept;";
 			}
 
 			o + "void @obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
@@ -1131,15 +1260,38 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 					o + "@obj@.m_link_back_@prop@.vptr()[old_value.index()] = @obj@_id();";
 				};
 				o + "if(bool(value))" + block{
-					o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
-						o + "delete_@obj@(old_rel);";
-					};
+					if(!i.is_optional) {
+						o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
+							o + "delete_@obj@(old_rel);";
+						};
+					} else {
+						o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
+							o + "@obj@.m_@prop@.vptr()[old_rel.index()] = @obj@_id();";
+						};
+					}
 					o + "@obj@.m_link_back_@prop@.vptr()[value.index()] = id;";
+
+					make_delete_current_composite_keys_text(o, "id", obj, i);
+					o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
+					make_remove_add_current_composite_keys_text(o, "id", obj, i);
+				} +append{ "else" } +block{
+					if(!i.is_optional) {
+						o + "delete_@obj@(id);";
+					} else {
+						make_delete_current_composite_keys_text(o, "id", obj, i);
+						o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
+						make_remove_add_current_composite_keys_text(o, "id", obj, i);
+					}
 				};
-				o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
+				
 			};
 
 			o + "bool @obj@_try_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
+				if(!i.is_optional) {
+					o + "if(!bool(value)) return false;";
+				}
+				make_try_current_composite_keys_text(o, "id", obj, i);
+
 				o + "if(bool(value))" + block{
 					o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
 						o + "return false;";
@@ -1147,22 +1299,21 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 					o + "@obj@.m_link_back_@prop@.vptr()[value.index()] = id;";
 				};
 				o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()]; bool(old_value))" + block{
-						o + "@obj@.m_link_back_@prop@.vptr()[old_value.index()] = @obj@_id();";
+					o + "@obj@.m_link_back_@prop@.vptr()[old_value.index()] = @obj@_id();";
 				};
 				o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
+				make_force_add_current_composite_keys_text(o, "id", obj, i);
 				o + "return true;";
 			};
 
-			if(i.protection == protection_type::read_only || i.protection == protection_type::hidden
-				|| i.protection == protection_type::super_read_only || i.protection == protection_type::super_hidden)
+			if(i.protection == protection_type::read_only || i.protection == protection_type::hidden)
 				o + "public:";
 
 		} else if(i.index == index_type::many) {
 			o + substitute{ "obj", obj.name } +substitute{ "prop", i.property_name } +substitute{ "type", i.type_name + "_id" };
 			o + substitute{ "vector_position", obj.is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags" };
 
-			if(i.protection == protection_type::hidden
-				|| i.protection == protection_type::super_hidden) {
+			if(i.protection == protection_type::hidden) {
 				o + "private:";
 				o + "friend @rtype@ @obj@_fat_id::get_@prop@() const noexcept;";
 				o + "friend @rtype@ @obj@_const_fat_id::get_@prop@() const noexcepot;";
@@ -1184,19 +1335,12 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 			};
 			o + "#endif";
 
-			if(i.protection == protection_type::hidden
-				|| i.protection == protection_type::super_hidden) {
+			if(i.protection == protection_type::hidden) {
 				o + "public:";
 			}
 
-			if(i.protection == protection_type::read_only || i.protection == protection_type::hidden
-				|| i.protection == protection_type::super_read_only || i.protection == protection_type::super_hidden) {
-				o + "private:";
-				if(i.protection == protection_type::read_only || i.protection == protection_type::hidden)
-					o + "friend void @obj@_fat_id::set_@prop@( @prop_type@_id) const noexcept;";
-			}
-
-			o + "void @obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
+			o + "private:";
+			o + "void internal_@obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
 				if(i.ltype == list_type::list) {
 					o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()]; bool(old_value))" + block{
 						o + "if(auto old_left = @obj@.m_link_@prop@.vptr()[id.index()].left; bool(old_left))" + block{
@@ -1252,16 +1396,46 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 					o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
 				}
 			};
+			o + "public:";
 
-			if(i.protection == protection_type::read_only || i.protection == protection_type::hidden
-				|| i.protection == protection_type::super_read_only || i.protection == protection_type::super_hidden)
+			if(i.protection == protection_type::read_only || i.protection == protection_type::hidden) {
+				o + "private:";
+				o + "friend void @obj@_fat_id::set_@prop@( @prop_type@_id) const noexcept;";
+			}
+
+			o + "void @obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
+				if(!i.is_optional) {
+					o + "if(!bool(value))" + block{
+						o + "delete_@obj@(id);";
+						o + "return;";
+					};
+				}
+				make_delete_current_composite_keys_text(o, "id", obj, i);
+				o + "internal_@obj@_set_@prop@(id, value);";
+				make_remove_add_current_composite_keys_text(o, "id", obj, i);
+			};
+
+			o + "bool @obj@_try_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
+				if(!i.is_optional) {
+					o + "if(!bool(value))" + block{
+						o + "return false;";
+					};
+				}
+
+				make_try_current_composite_keys_text(o, "id", obj, i);
+				o + "internal_@obj@_set_@prop@(id, value);";
+
+				make_force_add_current_composite_keys_text(o, "id", obj, i);
+				o + "return true;";
+			};
+
+			if(i.protection == protection_type::read_only || i.protection == protection_type::hidden)
 				o + "public:";
 		} else { // unindexed
 			o + substitute{ "obj", obj.name } +substitute{ "prop", i.property_name } +substitute{ "type", i.type_name + "_id" };
 			o + substitute{ "vector_position", obj.is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags" };
 
-			if(i.protection == protection_type::hidden
-				|| i.protection == protection_type::super_hidden) {
+			if(i.protection == protection_type::hidden) {
 				o + "private:";
 				o + "friend @rtype@ @obj@_fat_id::get_@prop@() const noexcept;";
 				o + "friend @rtype@ @obj@_const_fat_id::get_@prop@() const noexcpet;";
@@ -1283,36 +1457,57 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 			};
 			o + "#endif";
 
-			if(i.protection == protection_type::hidden
-				|| i.protection == protection_type::super_hidden) {
+			if(i.protection == protection_type::hidden) {
 				o + "public:";
 			}
 
-			if(i.protection == protection_type::read_only || i.protection == protection_type::hidden
-				|| i.protection == protection_type::super_read_only || i.protection == protection_type::super_hidden) {
-				o + "private:";
-				if(i.protection == protection_type::read_only || i.protection == protection_type::hidden)
-					o + "friend void @obj@_fat_id::set_@prop@( @prop_type@_id) const noexcept;";
-			}
-
-			o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
+			o + "private:";
+			o + "DCON_RELEASE_INLINE void internal_@obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
 				o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
 			};
+			o + "public:";
 
-			o + "#ifndef DCON_NO_VE";
-			o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(@vector_position@<@obj@_id> id, ve::value_to_vector_type<@type@> values) noexcept" + block{
-				o + "ve::store(id, @obj@.m_@prop@.vptr(), values);";
-			};
-			o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(ve::partial_contiguous_tags<@obj@_id> id, ve::value_to_vector_type<@type@> values) noexcept" + block{
-				o + "ve::store(id, @obj@.m_@prop@.vptr(), values);";
-			};
-			o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(ve::tagged_vector<@obj@_id> id, ve::value_to_vector_type<@type@> values) noexcept" + block{
-				o + "ve::store(id, @obj@.m_@prop@.vptr(), values);";
-			};
-			o + "#endif";
+			if(i.protection == protection_type::read_only || i.protection == protection_type::hidden) {
+				o + "private:";
+				o + "friend void @obj@_fat_id::set_@prop@( @prop_type@_id) const noexcept;";
+			}
 
-			if(i.protection == protection_type::read_only || i.protection == protection_type::hidden
-				|| i.protection == protection_type::super_read_only || i.protection == protection_type::super_hidden)
+			o + "void @obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
+				if(!i.is_optional) {
+					o + "if(!bool(value))" + block{
+						o + "delete_@obj@(id);";
+						o + "return;";
+					};
+				}
+				make_delete_current_composite_keys_text(o, "id", obj, i);
+				o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
+				make_remove_add_current_composite_keys_text(o, "id", obj, i);
+			};
+			o + "bool @obj@_try_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
+				if(!i.is_optional) {
+					o + "if(!bool(value)) return false;";
+				}
+				make_try_current_composite_keys_text(o, "id", obj, i);
+				o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
+				make_force_add_current_composite_keys_text(o, "id", obj, i);
+				o + "return true;";
+			};
+
+			if(!i.is_covered_by_composite_key) {
+				o + "#ifndef DCON_NO_VE";
+				o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(@vector_position@<@obj@_id> id, ve::value_to_vector_type<@type@> values) noexcept" + block{
+					o + "ve::store(id, @obj@.m_@prop@.vptr(), values);";
+				};
+				o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(ve::partial_contiguous_tags<@obj@_id> id, ve::value_to_vector_type<@type@> values) noexcept" + block{
+					o + "ve::store(id, @obj@.m_@prop@.vptr(), values);";
+				};
+				o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(ve::tagged_vector<@obj@_id> id, ve::value_to_vector_type<@type@> values) noexcept" + block{
+					o + "ve::store(id, @obj@.m_@prop@.vptr(), values);";
+				};
+				o + "#endif";
+			}
+
+			if(i.protection == protection_type::read_only || i.protection == protection_type::hidden)
 				o + "public:";
 		}
 	}
@@ -1819,7 +2014,7 @@ void make_related_member_declarations(basic_builder& o, file_def const& parsed_f
 					o + substitute{ "r_prop", ir.property_name };
 					o + substitute{ "r_type", ir.type_name };
 
-					if(ir.protection != protection_type::hidden && ir.protection != protection_type::super_hidden) {
+					if(ir.protection != protection_type::hidden) {
 						if(add_prefix) {
 							if(in_rel.as_primary_key) {
 								o + "DCON_RELEASE_INLINE @r_type@_id @obj@_get_@r_prop@_from_@rel@(@obj@_id ref_id) const" + block{
@@ -1937,7 +2132,7 @@ void make_related_member_declarations(basic_builder& o, file_def const& parsed_f
 					o + substitute{ "prop", ir.property_name };
 					o + substitute{ "p_type", ir.type_name + "_id" };
 
-					if(ir.protection != protection_type::hidden && ir.protection != protection_type::super_hidden) {
+					if(ir.protection != protection_type::hidden) {
 						if(add_prefix) {
 							o + substitute{ "ref", "" };
 							relation_many_join_getters_setters_text(o, in_rel.listed_as, in_rel.rel_ptr->primary_key == ir);

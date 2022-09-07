@@ -610,6 +610,7 @@ namespace cob3 {
 		DCON_RELEASE_INLINE void set_ownership_date(int32_t v) const noexcept;
 		DCON_RELEASE_INLINE person_fat_id get_owner() const noexcept;
 		DCON_RELEASE_INLINE void set_owner(person_id val) const noexcept;
+		DCON_RELEASE_INLINE bool try_set_owner(person_id val) const noexcept;
 		DCON_RELEASE_INLINE car_fat_id get_owned_car() const noexcept;
 		DCON_RELEASE_INLINE void set_owned_car(car_id val) const noexcept;
 		DCON_RELEASE_INLINE bool try_set_owned_car(car_id val) const noexcept;
@@ -996,7 +997,8 @@ namespace cob3 {
 			return ve::load(id, car_ownership.m_owner.vptr());
 		}
 		#endif
-		void car_ownership_set_owner(car_ownership_id id, person_id value) noexcept {
+		private:
+		void internal_car_ownership_set_owner(car_ownership_id id, person_id value) noexcept {
 			if(auto old_value = car_ownership.m_owner.vptr()[id.index()]; bool(old_value)) {
 				auto& vref = car_ownership.m_array_owner.vptr()[old_value.index()];
 				if(auto it = std::find(vref.begin(), vref.end(), id); it != vref.end()) {
@@ -1008,6 +1010,21 @@ namespace cob3 {
 				car_ownership.m_array_owner.vptr()[value.index()].push_back(id);
 			}
 			car_ownership.m_owner.vptr()[id.index()] = value;
+		}
+		public:
+		void car_ownership_set_owner(car_ownership_id id, person_id value) noexcept {
+			if(!bool(value)) {
+				delete_car_ownership(id);
+				return;
+			}
+			internal_car_ownership_set_owner(id, value);
+		}
+		bool car_ownership_try_set_owner(car_ownership_id id, person_id value) noexcept {
+			if(!bool(value)) {
+				return false;
+			}
+			internal_car_ownership_set_owner(id, value);
+			return true;
 		}
 		DCON_RELEASE_INLINE car_id car_ownership_get_owned_car(car_ownership_id id) const noexcept {
 			return car_id(car_id::value_base_t(id.index()));
@@ -1023,6 +1040,14 @@ namespace cob3 {
 			return ve::tagged_vector<car_id>(id, std::true_type{});
 		}
 		#endif
+		private:
+		void internal_car_ownership_set_owned_car(car_ownership_id id, car_id value) noexcept {
+			if(bool(value)) {
+				delete_car_ownership( car_ownership_id(car_ownership_id::value_base_t(value.index())) );
+				internal_move_relationship_car_ownership(id, car_ownership_id(car_ownership_id::value_base_t(value.index())) );
+			}
+		}
+		public:
 		void car_ownership_set_owned_car(car_ownership_id id, car_id value) noexcept {
 			if(bool(value)) {
 				delete_car_ownership( car_ownership_id(car_ownership_id::value_base_t(value.index())) );
@@ -1218,7 +1243,7 @@ namespace cob3 {
 		// container delete for car_ownership
 		//
 		void delete_car_ownership(car_ownership_id id_removed) {
-			car_ownership_set_owner(id_removed, person_id());
+			internal_car_ownership_set_owner(id_removed, person_id());
 			car_ownership.m_ownership_date.vptr()[id_removed.index()] = int32_t{};
 		}
 		
@@ -1228,7 +1253,7 @@ namespace cob3 {
 		void pop_back_car_ownership() {
 			if(car_ownership.size_used == 0) return;
 			car_ownership_id id_removed(car_ownership_id::value_base_t(car_ownership.size_used - 1));
-			car_ownership_set_owner(id_removed, person_id());
+			internal_car_ownership_set_owner(id_removed, person_id());
 			car_ownership.m_ownership_date.vptr()[id_removed.index()] = int32_t{};
 			--car_ownership.size_used;
 		}
@@ -1238,7 +1263,7 @@ namespace cob3 {
 		// container move relationship for car_ownership
 		//
 		void internal_move_relationship_car_ownership(car_ownership_id last_id, car_ownership_id id_removed) {
-			car_ownership_set_owner(id_removed, person_id());
+			internal_car_ownership_set_owner(id_removed, person_id());
 			if(auto tmp = car_ownership.m_owner.vptr()[last_id.index()]; bool(tmp)) {
 				auto& vref = car_ownership.m_array_owner.vptr()[tmp.index()];
 				if(auto pos = std::find(vref.begin(), vref.end(), last_id); pos != vref.end()) {
@@ -1259,7 +1284,7 @@ namespace cob3 {
 			if(car_ownership_is_valid(car_ownership_id(car_ownership_id::value_base_t(owned_car_p.index())))) return car_ownership_id();
 			car_ownership_id new_id(car_ownership_id::value_base_t(owned_car_p.index()));
 			if(car_ownership.size_used < uint32_t(owned_car_p.value)) car_ownership_resize(uint32_t(owned_car_p.value));
-			car_ownership_set_owner(new_id, owner_p);
+			internal_car_ownership_set_owner(new_id, owner_p);
 			return new_id;
 		}
 		
@@ -1269,7 +1294,7 @@ namespace cob3 {
 		car_ownership_id force_create_car_ownership(person_id owner_p, car_id owned_car_p) {
 			car_ownership_id new_id(car_ownership_id::value_base_t(owned_car_p.index()));
 			if(car_ownership.size_used < uint32_t(owned_car_p.value)) car_ownership_resize(uint32_t(owned_car_p.value));
-			car_ownership_set_owner(new_id, owner_p);
+			internal_car_ownership_set_owner(new_id, owner_p);
 			return new_id;
 		}
 		
@@ -1791,7 +1816,7 @@ namespace cob3 {
 								for(uint32_t i = 0; i < car_ownership.size_used; ++i) {
 									auto tmp = car_ownership.m_owner.vptr()[i];
 									car_ownership.m_owner.vptr()[i] = person_id();
-									car_ownership_set_owner(car_ownership_id(car_ownership_id::value_base_t(i)), tmp);
+									internal_car_ownership_set_owner(car_ownership_id(car_ownership_id::value_base_t(i)), tmp);
 								}
 							}
 						}
@@ -2152,7 +2177,7 @@ namespace cob3 {
 								for(uint32_t i = 0; i < car_ownership.size_used; ++i) {
 									auto tmp = car_ownership.m_owner.vptr()[i];
 									car_ownership.m_owner.vptr()[i] = person_id();
-									car_ownership_set_owner(car_ownership_id(car_ownership_id::value_base_t(i)), tmp);
+									internal_car_ownership_set_owner(car_ownership_id(car_ownership_id::value_base_t(i)), tmp);
 								}
 							}
 						}
@@ -2374,6 +2399,9 @@ namespace cob3 {
 	}
 	DCON_RELEASE_INLINE void car_ownership_fat_id::set_owner(person_id val) const noexcept {
 		container.car_ownership_set_owner(id, val);
+	}
+	DCON_RELEASE_INLINE bool car_ownership_fat_id::try_set_owner(person_id val) const noexcept {
+		return container.car_ownership_try_set_owner(id, val);
 	}
 	DCON_RELEASE_INLINE car_fat_id car_ownership_fat_id::get_owned_car() const noexcept {
 		return car_fat_id(container, container.car_ownership_get_owned_car(id));
