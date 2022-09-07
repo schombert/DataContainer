@@ -1844,7 +1844,7 @@ void join_getter_text(basic_builder& o, property_def const& ip, bool add_prefix,
 	}
 }
 
-void many_getter_setter_text(basic_builder & o, list_type ltype) {
+void many_getter_setter_text(basic_builder & o, list_type ltype, bool remove_all_needs_sort) {
 	o + "template<typename T>";
 	o + "DCON_RELEASE_INLINE void @obj@_for_each_@rel@@as_suffix@(@obj@_id id, T&& func) const" + block{
 		o + "if(bool(id))" + block{
@@ -1889,12 +1889,13 @@ void many_getter_setter_text(basic_builder & o, list_type ltype) {
 		if(ltype == list_type::array || ltype == list_type::std_vector) {
 			o + "auto rng = @obj@_range_of_@rel@_as_@rel_prop@(id);";
 			o + "dcon::local_vector<@rel@_id> temp(rng.first, rng.second);";
-			o + "std::for_each(temp.begin(), temp.end(), [t = this](@rel@_id i) { t->@rel@_set_@rel_prop@(i, @obj@_id()); });";
 		} else {
 			o + "dcon::local_vector<@rel@_id> temp;";
 			o + "@obj@_for_each_@rel@_as_@rel_prop@(id, [&](@rel@_id j) { temp.push_back(j); });";
-			o + "std::for_each(temp.begin(), temp.end(), [t = this](@rel@_id i) { t->@rel@_set_@rel_prop@(i, @obj@_id()); });";
 		}
+		if(remove_all_needs_sort)
+			o + "std::sort(temp.begin(), temp.end(), [](@rel@_id l, @rel@_id r){ return l.value > r.value; });";
+		o + "std::for_each(temp.begin(), temp.end(), [t = this](@rel@_id i) { t->@rel@_set_@rel_prop@(i, @obj@_id()); });";
 	};
 }
 
@@ -2098,7 +2099,7 @@ void make_related_member_declarations(basic_builder& o, file_def const& parsed_f
 	} else if(in_rel.indexed_as == index_type::many) {
 		if(add_prefix) {
 			o + substitute{ "as_suffix", std::string("_as_") + in_rel.property_name };
-			many_getter_setter_text(o, in_rel.listed_as);
+			many_getter_setter_text(o, in_rel.listed_as, !in_rel.as_optional && in_rel.rel_ptr->store_type == storage_type::compactable);
 		} else {
 			o + "template<typename T>";
 			o + "DCON_RELEASE_INLINE void @namesp@for_each_@rel@_as_@rel_prop@(T&& func) const" + block{
@@ -2123,7 +2124,7 @@ void make_related_member_declarations(basic_builder& o, file_def const& parsed_f
 		if(is_only_of_type) {
 			if(add_prefix) {
 				o + substitute{ "as_suffix", "" };
-				many_getter_setter_text(o, in_rel.listed_as);
+				many_getter_setter_text(o, in_rel.listed_as, !in_rel.as_optional && in_rel.rel_ptr->store_type == storage_type::compactable);
 			} else {
 				o + "template<typename T>";
 				o + "DCON_RELEASE_INLINE void @namesp@for_each_@rel@(T&& func) const" + block{
@@ -2282,7 +2283,7 @@ basic_builder& make_object_member_declarations(basic_builder& o, file_def const&
 				o + substitute{ "fn", m.name };
 
 				auto name_pos = m.signature.find(m.name);
-				std::string in_namsepace = m.signature.substr(0, name_pos) + "@namesp@"
+				std::string in_namsepace = "inline " + m.signature.substr(0, name_pos) + "@namesp@"
 					+ m.signature.substr(name_pos);
 
 				o + in_namsepace + block{

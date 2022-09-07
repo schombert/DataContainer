@@ -1,0 +1,21 @@
+include{"color_tutorial.hpp"}
+
+object{
+	name{colored_thing}
+	size{3000}
+	storage_type{contiguous}
+	
+	property {
+		name{color}
+		type{rgb_color}
+	}
+
+	function{void @set_red(float @value)}
+	function{void @set_green(float @value)}
+	function{void @set_blue(float @value)}
+	const_function{float @get_red()}
+	const_function{float @get_green()}
+	const_function{float @get_blue()}
+}
+
+global{void deserialize_rgb(std::byte const* start, std::byte const* end, load_record& record_in_out);}

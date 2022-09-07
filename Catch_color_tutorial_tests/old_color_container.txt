@@ -1,0 +1,21 @@
+namespace{old}
+
+object{
+	name{colored_thing}
+	size{3000}
+	storage_type{contiguous}
+	
+	property {
+		name{red}
+		type{float}
+	}
+	property {
+		name{green}
+		type{float}
+	}
+	property {
+		name{blue}
+		type{float}
+	}
+
+}

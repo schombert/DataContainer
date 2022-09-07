@@ -2240,7 +2240,7 @@ basic_builder& make_iterate_over_objects(basic_builder& o, relationship_object_d
 	o + "template <typename T>";
 	o + "DCON_RELEASE_INLINE void for_each_@obj@(T&& func)" + block{
 		o + "for(uint32_t i = 0; i < @obj@.size_used; ++i)" + block{
-			o + "@obj@_id tmp(@obj@_id::value_base_t(i));";
+			o + "@obj@_id tmp = @obj@_id(@obj@_id::value_base_t(i));";
 			if(obj.store_type == storage_type::erasable) {
 				o + "if(@obj@.m__index.vptr()[tmp.index()] == tmp) func(tmp);";
 			} else {

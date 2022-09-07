@@ -629,23 +629,23 @@ int main(int argc, char *argv[]) {
 			if(!ob.is_expandable) {
 				output += "\t\ttemplate<typename F>\n";
 				output += "\t\tDCON_RELEASE_INLINE void execute_serial_over_" + ob.name + "(F&& functor) {\n";
-				output += "\t\t\tve::execute_serial(" + ob.name + ".size_used, functor);\n";
+				output += "\t\t\tve::execute_serial<" + ob.name + "_id>(" + ob.name + ".size_used, functor);\n";
 				output += "\t\t}\n";
 				output += "#ifndef VE_NO_TBB\n";
 				output += "\t\ttemplate<typename F>\n";
 				output += "\t\tDCON_RELEASE_INLINE void execute_parallel_over_" + ob.name + "(F&& functor) {\n";
-				output += "\t\t\tve::execute_parallel_exact(" + ob.name + ".size_used, functor);\n";
+				output += "\t\t\tve::execute_parallel_exact<" + ob.name + "_id>(" + ob.name + ".size_used, functor);\n";
 				output += "\t\t}\n";
 				output += "#endif\n";
 			} else {
 				output += "\t\ttemplate<typename F>\n";
 				output += "\t\tDCON_RELEASE_INLINE void execute_serial_over_" + ob.name + "(F&& functor) {\n";
-				output += "\t\t\tve::execute_serial_unaligned(" + ob.name + ".size_used, functor);\n";
+				output += "\t\t\tve::execute_serial_unaligned<" + ob.name + "_id>(" + ob.name + ".size_used, functor);\n";
 				output += "\t\t}\n";
 				output += "#ifndef VE_NO_TBB\n";
 				output += "\t\ttemplate<typename F>\n";
 				output += "\t\tDCON_RELEASE_INLINE void execute_parallel_over_" + ob.name + "(F&& functor) {\n";
-				output += "\t\t\tve::execute_parallel_unaligned(" + ob.name + ".size_used, functor);\n";
+				output += "\t\t\tve::execute_parallel_unaligned<" + ob.name + "_id>(" + ob.name + ".size_used, functor);\n";
 				output += "\t\t}\n";
 				output += "#endif\n";
 			}

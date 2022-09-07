@@ -153,10 +153,10 @@ namespace dcon {
 			property_name_end = property_name_start + strlen(property_name_start);
 		}
 
-		uint64_t serialize_size() {
+		uint64_t serialize_size() const {
 			return sizeof(uint64_t) + (type_name_end - type_name_start) + (object_name_end - object_name_start) + (property_name_end - property_name_start) + 3;
 		}
-		void serialize(std::byte*& output_buffer) {
+		void serialize(std::byte*& output_buffer) const {
 			uint64_t* sz = reinterpret_cast<uint64_t*>(output_buffer);
 			*sz = record_size;
 
@@ -214,7 +214,7 @@ namespace dcon {
 			++input_buffer;
 		}
 
-		bool is_type(char const* n) {
+		bool is_type(char const* n) const {
 			char const* i = type_name_start;
 			while(i != type_name_end) {
 				if(*i != *n)
@@ -224,7 +224,7 @@ namespace dcon {
 			}
 			return *i == *n;
 		}
-		bool is_object(char const* n) {
+		bool is_object(char const* n) const {
 			char const* i = object_name_start;
 			while(i != object_name_end) {
 				if(*i != *n)
@@ -234,7 +234,7 @@ namespace dcon {
 			}
 			return *i == *n;
 		}
-		bool is_property(char const* n) {
+		bool is_property(char const* n) const {
 			char const* i = property_name_start;
 			while(i != property_name_end) {
 				if(*i != *n)
@@ -252,7 +252,7 @@ namespace dcon {
 			dcon::record_header header;
 			header.deserialize(input_buffer, end);
 			if(input_buffer + header.record_size <= end) {
-				functor(header, input_buffer, input_buffer + header.record_size);
+				functor(header, input_buffer, input_buffer + header.record_size <= end ? input_buffer + header.record_size : end);
 			}
 			input_buffer += header.record_size;
 		}
