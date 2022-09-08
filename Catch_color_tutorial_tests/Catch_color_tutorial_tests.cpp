@@ -59,39 +59,71 @@ TEST_CASE("test deserialize", "[tutorial_tests]") {
 }
 
 TEST_CASE("test SIMD", "[tutorial_tests]") {
-	auto ptr = std::make_unique< dcon::data_container >();
-
 	{
-		auto h = fatten(*ptr, ptr->create_colored_thing());
-		h.set_red(1.0f);
-		h.set_green(3.0f);
+		auto ptr = std::make_unique< dcon::data_container >();
+
+		{
+			auto h = fatten(*ptr, ptr->create_colored_thing());
+			h.set_red(1.0f);
+			h.set_green(3.0f);
+		}
+		{
+			auto h = fatten(*ptr, ptr->create_colored_thing());
+			h.set_red(7.0f);
+			h.set_green(1.0f);
+		}
+		{
+			auto h = fatten(*ptr, ptr->create_colored_thing());
+			h.set_red(1.0f);
+			h.set_green(2.0f);
+		}
+
+		ptr->create_colored_thing();
+
+		ptr->execute_serial_over_colored_thing([p = ptr.get()](auto position){
+			auto red_value = ve::apply(
+				[p](dcon::colored_thing_id i) { return p->colored_thing_get_color(i).red; },
+				position);
+			auto green_value = ve::apply(
+				[p](dcon::colored_thing_id i) { return p->colored_thing_get_color(i).green; },
+				position);
+			ve::apply(
+				[p](dcon::colored_thing_id i, float v) { p->colored_thing_get_color(i).blue = v; },
+				position, (red_value + green_value) / 2.0f);
+		});
+
+		REQUIRE(ptr->colored_thing_get_color(dcon::colored_thing_id(0)).blue == 2.0f);
+		REQUIRE(ptr->colored_thing_get_color(dcon::colored_thing_id(1)).blue == 4.0f);
+		REQUIRE(ptr->colored_thing_get_color(dcon::colored_thing_id(2)).blue == 1.5f);
 	}
 	{
-		auto h = fatten(*ptr, ptr->create_colored_thing());
-		h.set_red(7.0f);
-		h.set_green(1.0f);
+		auto ptr = std::make_unique< old::data_container >();
+
+		{
+			auto h = fatten(*ptr, ptr->create_colored_thing());
+			h.set_red(1.0f);
+			h.set_green(3.0f);
+		}
+		{
+			auto h = fatten(*ptr, ptr->create_colored_thing());
+			h.set_red(7.0f);
+			h.set_green(1.0f);
+		}
+		{
+			auto h = fatten(*ptr, ptr->create_colored_thing());
+			h.set_red(1.0f);
+			h.set_green(2.0f);
+		}
+
+		ptr->create_colored_thing();
+
+		ptr->execute_serial_over_colored_thing([p = ptr.get()](auto position){
+			p->colored_thing_set_blue(position,
+				(p->colored_thing_get_red(position) + p->colored_thing_get_green(position)) / 2.0f);
+		});
+
+		REQUIRE(ptr->colored_thing_get_blue(old::colored_thing_id(0)) == 2.0f);
+		REQUIRE(ptr->colored_thing_get_blue(old::colored_thing_id(1)) == 4.0f);
+		REQUIRE(ptr->colored_thing_get_blue(old::colored_thing_id(2)) == 1.5f);
 	}
-	{
-		auto h = fatten(*ptr, ptr->create_colored_thing());
-		h.set_red(1.0f);
-		h.set_green(2.0f);
-	}
-
-	ptr->create_colored_thing();
-
-	ptr->execute_serial_over_colored_thing([p = ptr.get()](auto position){
-		auto red_value = ve::apply(
-			[p](dcon::colored_thing_id i) { return p->colored_thing_get_color(i).red; },
-			position);
-		auto green_value = ve::apply(
-			[p](dcon::colored_thing_id i) { return p->colored_thing_get_color(i).green; },
-			position);
-		ve::apply(
-			[p](dcon::colored_thing_id i, float v) { p->colored_thing_get_color(i).blue = v; },
-			position, (red_value + green_value) / 2.0f);
-	});
-
-	REQUIRE(ptr->colored_thing_get_color(dcon::colored_thing_id(0)).blue == 2.0f);
-	REQUIRE(ptr->colored_thing_get_color(dcon::colored_thing_id(1)).blue == 4.0f);
-	REQUIRE(ptr->colored_thing_get_color(dcon::colored_thing_id(2)).blue == 1.5f);
 }

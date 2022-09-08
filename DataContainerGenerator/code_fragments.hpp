@@ -12,7 +12,7 @@ enum class struct_padding { none, fixed };
 
 basic_builder& make_member_container(basic_builder& o,
 	std::string const& member_name, std::string const& type_name, std::string const& size, struct_padding pad, bool is_expandable,
-	std::optional<std::string> const& special_fill = std::optional<std::string>());
+	std::optional<std::string> const& special_fill = std::optional<std::string>(), int32_t multiplicity = 1);
 basic_builder& make_array_member_container(basic_builder& o,
 	std::string const& member_name, std::string const& type_name, size_t raw_size,
 	bool is_expandable, bool is_bitfield);

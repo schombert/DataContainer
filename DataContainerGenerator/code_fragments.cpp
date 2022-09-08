@@ -81,24 +81,33 @@ basic_builder& make_value_to_vector_type(basic_builder& o, std::string const& qu
 
 basic_builder& make_member_container(basic_builder& o,
 	std::string const& member_name, std::string const& type_name, std::string const& size,
-	struct_padding pad, bool is_expandable, std::optional<std::string> const& special_fill) {
+	struct_padding pad, bool is_expandable, std::optional<std::string> const& special_fill, int32_t multiplicity = 1) {
 
 	o + substitute("type", type_name) + substitute("name", member_name) + substitute{"size", size}
 	+ substitute{ "align", pad != struct_padding::none ? "alignas(64) " : "" }
 	+ substitute{"fill", special_fill.has_value() ? *special_fill : std::string("")};
+	o + substitute{ "mval", std::to_string(multiplicity) };
 
 	o + heading{"storage space for @name@ of type @type@"};
 	o + "struct @align@dtype_@name@" + block{
 		if(is_expandable) {
-			o + "std::vector<@type@> values;"
-			+ "DCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }"
-			+ "DCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }";
+			if(multiplicity == 1) {
+				o + "std::vector<@type@> values;";
+			} else {
+				o + "std::vector<std::array<@type@, @mval@>> values;";
+			}
+			o + "DCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }";
+			o + "DCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }";
 		} else {
 			if(pad == struct_padding::fixed)
 				o + "uint8_t padding[(63 + sizeof(@type@)) & ~63ui64];";
-			o + "@type@ values[@size@];"
-			+ "DCON_RELEASE_INLINE auto vptr() const { return values; }"
-			+ "DCON_RELEASE_INLINE auto vptr() { return values; }";
+			if(multiplicity == 1) {
+				o + "@type@ values[@size@];";
+			} else {
+				o + "std::array<@type@, @mval@> values[@size@];";
+			}
+			o + "DCON_RELEASE_INLINE auto vptr() const { return values; }";
+			o +"DCON_RELEASE_INLINE auto vptr() { return values; }";;
 		}
 		
 		if(!special_fill.has_value()) {
@@ -272,12 +281,14 @@ basic_builder& make_erasable_object_constructor(basic_builder& o, std::string co
 
 
 basic_builder& clear_value(basic_builder& o, std::string const& object_name, std::string const& property_name,
-	std::string const& property_type_val, property_type type, std::string const& at) {
+	std::string const& property_type_val, property_type type, std::string const& at, bool is_multiple) {
 
 	o + substitute{ "t_obj", object_name } + substitute{ "t_prop", property_name } + substitute{ "t_at", at }
 		+substitute{ "t_type", property_type_val };
 
-	if(type == property_type::special_vector) {
+	if(is_multiple) {
+		o + "@t_obj@.m_@t_prop@.vptr()[@t_at@.index()].fill(@t_type@{});";
+	} else if(type == property_type::special_vector) {
 		o + "@t_obj@.@t_prop@_storage.release(@t_obj@.m_@t_prop@.vptr()[@t_at@.index()]);";
 	} else if(type == property_type::bitfield) {
 		o + "dcon::bit_vector_set(@t_obj@.m_@t_prop@.vptr(), @t_at@.index(), false);";
@@ -344,11 +355,24 @@ basic_builder& make_pop_back(basic_builder& o, relationship_object_def const& co
 		for(auto& iob : cob.indexed_objects) {
 			o + substitute{ "i_prop_name", iob.property_name } +substitute{ "i_type_name", iob.type_name };
 			if(cob.primary_key != iob) {
-				o + "internal_@obj@_set_@i_prop_name@(id_removed, @i_type_name@_id());";
-				if(cob.is_expandable) {
-					o + "@obj@.m_@i_prop_name@.values.pop_back();";
-					if(iob.ltype == list_type::list)
-						o + "@obj@.m_link_@i_prop_name@.values.pop_back();";
+				if(iob.multiplicity == 1) {
+					o + "internal_@obj@_set_@i_prop_name@(id_removed, @i_type_name@_id());";
+					if(cob.is_expandable) {
+						o + "@obj@.m_@i_prop_name@.values.pop_back();";
+						if(iob.ltype == list_type::list)
+							o + "@obj@.m_link_@i_prop_name@.values.pop_back();";
+					}
+				} else {
+					for(int32_t i = 0; i < iob.multiplicity; ++i) {
+						o + substitute{ "i", std::to_string(i)};
+
+						o + "internal_@obj@_set_@i_prop_name@(id_removed, @i@, @i_type_name@_id());";
+						if(cob.is_expandable) {
+							o + "@obj@.m_@i_prop_name@.values.pop_back();";
+							if(iob.ltype == list_type::list)
+								o + "@obj@.m_link_@i_prop_name@.values.pop_back();";
+						}
+					}
 				}
 			}
 		}
@@ -393,7 +417,7 @@ basic_builder& make_pop_back(basic_builder& o, relationship_object_def const& co
 		} else {
 			for(auto& cp : cob.properties) {
 				if(!cp.is_derived) {
-					clear_value(o, cob.name, cp.name, cp.data_type, cp.type, "id_removed");
+					clear_value(o, cob.name, cp.name, cp.data_type, cp.type, "id_removed", false);
 				}
 			}
 		}
@@ -549,12 +573,23 @@ basic_builder& make_object_resize(basic_builder& o, relationship_object_def cons
 			for(auto& io : cob.indexed_objects) {
 				if(cob.primary_key != io) {
 					if(!cob.is_expandable) {
-						clear_value_range(o, cob.name, io.property_name, io.type_name + "_id", property_type::other,
-							"0", "old_size");
+						if(io.multiplicity == 1) {
+							clear_value_range(o, cob.name, io.property_name, io.type_name + "_id", property_type::other,
+								"0", "old_size");
+						} else {
+							clear_value_range(o, cob.name, io.property_name, io.type_name + "_id", property_type::object,
+								"0", "old_size");
+						}
 					} else {
-						shrink_value_range(o, cob.name, io.property_name, property_type::other, "new_size", "old_size - new_size");
-						clear_value_range(o, cob.name, io.property_name, io.type_name + "_id", property_type::other,
-							"0", "new_size");
+						if(io.multiplicity == 1) {
+							shrink_value_range(o, cob.name, io.property_name, property_type::other, "new_size", "old_size - new_size");
+							clear_value_range(o, cob.name, io.property_name, io.type_name + "_id", property_type::other,
+								"0", "new_size");
+						} else {
+							shrink_value_range(o, cob.name, io.property_name, property_type::object, "new_size", "old_size - new_size");
+							clear_value_range(o, cob.name, io.property_name, io.type_name + "_id", property_type::object,
+								"0", "new_size");
+						}
 					}
 
 					if(io.index == index_type::at_most_one) {
@@ -666,13 +701,20 @@ basic_builder& make_object_resize(basic_builder& o, relationship_object_def cons
 }
 
 basic_builder& move_value_from_back(basic_builder& o, std::string const& object_name, std::string const& property_name,
-	std::string const& source, std::string const& destination, std::string const& null_value, bool is_expandable) {
+	std::string const& source, std::string const& destination, std::string const& null_value, bool is_expandable, int32_t multiplicity) {
 
 	o + substitute{ "t_obj", object_name } +substitute{ "t_prop", property_name }
 		+substitute{ "t_source", source } +substitute{ "t_dest", destination }
 	+substitute{ "t_null", null_value };
 
-	o + "@t_obj@.m_@t_prop@.vptr()[@t_dest@.index()] = std::move(@t_obj@.m_@t_prop@.vptr()[@t_source@.index()]);";
+	if(multiplicity > 1) {
+		for(int32_t i = 0; i < multiplicity; ++i) {
+			o + substitute{ "i", std::to_string(i) };
+			o + "@t_obj@.m_@t_prop@.vptr()[@t_dest@.index()][@i@] = @t_obj@.m_@t_prop@.vptr()[@t_source@.index()][@i@];";
+		}
+	} else {
+		o + "@t_obj@.m_@t_prop@.vptr()[@t_dest@.index()] = std::move(@t_obj@.m_@t_prop@.vptr()[@t_source@.index()]);";
+	}
 	if(is_expandable) {
 		o + "@t_obj@.m_@t_prop@.values.pop_back();";
 	} else {
@@ -699,14 +741,22 @@ basic_builder& move_array_value_from_back(basic_builder& o, std::string const& o
 }
 
 basic_builder& move_value(basic_builder& o, std::string const& object_name, std::string const& property_name,
-	std::string const& source, std::string const& destination, std::string const& null_value) {
+	std::string const& source, std::string const& destination, std::string const& null_value, int32_t multiplicity) {
 
 	o + substitute{ "t_obj", object_name } +substitute{ "t_prop", property_name }
 		+substitute{ "t_source", source } +substitute{ "t_dest", destination }
 	+substitute{ "t_null", null_value };
 
-	o + "@t_obj@.m_@t_prop@.vptr()[@t_dest@.index()] = std::move(@t_obj@.m_@t_prop@.vptr()[@t_source@.index()]);";
-	o + "@t_obj@.m_@t_prop@.vptr()[@t_source@.index()] = @t_null@;";
+	if(multiplicity == 1) {
+		o + "@t_obj@.m_@t_prop@.vptr()[@t_dest@.index()] = std::move(@t_obj@.m_@t_prop@.vptr()[@t_source@.index()]);";
+		o + "@t_obj@.m_@t_prop@.vptr()[@t_source@.index()] = @t_null@;";
+	} else {
+		for(int32_t i = 0; i < multiplicity; ++i) {
+			o + substitute{ "i", std::to_string(i) };
+			o + "@t_obj@.m_@t_prop@.vptr()[@t_dest@.index()][@i@] = @t_obj@.m_@t_prop@.vptr()[@t_source@.index()][@i@];";
+			o + "@t_obj@.m_@t_prop@.vptr()[@t_source@.index()][@i@] = @t_null@;";
+		}
+	}
 	
 	return o;
 }
@@ -749,14 +799,30 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 		}
 
 		for(auto& iob : cob.indexed_objects) {
-			o + substitute{ "i_prop_name", iob.property_name } +substitute{ "i_type_name", iob.type_name };
+			o + substitute{ "i_prop", iob.property_name } +substitute{ "i_type_name", iob.type_name };
 
-			o + "internal_@obj@_set_@i_prop_name@(id_removed, @i_type_name@_id());";
+			if(iob.multiplicity == 1) {
+				o + "internal_@obj@_set_@i_prop@(id_removed, @i_type_name@_id());";
+			} else {
+				for(int32_t i = 0; i < iob.multiplicity; ++i) {
+					o + substitute{ "i", std::to_string(i) };
+					o + "internal_@obj@_set_@i_prop@(id_removed, @i@, @i_type_name@_id());";
+				}
+			}
 
 			if(iob.index == index_type::at_most_one) {
-				o + "if(auto related = @obj@.m_@i_prop@.vptr()[last_id.index()]; bool(related))" + block{
-					o + "@obj@.m_link_back_@i_prop@.vptr()[related.index()] = id_removed;";
-				};
+				if(iob.multiplicity == 1) {
+					o + "if(auto related = @obj@.m_@i_prop@.vptr()[last_id.index()]; bool(related))" + block{
+						o + "@obj@.m_link_back_@i_prop@.vptr()[related.index()] = id_removed;";
+					};
+				} else {
+					for(int32_t i = 0; i < iob.multiplicity; ++i) {
+						o + substitute{ "i", std::to_string(i) };
+						o + "if(auto related = @obj@.m_@i_prop@.vptr()[last_id.index()][@i@]; bool(related))" + block{
+							o + "@obj@.m_link_back_@i_prop@.vptr()[related.index()] = id_removed;";
+						};
+					}
+				}
 			} else if(iob.index == index_type::many) {
 				if(iob.ltype == list_type::list) {
 					o + "if(bool(@obj@.m_@i_prop@.vptr()[last_id.index()]))" + block{
@@ -773,24 +839,57 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 						};
 					};
 					move_value_from_back(o, cob.name, std::string("link_") + iob.property_name,
-						"last_id", "id_removed", cob.name + "_id_pair()", cob.is_expandable);
+						"last_id", "id_removed", cob.name + "_id_pair()", cob.is_expandable, 1);
 				} else if(iob.ltype == list_type::std_vector) {
-					o + "if(auto tmp = @obj@.m_@i_prop@.vptr()[last_id.index()]; bool(tmp))" + block{
-						o + "auto& vref = @obj@.m_array_@i_prop@.vptr()[tmp.index()];";
-						o + "if(auto pos = std::find(vref.begin(), vref.end(), last_id); pos != range.second)" + block {
-							o + "*pos = id_removed;";
+					if(iob.multiplicity == 1) {
+						o + "if(auto tmp = @obj@.m_@i_prop@.vptr()[last_id.index()]; bool(tmp))" + block{
+							o + "auto& vref = @obj@.m_array_@i_prop@.vptr()[tmp.index()];";
+							o + "if(auto pos = std::find(vref.begin(), vref.end(), last_id); pos != range.second)" + block {
+								o + "*pos = id_removed;";
+							};
 						};
-					};
+					} else {
+						for(int32_t i = 0; i < iob.multiplicity; ++i) {
+							o + substitute{ "i", std::to_string(i) };
+							o + "if(auto tmp = @obj@.m_@i_prop@.vptr()[last_id.index()][@i@]; bool(tmp))" + block{
+								o + "auto& vref = @obj@.m_array_@i_prop@.vptr()[tmp.index()];";
+								if(iob.is_distinct) {
+									o + "if(auto pos = std::find(vref.begin(), vref.end(), last_id); pos != range.second)" + block {
+										o + "*pos = id_removed;";
+									};
+								} else {
+									o + "for(auto pos = std::find(vref.begin(), vref.end(), last_id); pos != range.second; pos = std::find(pos + 1, vref.end(), last_id))" + block{
+										o + "*pos = id_removed;";
+									};
+								}
+							};
+						}
+					}
 				} else if(iob.ltype == list_type::array) {
-					o + "if(auto tmp = @obj@.m_@i_prop@.vptr()[last_id.index()]; bool(tmp))" + block{
-						o + "dcon::replace_unique_item(@obj@.@i_prop@_storage, @obj@.m_array_@i_prop@.vptr()[tmp.index()],"
-							" last_id, id_removed);";
-					};
+					if(iob.multiplicity == 1) {
+						o + "if(auto tmp = @obj@.m_@i_prop@.vptr()[last_id.index()]; bool(tmp))" + block{
+							o + "dcon::replace_unique_item(@obj@.@i_prop@_storage, @obj@.m_array_@i_prop@.vptr()[tmp.index()],"
+								" last_id, id_removed);";
+						};
+					} else {
+						for(int32_t i = 0; i < iob.multiplicity; ++i) {
+							o + substitute{ "i", std::to_string(i) };
+							o + "if(auto tmp = @obj@.m_@i_prop@.vptr()[last_id.index()][@i@]; bool(tmp))" + block{
+								if(iob.is_distinct) {
+									o + "dcon::replace_unique_item(@obj@.@i_prop@_storage, @obj@.m_array_@i_prop@.vptr()[tmp.index()],"
+										" last_id, id_removed);";
+								} else {
+									o + "dcon::replace_all_items(@obj@.@i_prop@_storage, @obj@.m_array_@i_prop@.vptr()[tmp.index()],"
+										" last_id, id_removed);";
+								}
+							};
+						}
+					}
 				}
 			}
 
 			move_value_from_back(o, cob.name, iob.property_name,
-				"last_id", "id_removed", iob.type_name + "_id()", cob.is_expandable);
+				"last_id", "id_removed", iob.type_name + "_id()", cob.is_expandable, iob.multiplicity);
 		}
 		for(auto& cr : cob.relationships_involved_in) {
 			o + substitute{ "rel", cr.relation_name } +substitute{"r_prop", cr.property_name };
@@ -808,67 +907,22 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 					o + "@rel@.m_@r_prop@.vptr()[bk.index()] = id_removed;"; 
 				};
 				move_value_from_back(o, cr.relation_name, std::string("link_back_") + cr.property_name,
-					"last_id", "id_removed", cr.relation_name + "_id()", cob.is_expandable);
+					"last_id", "id_removed", cr.relation_name + "_id()", cob.is_expandable, 1);
 			} else if(cr.indexed_as == index_type::many) {
 				o + "@obj@_remove_all_@rel@_as_@r_prop@(id_removed);";
 				o + "@obj@_for_each_@rel@_as_@r_prop@(last_id, "
 					"[t = this, id_removed](@rel@_id i){ t->@rel@.m_@r_prop@.vptr()[i.index()] = id_removed; });";
 				if(cr.listed_as == list_type::list) {
 					move_value_from_back(o, cr.relation_name, std::string("head_back_") + cr.property_name,
-						"last_id", "id_removed", cr.relation_name + "_id()", cob.is_expandable);
+						"last_id", "id_removed", cr.relation_name + "_id()", cob.is_expandable, 1);
 				} else if(cr.listed_as == list_type::array) {
 					o + "@rel@.@r_prop@_storage.release(@rel@.m_array_@r_prop@.vptr()[id_removed.index()]);";
 					move_value_from_back(o, cr.relation_name, std::string("array_") + cr.property_name,
-						"last_id", "id_removed", "std::numeric_limits<dcon::stable_mk_2_tag>::max()", cob.is_expandable);
+						"last_id", "id_removed", "std::numeric_limits<dcon::stable_mk_2_tag>::max()", cob.is_expandable, 1);
 				} else if(cr.listed_as == list_type::std_vector) {
 					move_value_from_back(o, cr.relation_name, std::string("array_") + cr.property_name,
-						"last_id", "id_removed", std::string("std::vector<") + cr.relation_name + "_id>{}", cob.is_expandable);
+						"last_id", "id_removed", std::string("std::vector<") + cr.relation_name + "_id>{}", cob.is_expandable, 1);
 				}
-			}
-		}
-		for(auto& io : cob.indexed_objects) {
-			if(cob.primary_key != io) {
-				o + substitute{ "i_prop", io.property_name } +substitute{ "i_type", io.type_name };
-				o + "internal_@obj@_set_@i_prop@(id_removed, @i_type@_id());";
-
-				if(io.index == index_type::at_most_one) {
-					o + "if(auto related = @obj@.m_@i_prop@.vptr()[last_id.index()]; bool(related))" + block{
-						o + "@obj@.m_link_back_@i_prop@.vptr()[related.index()] = id_removed;";
-					};
-				} else if(io.index == index_type::many) {
-					if(io.ltype == list_type::list) {
-						o + "if(bool(@obj@.m_@i_prop@.vptr()[last_id.index()]))" + block{
-							o + "auto tmp = @obj@.m_link_@i_prop@.vptr()[last_id.index()];";
-							o + "if(bool(tmp.left))" + block{
-								o + "@obj@.m_link_@i_prop@.vptr()[tmp.left.index()].right = id_removed;";
-							} +append{ "else" } +block{
-								o + "for(auto lpos = last_id; bool(lpos); lpos = @obj@.m_link_@i_prop@.vptr()[lpos.index()].right)" + block{
-									o + "@obj@.m_head_back_@i_prop@.vptr()[@obj@.m_@i_prop@.vptr()[lpos.index()].index()] = id_removed;";
-								};
-							};
-							o + "if(bool(tmp.right))" + block{
-								o + "@obj@.m_link_@i_prop@.vptr()[tmp.right.index()].left = id_removed;";
-							};
-						};
-						move_value_from_back(o, cob.name, std::string("m_link_") + io.property_name,
-							"last_id", "id_removed", cob.name + "_id_pair()", cob.is_expandable);
-					} else if(io.ltype == list_type::std_vector) {
-						o + "if(auto tmp = @obj@.m_@i_prop@.vptr()[last_id.index()]; bool(tmp))" + block{
-							o + "auto& vref = @obj@.m_array_@i_prop@.vptr()[tmp.index()];";
-							o + "if(auto pos = std::find(vref.begin(), vref.end(), last_id); pos != range.second)" + block {
-								o + "*pos = id_removed;";
-							};
-						};
-					} else if(io.ltype == list_type::array) {
-						o + "if(auto tmp = @obj@.m_@i_prop@.vptr()[last_id.index()]; bool(tmp))" + block{
-							o + "dcon::replace_unique_item(@obj@.@i_prop@_storage, @obj@.m_array_@i_prop@.vptr()[tmp.index()],"
-								" last_id, id_removed);";
-						};
-					}
-				}
-
-				move_value_from_back(o, cob.name, io.property_name,
-					"last_id", "id_removed", io.type_name + "_id()", cob.is_expandable);
 			}
 		}
 		for(auto& cp : cob.properties) {
@@ -877,7 +931,7 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 			} else if(cp.type == property_type::special_vector) {
 				o + "@obj@.@prop@_storage.release(@obj@.m_@prop@.vptr()[id_removed.index()]);";
 				move_value_from_back(o, cob.name, cp.name,
-					"last_id", "id_removed", "std::numeric_limits<dcon::stable_mk_2_tag>::max()", cob.is_expandable);
+					"last_id", "id_removed", "std::numeric_limits<dcon::stable_mk_2_tag>::max()", cob.is_expandable, 1);
 			} else if(cp.type == property_type::bitfield) {
 				o + "dcon::bit_vector_set(@obj@.m_@prop@.vptr(), id_removed.index(), "
 					"dcon::bit_vector_test(@obj@.m_@prop@.vptr(), last_id.index()));";
@@ -889,7 +943,7 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 					"last_id", "id_removed", cob.is_expandable);
 			} else {
 				move_value_from_back(o, cob.name, cp.name,
-					"last_id", "id_removed", cp.data_type + "{}", cob.is_expandable);
+					"last_id", "id_removed", cp.data_type + "{}", cob.is_expandable, 1);
 			}
 		}
 
@@ -1084,7 +1138,14 @@ basic_builder& make_clearing_delete(basic_builder& o, relationship_object_def co
 		for(auto& io : cob.indexed_objects) {
 			if(cob.primary_key != io) {
 				o + substitute{ "i_prop", io.property_name } +substitute{ "i_type", io.type_name };
-				o + "internal_@obj@_set_@i_prop@(id_removed, @i_type@_id());";
+				if(io.multiplicity == 1) {
+					o + "internal_@obj@_set_@i_prop@(id_removed, @i_type@_id());";
+				} else {
+					for(int32_t i = 0; i < io.multiplicity; ++i) {
+						o + substitute{ "i", std::to_string(i) };
+						o + "internal_@obj@_set_@i_prop@(id_removed, @i@, @i_type@_id());";
+					}
+				}
 			}
 		}
 		for(auto& cr : cob.relationships_involved_in) {
@@ -1099,7 +1160,7 @@ basic_builder& make_clearing_delete(basic_builder& o, relationship_object_def co
 		}
 		for(auto& cp : cob.properties) {
 			if(!cp.is_derived) {
-				clear_value(o, cob.name, cp.name, cp.data_type, cp.type, "id_removed");
+				clear_value(o, cob.name, cp.name, cp.data_type, cp.type, "id_removed", false);
 			}
 		}
 	};
@@ -1142,7 +1203,14 @@ basic_builder& make_erasable_delete(basic_builder& o, relationship_object_def co
 		for(auto& io : cob.indexed_objects) {
 			if(cob.primary_key != io) {
 				o + substitute{ "i_prop", io.property_name } +substitute{ "i_type", io.type_name };
-				o + "internal_@obj@_set_@i_prop@(id_removed, @i_type@_id());";
+				if(io.multiplicity == 1) {
+					o + "internal_@obj@_set_@i_prop@(id_removed, @i_type@_id());";
+				} else {
+					for(int32_t i = 0; i < io.multiplicity; ++i) {
+						o + substitute{ "i", std::to_string(i) };
+						o + "internal_@obj@_set_@i_prop@(id_removed, @i@, @i_type@_id());";
+					}
+				}
 			}
 		}
 		for(auto& cr : cob.relationships_involved_in) {
@@ -1158,7 +1226,7 @@ basic_builder& make_erasable_delete(basic_builder& o, relationship_object_def co
 		}
 		for(auto& cp : cob.properties) {
 			if(!cp.is_derived) {
-				clear_value(o, cob.name, cp.name, cp.data_type, cp.type, "id_removed");
+				clear_value(o, cob.name, cp.name, cp.data_type, cp.type, "id_removed", false);
 			}
 		}
 	};
@@ -1244,12 +1312,28 @@ basic_builder& make_internal_move_relationship(basic_builder& o, relationship_ob
 		for(auto& io : cob.indexed_objects) {
 			if(cob.primary_key != io) {
 				o + substitute{ "i_prop", io.property_name } +substitute{ "i_type", io.type_name };
-				o + "internal_@obj@_set_@i_prop@(id_removed, @i_type@_id());";
+				if(io.multiplicity == 1) {
+					o + "internal_@obj@_set_@i_prop@(id_removed, @i_type@_id());";
+				} else {
+					for(int32_t i = 0; i < io.multiplicity; ++i) {
+						o + substitute{ "i", std::to_string(i) };
+						o + "internal_@obj@_set_@i_prop@(id_removed, @i@, @i_type@_id());";
+					}
+				}
 
 				if(io.index == index_type::at_most_one) {
-					o + "if(auto related = @obj@.m_@i_prop@.vptr()[last_id.index()]; bool(related))" + block{
-						o + "@obj@.m_link_back_@i_prop@.vptr()[related.index()] = id_removed;";
-					};
+					if(io.multiplicity == 1) {
+						o + "if(auto related = @obj@.m_@i_prop@.vptr()[last_id.index()]; bool(related))" + block{
+							o + "@obj@.m_link_back_@i_prop@.vptr()[related.index()] = id_removed;";
+						};
+					} else {
+						for(int32_t i = 0; i < io.multiplicity; ++i) {
+							o + substitute{ "i", std::to_string(i) };
+							o + "if(auto related = @obj@.m_@i_prop@.vptr()[last_id.index()][@i@]; bool(related))" + block{
+								o + "@obj@.m_link_back_@i_prop@.vptr()[related.index()] = id_removed;";
+							};
+						}
+					}
 				} else if(io.index == index_type::many) {
 					if(io.ltype == list_type::list) {
 						o + "if(bool(@obj@.m_@i_prop@.vptr()[last_id.index()]))" + block{
@@ -1266,24 +1350,57 @@ basic_builder& make_internal_move_relationship(basic_builder& o, relationship_ob
 							};
 						};
 						move_value(o, cob.name, std::string("link_") + io.property_name,
-							"last_id", "id_removed", cob.name + "_id_pair()");
+							"last_id", "id_removed", cob.name + "_id_pair()", 1);
 					} else if(io.ltype == list_type::std_vector) {
-						o + "if(auto tmp = @obj@.m_@i_prop@.vptr()[last_id.index()]; bool(tmp))" + block{
-							o + "auto& vref = @obj@.m_array_@i_prop@.vptr()[tmp.index()];";
-							o + "if(auto pos = std::find(vref.begin(), vref.end(), last_id); pos != vref.end())" + block {
-								o + "*pos = id_removed;";
+						if(io.multiplicity == 1) {
+							o + "if(auto tmp = @obj@.m_@i_prop@.vptr()[last_id.index()]; bool(tmp))" + block{
+								o + "auto& vref = @obj@.m_array_@i_prop@.vptr()[tmp.index()];";
+								o + "if(auto pos = std::find(vref.begin(), vref.end(), last_id); pos != vref.end())" + block {
+									o + "*pos = id_removed;";
+								};
 							};
-						};
+						} else {
+							for(int32_t i = 0; i < io.multiplicity; ++i) {
+								o + substitute{ "i", std::to_string(i) };
+								o + "if(auto tmp = @obj@.m_@i_prop@.vptr()[last_id.index()][@i@]; bool(tmp))" + block{
+									o + "auto& vref = @obj@.m_array_@i_prop@.vptr()[tmp.index()];";
+									if(io.is_distinct) {
+										o + "if(auto pos = std::find(vref.begin(), vref.end(), last_id); pos != vref.end())" + block{
+											o + "*pos = id_removed;";
+										};
+									} else {
+										o + "for(auto pos = std::find(vref.begin(), vref.end(), last_id); pos != vref.end(); pos = std::find(pos + 1, vref.end(), last_id))" + block{
+											o + "*pos = id_removed;";
+										};
+									}
+								};
+							}
+						}
 					} else if(io.ltype == list_type::array) {
-						o + "if(auto tmp = @obj@.m_@i_prop@.vptr()[last_id.index()]; bool(tmp))" + block{
-							o + "dcon::replace_unique_item(@obj@.@i_prop@_storage, @obj@.m_array_@i_prop@.vptr()[tmp.index()],"
-								" last_id, id_removed);";
-						};
+						if(io.multiplicity == 1) {
+							o + "if(auto tmp = @obj@.m_@i_prop@.vptr()[last_id.index()]; bool(tmp))" + block{
+								o + "dcon::replace_unique_item(@obj@.@i_prop@_storage, @obj@.m_array_@i_prop@.vptr()[tmp.index()],"
+									" last_id, id_removed);";
+							};
+						} else {
+							for(int32_t i = 0; i < io.multiplicity; ++i) {
+								o + substitute{ "i", std::to_string(i) };
+								o + "if(auto tmp = @obj@.m_@i_prop@.vptr()[last_id.index()][@i@]; bool(tmp))" + block{
+									if(io.is_distinct) {
+										o + "dcon::replace_unique_item(@obj@.@i_prop@_storage, @obj@.m_array_@i_prop@.vptr()[tmp.index()],"
+											" last_id, id_removed);";
+									} else {
+										o + "dcon::replace_all_items(@obj@.@i_prop@_storage, @obj@.m_array_@i_prop@.vptr()[tmp.index()],"
+											" last_id, id_removed);";
+									}
+								};
+							}
+						}
 					}
 				}
 
 				move_value(o, cob.name, io.property_name,
-					"last_id", "id_removed", io.type_name + "_id()");
+					"last_id", "id_removed", io.type_name + "_id()", io.multiplicity);
 			}
 		}
 		for(auto& cp : cob.properties) {
@@ -1292,7 +1409,7 @@ basic_builder& make_internal_move_relationship(basic_builder& o, relationship_ob
 			} else if(cp.type == property_type::special_vector) {
 				o + "@obj@.@prop@_storage.release(@obj@.m_@prop@.vptr()[id_removed.index()]);";
 				move_value(o, cob.name, cp.name,
-					"last_id", "id_removed", "std::numeric_limits<dcon::stable_mk_2_tag>::max()");
+					"last_id", "id_removed", "std::numeric_limits<dcon::stable_mk_2_tag>::max()", 1);
 			} else if(cp.type == property_type::bitfield) {
 				o + "dcon::bit_vector_set(@obj@.m_@prop@.vptr(), id_removed.index(), "
 					"dcon::bit_vector_test(@obj@.m_@prop@.vptr(), last_id.index()));";
@@ -1302,7 +1419,7 @@ basic_builder& make_internal_move_relationship(basic_builder& o, relationship_ob
 					"last_id", "id_removed");
 			} else {
 				move_value(o, cob.name, cp.name,
-					"last_id", "id_removed", cp.data_type + "{}");
+					"last_id", "id_removed", cp.data_type + "{}", 1);
 			}
 		}
 
@@ -1363,17 +1480,48 @@ basic_builder& make_relation_try_create(basic_builder& o, relationship_object_de
 	o + "@obj@_id try_create_@obj@(@params@)" + block{
 		for(auto& iob : cob.indexed_objects) {
 			o + substitute{ "prop", iob.property_name };
-			if(!iob.is_optional) {
-				o + "if(!bool(@prop@_p)) return @obj@_id();";
-			}
-			if(cob.primary_key != iob) {
-				if(iob.index == index_type::at_most_one) {
-					o + "if(bool(@prop@_p) && bool(@obj@.m_link_back_@prop@.vptr()[@prop@_p.index()])) return @obj@_id();";
+			if(iob.multiplicity == 1) {
+				if(!iob.is_optional) {
+					o + "if(!bool(@prop@_p)) return @obj@_id();";
+				}
+				if(cob.primary_key != iob) {
+					if(iob.index == index_type::at_most_one) {
+						o + "if(bool(@prop@_p) && bool(@obj@.m_link_back_@prop@.vptr()[@prop@_p.index()])) return @obj@_id();";
+					}
+				} else {
+					o + "if(@obj@_is_valid(@obj@_id(@obj@_id::value_base_t(@prop@_p.index())))) return @obj@_id();";
 				}
 			} else {
-				o + "if(@obj@_is_valid(@obj@_id(@obj@_id::value_base_t(@prop@_p.index())))) return @obj@_id();";
+				for(int32_t i = 0; i < iob.multiplicity; ++i) {
+					o + substitute{ "i", std::to_string(i) };
+					if(!iob.is_optional) {
+						o + "if(!bool(@prop@_p@i@)) return @obj@_id();";
+					}
+					if(iob.index == index_type::at_most_one) {
+						o + "if(bool(@prop@_p@i@) && bool(@obj@.m_link_back_@prop@.vptr()[@prop@_p@i@.index()])) return @obj@_id();";
+					}
+					if(iob.is_distinct) {
+						o + substitute{ "j", std::to_string(i) };
+						for(int32_t j = i + 1; j < iob.multiplicity; ++j) {
+							o + "if(bool(@prop@_p@i@) && @prop@_p@i@ == @prop@_p@j@) return @obj@_id();";
+						}
+					}
+				}
+
+				o + substitute{ "mult", std::to_string(iob.multiplicity) };
+				o + substitute{ "id_type", iob.type_name + "_id" };
+
+				o + "std::array<@id_type@, @mult@> @prop@_p =" + class_block{
+					for(int32_t i = 0; i < iob.multiplicity; ++i) {
+						o + substitute{ "i", std::to_string(i) };
+						o + "@prop@_p@i@,";
+					}
+				};
+				o + "std::sort(@prop@_p.begin(), @prop@_p.end(), [](@id_type@ a, @id_type@ b){ return a.value < b.value; });";
 			}
 		}
+
+
 
 		for(auto& ck : cob.composite_indexes) {
 			if(!ck.involves_primary_key) {
@@ -1417,7 +1565,14 @@ basic_builder& make_relation_try_create(basic_builder& o, relationship_object_de
 		for(auto& iob : cob.indexed_objects) {
 			o + substitute{ "prop", iob.property_name };
 			if( cob.primary_key != iob)  {
-				o + "internal_@obj@_set_@prop@(new_id, @prop@_p);";
+				if(iob.multiplicity == 1) {
+					o + "internal_@obj@_set_@prop@(new_id, @prop@_p);";
+				} else {
+					for(int32_t i = 0; i < iob.multiplicity; ++i) {
+						o + substitute{ "i", std::to_string(i) };
+						o + "internal_@obj@_set_@prop@(new_id, @i@, @prop@_p[@i@]);";
+					}
+				}
 			}
 		}
 
@@ -1447,6 +1602,21 @@ basic_builder& make_relation_force_create(basic_builder& o, relationship_object_
 	o + heading{ "container force create relationship for @obj@" };
 
 	o + "@obj@_id force_create_@obj@(@params@)" + block{
+		for(auto& iob : cob.indexed_objects) {
+			if(iob.multiplicity > 1) {
+				o + substitute{ "mult", std::to_string(iob.multiplicity) };
+				o + substitute{ "id_type", iob.type_name + "_id" };
+
+				o + "std::array<@id_type@, @mult@> @prop@_p =" + class_block{
+					for(int32_t i = 0; i < iob.multiplicity; ++i) {
+						o + substitute{ "i", std::to_string(i) };
+						o + "@prop@_p@i@,";
+					}
+				};
+				o + "std::sort(@prop@_p.begin(), @prop@_p.end(), [](@id_type@ a, @id_type@ b){ return a.value < b.value; });";
+			}
+		}
+
 		if(cob.primary_key.points_to != nullptr) {
 			for(auto& iob : cob.indexed_objects) {
 				if(cob.primary_key == iob) {
@@ -1493,7 +1663,14 @@ basic_builder& make_relation_force_create(basic_builder& o, relationship_object_
 		for(auto& iob : cob.indexed_objects) {
 			o + substitute{ "prop", iob.property_name };
 			if( cob.primary_key != iob) {
-				o + "internal_@obj@_set_@prop@(new_id, @prop@_p);";
+				if(iob.multiplicity == 1) {
+					o + "internal_@obj@_set_@prop@(new_id, @prop@_p);";
+				} else {
+					for(int32_t i = 0; i < iob.multiplicity; ++i) {
+						o + substitute{ "i", std::to_string(i) };
+						o + "internal_@obj@_set_@prop@(new_id, @i@, @prop@_p[@i@]);";
+					}
+				}
 			}
 		}
 
@@ -2394,7 +2571,11 @@ basic_builder& make_composite_key_declarations(basic_builder& o, std::string con
 	for(auto& k : cc.component_indexes) {
 		if(parameter_string.length() != 0)
 			parameter_string += ", ";
-		parameter_string += k.object_type + "_id " + k.property_name + "_p";
+		if(k.multiplicity == 1) {
+			parameter_string += k.object_type + "_id " + k.property_name + "_p";
+		} else {
+			parameter_string += "std::array<" + k.object_type + "_id, " + std::to_string(k.multiplicity) + "> const& " + k.property_name + "_p";
+		}
 	}
 	o + substitute{ "ccname", cc.name } +substitute{ "obj", obj_name }
 	+substitute{ "intvalue", std::to_string(cc.total_bytes) } +substitute{ "params", parameter_string };
@@ -2404,21 +2585,43 @@ basic_builder& make_composite_key_declarations(basic_builder& o, std::string con
 		o + "dcon::key_data_extended<@intvalue@> to_@ccname@_keydata(@params@)" + block{
 			o + "dcon::key_data_extended<@intvalue@> result;";
 			for(auto& k : cc.component_indexes) {
-				o + substitute{ "byte", std::to_string(k.bit_position / 8) };
-				o + substitute{ "bit", std::to_string(k.bit_position & 7) };
-				o + substitute{ "param", k.property_name + "_p"};
-				if(k.number_of_bits > 16) {
-					o + "*(reinterpret_cast<uint32_t*>(result.values.data() + @byte@)) = "
-						"uint32_t(*(reinterpret_cast<uint32_t*>(result.values.data() + @byte@)) | "
-						"(uint32_t(@param@.value) << @bit@));";
-				} else if(k.number_of_bits > 8) {
-					o + "*(reinterpret_cast<uint16_t*>(result.values.data() + @byte@)) = "
-						"uint16_t(*(reinterpret_cast<uint16_t*>(result.values.data() + @byte@)) | "
-						"(uint16_t(@param@.value) << @bit@));";
+				if(k.multiplicity == 1) {
+					o + substitute{ "byte", std::to_string(k.bit_position / 8) };
+					o + substitute{ "bit", std::to_string(k.bit_position & 7) };
+					o + substitute{ "param", k.property_name + "_p" };
+					if(k.number_of_bits > 16) {
+						o + "*(reinterpret_cast<uint32_t*>(result.values.data() + @byte@)) = "
+							"uint32_t(*(reinterpret_cast<uint32_t*>(result.values.data() + @byte@)) | "
+							"(uint32_t(@param@.value) << @bit@));";
+					} else if(k.number_of_bits > 8) {
+						o + "*(reinterpret_cast<uint16_t*>(result.values.data() + @byte@)) = "
+							"uint16_t(*(reinterpret_cast<uint16_t*>(result.values.data() + @byte@)) | "
+							"(uint16_t(@param@.value) << @bit@));";
+					} else {
+						o + "*(reinterpret_cast<uint8_t*>(result.values.data() + @byte@)) = "
+							"uint8_t(*(reinterpret_cast<uint8_t*>(result.values.data() + @byte@)) | "
+							"(uint8_t(@param@.value) << @bit@));";
+					}
 				} else {
-					o + "*(reinterpret_cast<uint8_t*>(result.values.data() + @byte@)) = "
-						"uint8_t(*(reinterpret_cast<uint8_t*>(result.values.data() + @byte@)) | "
-						"(uint8_t(@param@.value) << @bit@));";
+					for(int32_t i = 0; i < k.multiplicity; ++i) {
+						o + substitute{ "byte", std::to_string((k.bit_position + k.number_of_bits * i) / 8) };
+						o + substitute{ "bit", std::to_string((k.bit_position + k.number_of_bits * i) & 7) };
+						o + substitute{ "i", std::to_string(i) };
+						o + substitute{ "param", k.property_name + "_p" };
+						if(k.number_of_bits > 16) {
+							o + "*(reinterpret_cast<uint32_t*>(result.values.data() + @byte@)) = "
+								"uint32_t(*(reinterpret_cast<uint32_t*>(result.values.data() + @byte@)) | "
+								"(uint32_t(@param@[@i@].value) << @bit@));";
+						} else if(k.number_of_bits > 8) {
+							o + "*(reinterpret_cast<uint16_t*>(result.values.data() + @byte@)) = "
+								"uint16_t(*(reinterpret_cast<uint16_t*>(result.values.data() + @byte@)) | "
+								"(uint16_t(@param@[@i@].value) << @bit@));";
+						} else {
+							o + "*(reinterpret_cast<uint8_t*>(result.values.data() + @byte@)) = "
+								"uint8_t(*(reinterpret_cast<uint8_t*>(result.values.data() + @byte@)) | "
+								"(uint8_t(@param@[@i@].value) << @bit@));";
+						}
+					}
 				}
 			}
 			o + "return result;";
@@ -2429,9 +2632,18 @@ basic_builder& make_composite_key_declarations(basic_builder& o, std::string con
 		o + "uint64_t to_@ccname@_keydata(@params@)" + block{
 			o + "uint64_t result = 0;";
 			for(auto& k : cc.component_indexes) {
-				o + substitute{ "bit", std::to_string(k.bit_position) };
-				o + substitute{ "param", k.property_name + "_p"};
-				o + "result |= (uint64_t(@param@.value) << @bit@);";
+				if(k.multiplicity == 1) {
+					o + substitute{ "bit", std::to_string(k.bit_position) };
+					o + substitute{ "param", k.property_name + "_p" };
+					o + "result |= (uint64_t(@param@.value) << @bit@);";
+				} else {
+					for(int32_t i = 0; i < k.multiplicity; ++i) {
+						o + substitute{ "bit", std::to_string(k.bit_position) };
+						o + substitute{ "param", k.property_name + "_p" };
+						o + substitute{ "i", std::to_string(i) };
+						o + "result |= (uint64_t(@param@[@i@].value) << @bit@);";
+					}
+				}
 			}
 			o + "return result;";
 		};
@@ -2441,9 +2653,18 @@ basic_builder& make_composite_key_declarations(basic_builder& o, std::string con
 		o + "uint32_t to_@ccname@_keydata(@params@)" + block{
 			o + "uint32_t result = 0;";
 			for(auto& k : cc.component_indexes) {
-				o + substitute{ "bit", std::to_string(k.bit_position) };
-				o + substitute{ "param", k.property_name + "_p"};
-				o + "result |= (uint32_t(@param@.value) << @bit@);";
+				if(k.multiplicity == 1) {
+					o + substitute{ "bit", std::to_string(k.bit_position) };
+					o + substitute{ "param", k.property_name + "_p"};
+					o + "result |= (uint32_t(@param@.value) << @bit@);";
+				} else {
+					for(int32_t i = 0; i < k.multiplicity; ++i) {
+						o + substitute{ "bit", std::to_string(k.bit_position) };
+						o + substitute{ "param", k.property_name + "_p" };
+						o + substitute{ "i", std::to_string(i) };
+						o + "result |= (uint32_t(@param@[@i@].value) << @bit@);";
+					}
+				}
 			}
 			o + "return result;";
 		};
@@ -2453,9 +2674,18 @@ basic_builder& make_composite_key_declarations(basic_builder& o, std::string con
 		o + "uint16_t to_@ccname@_keydata(@params@)" + block{
 			o + "uint16_t result = 0;";
 			for(auto& k : cc.component_indexes) {
-				o + substitute{ "bit", std::to_string(k.bit_position) };
-				o + substitute{ "param", k.property_name + "_p"};
-				o + "result |= (uint16_t(@param@.value) << @bit@);";
+				if(k.multiplicity == 1) {
+					o + substitute{ "bit", std::to_string(k.bit_position) };
+					o + substitute{ "param", k.property_name + "_p"};
+					o + "result |= (uint16_t(@param@.value) << @bit@);";
+				} else {
+					for(int32_t i = 0; i < k.multiplicity; ++i) {
+						o + substitute{ "bit", std::to_string(k.bit_position) };
+						o + substitute{ "param", k.property_name + "_p" };
+						o + substitute{ "i", std::to_string(i) };
+						o + "result |= (uint16_t(@param@[@i@].value) << @bit@);";
+					}
+				}
 			}
 			o + "return result;";
 		};

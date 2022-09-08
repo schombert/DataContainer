@@ -560,6 +560,13 @@ namespace dcon {
 			*pos = new_val;
 		}
 	}
+	template<typename object_type, uint32_t minimum_size, size_t memory_size>
+	void replace_all_items(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag i, object_type obj, object_type new_val) {
+		const auto range = get_range(storage, i);
+		for(auto pos = std::find(range.first, range.second, obj); pos != range.second;  pos = std::find(pos + 1, range.second, obj)) {
+			*pos = new_val;
+		}
+	}
 
 	template<typename object_type, uint32_t minimum_size, size_t memory_size>
 	void load_range(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag& i, object_type const* first, object_type const* last) {

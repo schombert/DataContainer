@@ -116,16 +116,21 @@ int main(int argc, char *argv[]) {
 					} else {
 						error_to_file(output_file_name, std::string("Could not find object named: ") + l.type_name + " in relationship: " + r.name);
 					}
-					if(l.index == index_type::at_most_one && !l.is_optional) {
+					if(l.index == index_type::at_most_one && !l.is_optional && l.multiplicity == 1) {
 						r.primary_key.points_to = better_primary_key(r.primary_key.points_to, l.related_to);
 						if(r.primary_key.points_to == l.related_to)
 							r.primary_key.property_name = l.property_name;
+					}
+
+					if(l.multiplicity > 1 && l.index == index_type::many && l.ltype == list_type::list) {
+						error_to_file(output_file_name, std::string("Unsupported combination of list type storage with multiplicity > 1 in link ")
+							+ l.property_name + " in relationship: " + r.name);
 					}
 				}
 
 				
 
-				if(r.indexed_objects.size() <= 1) {
+				if(r.indexed_objects.size() == 0) {
 					error_to_file(output_file_name, std::string("Relationship: ") + r.name + " is between too few objects");
 				}
 
@@ -133,7 +138,8 @@ int main(int argc, char *argv[]) {
 				if(r.force_pk.length() > 0) {
 					bool pk_forced = false;
 					for(auto& link : r.indexed_objects) {
-						if(link.property_name == r.force_pk && link.index == index_type::at_most_one) {
+						if(link.property_name == r.force_pk && link.index == index_type::at_most_one
+							&& !link.is_optional && link.multiplicity == 1) {
 							r.primary_key.points_to = link.related_to;
 							r.primary_key.property_name = link.property_name;
 							pk_forced = true;
@@ -211,6 +217,7 @@ int main(int argc, char *argv[]) {
 						if(ri.property_name == k.property_name) {
 							k.object_type = ri.type_name;
 							ri.is_covered_by_composite_key = true;
+							k.multiplicity = ri.multiplicity;
 						}
 					}
 
@@ -230,7 +237,7 @@ int main(int argc, char *argv[]) {
 						k.number_of_bits = 0;
 						for(auto sz = ob.size; sz != 0; sz = sz >> 1) {
 							++k.number_of_bits;
-							++bits_so_far;
+							bits_so_far += k.multiplicity;
 						}
 					}
 				}
@@ -261,7 +268,7 @@ int main(int argc, char *argv[]) {
 		output += "#include <utility>\n";
 		output += "#include <vector>\n";
 		output += "#include <algorithm>\n";
-		output += "#include <cassert>\n";
+		output += "#include <array>\n";
 		output += "#include <memory>\n";
 		output += "#include <cstring>\n";
 		output += "#include \"common_types.hpp\"\n";
@@ -402,8 +409,9 @@ int main(int argc, char *argv[]) {
 					//skip recording index value
 				} else {
 					output += make_member_container(o, i.property_name, i.type_name + "_id",
-						expand_size_to_fill_cacheline_calculation(i.type_name + "_id", ob.size),
-						struct_padding::fixed, ob.is_expandable).to_string(3);
+						i.multiplicity == 1 ? expand_size_to_fill_cacheline_calculation(i.type_name + "_id", ob.size) : std::to_string(ob.size),
+						i.multiplicity == 1 ? struct_padding::fixed : struct_padding::none,
+						ob.is_expandable, std::optional<std::string>(), i.multiplicity).to_string(3);
 				}
 
 				if(i.index == index_type::many) {

@@ -271,6 +271,21 @@ related_object parse_link_def(char const * start, char const * end, char const *
 					err_out.add(std::string("unknown parameter \"") + extracted.values[0].to_string() + "\" passed to index_storage on line "
 						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
 				}
+			} else if(kstr == "multiple") {
+				if(extracted.values.size() != 1 || extracted.values.size() != 2) {
+					err_out.add(std::string("wrong number of parameters for \"multiple\" on line ")
+						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				} else {
+					result.multiplicity = std::stoi(extracted.values[0].to_string());
+					if(extracted.values.size() == 2) {
+						if(extracted.values[1].to_string() == "distinct") {
+							result.is_distinct = true;
+						} else {
+							err_out.add(std::string("unknown parameter \"") + extracted.values[1].to_string() + "\" passed to multiple on line "
+								+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+						}
+					}
+				}
 			} else if(kstr == "private") {
 				if(extracted.values.size() != 0) {
 					err_out.add(std::string("wrong number of parameters for \"private\" on line ")

@@ -34,7 +34,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="color_container.txt" />
-    <Text Include="old_color_container.txt" />
+    <CustomBuild Include="color_container.txt" />
+    <CustomBuild Include="old_color_container.txt" />
   </ItemGroup>
 </Project>

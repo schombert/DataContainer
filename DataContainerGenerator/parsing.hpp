@@ -77,9 +77,11 @@ struct relationship_object_def;
 struct related_object {
 	std::string property_name;
 	std::string type_name;
+	int32_t multiplicity = 1;
 	index_type index = index_type::at_most_one;
 	list_type ltype = list_type::list;
 	bool is_optional = false;
+	bool is_distinct = false;
 	bool is_covered_by_composite_key = false;
 	protection_type protection = protection_type::none;
 	relationship_object_def* related_to = nullptr;
@@ -98,6 +100,7 @@ struct in_relation_information {
 struct key_component {
 	std::string property_name;
 	std::string object_type;
+	int32_t multiplicity = 1;
 	int32_t number_of_bits = 0;
 	int32_t bit_position = 0;
 };
@@ -211,7 +214,13 @@ inline std::string make_relationship_parameters(relationship_object_def const& o
 	for(auto& i : o.indexed_objects) {
 		if(result.length() != 0)
 			result += ", ";
-		result += i.type_name + "_id " + i.property_name + "_p";
+		if(i.multiplicity == 1) {
+			result += i.type_name + "_id " + i.property_name + "_p";
+		} else {
+			for(int32_t j = 0; j < i.multiplicity; ++j) {
+				result += i.type_name + "_id " + i.property_name + "_p" + std::to_string(j);
+			}
+		}
 	}
 	return result;
 }
