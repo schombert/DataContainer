@@ -48,14 +48,14 @@ namespace dcon {
 		public:
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint16_t value = 0;
-	
+		
 		constexpr colored_thing_id() noexcept = default;
 		explicit constexpr colored_thing_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr colored_thing_id(colored_thing_id const& v) noexcept = default;
 		constexpr colored_thing_id(colored_thing_id&& v) noexcept = default;
-	
+		
 		colored_thing_id& operator=(colored_thing_id const& v) noexcept = default;
 		colored_thing_id& operator=(colored_thing_id&& v) noexcept = default;
 		constexpr bool operator==(colored_thing_id v) const noexcept { return value == v.value; }
@@ -159,7 +159,7 @@ namespace dcon {
 		inline float get_red();
 		inline float get_green();
 		inline float get_blue();
-	
+		
 	};
 	DCON_RELEASE_INLINE colored_thing_fat_id fatten(data_container& c, colored_thing_id id) noexcept {
 		return colored_thing_fat_id(c, id);
@@ -216,7 +216,7 @@ namespace dcon {
 		float get_red() ;
 		float get_green() ;
 		float get_blue() ;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(colored_thing_fat_id const& l, colored_thing_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);

@@ -74,5 +74,8 @@
     <None Include="..\tutorial_color.md">
       <Filter>docs</Filter>
     </None>
+    <None Include="..\changes.md">
+      <Filter>docs</Filter>
+    </None>
   </ItemGroup>
 </Project>

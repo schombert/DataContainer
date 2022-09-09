@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 #include <algorithm>
-#include <cassert>
+#include <array>
 #include <memory>
 #include <cstring>
 #include "common_types.hpp"
@@ -61,14 +61,14 @@ namespace ex1 {
 		public:
 		using value_base_t = uint32_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint32_t value = 0;
-	
+		
 		constexpr top_id() noexcept = default;
 		explicit constexpr top_id(uint32_t v) noexcept : value(v + 1) {}
 		constexpr top_id(top_id const& v) noexcept = default;
 		constexpr top_id(top_id&& v) noexcept = default;
-	
+		
 		top_id& operator=(top_id const& v) noexcept = default;
 		top_id& operator=(top_id&& v) noexcept = default;
 		constexpr bool operator==(top_id v) const noexcept { return value == v.value; }
@@ -94,14 +94,14 @@ namespace ex1 {
 		public:
 		using value_base_t = uint32_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint32_t value = 0;
-	
+		
 		constexpr bottom_id() noexcept = default;
 		explicit constexpr bottom_id(uint32_t v) noexcept : value(v + 1) {}
 		constexpr bottom_id(bottom_id const& v) noexcept = default;
 		constexpr bottom_id(bottom_id&& v) noexcept = default;
-	
+		
 		bottom_id& operator=(bottom_id const& v) noexcept = default;
 		bottom_id& operator=(bottom_id&& v) noexcept = default;
 		constexpr bool operator==(bottom_id v) const noexcept { return value == v.value; }
@@ -127,14 +127,14 @@ namespace ex1 {
 		public:
 		using value_base_t = uint32_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint32_t value = 0;
-	
+		
 		constexpr lr_relation_id() noexcept = default;
 		explicit constexpr lr_relation_id(uint32_t v) noexcept : value(v + 1) {}
 		constexpr lr_relation_id(lr_relation_id const& v) noexcept = default;
 		constexpr lr_relation_id(lr_relation_id&& v) noexcept = default;
-	
+		
 		lr_relation_id& operator=(lr_relation_id const& v) noexcept = default;
 		lr_relation_id& operator=(lr_relation_id&& v) noexcept = default;
 		constexpr bool operator==(lr_relation_id v) const noexcept { return value == v.value; }
@@ -355,7 +355,7 @@ namespace ex1 {
 		DCON_RELEASE_INLINE void for_each_thingies_from_lr_relation(T&& func) const;
 		DCON_RELEASE_INLINE bool has_thingies_from_lr_relation(int32_t target) const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE top_fat_id fatten(data_container& c, top_id id) noexcept {
 		return top_fat_id(c, id);
@@ -421,7 +421,7 @@ namespace ex1 {
 		DCON_RELEASE_INLINE void for_each_thingies_from_lr_relation(T&& func) const;
 		DCON_RELEASE_INLINE bool has_thingies_from_lr_relation(int32_t target) const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(top_fat_id const& l, top_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -484,7 +484,7 @@ namespace ex1 {
 		DCON_RELEASE_INLINE void for_each_thingies_from_lr_relation(T&& func) const;
 		DCON_RELEASE_INLINE bool has_thingies_from_lr_relation(int32_t target) const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bottom_fat_id fatten(data_container& c, bottom_id id) noexcept {
 		return bottom_fat_id(c, id);
@@ -550,7 +550,7 @@ namespace ex1 {
 		DCON_RELEASE_INLINE void for_each_thingies_from_lr_relation(T&& func) const;
 		DCON_RELEASE_INLINE bool has_thingies_from_lr_relation(int32_t target) const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(bottom_fat_id const& l, bottom_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -605,7 +605,7 @@ namespace ex1 {
 		DCON_RELEASE_INLINE void set_right(bottom_id val) const noexcept;
 		DCON_RELEASE_INLINE bool try_set_right(bottom_id val) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE lr_relation_fat_id fatten(data_container& c, lr_relation_id id) noexcept {
 		return lr_relation_fat_id(c, id);
@@ -661,7 +661,7 @@ namespace ex1 {
 		DCON_RELEASE_INLINE top_const_fat_id get_left() const noexcept;
 		DCON_RELEASE_INLINE bottom_const_fat_id get_right() const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(lr_relation_fat_id const& l, lr_relation_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -736,7 +736,7 @@ namespace ex1 {
 		void top_remove_all_lr_relation_as_left(top_id id) noexcept {
 			auto rng = top_range_of_lr_relation_as_left(id);
 			dcon::local_vector<lr_relation_id> temp(rng.first, rng.second);
-			std::for_each(temp.begin(), temp.end(), [t = this](lr_relation_id i) { t->delete_lr_relation(i); });
+			std::for_each(temp.begin(), temp.end(), [t = this](lr_relation_id i) { t->lr_relation_set_left(i, top_id()); });
 		}
 		template<typename T>
 		DCON_RELEASE_INLINE void top_for_each_lr_relation(top_id id, T&& func) const {
@@ -756,7 +756,7 @@ namespace ex1 {
 		void top_remove_all_lr_relation(top_id id) noexcept {
 			auto rng = top_range_of_lr_relation_as_left(id);
 			dcon::local_vector<lr_relation_id> temp(rng.first, rng.second);
-			std::for_each(temp.begin(), temp.end(), [t = this](lr_relation_id i) { t->delete_lr_relation(i); });
+			std::for_each(temp.begin(), temp.end(), [t = this](lr_relation_id i) { t->lr_relation_set_left(i, top_id()); });
 		}
 		template<typename T>
 		void top_for_each_right_from_lr_relation(top_id id, T&& func) const {
@@ -845,7 +845,7 @@ namespace ex1 {
 		void bottom_remove_all_lr_relation_as_right(bottom_id id) noexcept {
 			auto rng = bottom_range_of_lr_relation_as_right(id);
 			dcon::local_vector<lr_relation_id> temp(rng.first, rng.second);
-			std::for_each(temp.begin(), temp.end(), [t = this](lr_relation_id i) { t->delete_lr_relation(i); });
+			std::for_each(temp.begin(), temp.end(), [t = this](lr_relation_id i) { t->lr_relation_set_right(i, bottom_id()); });
 		}
 		template<typename T>
 		DCON_RELEASE_INLINE void bottom_for_each_lr_relation(bottom_id id, T&& func) const {
@@ -865,7 +865,7 @@ namespace ex1 {
 		void bottom_remove_all_lr_relation(bottom_id id) noexcept {
 			auto rng = bottom_range_of_lr_relation_as_right(id);
 			dcon::local_vector<lr_relation_id> temp(rng.first, rng.second);
-			std::for_each(temp.begin(), temp.end(), [t = this](lr_relation_id i) { t->delete_lr_relation(i); });
+			std::for_each(temp.begin(), temp.end(), [t = this](lr_relation_id i) { t->lr_relation_set_right(i, bottom_id()); });
 		}
 		template<typename T>
 		void bottom_for_each_left_from_lr_relation(bottom_id id, T&& func) const {
@@ -1075,7 +1075,9 @@ namespace ex1 {
 			top_id last_id(top_id::value_base_t(top.size_used - 1));
 			if(id_removed == last_id) { pop_back_top(); return; }
 			top_remove_all_lr_relation_as_left(id_removed);
-			top_for_each_lr_relation_as_left(last_id, [t = this, id_removed](lr_relation_id i){ t->lr_relation.m_left.vptr()[i.index()] = id_removed; });
+			top_for_each_lr_relation_as_left(last_id, [this, id_removed, last_id](lr_relation_id i) {
+				lr_relation.m_left.vptr()[i.index()] = id_removed;
+			} );
 			lr_relation.m_array_left.vptr()[id_removed.index()] = std::move(lr_relation.m_array_left.vptr()[last_id.index()]);
 			lr_relation.m_array_left.values.pop_back();
 			top.m_wheels.vptr()[id_removed.index()] = std::move(top.m_wheels.vptr()[last_id.index()]);
@@ -1179,6 +1181,8 @@ namespace ex1 {
 		// container try create relationship for lr_relation
 		//
 		lr_relation_id try_create_lr_relation(top_id left_p, bottom_id right_p) {
+			if(!bool(left_p)) return lr_relation_id();
+			if(!bool(right_p)) return lr_relation_id();
 			lr_relation_id new_id = lr_relation.first_free;
 			bool expanded = !bool(lr_relation.first_free );
 			if(expanded) {
@@ -1224,7 +1228,7 @@ namespace ex1 {
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_top(T&& func) {
 			for(uint32_t i = 0; i < top.size_used; ++i) {
-				top_id tmp(top_id::value_base_t(i));
+				top_id tmp = top_id(top_id::value_base_t(i));
 				func(tmp);
 			}
 		}
@@ -1232,7 +1236,7 @@ namespace ex1 {
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_bottom(T&& func) {
 			for(uint32_t i = 0; i < bottom.size_used; ++i) {
-				bottom_id tmp(bottom_id::value_base_t(i));
+				bottom_id tmp = bottom_id(bottom_id::value_base_t(i));
 				func(tmp);
 			}
 		}
@@ -1240,7 +1244,7 @@ namespace ex1 {
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_lr_relation(T&& func) {
 			for(uint32_t i = 0; i < lr_relation.size_used; ++i) {
-				lr_relation_id tmp(lr_relation_id::value_base_t(i));
+				lr_relation_id tmp = lr_relation_id(lr_relation_id::value_base_t(i));
 				if(lr_relation.m__index.vptr()[tmp.index()] == tmp) func(tmp);
 			}
 		}
@@ -1262,12 +1266,12 @@ namespace ex1 {
 		}
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_serial_over_top(F&& functor) {
-			ve::execute_serial_unaligned(top.size_used, functor);
+			ve::execute_serial_unaligned<top_id>(top.size_used, functor);
 		}
 #ifndef VE_NO_TBB
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_parallel_over_top(F&& functor) {
-			ve::execute_parallel_unaligned(top.size_used, functor);
+			ve::execute_parallel_unaligned<top_id>(top.size_used, functor);
 		}
 #endif
 		ve::vectorizable_buffer<float, bottom_id> bottom_make_vectorizable_float_buffer() const noexcept {
@@ -1278,12 +1282,12 @@ namespace ex1 {
 		}
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_serial_over_bottom(F&& functor) {
-			ve::execute_serial_unaligned(bottom.size_used, functor);
+			ve::execute_serial_unaligned<bottom_id>(bottom.size_used, functor);
 		}
 #ifndef VE_NO_TBB
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_parallel_over_bottom(F&& functor) {
-			ve::execute_parallel_unaligned(bottom.size_used, functor);
+			ve::execute_parallel_unaligned<bottom_id>(bottom.size_used, functor);
 		}
 #endif
 		ve::vectorizable_buffer<float, lr_relation_id> lr_relation_make_vectorizable_float_buffer() const noexcept {
@@ -1294,12 +1298,12 @@ namespace ex1 {
 		}
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_serial_over_lr_relation(F&& functor) {
-			ve::execute_serial_unaligned(lr_relation.size_used, functor);
+			ve::execute_serial_unaligned<lr_relation_id>(lr_relation.size_used, functor);
 		}
 #ifndef VE_NO_TBB
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_parallel_over_lr_relation(F&& functor) {
-			ve::execute_parallel_unaligned(lr_relation.size_used, functor);
+			ve::execute_parallel_unaligned<lr_relation_id>(lr_relation.size_used, functor);
 		}
 #endif
 		#endif
@@ -1406,17 +1410,17 @@ namespace ex1 {
 				header.serialize(output_buffer);
 				*(reinterpret_cast<uint32_t*>(output_buffer)) = lr_relation.size_used;
 				output_buffer += sizeof(uint32_t);
-		 {
+				 {
 					dcon::record_header iheader(sizeof(top_id) * lr_relation.size_used, "uint32_t", "lr_relation", "left");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<top_id*>(output_buffer), lr_relation.m_left.vptr(), sizeof(top_id) * lr_relation.size_used);
-					output_buffer += sizeof(top_id) * lr_relation.size_used;
+					output_buffer += sizeof(top_id) *  lr_relation.size_used;
 				}
-		 {
+				 {
 					dcon::record_header iheader(sizeof(bottom_id) * lr_relation.size_used, "uint32_t", "lr_relation", "right");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<bottom_id*>(output_buffer), lr_relation.m_right.vptr(), sizeof(bottom_id) * lr_relation.size_used);
-					output_buffer += sizeof(bottom_id) * lr_relation.size_used;
+					output_buffer += sizeof(bottom_id) *  lr_relation.size_used;
 				}
 				dcon::record_header headerb(0, "$", "lr_relation", "$index_end");
 				headerb.serialize(output_buffer);

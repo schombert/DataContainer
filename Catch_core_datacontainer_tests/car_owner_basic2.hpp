@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 #include <algorithm>
-#include <cassert>
+#include <array>
 #include <memory>
 #include <cstring>
 #include "common_types.hpp"
@@ -61,14 +61,14 @@ namespace cob2 {
 		public:
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint16_t value = 0;
-	
+		
 		constexpr car_id() noexcept = default;
 		explicit constexpr car_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr car_id(car_id const& v) noexcept = default;
 		constexpr car_id(car_id&& v) noexcept = default;
-	
+		
 		car_id& operator=(car_id const& v) noexcept = default;
 		car_id& operator=(car_id&& v) noexcept = default;
 		constexpr bool operator==(car_id v) const noexcept { return value == v.value; }
@@ -94,14 +94,14 @@ namespace cob2 {
 		public:
 		using value_base_t = uint8_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint8_t value = 0;
-	
+		
 		constexpr person_id() noexcept = default;
 		explicit constexpr person_id(uint8_t v) noexcept : value(v + 1) {}
 		constexpr person_id(person_id const& v) noexcept = default;
 		constexpr person_id(person_id&& v) noexcept = default;
-	
+		
 		person_id& operator=(person_id const& v) noexcept = default;
 		person_id& operator=(person_id&& v) noexcept = default;
 		constexpr bool operator==(person_id v) const noexcept { return value == v.value; }
@@ -127,14 +127,14 @@ namespace cob2 {
 		public:
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint16_t value = 0;
-	
+		
 		constexpr car_ownership_id() noexcept = default;
 		explicit constexpr car_ownership_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr car_ownership_id(car_ownership_id const& v) noexcept = default;
 		constexpr car_ownership_id(car_ownership_id&& v) noexcept = default;
-	
+		
 		car_ownership_id& operator=(car_ownership_id const& v) noexcept = default;
 		car_ownership_id& operator=(car_ownership_id&& v) noexcept = default;
 		constexpr bool operator==(car_ownership_id v) const noexcept { return value == v.value; }
@@ -329,10 +329,11 @@ namespace cob2 {
 		DCON_RELEASE_INLINE car_ownership_fat_id get_car_ownership() const noexcept;
 		DCON_RELEASE_INLINE void remove_car_ownership() const noexcept;
 		DCON_RELEASE_INLINE person_fat_id get_owner_from_car_ownership() const noexcept;
+		DCON_RELEASE_INLINE void set_owner_from_car_ownership(person_id v) const noexcept;
 		DCON_RELEASE_INLINE void set_ownership_date_from_car_ownership(int32_t v) const noexcept;
 		DCON_RELEASE_INLINE int32_t get_ownership_date_from_car_ownership() const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE car_fat_id fatten(data_container& c, car_id id) noexcept {
 		return car_fat_id(c, id);
@@ -391,7 +392,7 @@ namespace cob2 {
 		DCON_RELEASE_INLINE person_const_fat_id get_owner_from_car_ownership() const noexcept;
 		DCON_RELEASE_INLINE int32_t get_ownership_date_from_car_ownership() const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(car_fat_id const& l, car_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -454,7 +455,7 @@ namespace cob2 {
 		DCON_RELEASE_INLINE void for_each_ownership_date_from_car_ownership(T&& func) const;
 		DCON_RELEASE_INLINE bool has_ownership_date_from_car_ownership(int32_t target) const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE person_fat_id fatten(data_container& c, person_id id) noexcept {
 		return person_fat_id(c, id);
@@ -520,7 +521,7 @@ namespace cob2 {
 		DCON_RELEASE_INLINE void for_each_ownership_date_from_car_ownership(T&& func) const;
 		DCON_RELEASE_INLINE bool has_ownership_date_from_car_ownership(int32_t target) const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(person_fat_id const& l, person_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -575,7 +576,7 @@ namespace cob2 {
 		DCON_RELEASE_INLINE void set_owned_car(car_id val) const noexcept;
 		DCON_RELEASE_INLINE bool try_set_owned_car(car_id val) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE car_ownership_fat_id fatten(data_container& c, car_ownership_id id) noexcept {
 		return car_ownership_fat_id(c, id);
@@ -631,7 +632,7 @@ namespace cob2 {
 		DCON_RELEASE_INLINE person_const_fat_id get_owner() const noexcept;
 		DCON_RELEASE_INLINE car_const_fat_id get_owned_car() const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(car_ownership_fat_id const& l, car_ownership_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -738,7 +739,7 @@ namespace cob2 {
 		#endif
 		DCON_RELEASE_INLINE void car_remove_car_ownership_as_owned_car(car_id id) noexcept {
 			if(car_ownership_is_valid(car_ownership_id(car_ownership_id::value_base_t(id.index())))) {
-				delete_car_ownership(car_ownership_id(car_ownership_id::value_base_t(id.index())));
+				car_ownership_set_owned_car(car_ownership_id(car_ownership_id::value_base_t(id.index())), car_id());
 			}
 		}
 		DCON_RELEASE_INLINE car_ownership_id car_get_car_ownership(car_id id) const noexcept {
@@ -757,7 +758,7 @@ namespace cob2 {
 		#endif
 		DCON_RELEASE_INLINE void car_remove_car_ownership(car_id id) noexcept {
 			if(car_ownership_is_valid(car_ownership_id(car_ownership_id::value_base_t(id.index())))) {
-				delete_car_ownership(car_ownership_id(car_ownership_id::value_base_t(id.index())));
+				car_ownership_set_owned_car(car_ownership_id(car_ownership_id::value_base_t(id.index())), car_id());
 			}
 		}
 		DCON_RELEASE_INLINE person_id car_get_owner_from_car_ownership(car_id ref_id) const {
@@ -774,6 +775,9 @@ namespace cob2 {
 			return car_ownership_get_owner(ve::tagged_vector<car_ownership_id>(ref_id, std::true_type{}));
 		}
 		#endif
+		void car_set_owner_from_car_ownership(car_id ref_id, person_id val) {
+			car_ownership_set_owner(car_ownership_id(car_ownership_id::value_base_t(ref_id.index())), val);
+		}
 		void car_set_ownership_date_from_car_ownership(car_id ref_id, int32_t val) {
 			car_ownership_set_ownership_date(car_ownership_id(car_ownership_id::value_base_t(ref_id.index())), val);
 		}
@@ -852,7 +856,7 @@ namespace cob2 {
 		void person_remove_all_car_ownership_as_owner(person_id id) noexcept {
 			auto rng = person_range_of_car_ownership_as_owner(id);
 			dcon::local_vector<car_ownership_id> temp(rng.first, rng.second);
-			std::for_each(temp.begin(), temp.end(), [t = this](car_ownership_id i) { t->delete_car_ownership(i); });
+			std::for_each(temp.begin(), temp.end(), [t = this](car_ownership_id i) { t->car_ownership_set_owner(i, person_id()); });
 		}
 		template<typename T>
 		DCON_RELEASE_INLINE void person_for_each_car_ownership(person_id id, T&& func) const {
@@ -872,7 +876,7 @@ namespace cob2 {
 		void person_remove_all_car_ownership(person_id id) noexcept {
 			auto rng = person_range_of_car_ownership_as_owner(id);
 			dcon::local_vector<car_ownership_id> temp(rng.first, rng.second);
-			std::for_each(temp.begin(), temp.end(), [t = this](car_ownership_id i) { t->delete_car_ownership(i); });
+			std::for_each(temp.begin(), temp.end(), [t = this](car_ownership_id i) { t->car_ownership_set_owner(i, person_id()); });
 		}
 		template<typename T>
 		void person_for_each_owned_car_from_car_ownership(person_id id, T&& func) const {
@@ -1020,10 +1024,10 @@ namespace cob2 {
 			if(bool(value)) {
 				if(car_ownership_is_valid( car_ownership_id(car_ownership_id::value_base_t(value.index())) )) return false;
 				internal_move_relationship_car_ownership(id, car_ownership_id(car_ownership_id::value_base_t(value.index())) );
+				return true;
 			} else {
-				delete_car_ownership(id);
+				return false;
 			}
-			return true;
 		}
 		DCON_RELEASE_INLINE bool car_ownership_is_valid(car_ownership_id id) const noexcept {
 			return bool(id) && uint32_t(id.index()) < car_ownership.size_used && car_is_valid(car_id(car_id::value_base_t(id.index()))) && (bool(car_ownership.m_owner.vptr()[id.index()]) || false);
@@ -1147,7 +1151,9 @@ namespace cob2 {
 			person_id last_id(person_id::value_base_t(person.size_used - 1));
 			if(id_removed == last_id) { pop_back_person(); return; }
 			person_remove_all_car_ownership_as_owner(id_removed);
-			person_for_each_car_ownership_as_owner(last_id, [t = this, id_removed](car_ownership_id i){ t->car_ownership.m_owner.vptr()[i.index()] = id_removed; });
+			person_for_each_car_ownership_as_owner(last_id, [this, id_removed, last_id](car_ownership_id i) {
+				car_ownership.m_owner.vptr()[i.index()] = id_removed;
+			} );
 			car_ownership.m_array_owner.vptr()[id_removed.index()] = std::move(car_ownership.m_array_owner.vptr()[last_id.index()]);
 			car_ownership.m_array_owner.vptr()[last_id.index()] = std::vector<car_ownership_id>{};
 			person.m_age.vptr()[id_removed.index()] = std::move(person.m_age.vptr()[last_id.index()]);
@@ -1216,6 +1222,8 @@ namespace cob2 {
 		// container try create relationship for car_ownership
 		//
 		car_ownership_id try_create_car_ownership(person_id owner_p, car_id owned_car_p) {
+			if(!bool(owner_p)) return car_ownership_id();
+			if(!bool(owned_car_p)) return car_ownership_id();
 			if(car_ownership_is_valid(car_ownership_id(car_ownership_id::value_base_t(owned_car_p.index())))) return car_ownership_id();
 			car_ownership_id new_id(car_ownership_id::value_base_t(owned_car_p.index()));
 			if(car_ownership.size_used < uint32_t(owned_car_p.value)) car_ownership_resize(uint32_t(owned_car_p.value));
@@ -1236,7 +1244,7 @@ namespace cob2 {
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_car(T&& func) {
 			for(uint32_t i = 0; i < car.size_used; ++i) {
-				car_id tmp(car_id::value_base_t(i));
+				car_id tmp = car_id(car_id::value_base_t(i));
 				func(tmp);
 			}
 		}
@@ -1244,7 +1252,7 @@ namespace cob2 {
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_person(T&& func) {
 			for(uint32_t i = 0; i < person.size_used; ++i) {
-				person_id tmp(person_id::value_base_t(i));
+				person_id tmp = person_id(person_id::value_base_t(i));
 				func(tmp);
 			}
 		}
@@ -1252,7 +1260,7 @@ namespace cob2 {
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_car_ownership(T&& func) {
 			for(uint32_t i = 0; i < car_ownership.size_used; ++i) {
-				car_ownership_id tmp(car_ownership_id::value_base_t(i));
+				car_ownership_id tmp = car_ownership_id(car_ownership_id::value_base_t(i));
 				func(tmp);
 			}
 		}
@@ -1274,12 +1282,12 @@ namespace cob2 {
 		}
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_serial_over_car(F&& functor) {
-			ve::execute_serial(car.size_used, functor);
+			ve::execute_serial<car_id>(car.size_used, functor);
 		}
 #ifndef VE_NO_TBB
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_parallel_over_car(F&& functor) {
-			ve::execute_parallel_exact(car.size_used, functor);
+			ve::execute_parallel_exact<car_id>(car.size_used, functor);
 		}
 #endif
 		ve::vectorizable_buffer<float, person_id> person_make_vectorizable_float_buffer() const noexcept {
@@ -1290,12 +1298,12 @@ namespace cob2 {
 		}
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_serial_over_person(F&& functor) {
-			ve::execute_serial(person.size_used, functor);
+			ve::execute_serial<person_id>(person.size_used, functor);
 		}
 #ifndef VE_NO_TBB
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_parallel_over_person(F&& functor) {
-			ve::execute_parallel_exact(person.size_used, functor);
+			ve::execute_parallel_exact<person_id>(person.size_used, functor);
 		}
 #endif
 		ve::vectorizable_buffer<float, car_ownership_id> car_ownership_make_vectorizable_float_buffer() const noexcept {
@@ -1306,12 +1314,12 @@ namespace cob2 {
 		}
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_serial_over_car_ownership(F&& functor) {
-			ve::execute_serial(car_ownership.size_used, functor);
+			ve::execute_serial<car_ownership_id>(car_ownership.size_used, functor);
 		}
 #ifndef VE_NO_TBB
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_parallel_over_car_ownership(F&& functor) {
-			ve::execute_parallel_exact(car_ownership.size_used, functor);
+			ve::execute_parallel_exact<car_ownership_id>(car_ownership.size_used, functor);
 		}
 #endif
 		#endif
@@ -1419,11 +1427,11 @@ namespace cob2 {
 				header.serialize(output_buffer);
 				*(reinterpret_cast<uint32_t*>(output_buffer)) = car_ownership.size_used;
 				output_buffer += sizeof(uint32_t);
-		 {
+				 {
 					dcon::record_header iheader(sizeof(person_id) * car_ownership.size_used, "uint8_t", "car_ownership", "owner");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<person_id*>(output_buffer), car_ownership.m_owner.vptr(), sizeof(person_id) * car_ownership.size_used);
-					output_buffer += sizeof(person_id) * car_ownership.size_used;
+					output_buffer += sizeof(person_id) *  car_ownership.size_used;
 				}
 				dcon::record_header headerb(0, "$", "car_ownership", "$index_end");
 				headerb.serialize(output_buffer);
@@ -2067,6 +2075,9 @@ namespace cob2 {
 	}
 	DCON_RELEASE_INLINE person_fat_id car_fat_id::get_owner_from_car_ownership() const noexcept {
 		return person_fat_id(container, container.car_get_owner_from_car_ownership(id));
+	}
+	DCON_RELEASE_INLINE void car_fat_id::set_owner_from_car_ownership(person_id v) const noexcept {
+		container.car_set_owner_from_car_ownership(id, v);
 	}
 	DCON_RELEASE_INLINE void car_fat_id::set_ownership_date_from_car_ownership(int32_t v) const noexcept {
 		container.car_set_ownership_date_from_car_ownership(id, v);

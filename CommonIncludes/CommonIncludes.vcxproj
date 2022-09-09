@@ -133,6 +133,7 @@
     <ClInclude Include="ve_sse.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\changes.md" />
     <None Include="..\file_format_documentation.md" />
     <None Include="..\getting_started.md" />
     <None Include="..\LICENSE.md" />

@@ -51,14 +51,14 @@ namespace old {
 		public:
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint16_t value = 0;
-	
+		
 		constexpr colored_thing_id() noexcept = default;
 		explicit constexpr colored_thing_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr colored_thing_id(colored_thing_id const& v) noexcept = default;
 		constexpr colored_thing_id(colored_thing_id&& v) noexcept = default;
-	
+		
 		colored_thing_id& operator=(colored_thing_id const& v) noexcept = default;
 		colored_thing_id& operator=(colored_thing_id&& v) noexcept = default;
 		constexpr bool operator==(colored_thing_id v) const noexcept { return value == v.value; }
@@ -184,7 +184,7 @@ namespace old {
 		DCON_RELEASE_INLINE float& get_blue() const noexcept;
 		DCON_RELEASE_INLINE void set_blue(float v) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE colored_thing_fat_id fatten(data_container& c, colored_thing_id id) noexcept {
 		return colored_thing_fat_id(c, id);
@@ -240,7 +240,7 @@ namespace old {
 		DCON_RELEASE_INLINE float get_green() const noexcept;
 		DCON_RELEASE_INLINE float get_blue() const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(colored_thing_fat_id const& l, colored_thing_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);

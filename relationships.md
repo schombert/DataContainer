@@ -14,7 +14,7 @@ For the remainder of this document we will be concerned exclusively with the fea
 
 ### Links
 
-Specifying the objects involved in a relationship is done by adding `link` keys to the relationship definition (and there must be at least two for the definition to be valid). Like the `property` key, a `link` key contains a number of sub-keys. The `object{𝘰𝘣𝘫𝘦𝘤𝘵 𝘯𝘢𝘮𝘦}` sub-key determines which type of object is connected by this particular link. While `𝘰𝘣𝘫𝘦𝘤𝘵 𝘯𝘢𝘮𝘦` must be an object defined somewhere else in the file, it does not have to be defined prior to defining the relationship. The `name{...}` sub-key determines how this link will be referred to in the context of the relationship. It must be a valid C++ identifier, but there are no other restrictions placed upon it. (However, for the sake of everyone's sanity, try to choose a name as descriptive as possible of the role that the linked object plays in the relationship.) The `type{...}` sub-key determines some of the constraints placed on the relationship (more on this in a moment). Its parameter must be one of `unique`, `many`, or `unindexed`. The `type` sub-key may also appear as `type{...}{optional}`. The first parameter is as before, and the second parameter must always be `optional` Finally, a fourth possible sub-key is `index_storage{...}`. This an optional sub-key, and is required only when `type` is set to `many`. Its parameter must be one of `list`, `array`, or `std_vector`, the meaning of which is discussed in [Storage of indexing data](#storage-of-indexing-data) below.
+Specifying the objects involved in a relationship is done by adding `link` keys to the relationship definition (and there must be at least one for the definition to be valid). Like the `property` key, a `link` key contains a number of sub-keys. The `object{𝘰𝘣𝘫𝘦𝘤𝘵 𝘯𝘢𝘮𝘦}` sub-key determines which type of object is connected by this particular link. While `𝘰𝘣𝘫𝘦𝘤𝘵 𝘯𝘢𝘮𝘦` must be an object defined somewhere else in the file, it does not have to be defined prior to defining the relationship. The `name{...}` sub-key determines how this link will be referred to in the context of the relationship. It must be a valid C++ identifier, but there are no other restrictions placed upon it. (However, for the sake of everyone's sanity, try to choose a name that is as descriptive as possible of the role that the linked object plays in the relationship.) The `type{...}` sub-key determines some of the constraints placed on the relationship (more on this in a moment). Its parameter must be one of `unique`, `many`, or `unindexed`. The `type` sub-key may also appear as `type{...}{optional}`. The first parameter is as before, and the second parameter must always be `optional` Finally, a fourth possible sub-key is `index_storage{...}`. This an optional sub-key, and is required only when `type` is set to `many`. Its parameter must be one of `list`, `array`, or `std_vector`, the meaning of which is discussed in [Storage of indexing data](#storage-of-indexing-data) below.
 
 It was already mentioned in the [overview](overview.md) that relationship instances can be thought of as rows in a table. (e.g. the the table below of a relationship between two objects with a single property.)
 
@@ -119,6 +119,113 @@ would generate the function `get_𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪�
 
 Multiple composite keys may be defined for the same relationship. If they are, the uniqueness requirement will be enforced for each composite key independently of the others. For example if the first composite key is between links `A`, `B`, and `C` and the second composite key is between links `B`, `C`, and `D`, then each relationship instance will required to have both an A-B-C combination that is unique to it and a B-C-D combination that is unique to it.
 
+### `multiple` links
+
+The links discussed so far each connect the relationship to a single object instance. You can change this by adding `multiple{...}` or `multiple{...}{distinct}` to the definition of a link, with a number as its first parameter. Such a link will connect the relationship to the specified number of object instances rather than just one.
+
+There are a number of consequences of this change. First, a link marked as `multiple` is not eligible to be a primary key. Second, there are changes to the getters and setters generated for this link (see [below](#those-in-the-relationship)). Third, the object instances that are linked in this way are not ordered, conceptually. Although you can access the n<sup>th</sup> object instance linked in a `multiple` link, it is not wise to depend on the relative position being stable over any operation that changes the relationship. When involved in a composite key, a `multiple` link will internally be sorted so that different orderings of the same combination of object instances find the same relationship through the composite key.
+
+`multiple` links have two common uses. First let us consider a relationship of biological parentage. You could link every child to their biological parents as so:
+
+```
+relationship {
+	name{parentage}
+	link{
+		object{person}
+		name{child}
+		type{unique}
+	}
+	link{
+		object{person}
+		name{bio_mother}
+		type{many}
+		index_storage{array}
+	}
+	link{
+		object{person}
+		name{bio_father}
+		type{many}
+		index_storage{array}
+	}
+}
+```
+
+The problem with this is that finding all the biological children of some parent will require two lookups: first you would have to find all their children as a mother and then all their children as a father. For most purposes this will be both cumbersome and unnecessary. With a `multiple` link, this relationship could be expressed as follows:
+
+```
+relationship {
+	name{parentage}
+	link{
+		object{person}
+		name{child}
+		type{unique}
+	}
+	link{
+		object{person}
+		name{bio_parent}
+		type{many}
+		index_storage{array}
+		multiple{2}{distinct}
+	}
+}
+```
+
+Adding `distinct` requires that both of the parents linked be distinct `person`s. And defining the relationship in this way will create a single index linking each person to all of their biological children, meaning that you only need to iterate over that single list to enumerate them all.
+
+The second common use of a `multiple` link is to represent an edge in an undirected graph. Consider the following relationship:
+
+```
+relationship {
+	name{edge}
+	...
+	
+	link{
+		object{node}
+		name{start}
+		type{many}
+		index_storage{array}
+	}
+	link{
+		object{node}
+		name{end}
+		type{many}
+		index_storage{array}
+	}
+	
+	composite_key{
+		name{edge_identifier}
+		index{start}
+		index{end}
+	}
+}
+```
+
+This relationship represents an edge in a directed graph. Not only do you find and iterate over the notes connected as the start and end of an edge distinctly, but edges from A to B are treated as distinct from edges from B to A as far as the composite key is concerned.
+
+To make an undirected graph edge we can use the following:
+
+```
+relationship {
+	name{edge}
+	...
+	
+	link{
+		object{node}
+		name{connected_node}
+		type{many}
+		index_storage{array}
+		multiple{2}
+	}
+	
+	composite_key{
+		name{edge_identifier}
+		index{connected_node}
+	}
+}
+```
+
+Now there are is no difference between the node that starts the edge and the node that ends the edge. More importantly, the composite key will treat an edge from A to B as identical to an edge from B to A.
+
 ### Try create and force create
 
 Unlike objects, there are two ways to create a new relationship instance: `try_create_𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦(...)` and `force_create_𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦(...)`. Both take as parameters one handle for each link in the relationship. `try_create_𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦` first checks whether the new relationship can be created without violating any of the relationship constraints (i.e. it checks whether any of the object instances involved in a `unique` link are already involved in some other relationship, whether any of the composite keys that would be created already index another relationship, and checks whether any of the parameters for non `optional` links are invalid handles). If the new relationship would violate any of those constraints, `try_create_𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦` returns an invalid handle. Otherwise, it will create the new relationship instance as specified and return a handle to it.
@@ -136,6 +243,8 @@ If a relationship has any properties, it will have the standard getters and sett
 #### Those in the relationship
 
 For every link in a relationship definition, a getter will be created to access the handle stored in that link as `𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_get_𝘭𝘪𝘯𝘬 𝘯𝘢𝘮𝘦(𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_id)` (as well as the SIMD vectorization friendly versions). For `type{many}` and `type{unindexed}` links *not* involved in a composite key, a setter for those links as `𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_set_𝘭𝘪𝘯𝘬 𝘯𝘢𝘮𝘦(𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_id, 𝘭𝘪𝘯𝘬 𝘰𝘣𝘫𝘦𝘤𝘵 𝘵𝘺𝘱𝘦_id)` will also be generated. For links *two* setters will be generated: `𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_set_𝘭𝘪𝘯𝘬 𝘯𝘢𝘮𝘦(𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_id, 𝘭𝘪𝘯𝘬 𝘰𝘣𝘫𝘦𝘤𝘵 𝘵𝘺𝘱𝘦_id)` and `𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_try_set_𝘭𝘪𝘯𝘬 𝘯𝘢𝘮𝘦(𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_id, 𝘭𝘪𝘯𝘬 𝘰𝘣𝘫𝘦𝘤𝘵 𝘵𝘺𝘱𝘦_id)`. This is because changing the value of such a link may violate the relationship constraints if the new value you wish to set it to is already involved in some other relationship instance, if it would result in the relationship mapping to a composite key that is already taken, or if it is not marked as `optional` and you are passing an invalid handle. The `set` version of the setter resolves this by calling `delete_𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦` on any conflicting relationship instance (and deleting the relationship itself if you pass an invalid handle value for a non `optional` link), while the `try_set` version will change the value only if it can be done without violating the relationship constraints, and will return `true` if the link could be set and `false` otherwise.
+
+For `multiple` links, there are some modifications to these getters and setters. First, the standard getter and setters appear as `𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_get_𝘭𝘪𝘯𝘬 𝘯𝘢𝘮𝘦(𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_id, int32_t)`, `𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_set_𝘭𝘪𝘯𝘬 𝘯𝘢𝘮𝘦(𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_id, int32_t, 𝘭𝘪𝘯𝘬 𝘰𝘣𝘫𝘦𝘤𝘵 𝘵𝘺𝘱𝘦_id)` and `𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_try_set_𝘭𝘪𝘯𝘬 𝘯𝘢𝘮𝘦(𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_id, int32_t, 𝘭𝘪𝘯𝘬 𝘰𝘣𝘫𝘦𝘤𝘵 𝘵𝘺𝘱𝘦_id)`. The integer parameter for these functions determines the (zero-based) index of the internal copy of the link you want to get or set. Because these indexes are not necessarily stable over operations that modify the relationship, they are not the preferred way to interact with `multiple` links. Thus, the data container additionally provides `𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_has_𝘭𝘪𝘯𝘬 𝘯𝘢𝘮𝘦(𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_id, 𝘭𝘪𝘯𝘬 𝘰𝘣𝘫𝘦𝘤𝘵 𝘵𝘺𝘱𝘦_id)`, which returns `true` if and only if any of the internal links is to the passed handle; `𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_replace_𝘭𝘪𝘯𝘬 𝘯𝘢𝘮𝘦(𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_id, 𝘭𝘪𝘯𝘬 𝘰𝘣𝘫𝘦𝘤𝘵 𝘵𝘺𝘱𝘦_id new_value, 𝘭𝘪𝘯𝘬 𝘰𝘣𝘫𝘦𝘤𝘵 𝘵𝘺𝘱𝘦_id old_value)`, which calls `set` to replace the linked object instance referenced by `old_value` with that of `new_value` (or does nothing if `old_value` is not present); and `𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_try_replace_𝘭𝘪𝘯𝘬 𝘯𝘢𝘮𝘦(𝘳𝘦𝘭𝘢𝘵𝘪𝘰𝘯𝘴𝘩𝘪𝘱 𝘯𝘢𝘮𝘦_id, 𝘭𝘪𝘯𝘬 𝘰𝘣𝘫𝘦𝘤𝘵 𝘵𝘺𝘱𝘦_id new_value, 𝘭𝘪𝘯𝘬 𝘰𝘣𝘫𝘦𝘤𝘵 𝘵𝘺𝘱𝘦_id old_value)`, which functions the same as `replace`, except that instead of calling `set` internally, it calls `try_set` and returns the result of that function. Finally, there are no SIMD friendly versions of the getters for `multiple` links.
 
 #### Those added to the related objects
 
