@@ -164,3 +164,62 @@ relationship{
 		index_storage{array}
 	}
 }
+
+relationship{
+	name{relate_as_multipleA}
+	storage_type{erasable}
+	size{400}
+
+	link{
+		object{thingyA}
+		name{left}
+		type{many}
+		index_storage{array}
+		multiple{2}
+	}
+
+	composite_key{
+		name{joint}
+		index{left}
+	}
+}
+
+relationship{
+	name{relate_as_multipleB}
+	storage_type{erasable}
+	size{400}
+
+	link{
+		object{thingyA}
+		name{left}
+		type{unique}
+		multiple{2}{distinct}
+	}
+}
+
+relationship{
+	name{relate_as_multipleC}
+	storage_type{erasable}
+	size{400}
+
+	link{
+		object{thingyA}
+		name{left}
+		type{many}
+		index_storage{array}
+		multiple{2}{distinct}
+	}
+}
+
+relationship{
+	name{relate_as_multipleD}
+	storage_type{erasable}
+	size{400}
+
+	link{
+		object{thingyA}
+		name{left}
+		type{unindexed}
+		multiple{2}
+	}
+}

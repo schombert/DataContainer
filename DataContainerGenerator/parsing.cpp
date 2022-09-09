@@ -126,7 +126,7 @@ load_save_def parse_load_save_def(char const* start, char const* end, char const
 	load_save_def result;
 	char const* pos = start;
 	while(pos < end) {
-		auto extracted = extract_item(pos, end, start, err_out);
+		auto extracted = extract_item(pos, end, global_start, err_out);
 		pos = extracted.terminal;
 
 		if(extracted.key.start != extracted.key.end) {
@@ -200,7 +200,7 @@ related_object parse_link_def(char const * start, char const * end, char const *
 
 	char const* pos = start;
 	while(pos < end) {
-		auto extracted = extract_item(pos, end, start, err_out);
+		auto extracted = extract_item(pos, end, global_start, err_out);
 		pos = extracted.terminal;
 
 		if(extracted.key.start != extracted.key.end) {
@@ -272,7 +272,7 @@ related_object parse_link_def(char const * start, char const * end, char const *
 						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
 				}
 			} else if(kstr == "multiple") {
-				if(extracted.values.size() != 1 || extracted.values.size() != 2) {
+				if(extracted.values.size() != 1 && extracted.values.size() != 2) {
 					err_out.add(std::string("wrong number of parameters for \"multiple\" on line ")
 						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
 				} else {
@@ -320,7 +320,7 @@ composite_index_def parse_composite_key(char const * start, char const * end, ch
 
 	char const* pos = start;
 	while(pos < end) {
-		auto extracted = extract_item(pos, end, start, err_out);
+		auto extracted = extract_item(pos, end, global_start, err_out);
 		pos = extracted.terminal;
 
 		if(extracted.key.start != extracted.key.end) {
@@ -353,7 +353,7 @@ property_def parse_property_def(char const * start, char const * end, char const
 
 	char const* pos = start;
 	while(pos < end) {
-		auto extracted = extract_item(pos, end, start, err_out);
+		auto extracted = extract_item(pos, end, global_start, err_out);
 		pos = extracted.terminal;
 
 		if(extracted.key.start != extracted.key.end) {
@@ -370,7 +370,7 @@ property_def parse_property_def(char const * start, char const * end, char const
 					err_out.add(std::string("wrong number of parameters for \"type\" on line ")
 						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
 				} else {
-					auto inner_extracted = extract_item(extracted.values[0].start, extracted.values[0].end, start, err_out);
+					auto inner_extracted = extract_item(extracted.values[0].start, extracted.values[0].end, global_start, err_out);
 					std::string ikstr = inner_extracted.key.to_string();
 
 					if(ikstr == "bitfield") {
@@ -490,7 +490,7 @@ relationship_object_def parse_relationship(char const * start, char const * end,
 
 	char const* pos = start;
 	while(pos < end) {
-		auto extracted = extract_item(pos, end, start, err_out);
+		auto extracted = extract_item(pos, end, global_start, err_out);
 		pos = extracted.terminal;
 
 		if(extracted.key.start != extracted.key.end) {
@@ -551,7 +551,7 @@ relationship_object_def parse_relationship(char const * start, char const * end,
 						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
 				} else {
 					result.properties.push_back(
-						parse_property_def(extracted.values[0].start, extracted.values[0].end, start, err_out));
+						parse_property_def(extracted.values[0].start, extracted.values[0].end, global_start, err_out));
 				}
 			} else if(kstr == "link") {
 				if(extracted.values.size() != 1) {
@@ -559,7 +559,7 @@ relationship_object_def parse_relationship(char const * start, char const * end,
 						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
 				} else {
 					result.indexed_objects.push_back(
-						parse_link_def(extracted.values[0].start, extracted.values[0].end, start, err_out));
+						parse_link_def(extracted.values[0].start, extracted.values[0].end, global_start, err_out));
 				}
 			} else if(kstr == "composite_key") {
 				if(extracted.values.size() != 1) {
@@ -567,7 +567,7 @@ relationship_object_def parse_relationship(char const * start, char const * end,
 						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
 				} else {
 					result.composite_indexes.push_back(
-						parse_composite_key(extracted.values[0].start, extracted.values[0].end, start, err_out));
+						parse_composite_key(extracted.values[0].start, extracted.values[0].end, global_start, err_out));
 				}
 			} else if(kstr == "function") {
 				if(extracted.values.size() != 1) {
@@ -641,7 +641,7 @@ relationship_object_def parse_object(char const * start, char const * end, char 
 
 	char const* pos = start;
 	while(pos < end) {
-		auto extracted = extract_item(pos, end, start, err_out);
+		auto extracted = extract_item(pos, end, global_start, err_out);
 		pos = extracted.terminal;
 
 		if(extracted.key.start != extracted.key.end) {
@@ -709,7 +709,7 @@ relationship_object_def parse_object(char const * start, char const * end, char 
 						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
 				} else {
 					result.properties.push_back(
-						parse_property_def(extracted.values[0].start, extracted.values[0].end, start, err_out));
+						parse_property_def(extracted.values[0].start, extracted.values[0].end, global_start, err_out));
 				}
 			} else if(kstr == "function") {
 				if(extracted.values.size() != 1) {
@@ -767,7 +767,7 @@ std::vector<std::string> parse_legacy_types(char const * start, char const * end
 
 	char const* pos = start;
 	while(pos < end) {
-		auto extracted = extract_item(pos, end, start, err_out);
+		auto extracted = extract_item(pos, end, global_start, err_out);
 		pos = extracted.terminal;
 
 		if(extracted.key.start != extracted.key.end) {
@@ -792,7 +792,7 @@ conversion_def parse_conversion_def(char const * start, char const * end, char c
 	conversion_def result;
 	char const* pos = start;
 	while(pos < end) {
-		auto extracted = extract_item(pos, end, start, err_out);
+		auto extracted = extract_item(pos, end, global_start, err_out);
 		pos = extracted.terminal;
 
 		if(extracted.key.start != extracted.key.end) {

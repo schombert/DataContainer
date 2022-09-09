@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 #include <algorithm>
-#include <cassert>
+#include <array>
 #include <memory>
 #include <cstring>
 #include "common_types.hpp"
@@ -1119,7 +1119,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE void remove_dummy_rel_B_as_right() const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 		void reset_internal() ;
-		int get_a_value(float offset);
+		inline int get_a_value(float offset);
 	
 	};
 	DCON_RELEASE_INLINE oop_thingy_fat_id fatten(data_container& c, oop_thingy_id id) noexcept {
@@ -2045,22 +2045,22 @@ namespace dcon {
 		#endif
 		public:
 		DCON_RELEASE_INLINE dummy_rel_B_id oop_thingy_get_dummy_rel_B_as_left(oop_thingy_id id) const noexcept {
-			return dummy_rel_B_id(dummy_rel_B_id::value_base_t(id.index()));
+			return dummy_rel_B.m_link_back_left.vptr()[id.index()];
 		}
 		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE ve::contiguous_tags<dummy_rel_B_id> oop_thingy_get_dummy_rel_B_as_left(ve::contiguous_tags<oop_thingy_id> id) const noexcept {
-			return ve::contiguous_tags<dummy_rel_B_id>(id.value);
+		DCON_RELEASE_INLINE ve::tagged_vector<dummy_rel_B_id> oop_thingy_get_dummy_rel_B_as_left(ve::contiguous_tags<oop_thingy_id> id) const noexcept {
+			return ve::load(id, dummy_rel_B.m_link_back_left.vptr());
 		}
-		DCON_RELEASE_INLINE ve::partial_contiguous_tags<dummy_rel_B_id> oop_thingy_get_dummy_rel_B_as_left(ve::partial_contiguous_tags<oop_thingy_id> id) const noexcept {
-			return ve::partial_contiguous_tags<dummy_rel_B_id>(id.value, id.subcount);
+		DCON_RELEASE_INLINE ve::tagged_vector<dummy_rel_B_id> oop_thingy_get_dummy_rel_B_as_left(ve::partial_contiguous_tags<oop_thingy_id> id) const noexcept {
+			return ve::load(id, dummy_rel_B.m_link_back_left.vptr());
 		}
 		DCON_RELEASE_INLINE ve::tagged_vector<dummy_rel_B_id> oop_thingy_get_dummy_rel_B_as_left(ve::tagged_vector<oop_thingy_id> id) const noexcept {
-			return ve::tagged_vector<dummy_rel_B_id>(id, std::true_type{});
+			return ve::load(id, dummy_rel_B.m_link_back_left.vptr());
 		}
 		#endif
 		DCON_RELEASE_INLINE void oop_thingy_remove_dummy_rel_B_as_left(oop_thingy_id id) noexcept {
-			if(dummy_rel_B_is_valid(dummy_rel_B_id(dummy_rel_B_id::value_base_t(id.index())))) {
-				dummy_rel_B_set_left(dummy_rel_B_id(dummy_rel_B_id::value_base_t(id.index())), oop_thingy_id());
+			if(auto backid = dummy_rel_B.m_link_back_left.vptr()[id.index()]; bool(backid)) {
+				dummy_rel_B_set_left(backid, oop_thingy_id());
 			}
 		}
 		DCON_RELEASE_INLINE dummy_rel_B_id oop_thingy_get_dummy_rel_B_as_right(oop_thingy_id id) const noexcept {
@@ -2473,8 +2473,7 @@ namespace dcon {
 		void pop_back_oop_thingy() {
 			if(oop_thingy.size_used == 0) return;
 			oop_thingy_id id_removed(oop_thingy_id::value_base_t(oop_thingy.size_used - 1));
-			delete_dummy_rel_B(dummy_rel_B_id(dummy_rel_B_id::value_base_t(id_removed.index())));
-			dummy_rel_B.size_used = oop_thingy.size_used - 1;
+			oop_thingy_remove_dummy_rel_B_as_left(id_removed);
 			delete_dummy_rel_B(dummy_rel_B_id(dummy_rel_B_id::value_base_t(id_removed.index())));
 			dummy_rel_B.size_used = oop_thingy.size_used - 1;
 			oop_thingy.m_pstruct.vptr()[id_removed.index()] = my_struct{};
@@ -2495,7 +2494,7 @@ namespace dcon {
 			if(new_size < old_size) {
 				std::fill_n(oop_thingy.m_pstruct.vptr() + new_size, old_size - new_size, my_struct{});
 				std::fill_n(oop_thingy.m_pfloat.vptr() + new_size, old_size - new_size, float{});
-				dummy_rel_B_resize(std::min(new_size, dummy_rel_B.size_used));
+				dummy_rel_B_resize(0);
 				dummy_rel_B_resize(std::min(new_size, dummy_rel_B.size_used));
 			} else if(new_size > old_size) {
 			}
@@ -2513,7 +2512,6 @@ namespace dcon {
 			if(oop_thingy.size_used >= 1200) throw dcon::out_of_space{};
 			#endif
 			dummy_rel_B.size_used = oop_thingy.size_used + 1;
-			dummy_rel_B.size_used = oop_thingy.size_used + 1;
 			++oop_thingy.size_used;
 			return new_id;
 		}
@@ -2525,9 +2523,12 @@ namespace dcon {
 			oop_thingy_id id_removed = id;
 			oop_thingy_id last_id(oop_thingy_id::value_base_t(oop_thingy.size_used - 1));
 			if(id_removed == last_id) { pop_back_oop_thingy(); return; }
-			delete_dummy_rel_B(dummy_rel_B_id(dummy_rel_B_id::value_base_t(id_removed.index())));
-			internal_move_relationship_dummy_rel_B(dummy_rel_B_id(dummy_rel_B_id::value_base_t(last_id.index())), dummy_rel_B_id(dummy_rel_B_id::value_base_t(id_removed.index())));
-			dummy_rel_B.size_used = oop_thingy.size_used - 1;
+			oop_thingy_remove_dummy_rel_B_as_left(id_removed);
+			if(auto bk = dummy_rel_B.m_link_back_left.vptr()[last_id.index()]; bool(bk)) {
+				dummy_rel_B.m_left.vptr()[bk.index()] = id_removed;
+			}
+			dummy_rel_B.m_link_back_left.vptr()[id_removed.index()] = std::move(dummy_rel_B.m_link_back_left.vptr()[last_id.index()]);
+			dummy_rel_B.m_link_back_left.vptr()[last_id.index()] = dummy_rel_B_id();
 			delete_dummy_rel_B(dummy_rel_B_id(dummy_rel_B_id::value_base_t(id_removed.index())));
 			internal_move_relationship_dummy_rel_B(dummy_rel_B_id(dummy_rel_B_id::value_base_t(last_id.index())), dummy_rel_B_id(dummy_rel_B_id::value_base_t(id_removed.index())));
 			dummy_rel_B.size_used = oop_thingy.size_used - 1;
@@ -2614,7 +2615,7 @@ namespace dcon {
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_thingy(T&& func) {
 			for(uint32_t i = 0; i < thingy.size_used; ++i) {
-				thingy_id tmp(thingy_id::value_base_t(i));
+				thingy_id tmp = thingy_id(thingy_id::value_base_t(i));
 				func(tmp);
 			}
 		}
@@ -2622,7 +2623,7 @@ namespace dcon {
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_thingy2(T&& func) {
 			for(uint32_t i = 0; i < thingy2.size_used; ++i) {
-				thingy2_id tmp(thingy2_id::value_base_t(i));
+				thingy2_id tmp = thingy2_id(thingy2_id::value_base_t(i));
 				func(tmp);
 			}
 		}
@@ -2630,7 +2631,7 @@ namespace dcon {
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_dummy_rel(T&& func) {
 			for(uint32_t i = 0; i < dummy_rel.size_used; ++i) {
-				dummy_rel_id tmp(dummy_rel_id::value_base_t(i));
+				dummy_rel_id tmp = dummy_rel_id(dummy_rel_id::value_base_t(i));
 				func(tmp);
 			}
 		}
@@ -2638,7 +2639,7 @@ namespace dcon {
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_oop_thingy(T&& func) {
 			for(uint32_t i = 0; i < oop_thingy.size_used; ++i) {
-				oop_thingy_id tmp(oop_thingy_id::value_base_t(i));
+				oop_thingy_id tmp = oop_thingy_id(oop_thingy_id::value_base_t(i));
 				func(tmp);
 			}
 		}
@@ -2646,7 +2647,7 @@ namespace dcon {
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_dummy_rel_B(T&& func) {
 			for(uint32_t i = 0; i < dummy_rel_B.size_used; ++i) {
-				dummy_rel_B_id tmp(dummy_rel_B_id::value_base_t(i));
+				dummy_rel_B_id tmp = dummy_rel_B_id(dummy_rel_B_id::value_base_t(i));
 				func(tmp);
 			}
 		}
@@ -2673,12 +2674,12 @@ namespace dcon {
 		}
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_serial_over_thingy(F&& functor) {
-			ve::execute_serial(thingy.size_used, functor);
+			ve::execute_serial<thingy_id>(thingy.size_used, functor);
 		}
 #ifndef VE_NO_TBB
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_parallel_over_thingy(F&& functor) {
-			ve::execute_parallel_exact(thingy.size_used, functor);
+			ve::execute_parallel_exact<thingy_id>(thingy.size_used, functor);
 		}
 #endif
 		ve::vectorizable_buffer<float, thingy2_id> thingy2_make_vectorizable_float_buffer() const noexcept {
@@ -2689,12 +2690,12 @@ namespace dcon {
 		}
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_serial_over_thingy2(F&& functor) {
-			ve::execute_serial_unaligned(thingy2.size_used, functor);
+			ve::execute_serial_unaligned<thingy2_id>(thingy2.size_used, functor);
 		}
 #ifndef VE_NO_TBB
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_parallel_over_thingy2(F&& functor) {
-			ve::execute_parallel_unaligned(thingy2.size_used, functor);
+			ve::execute_parallel_unaligned<thingy2_id>(thingy2.size_used, functor);
 		}
 #endif
 		ve::vectorizable_buffer<float, dummy_rel_id> dummy_rel_make_vectorizable_float_buffer() const noexcept {
@@ -2705,12 +2706,12 @@ namespace dcon {
 		}
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_serial_over_dummy_rel(F&& functor) {
-			ve::execute_serial(dummy_rel.size_used, functor);
+			ve::execute_serial<dummy_rel_id>(dummy_rel.size_used, functor);
 		}
 #ifndef VE_NO_TBB
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_parallel_over_dummy_rel(F&& functor) {
-			ve::execute_parallel_exact(dummy_rel.size_used, functor);
+			ve::execute_parallel_exact<dummy_rel_id>(dummy_rel.size_used, functor);
 		}
 #endif
 		ve::vectorizable_buffer<float, oop_thingy_id> oop_thingy_make_vectorizable_float_buffer() const noexcept {
@@ -2721,12 +2722,12 @@ namespace dcon {
 		}
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_serial_over_oop_thingy(F&& functor) {
-			ve::execute_serial(oop_thingy.size_used, functor);
+			ve::execute_serial<oop_thingy_id>(oop_thingy.size_used, functor);
 		}
 #ifndef VE_NO_TBB
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_parallel_over_oop_thingy(F&& functor) {
-			ve::execute_parallel_exact(oop_thingy.size_used, functor);
+			ve::execute_parallel_exact<oop_thingy_id>(oop_thingy.size_used, functor);
 		}
 #endif
 		ve::vectorizable_buffer<float, dummy_rel_B_id> dummy_rel_B_make_vectorizable_float_buffer() const noexcept {
@@ -2737,12 +2738,12 @@ namespace dcon {
 		}
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_serial_over_dummy_rel_B(F&& functor) {
-			ve::execute_serial(dummy_rel_B.size_used, functor);
+			ve::execute_serial<dummy_rel_B_id>(dummy_rel_B.size_used, functor);
 		}
 #ifndef VE_NO_TBB
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_parallel_over_dummy_rel_B(F&& functor) {
-			ve::execute_parallel_exact(dummy_rel_B.size_used, functor);
+			ve::execute_parallel_exact<dummy_rel_B_id>(dummy_rel_B.size_used, functor);
 		}
 #endif
 		#endif
@@ -3089,7 +3090,7 @@ namespace dcon {
 					dcon::record_header iheader(sizeof(thingy2_id) * dummy_rel.size_used, "uint32_t", "dummy_rel", "right");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<thingy2_id*>(output_buffer), dummy_rel.m_right.vptr(), sizeof(thingy2_id) * dummy_rel.size_used);
-					output_buffer += sizeof(thingy2_id) * dummy_rel.size_used;
+					output_buffer += sizeof(thingy2_id) *  dummy_rel.size_used;
 				}
 				dcon::record_header headerb(0, "$", "dummy_rel", "$index_end");
 				headerb.serialize(output_buffer);
@@ -3103,7 +3104,7 @@ namespace dcon {
 					dcon::record_header iheader(sizeof(oop_thingy_id) * dummy_rel_B.size_used, "uint16_t", "dummy_rel_B", "left");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<oop_thingy_id*>(output_buffer), dummy_rel_B.m_left.vptr(), sizeof(oop_thingy_id) * dummy_rel_B.size_used);
-					output_buffer += sizeof(oop_thingy_id) * dummy_rel_B.size_used;
+					output_buffer += sizeof(oop_thingy_id) *  dummy_rel_B.size_used;
 				}
 				dcon::record_header headerb(0, "$", "dummy_rel_B", "$index_end");
 				headerb.serialize(output_buffer);
@@ -4932,7 +4933,7 @@ namespace dcon {
 	DCON_RELEASE_INLINE bool oop_thingy_fat_id::is_valid() const noexcept {
 		return container.oop_thingy_is_valid(id);
 	}
-	int oop_thingy_fat_id::get_a_value(float offset) {
+	inline int oop_thingy_fat_id::get_a_value(float offset) {
 		return oop_thingy_const_fat_id(container, id).get_a_value(offset);
 	}
 	

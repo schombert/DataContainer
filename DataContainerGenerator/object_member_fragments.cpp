@@ -987,9 +987,10 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 void make_delete_current_composite_keys_text(basic_builder& o, std::string const& target_id, relationship_object_def const& obj, related_object const& i) {
 	o + substitute{ "target_id", target_id };
 	if(i.is_covered_by_composite_key) {
-		std::string params;
-		bool needs_adjust = false;
 		for(auto& cc : obj.composite_indexes) {
+			std::string params;
+			bool needs_adjust = false;
+
 			for(auto& idx : cc.component_indexes) {
 				if(idx.property_name == i.property_name) {
 					needs_adjust = true;
@@ -1012,9 +1013,10 @@ void make_delete_current_composite_keys_text(basic_builder& o, std::string const
 void make_try_current_composite_keys_text(basic_builder& o, std::string const& target_id, relationship_object_def const& obj, related_object const& i) {
 	o + substitute{ "target_id", target_id };
 	if(i.is_covered_by_composite_key) {
-		std::string params;
-		bool needs_adjust = false;
 		for(auto& cc : obj.composite_indexes) {
+			std::string params;
+			bool needs_adjust = false;
+
 			for(auto& idx : cc.component_indexes) {
 				if(idx.property_name == i.property_name) {
 					needs_adjust = true;
@@ -1036,12 +1038,46 @@ void make_try_current_composite_keys_text(basic_builder& o, std::string const& t
 	}
 }
 
+void make_try_current_composite_keys_text_with_multiplicity(basic_builder& o, std::string const& target_id, relationship_object_def const& obj, related_object const& i) {
+	o + substitute{ "target_id", target_id };
+	if(i.is_covered_by_composite_key) {
+		for(auto& cc : obj.composite_indexes) {
+			std::string params;
+			bool needs_adjust = false;
+
+			for(auto& idx : cc.component_indexes) {
+				if(idx.property_name == i.property_name) {
+					needs_adjust = true;
+				}
+				if(params.length() > 0)
+					params += ", ";
+				if(idx.property_name == obj.primary_key.property_name)
+					params += idx.object_type + "_id(" + idx.object_type + "_id::value_base_t(" + target_id + ".index()))";
+				else if(idx.property_name == i.property_name)
+					params += "temp";
+				else
+					params += obj.name + ".m_" + idx.property_name + ".vptr()[" + target_id + ".index()]";
+			}
+			if(needs_adjust) {
+				o + substitute{ "params", params } +substitute{ "ckname", cc.name };
+				o + "auto temp = @obj@.m_@prop@.vptr()[id.index()];";
+				o + "temp[i] = value;";
+				o + "std::sort(temp.begin(), temp.end(), [](@type@ a, @type@ b){ return a.value < b.value; });";
+				o + "if(@obj@.hashm_@ckname@.find( @obj@.to_@ckname@_keydata(@params@) ) != @obj@.hashm_@ckname@.end())" + block{
+					o + "return false;";
+				};
+			}
+		}
+	}
+}
+
 void make_remove_add_current_composite_keys_text(basic_builder& o, std::string const& target_id, relationship_object_def const& obj, related_object const& i) {
 	o + substitute{ "target_id", target_id };
 	if(i.is_covered_by_composite_key) {
-		std::string params;
-		bool needs_adjust = false;
 		for(auto& cc : obj.composite_indexes) {
+			std::string params;
+			bool needs_adjust = false;
+
 			for(auto& idx : cc.component_indexes) {
 				if(idx.property_name == i.property_name) {
 					needs_adjust = true;
@@ -1067,9 +1103,10 @@ void make_remove_add_current_composite_keys_text(basic_builder& o, std::string c
 void make_force_add_current_composite_keys_text(basic_builder& o, std::string const& target_id, relationship_object_def const& obj, related_object const& i) {
 	o + substitute{ "target_id", target_id };
 	if(i.is_covered_by_composite_key) {
-		std::string params;
-		bool needs_adjust = false;
 		for(auto& cc : obj.composite_indexes) {
+			std::string params;
+			bool needs_adjust = false;
+
 			for(auto& idx : cc.component_indexes) {
 				if(idx.property_name == i.property_name) {
 					needs_adjust = true;
@@ -1101,24 +1138,48 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 		if(o.declaration_mode && i.protection == protection_type::hidden)
 			o + "private:";
 
-		o + "DCON_RELEASE_INLINE @rtype@ @namesp@get_@prop@() const noexcept" + block{
-				o + "return @rtype@(container, container.@obj@_get_@prop@(id));";
-		};
+		if(i.multiplicity == 1) {
+			o + "DCON_RELEASE_INLINE @rtype@ @namesp@get_@prop@() const noexcept" + block{
+					o + "return @rtype@(container, container.@obj@_get_@prop@(id));";
+			};
+		} else {
+			o + "DCON_RELEASE_INLINE @rtype@ @namesp@get_@prop@(int32_t i) const noexcept" + block{
+					o + "return @rtype@(container, container.@obj@_get_@prop@(id, i));";
+			};
+			o + "DCON_RELEASE_INLINE bool @namesp@has_@prop@(@prtype@ val) const noexcept" + block{
+					o + "return container.@obj@_has_@prop@(id, val);";
+			};
+		}
 		if(o.declaration_mode && i.protection == protection_type::hidden)
 			o + "public:";
 
 		if(!const_mode) {
-			if((o.declaration_mode) && 
+			if((o.declaration_mode) &&
 				(i.protection == protection_type::read_only || i.protection == protection_type::hidden))
 				o + "private:";
 
-			o + "DCON_RELEASE_INLINE void @namesp@set_@prop@(@prtype@ val) const noexcept" + block{
-				o + "container.@obj@_set_@prop@(id, val);";
-			};
-			
-			o + "DCON_RELEASE_INLINE bool @namesp@try_set_@prop@(@prtype@ val) const noexcept" + block{
-				o + "return container.@obj@_try_set_@prop@(id, val);";
-			};
+			if(i.multiplicity == 1) {
+				o + "DCON_RELEASE_INLINE void @namesp@set_@prop@(@prtype@ val) const noexcept" + block{
+					o + "container.@obj@_set_@prop@(id, val);";
+				};
+
+				o + "DCON_RELEASE_INLINE bool @namesp@try_set_@prop@(@prtype@ val) const noexcept" + block{
+					o + "return container.@obj@_try_set_@prop@(id, val);";
+				};
+			} else {
+				o + "DCON_RELEASE_INLINE void @namesp@set_@prop@(int32_t i, @prtype@ val) const noexcept" + block{
+					o + "container.@obj@_set_@prop@(id, i, val);";
+				};
+				o + "DCON_RELEASE_INLINE bool @namesp@try_set_@prop@(int32_t i, @prtype@ val) const noexcept" + block{
+					o + "return container.@obj@_try_set_@prop@(id, i, val);";
+				};
+				o + "DCON_RELEASE_INLINE void @namesp@replace_@prop@(@prtype@ newval, @prtype@ oldval) const noexcept" + block{
+					o + "container.@obj@_replace_@prop@(id, newval, oldval);";
+				};
+				o + "DCON_RELEASE_INLINE bool @namesp@try_replace_@prop@(@prtype@ newval, @prtype@ oldval) const noexcept" + block{
+					o + "return container.@obj@_try_replace_@prop@(id, newval, oldval);";
+				};
+			}
 			
 
 			if((o.declaration_mode) && 
@@ -1153,6 +1214,7 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 				o + "return ve::tagged_vector<@prop_type@_id>(id, std::true_type{});";
 			};
 			o + "#endif";
+			
 
 			if(i.protection == protection_type::hidden)
 				o + "public:";
@@ -1200,106 +1262,247 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 			
 			if(i.protection == protection_type::hidden) {
 				o + "private:";
-				o + "friend @rtype@ @obj@_fat_id::get_@prop@() const noexcept;";
-				o + "friend @rtype@ @obj@_const_fat_id::get_@prop@() const noexcept;";
+				if(i.multiplicity == 1) {
+					o + "friend @rtype@ @obj@_fat_id::get_@prop@() const noexcept;";
+					o + "friend @rtype@ @obj@_const_fat_id::get_@prop@() const noexcept;";
+				} else {
+					o + "friend @rtype@ @obj@_fat_id::get_@prop@(int32_t) const noexcept;";
+					o + "friend @rtype@ @obj@_const_fat_id::get_@prop@(int32_t) const noexcept;";
+					o + "friend bool @obj@_fat_id::has_@prop@(@prop_type@_i) const noexcept;";
+					o + "friend bool @obj@_const_fat_id::has_@prop@(@prop_type@_i) const noexcept;";
+				}
 			}
 
-			o + "DCON_RELEASE_INLINE @type@ @obj@_get_@prop@(@obj@_id id) const noexcept" + block{
-				o + "return @obj@.m_@prop@.vptr()[id.index()];";
-			};
+			if(i.multiplicity == 1) {
+				o + "DCON_RELEASE_INLINE @type@ @obj@_get_@prop@(@obj@_id id) const noexcept" + block{
+					o + "return @obj@.m_@prop@.vptr()[id.index()];";
+				};
 
-			o + "#ifndef DCON_NO_VE";
-			o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@type@> @obj@_get_@prop@(@vector_position@<@obj@_id> id) const noexcept" + block{
-				o + "return ve::load(id, @obj@.m_@prop@.vptr());";
-			};
-			o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@type@> @obj@_get_@prop@(ve::partial_contiguous_tags<@obj@_id> id) const noexcept" + block{
-				o + "return ve::load(id, @obj@.m_@prop@.vptr());";
-			};
-			o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@type@> @obj@_get_@prop@(ve::tagged_vector<@obj@_id> id) const noexcept" + block{
-				o + "return ve::load(id, @obj@.m_@prop@.vptr());";
-			};
-			o + "#endif";
+				o + "#ifndef DCON_NO_VE";
+				o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@type@> @obj@_get_@prop@(@vector_position@<@obj@_id> id) const noexcept" + block{
+					o + "return ve::load(id, @obj@.m_@prop@.vptr());";
+				};
+				o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@type@> @obj@_get_@prop@(ve::partial_contiguous_tags<@obj@_id> id) const noexcept" + block{
+					o + "return ve::load(id, @obj@.m_@prop@.vptr());";
+				};
+				o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@type@> @obj@_get_@prop@(ve::tagged_vector<@obj@_id> id) const noexcept" + block{
+					o + "return ve::load(id, @obj@.m_@prop@.vptr());";
+				};
+				o + "#endif";
+			} else {
+				o + "DCON_RELEASE_INLINE @type@ @obj@_get_@prop@(@obj@_id id, int32_t i) const noexcept" + block{
+					o + "return @obj@.m_@prop@.vptr()[id.index()][i];";
+				};
+				o + "DCON_RELEASE_INLINE bool @obj@_has_@prop@(@obj@_id id, @type@ v) const noexcept" + block{
+					for(int32_t j = 0; j < i.multiplicity; ++j) {
+						o + substitute{"i", std::to_string(j)};
+						o + "if(@obj@.m_@prop@.vptr()[id.index()][@i@] == v) return true;";
+					}
+					o + "return false;";
+				};
+			}
 
 			if(i.protection == protection_type::hidden) {
 				o + "public:";
 			}
 
 			o + "private:";
-			o + "void internal_@obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
-				o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()]; bool(old_value))" + block{
-					o + "@obj@.m_link_back_@prop@.vptr()[old_value.index()] = @obj@_id();";
+
+			if(i.multiplicity == 1) {
+				o + "void internal_@obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
+					o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()]; bool(old_value))" + block{
+						o + "@obj@.m_link_back_@prop@.vptr()[old_value.index()] = @obj@_id();";
+					};
+					o + "if(bool(value))" + block{
+						if(!i.is_optional) {
+							o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
+								o + "delete_@obj@(old_rel);";
+							};
+						} else {
+							o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
+								o + "@obj@.m_@prop@.vptr()[old_rel.index()] = @type@();";
+							};
+						}
+						o + "@obj@.m_link_back_@prop@.vptr()[value.index()] = id;";
+					};
+					o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
 				};
-				o + "if(bool(value))" + block{
-					if(!i.is_optional) {
-						o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
-							o + "delete_@obj@(old_rel);";
-						};
-					} else {
-						o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
-							o + "@obj@.m_@prop@.vptr()[old_rel.index()] = @type@();";
-						};
-					}
-					o + "@obj@.m_link_back_@prop@.vptr()[value.index()] = id;";
+			} else {
+				o + "void internal_@obj@_set_@prop@(@obj@_id id, int32_t i, @type@ value) noexcept" + block{
+					o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()][i]; bool(old_value))" + block{
+						o + "@obj@.m_link_back_@prop@.vptr()[old_value.index()] = @obj@_id();";
+					};
+					o + "if(bool(value))" + block{
+						if(!i.is_optional) {
+							o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
+								o + "delete_@obj@(old_rel);";
+							};
+						} else {
+							o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
+								o + "@obj@.m_@prop@.vptr()[old_rel.index()] = @type@();";
+							};
+						}
+						o + "@obj@.m_link_back_@prop@.vptr()[value.index()] = id;";
+					};
+					o + "@obj@.m_@prop@.vptr()[id.index()][i] = value;";
 				};
-				o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
-			};
+			}
 			o + "public:";
 
 			if(i.protection == protection_type::read_only || i.protection == protection_type::hidden) {
 				o + "private:";
-				o + "friend void @obj@_fat_id::set_@prop@( @prop_type@_id) const noexcept;";
+				if(i.multiplicity == 1) {
+					o + "friend void @obj@_fat_id::set_@prop@( @prop_type@_id) const noexcept;";
+					o + "friend bool @obj@_fat_id::try_set_@prop@( @prop_type@_id) const noexcept;";
+				} else {
+					o + "friend void @obj@_fat_id::set_@prop@(int32_t, @prop_type@_id) const noexcept;";
+					o + "friend bool @obj@_fat_id::try_set_@prop@(int32_t, @prop_type@_id) const noexcept;";
+					o + "friend void @obj@_fat_id::replace_@prop@(@prop_type@_id, @prop_type@_id) const noexcept;";
+					o + "friend bool @obj@_fat_id::try_replace_@prop@(@prop_type@_id, @prop_type@_id) const noexcept;";
+				}
 			}
 
-			o + "void @obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
-				o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()]; bool(old_value))" + block{
-					o + "@obj@.m_link_back_@prop@.vptr()[old_value.index()] = @obj@_id();";
-				};
-				o + "if(bool(value))" + block{
-					if(!i.is_optional) {
-						o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
-							o + "delete_@obj@(old_rel);";
-						};
-					} else {
-						o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
-							o + "@obj@.m_@prop@.vptr()[old_rel.index()] = @type@();";
-						};
-					}
-					o + "@obj@.m_link_back_@prop@.vptr()[value.index()] = id;";
+			if(i.multiplicity == 1) {
+				o + "void @obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
+					o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()]; bool(old_value))" + block{
+						o + "@obj@.m_link_back_@prop@.vptr()[old_value.index()] = @obj@_id();";
+					};
+					o + "if(bool(value))" + block{
+						if(!i.is_optional) {
+							o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
+								o + "delete_@obj@(old_rel);";
+							};
+						} else {
+							o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
+								o + "@obj@.m_@prop@.vptr()[old_rel.index()] = @type@();";
+							};
+						}
+						o + "@obj@.m_link_back_@prop@.vptr()[value.index()] = id;";
 
-					make_delete_current_composite_keys_text(o, "id", obj, i);
-					o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
-					make_remove_add_current_composite_keys_text(o, "id", obj, i);
-				} +append{ "else" } +block{
-					if(!i.is_optional) {
-						o + "delete_@obj@(id);";
-					} else {
 						make_delete_current_composite_keys_text(o, "id", obj, i);
 						o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
 						make_remove_add_current_composite_keys_text(o, "id", obj, i);
+					} +append{ "else" } +block{
+						if(!i.is_optional) {
+							o + "delete_@obj@(id);";
+						} else {
+							make_delete_current_composite_keys_text(o, "id", obj, i);
+							o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
+							make_remove_add_current_composite_keys_text(o, "id", obj, i);
+						}
+					};
+				};
+			} else {
+				o + "void @obj@_set_@prop@(@obj@_id id, int32_t i, @type@ value) noexcept" + block{
+					o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()][i]; bool(old_value))" + block{
+						o + "@obj@.m_link_back_@prop@.vptr()[old_value.index()] = @obj@_id();";
+					};
+					if(i.is_distinct) {
+						o + "if(@obj@_has_@prop@(id, value)) value = @type@();";
+					}
+					o + "if(bool(value))" + block{
+						if(!i.is_optional) {
+							o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
+								o + "delete_@obj@(old_rel);";
+							};
+						} else {
+							o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
+								o + "@obj@.m_@prop@.vptr()[old_rel.index()] = @type@();";
+							};
+						}
+						o + "@obj@.m_link_back_@prop@.vptr()[value.index()] = id;";
+
+						make_delete_current_composite_keys_text(o, "id", obj, i);
+						o + "@obj@.m_@prop@.vptr()[id.index()][i] = value;";
+						if(i.is_covered_by_composite_key) {
+							o + "std::sort(@obj@.m_@prop@.vptr()[id.index()].begin(), @obj@.m_@prop@.vptr()[id.index()].end(), "
+								"[](@type@ a, @type@ b){ return a.value < b.value; });";
+						}
+						make_remove_add_current_composite_keys_text(o, "id", obj, i);
+					} +append{ "else" } +block{
+						if(!i.is_optional) {
+							o + "delete_@obj@(id);";
+						} else {
+							make_delete_current_composite_keys_text(o, "id", obj, i);
+							o + "@obj@.m_@prop@.vptr()[id.index()][i] = value;";
+							if(i.is_covered_by_composite_key) {
+								o + "std::sort(@obj@.m_@prop@.vptr()[id.index()].begin(), @obj@.m_@prop@.vptr()[id.index()].end(), "
+									"[](@type@ a, @type@ b){ return a.value < b.value; });";
+							}
+							make_remove_add_current_composite_keys_text(o, "id", obj, i);
+						}
+					};
+				};
+
+				o + "void @obj@_replace_@prop@(@obj@_id id, @type@ newvalue, @type@ oldvalue) noexcept" + block{
+					for(int32_t j = 0; j < i.multiplicity; ++j) {
+						o + substitute{"i", std::to_string(j)};
+						o + "if(@obj@.m_@prop@.vptr()[id.index()][@i@] == oldvalue)" + block{
+							o + "@obj@_set_@prop@(id, @i@, newvalue);";
+							o + "return;";
+						};
 					}
 				};
-				
-			};
+			}
 
-			o + "bool @obj@_try_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
-				if(!i.is_optional) {
-					o + "if(!bool(value)) return false;";
-				}
-				make_try_current_composite_keys_text(o, "id", obj, i);
+			if(i.multiplicity == 1) {
+				o + "bool @obj@_try_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
+					if(!i.is_optional) {
+						o + "if(!bool(value)) return false;";
+					}
+					make_try_current_composite_keys_text(o, "id", obj, i);
 
-				o + "if(bool(value))" + block{
-					o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
-						o + "return false;";
+					o + "if(bool(value))" + block{
+						o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
+							o + "return false;";
+						};
+						o + "@obj@.m_link_back_@prop@.vptr()[value.index()] = id;";
 					};
-					o + "@obj@.m_link_back_@prop@.vptr()[value.index()] = id;";
+					o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()]; bool(old_value))" + block{
+						o + "@obj@.m_link_back_@prop@.vptr()[old_value.index()] = @obj@_id();";
+					};
+					o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
+					make_force_add_current_composite_keys_text(o, "id", obj, i);
+					o + "return true;";
 				};
-				o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()]; bool(old_value))" + block{
-					o + "@obj@.m_link_back_@prop@.vptr()[old_value.index()] = @obj@_id();";
+			} else {
+				o + "bool @obj@_try_set_@prop@(@obj@_id id, int32_t i, @type@ value) noexcept" + block{
+					if(!i.is_optional) {
+						o + "if(!bool(value)) return false;";
+					}
+					if(i.is_distinct) {
+						o + "if(@obj@_has_@prop@(id, value)) return false;";
+					}
+					make_try_current_composite_keys_text_with_multiplicity(o, "id", obj, i);
+
+					o + "if(bool(value))" + block{
+						o + "if(auto old_rel = @obj@.m_link_back_@prop@.vptr()[value.index()]; bool(old_rel))" + block{
+							o + "return false;";
+						};
+						o + "@obj@.m_link_back_@prop@.vptr()[value.index()] = id;";
+					};
+					o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()][i]; bool(old_value))" + block{
+						o + "@obj@.m_link_back_@prop@.vptr()[old_value.index()] = @obj@_id();";
+					};
+					o + "@obj@.m_@prop@.vptr()[id.index()][i] = value;";
+					if(i.is_covered_by_composite_key) {
+						o + "std::sort(@obj@.m_@prop@.vptr()[id.index()].begin(), @obj@.m_@prop@.vptr()[id.index()].end(), "
+							"[](@type@ a, @type@ b){ return a.value < b.value; });";
+					}
+					make_force_add_current_composite_keys_text(o, "id", obj, i);
+					o + "return true;";
 				};
-				o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
-				make_force_add_current_composite_keys_text(o, "id", obj, i);
-				o + "return true;";
-			};
+
+				o + "bool @obj@_try_replace_@prop@(@obj@_id id, @type@ newvalue, @type@ oldvalue) noexcept" + block{
+					for(int32_t j = 0; j < i.multiplicity; ++j) {
+						o + substitute{"i", std::to_string(j)};
+						o + "if(@obj@.m_@prop@.vptr()[id.index()][@i@] == oldvalue)" + block{
+							o + "return @obj@_try_set_@prop@(id, @i@, newvalue);";
+						};
+						o + "return false;";
+					}
+				};
+			}
 
 			if(i.protection == protection_type::read_only || i.protection == protection_type::hidden)
 				o + "public:";
@@ -1310,120 +1513,250 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 
 			if(i.protection == protection_type::hidden) {
 				o + "private:";
-				o + "friend @rtype@ @obj@_fat_id::get_@prop@() const noexcept;";
-				o + "friend @rtype@ @obj@_const_fat_id::get_@prop@() const noexcepot;";
+				if(i.multiplicity == 1) {
+					o + "friend @rtype@ @obj@_fat_id::get_@prop@() const noexcept;";
+					o + "friend @rtype@ @obj@_const_fat_id::get_@prop@() const noexcepot;";
+				} else {
+					o + "friend @rtype@ @obj@_fat_id::get_@prop@(int32_t) const noexcept;";
+					o + "friend @rtype@ @obj@_const_fat_id::get_@prop@(int32_t) const noexcept;";
+					o + "friend bool @obj@_fat_id::has_@prop@(@prop_type@_i) const noexcept;";
+					o + "friend bool @obj@_const_fat_id::has_@prop@(@prop_type@_i) const noexcept;";
+				}
 			}
 
-			o + "DCON_RELEASE_INLINE @type@ @obj@_get_@prop@(@obj@_id id) const noexcept" + block{
-				o + "return @obj@.m_@prop@.vptr()[id.index()];";
-			};
+			if(i.multiplicity == 1) {
+				o + "DCON_RELEASE_INLINE @type@ @obj@_get_@prop@(@obj@_id id) const noexcept" + block{
+					o + "return @obj@.m_@prop@.vptr()[id.index()];";
+				};
 
-			o + "#ifndef DCON_NO_VE";
-			o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@type@> @obj@_get_@prop@(@vector_position@<@obj@_id> id) const noexcept" + block{
-				o + "return ve::load(id, @obj@.m_@prop@.vptr());";
-			};
-			o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@type@> @obj@_get_@prop@(ve::partial_contiguous_tags<@obj@_id> id) const noexcept" + block{
-				o + "return ve::load(id, @obj@.m_@prop@.vptr());";
-			};
-			o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@type@> @obj@_get_@prop@(ve::tagged_vector<@obj@_id> id) const noexcept" + block{
-				o + "return ve::load(id, @obj@.m_@prop@.vptr());";
-			};
-			o + "#endif";
+				o + "#ifndef DCON_NO_VE";
+				o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@type@> @obj@_get_@prop@(@vector_position@<@obj@_id> id) const noexcept" + block{
+					o + "return ve::load(id, @obj@.m_@prop@.vptr());";
+				};
+				o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@type@> @obj@_get_@prop@(ve::partial_contiguous_tags<@obj@_id> id) const noexcept" + block{
+					o + "return ve::load(id, @obj@.m_@prop@.vptr());";
+				};
+				o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@type@> @obj@_get_@prop@(ve::tagged_vector<@obj@_id> id) const noexcept" + block{
+					o + "return ve::load(id, @obj@.m_@prop@.vptr());";
+				};
+				o + "#endif";
+			} else {
+				o + "DCON_RELEASE_INLINE @type@ @obj@_get_@prop@(@obj@_id id, int32_t i) const noexcept" + block{
+					o + "return @obj@.m_@prop@.vptr()[id.index()][i];";
+				};
+				o + "DCON_RELEASE_INLINE bool @obj@_has_@prop@(@obj@_id id, @type@ v) const noexcept" + block{
+					for(int32_t j = 0; j < i.multiplicity; ++j) {
+						o + substitute{"i", std::to_string(j)};
+						o + "if(@obj@.m_@prop@.vptr()[id.index()][@i@] == v) return true;";
+					}
+					o + "return false;";
+				};
+			}
 
 			if(i.protection == protection_type::hidden) {
 				o + "public:";
 			}
 
 			o + "private:";
-			o + "void internal_@obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
-				if(i.ltype == list_type::list) {
-					o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()]; bool(old_value))" + block{
-						o + "if(auto old_left = @obj@.m_link_@prop@.vptr()[id.index()].left; bool(old_left))" + block{
-							o + "@obj@.m_link_@prop@.vptr()[old_left.index()].right = @obj@.m_link_@prop@.vptr()[id.index()].right;";
-						} +append{"else"} +block{ // else: was the current head of the existing list
-							o + "@obj@.m_head_back_@prop@.vptr()[old_value.index()] = @obj@.m_link_@prop@.vptr()[id.index()].right;";
-						};
-						o + "if(auto old_right = @obj@.m_link_@prop@.vptr()[id.index()].right; bool(old_right))" + block{
-							o + "@obj@.m_link_@prop@.vptr()[old_right.index()].left = @obj@.m_link_@prop@.vptr()[id.index()].left;";
-						};
-					};
-					o + "if(bool(value))" + block{
-						o + "if(auto existing_list = @obj@.m_head_back_@prop@.vptr()[value.index()]; bool(existing_list))" + block{
-							o + "@obj@.m_link_@prop@.vptr()[id.index()].left = existing_list;";
-							o + "if(auto r = @obj@.m_link_@prop@.vptr()[existing_list.index()].right; bool(r))" + block{
-								o + "@obj@.m_link_@prop@.vptr()[id.index()].right = r;";
-								o + "@obj@.m_link_@prop@.vptr()[r.index()].left = id;";
-							} +append{ "else" } +block{
-								o + "@obj@.m_link_@prop@.vptr()[id.index()].right = @obj@_id();";
+
+			if(i.multiplicity == 1) {
+				o + "void internal_@obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
+					if(i.ltype == list_type::list) {
+						o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()]; bool(old_value))" + block{
+							o + "if(auto old_left = @obj@.m_link_@prop@.vptr()[id.index()].left; bool(old_left))" + block{
+								o + "@obj@.m_link_@prop@.vptr()[old_left.index()].right = @obj@.m_link_@prop@.vptr()[id.index()].right;";
+							} +append{"else"} +block{ // else: was the current head of the existing list
+								o + "@obj@.m_head_back_@prop@.vptr()[old_value.index()] = @obj@.m_link_@prop@.vptr()[id.index()].right;";
 							};
-							o + "@obj@.m_link_@prop@.vptr()[existing_list.index()].right = id;";
-							o + "@obj@.m_head_back_@prop@.vptr()[value.index()] = existing_list;";
-						} +append{"else"} +block{
-							o + "@obj@.m_head_back_@prop@.vptr()[value.index()] = id;";
+							o + "if(auto old_right = @obj@.m_link_@prop@.vptr()[id.index()].right; bool(old_right))" + block{
+								o + "@obj@.m_link_@prop@.vptr()[old_right.index()].left = @obj@.m_link_@prop@.vptr()[id.index()].left;";
+							};
+						};
+						o + "if(bool(value))" + block{
+							o + "if(auto existing_list = @obj@.m_head_back_@prop@.vptr()[value.index()]; bool(existing_list))" + block{
+								o + "@obj@.m_link_@prop@.vptr()[id.index()].left = existing_list;";
+								o + "if(auto r = @obj@.m_link_@prop@.vptr()[existing_list.index()].right; bool(r))" + block{
+									o + "@obj@.m_link_@prop@.vptr()[id.index()].right = r;";
+									o + "@obj@.m_link_@prop@.vptr()[r.index()].left = id;";
+								} +append{ "else" } +block{
+									o + "@obj@.m_link_@prop@.vptr()[id.index()].right = @obj@_id();";
+								};
+								o + "@obj@.m_link_@prop@.vptr()[existing_list.index()].right = id;";
+								o + "@obj@.m_head_back_@prop@.vptr()[value.index()] = existing_list;";
+							} +append{"else"} +block{
+								o + "@obj@.m_head_back_@prop@.vptr()[value.index()] = id;";
+								o + "@obj@.m_link_@prop@.vptr()[id.index()].right = @obj@_id();";
+								o + "@obj@.m_link_@prop@.vptr()[id.index()].left = @obj@_id();";
+							};
+						} +append{ "else" } +block{
 							o + "@obj@.m_link_@prop@.vptr()[id.index()].right = @obj@_id();";
 							o + "@obj@.m_link_@prop@.vptr()[id.index()].left = @obj@_id();";
 						};
-					} +append{ "else" } +block{
-						o + "@obj@.m_link_@prop@.vptr()[id.index()].right = @obj@_id();";
-						o + "@obj@.m_link_@prop@.vptr()[id.index()].left = @obj@_id();";
-					};
-					o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
-				} else if(i.ltype == list_type::array) {
-					o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()]; bool(old_value))" + block{
-						o + "auto& vref = @obj@.m_array_@prop@.vptr()[old_value.index()];";
-						o + "dcon::remove_unique_item(@obj@.@prop@_storage, vref, id);";
-					};
-					o + "if(bool(value))" + block{
-						o + "dcon::push_back(@obj@.@prop@_storage, @obj@.m_array_@prop@.vptr()[value.index()], id);";
-					};
-					o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
-				} else if(i.ltype == list_type::std_vector) {
-					o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()]; bool(old_value))" + block{
-						o + "auto& vref = @obj@.m_array_@prop@.vptr()[old_value.index()];";
-						o + "if(auto it = std::find(vref.begin(), vref.end(), id); it != vref.end())" + block{
-							o + "*it = vref.back();";
-							o + "vref.pop_back();";
+						o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
+					} else if(i.ltype == list_type::array) {
+						o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()]; bool(old_value))" + block{
+							o + "auto& vref = @obj@.m_array_@prop@.vptr()[old_value.index()];";
+							o + "dcon::remove_unique_item(@obj@.@prop@_storage, vref, id);";
 						};
-					};
-					o + "if(bool(value))" + block{
-						o + "@obj@.m_array_@prop@.vptr()[value.index()].push_back(id);";
-					};
-					o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
-				}
-			};
+						o + "if(bool(value))" + block{
+							o + "dcon::push_back(@obj@.@prop@_storage, @obj@.m_array_@prop@.vptr()[value.index()], id);";
+						};
+						o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
+					} else if(i.ltype == list_type::std_vector) {
+						o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()]; bool(old_value))" + block{
+							o + "auto& vref = @obj@.m_array_@prop@.vptr()[old_value.index()];";
+							o + "if(auto it = std::find(vref.begin(), vref.end(), id); it != vref.end())" + block{
+								o + "*it = vref.back();";
+								o + "vref.pop_back();";
+							};
+						};
+						o + "if(bool(value))" + block{
+							o + "@obj@.m_array_@prop@.vptr()[value.index()].push_back(id);";
+						};
+						o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
+					}
+				};
+			} else {
+				o + "void internal_@obj@_set_@prop@(@obj@_id id, int32_t i, @type@ value) noexcept" + block{
+					if(i.ltype == list_type::array) {
+						o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()][i]; bool(old_value))" + block{
+							o + "auto& vref = @obj@.m_array_@prop@.vptr()[old_value.index()];";
+							if(i.is_distinct)
+								o + "dcon::remove_unique_item(@obj@.@prop@_storage, vref, id);";
+							else
+								o + "dcon::remove_all_items(@obj@.@prop@_storage, vref, id);";
+						};
+						o + "if(bool(value))" + block{
+							o + "dcon::push_back(@obj@.@prop@_storage, @obj@.m_array_@prop@.vptr()[value.index()], id);";
+						};
+						o + "@obj@.m_@prop@.vptr()[id.index()][i] = value;";
+					} else if(i.ltype == list_type::std_vector) {
+						o + "if(auto old_value = @obj@.m_@prop@.vptr()[id.index()][i]; bool(old_value))" + block{
+							if(i.is_distinct) {
+								o + "auto& vref = @obj@.m_array_@prop@.vptr()[old_value.index()];";
+								o + "if(auto it = std::find(vref.begin(), vref.end(), id); it != vref.end())" + block{
+									o + "*it = vref.back();";
+									o + "vref.pop_back();";
+								};
+							} else {
+								o + "auto dat = @obj@.m_array_@prop@.vptr()[old_value.index()].data();";
+								o + "auto sz = @obj@.m_array_@prop@.vptr()[old_value.index()].size();";
+								o + "for(auto j = sz; j > 0; --j)" + block{
+									o + "if(*(dat + j - 1) == id)" + block{
+										o + "*(dat + j - 1) = *(dat + sz - 1);";
+										o + "--sz;";
+									};
+									o + "vref.resize(sz);";
+								};
+							}
+						};
+						o + "if(bool(value))" + block{
+							o + "@obj@.m_array_@prop@.vptr()[value.index()].push_back(id);";
+						};
+						o + "@obj@.m_@prop@.vptr()[id.index()][i] = value;";
+					}
+				};
+			}
 			o + "public:";
 
 			if(i.protection == protection_type::read_only || i.protection == protection_type::hidden) {
 				o + "private:";
-				o + "friend void @obj@_fat_id::set_@prop@( @prop_type@_id) const noexcept;";
+				if(i.multiplicity == 1) {
+					o + "friend void @obj@_fat_id::set_@prop@( @prop_type@_id) const noexcept;";
+					o + "friend bool @obj@_fat_id::try_set_@prop@( @prop_type@_id) const noexcept;";
+				} else {
+					o + "friend void @obj@_fat_id::set_@prop@(int32_t, @prop_type@_id) const noexcept;";
+					o + "friend bool @obj@_fat_id::try_set_@prop@(int32_t, @prop_type@_id) const noexcept;";
+					o + "friend void @obj@_fat_id::replace_@prop@(@prop_type@_id, @prop_type@_id) const noexcept;";
+					o + "friend bool @obj@_fat_id::try_replace_@prop@(@prop_type@_id, @prop_type@_id) const noexcept;";
+				}
 			}
 
-			o + "void @obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
-				if(!i.is_optional) {
-					o + "if(!bool(value))" + block{
-						o + "delete_@obj@(id);";
-						o + "return;";
-					};
-				}
-				make_delete_current_composite_keys_text(o, "id", obj, i);
-				o + "internal_@obj@_set_@prop@(id, value);";
-				make_remove_add_current_composite_keys_text(o, "id", obj, i);
-			};
+			if(i.multiplicity == 1) {
+				o + "void @obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
+					if(!i.is_optional) {
+						o + "if(!bool(value))" + block{
+							o + "delete_@obj@(id);";
+							o + "return;";
+						};
+					}
+					make_delete_current_composite_keys_text(o, "id", obj, i);
+					o + "internal_@obj@_set_@prop@(id, value);";
+					make_remove_add_current_composite_keys_text(o, "id", obj, i);
+				};
 
-			o + "bool @obj@_try_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
-				if(!i.is_optional) {
-					o + "if(!bool(value))" + block{
+				o + "bool @obj@_try_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
+					if(!i.is_optional) {
+						o + "if(!bool(value))" + block{
+							o + "return false;";
+						};
+					}
+
+					make_try_current_composite_keys_text(o, "id", obj, i);
+					o + "internal_@obj@_set_@prop@(id, value);";
+
+					make_force_add_current_composite_keys_text(o, "id", obj, i);
+					o + "return true;";
+				};
+			} else {
+				o + "void @obj@_set_@prop@(@obj@_id id, int32_t i, @type@ value) noexcept" + block{
+					if(i.is_distinct) {
+						o + "if(@obj@_has_@prop@(id, value)) value = @type@();";
+					}
+					if(!i.is_optional) {
+						o + "if(!bool(value))" + block{
+							o + "delete_@obj@(id);";
+							o + "return;";
+						};
+					}
+					make_delete_current_composite_keys_text(o, "id", obj, i);
+					o + "internal_@obj@_set_@prop@(id, i, value);";
+					if(i.is_covered_by_composite_key) {
+						o + "std::sort(@obj@.m_@prop@.vptr()[id.index()].begin(), @obj@.m_@prop@.vptr()[id.index()].end(), "
+							"[](@type@ a, @type@ b){ return a.value < b.value; });";
+					}
+					make_remove_add_current_composite_keys_text(o, "id", obj, i);
+				};
+
+				o + "bool @obj@_try_set_@prop@(@obj@_id id, int32_t i, @type@ value) noexcept" + block{
+					if(!i.is_optional) {
+						o + "if(!bool(value))" + block{
+							o + "return false;";
+						};
+					}
+					if(i.is_distinct) {
+						o + "if(@obj@_has_@prop@(id, value)) return false;";
+					}
+					make_try_current_composite_keys_text_with_multiplicity(o, "id", obj, i);
+					o + "internal_@obj@_set_@prop@(id, i, value);";
+					if(i.is_covered_by_composite_key) {
+						o + "std::sort(@obj@.m_@prop@.vptr()[id.index()].begin(), @obj@.m_@prop@.vptr()[id.index()].end(), "
+							"[](@type@ a, @type@ b){ return a.value < b.value; });";
+					}
+					make_force_add_current_composite_keys_text(o, "id", obj, i);
+					o + "return true;";
+				};
+
+				o + "void @obj@_replace_@prop@(@obj@_id id, @type@ newvalue, @type@ oldvalue) noexcept" + block{
+					for(int32_t j = 0; j < i.multiplicity; ++j) {
+						o + substitute{"i", std::to_string(j)};
+						o + "if(@obj@.m_@prop@.vptr()[id.index()][@i@] == oldvalue)" + block{
+							o + "@obj@_set_@prop@(id, @i@, newvalue);";
+							o + "return;";
+						};
+					}
+				};
+
+				o + "bool @obj@_try_replace_@prop@(@obj@_id id, @type@ newvalue, @type@ oldvalue) noexcept" + block{
+					for(int32_t j = 0; j < i.multiplicity; ++j) {
+						o + substitute{"i", std::to_string(j)};
+						o + "if(@obj@.m_@prop@.vptr()[id.index()][@i@] == oldvalue)" + block{
+							o + "return @obj@_try_set_@prop@(id, @i@, newvalue);";
+						};
 						o + "return false;";
-					};
-				}
-
-				make_try_current_composite_keys_text(o, "id", obj, i);
-				o + "internal_@obj@_set_@prop@(id, value);";
-
-				make_force_add_current_composite_keys_text(o, "id", obj, i);
-				o + "return true;";
-			};
-
+					}
+				};
+			}
 			if(i.protection == protection_type::read_only || i.protection == protection_type::hidden)
 				o + "public:";
 		} else { // unindexed
@@ -1432,63 +1765,157 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 
 			if(i.protection == protection_type::hidden) {
 				o + "private:";
-				o + "friend @rtype@ @obj@_fat_id::get_@prop@() const noexcept;";
-				o + "friend @rtype@ @obj@_const_fat_id::get_@prop@() const noexcpet;";
+				if(i.multiplicity == 1) {
+					o + "friend @rtype@ @obj@_fat_id::get_@prop@() const noexcept;";
+					o + "friend @rtype@ @obj@_const_fat_id::get_@prop@() const noexcpet;";
+				} else {
+					o + "friend @rtype@ @obj@_fat_id::get_@prop@(int32_t) const noexcept;";
+					o + "friend @rtype@ @obj@_const_fat_id::get_@prop@(int32_t) const noexcept;";
+					o + "friend bool @obj@_fat_id::has_@prop@(@prop_type@_i) const noexcept;";
+					o + "friend bool @obj@_const_fat_id::has_@prop@(@prop_type@_i) const noexcept;";
+				}
 			}
 
-			o + "DCON_RELEASE_INLINE @type@ @obj@_get_@prop@(@obj@_id id) const noexcept" + block{
-				o + "return @obj@.m_@prop@.vptr()[id.index()];";
-			};
+			if(i.multiplicity == 1) {
+				o + "DCON_RELEASE_INLINE @type@ @obj@_get_@prop@(@obj@_id id) const noexcept" + block{
+					o + "return @obj@.m_@prop@.vptr()[id.index()];";
+				};
 
-			o + "#ifndef DCON_NO_VE";
-			o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@type@> @obj@_get_@prop@(@vector_position@<@obj@_id> id) const noexcept" + block{
-				o + "return ve::load(id, @obj@.m_@prop@.vptr());";
-			};
-			o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@type@> @obj@_get_@prop@(ve::partial_contiguous_tags<@obj@_id> id) const noexcept" + block{
-				o + "return ve::load(id, @obj@.m_@prop@.vptr());";
-			};
-			o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@type@> @obj@_get_@prop@(ve::tagged_vector<@obj@_id> id) const noexcept" + block{
-				o + "return ve::load(id, @obj@.m_@prop@.vptr());";
-			};
-			o + "#endif";
+				o + "#ifndef DCON_NO_VE";
+				o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@type@> @obj@_get_@prop@(@vector_position@<@obj@_id> id) const noexcept" + block{
+					o + "return ve::load(id, @obj@.m_@prop@.vptr());";
+				};
+				o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@type@> @obj@_get_@prop@(ve::partial_contiguous_tags<@obj@_id> id) const noexcept" + block{
+					o + "return ve::load(id, @obj@.m_@prop@.vptr());";
+				};
+				o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@type@> @obj@_get_@prop@(ve::tagged_vector<@obj@_id> id) const noexcept" + block{
+					o + "return ve::load(id, @obj@.m_@prop@.vptr());";
+				};
+				o + "#endif";
+			} else {
+				o + "DCON_RELEASE_INLINE @type@ @obj@_get_@prop@(@obj@_id id, int32_t i) const noexcept" + block{
+					o + "return @obj@.m_@prop@.vptr()[id.index()][i];";
+				};
+				o + "DCON_RELEASE_INLINE bool @obj@_has_@prop@(@obj@_id id, @type@ v) const noexcept" + block{
+					for(int32_t j = 0; j < i.multiplicity; ++j) {
+						o + substitute{"i", std::to_string(j)};
+						o + "if(@obj@.m_@prop@.vptr()[id.index()][@i@] == v) return true;";
+					}
+					o + "return false;";
+				};
+			}
 
 			if(i.protection == protection_type::hidden) {
 				o + "public:";
 			}
 
 			o + "private:";
-			o + "DCON_RELEASE_INLINE void internal_@obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
-				o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
-			};
+			if(i.multiplicity == 1) {
+				o + "DCON_RELEASE_INLINE void internal_@obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
+					o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
+				};
+			} else {
+				o + "DCON_RELEASE_INLINE void internal_@obj@_set_@prop@(@obj@_id id, int32_t i, @type@ value) noexcept" + block{
+					o + "@obj@.m_@prop@.vptr()[id.index()][i] = value;";
+				};
+			}
 			o + "public:";
 
 			if(i.protection == protection_type::read_only || i.protection == protection_type::hidden) {
 				o + "private:";
-				o + "friend void @obj@_fat_id::set_@prop@( @prop_type@_id) const noexcept;";
+				if(i.multiplicity == 1) {
+					o + "friend void @obj@_fat_id::set_@prop@( @prop_type@_id) const noexcept;";
+					o + "friend bool @obj@_fat_id::try_set_@prop@( @prop_type@_id) const noexcept;";
+				} else {
+					o + "friend void @obj@_fat_id::set_@prop@(int32_t, @prop_type@_id) const noexcept;";
+					o + "friend bool @obj@_fat_id::try_set_@prop@(int32_t, @prop_type@_id) const noexcept;";
+					o + "friend void @obj@_fat_id::replace_@prop@(@prop_type@_id, @prop_type@_id) const noexcept;";
+					o + "friend bool @obj@_fat_id::try_replace_@prop@(@prop_type@_id, @prop_type@_id) const noexcept;";
+				}
 			}
 
-			o + "void @obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
-				if(!i.is_optional) {
-					o + "if(!bool(value))" + block{
-						o + "delete_@obj@(id);";
-						o + "return;";
-					};
-				}
-				make_delete_current_composite_keys_text(o, "id", obj, i);
-				o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
-				make_remove_add_current_composite_keys_text(o, "id", obj, i);
-			};
-			o + "bool @obj@_try_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
-				if(!i.is_optional) {
-					o + "if(!bool(value)) return false;";
-				}
-				make_try_current_composite_keys_text(o, "id", obj, i);
-				o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
-				make_force_add_current_composite_keys_text(o, "id", obj, i);
-				o + "return true;";
-			};
+			if(i.multiplicity == 1) {
+				o + "void @obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
+					if(!i.is_optional) {
+						o + "if(!bool(value))" + block{
+							o + "delete_@obj@(id);";
+							o + "return;";
+						};
+					}
+					make_delete_current_composite_keys_text(o, "id", obj, i);
+					o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
+					make_remove_add_current_composite_keys_text(o, "id", obj, i);
+				};
+				o + "bool @obj@_try_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
+					if(!i.is_optional) {
+						o + "if(!bool(value)) return false;";
+					}
+					make_try_current_composite_keys_text(o, "id", obj, i);
+					o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
+					make_force_add_current_composite_keys_text(o, "id", obj, i);
+					o + "return true;";
+				};
+			} else {
+				o + "void @obj@_set_@prop@(@obj@_id id, int32_t i, @type@ value) noexcept" + block{
+					if(i.is_distinct) {
+						o + "if(@obj@_has_@prop@(id, value)) value = @type@();";
+					}
+					if(!i.is_optional) {
+						o + "if(!bool(value))" + block{
+							o + "delete_@obj@(id);";
+							o + "return;";
+						};
+					}
+					make_delete_current_composite_keys_text(o, "id", obj, i);
+					o + "internal_@obj@_set_@prop@(id, i, value);";
+					if(i.is_covered_by_composite_key) {
+						o + "std::sort(@obj@.m_@prop@.vptr()[id.index()].begin(), @obj@.m_@prop@.vptr()[id.index()].end(), "
+							"[](@type@ a, @type@ b){ return a.value < b.value; });";
+					}
+					make_remove_add_current_composite_keys_text(o, "id", obj, i);
+				};
 
-			if(!i.is_covered_by_composite_key) {
+				o + "bool @obj@_try_set_@prop@(@obj@_id id, int32_t i, @type@ value) noexcept" + block{
+					if(!i.is_optional) {
+						o + "if(!bool(value))" + block{
+							o + "return false;";
+						};
+					}
+					if(i.is_distinct) {
+						o + "if(@obj@_has_@prop@(id, value)) return false;";
+					}
+					make_try_current_composite_keys_text_with_multiplicity(o, "id", obj, i);
+					o + "internal_@obj@_set_@prop@(id, i, value);";
+					if(i.is_covered_by_composite_key) {
+						o + "std::sort(@obj@.m_@prop@.vptr()[id.index()].begin(), @obj@.m_@prop@.vptr()[id.index()].end(), "
+							"[](@type@ a, @type@ b){ return a.value < b.value; });";
+					}
+					make_force_add_current_composite_keys_text(o, "id", obj, i);
+					o + "return true;";
+				};
+
+				o + "void @obj@_replace_@prop@(@obj@_id id, @type@ newvalue, @type@ oldvalue) noexcept" + block{
+					for(int32_t j = 0; j < i.multiplicity; ++j) {
+						o + substitute{"i", std::to_string(j)};
+						o + "if(@obj@.m_@prop@.vptr()[id.index()][@i@] == oldvalue)" + block{
+							o + "@obj@_set_@prop@(id, @i@, newvalue);";
+							o + "return;";
+						};
+					}
+				};
+
+				o + "bool @obj@_try_replace_@prop@(@obj@_id id, @type@ newvalue, @type@ oldvalue) noexcept" + block{
+					for(int32_t j = 0; j < i.multiplicity; ++j) {
+						o + substitute{"i", std::to_string(j)};
+						o + "if(@obj@.m_@prop@.vptr()[id.index()][@i@] == oldvalue)" + block{
+							o + "return @obj@_try_set_@prop@(id, @i@, newvalue);";
+						};
+						o + "return false;";
+					}
+				};
+			}
+
+			if(!i.is_covered_by_composite_key && i.multiplicity == 1) {
 				o + "#ifndef DCON_NO_VE";
 				o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(@vector_position@<@obj@_id> id, ve::value_to_vector_type<@type@> values) noexcept" + block{
 					o + "ve::store(id, @obj@.m_@prop@.vptr(), values);";
@@ -1509,7 +1936,7 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 
 }
 
-void primary_key_getter_setter_text(basic_builder & o) {
+void primary_key_getter_setter_text(basic_builder & o, bool as_multiple) {
 	o + "DCON_RELEASE_INLINE @rel@_id @prop_type@_get_@rel@@as_suffix@(@prop_type@_id id) const noexcept" + block{
 		o + "return @rel@_id(@rel@_id::value_base_t(id.index()));";
 	};
@@ -1532,12 +1959,15 @@ void primary_key_getter_setter_text(basic_builder & o) {
 
 	o + "DCON_RELEASE_INLINE void @prop_type@_remove_@rel@@as_suffix@(@prop_type@_id id) noexcept" + block{
 		o + "if(@rel@_is_valid(@rel@_id(@rel@_id::value_base_t(id.index()))))" + block{
-			o + "@rel@_set_@rel_prop@(@rel@_id(@rel@_id::value_base_t(id.index())), @obj@_id());";
+			if(as_multiple)
+				o + "@rel@_replace_@rel_prop@(@rel@_id(@rel@_id::value_base_t(id.index())), @obj@_id(), id);";
+			else
+				o + "@rel@_set_@rel_prop@(@rel@_id(@rel@_id::value_base_t(id.index())), @obj@_id());";
 		};
 	};
 }
 
-void unique_getter_setter_text(basic_builder & o) {
+void unique_getter_setter_text(basic_builder & o, bool as_multiple) {
 	o + "DCON_RELEASE_INLINE @rel@_id @prop_type@_get_@rel@@as_suffix@(@prop_type@_id id) const noexcept" + block{
 		o + "return @rel@.m_link_back_@rel_prop@.vptr()[id.index()];";
 	};
@@ -1559,7 +1989,10 @@ void unique_getter_setter_text(basic_builder & o) {
 
 	o + "DCON_RELEASE_INLINE void @prop_type@_remove_@rel@@as_suffix@(@prop_type@_id id) noexcept" + block{
 		o + "if(auto backid = @rel@.m_link_back_@rel_prop@.vptr()[id.index()]; bool(backid))" + block{
-			o + "@rel@_set_@rel_prop@(backid, @obj@_id());";
+			if(as_multiple)
+				o + "@rel@_replace_@rel_prop@(backid, @obj@_id(), id);";
+			else
+				o + "@rel@_set_@rel_prop@(backid, @obj@_id());";
 		};
 	};
 }
@@ -1844,7 +2277,7 @@ void join_getter_text(basic_builder& o, property_def const& ip, bool add_prefix,
 	}
 }
 
-void many_getter_setter_text(basic_builder & o, list_type ltype, bool remove_all_needs_sort) {
+void many_getter_setter_text(basic_builder & o, list_type ltype, bool remove_all_needs_sort, bool has_multiplicity) {
 	o + "template<typename T>";
 	o + "DCON_RELEASE_INLINE void @obj@_for_each_@rel@@as_suffix@(@obj@_id id, T&& func) const" + block{
 		o + "if(bool(id))" + block{
@@ -1895,7 +2328,10 @@ void many_getter_setter_text(basic_builder & o, list_type ltype, bool remove_all
 		}
 		if(remove_all_needs_sort)
 			o + "std::sort(temp.begin(), temp.end(), [](@rel@_id l, @rel@_id r){ return l.value > r.value; });";
-		o + "std::for_each(temp.begin(), temp.end(), [t = this](@rel@_id i) { t->@rel@_set_@rel_prop@(i, @obj@_id()); });";
+		if(has_multiplicity)
+			o + "std::for_each(temp.begin(), temp.end(), [t = this, id](@rel@_id i) { t->@rel@_replace_@rel_prop@(i, @obj@_id(), id); });";
+		else
+			o + "std::for_each(temp.begin(), temp.end(), [t = this](@rel@_id i) { t->@rel@_set_@rel_prop@(i, @obj@_id()); });";
 	};
 }
 
@@ -1949,21 +2385,21 @@ void relation_many_join_getters_setters_text(basic_builder& o, list_type indexed
 void make_related_member_declarations(basic_builder& o, file_def const& parsed_file, relationship_object_def const& obj,
 	in_relation_information const& in_rel, bool add_prefix, std::string const& namesp, bool const_mode) {
 
-	o + substitute{ "rel", in_rel.relation_name } +substitute{ "rel_prop", in_rel.property_name };
+	o + substitute{ "rel", in_rel.relation_name } +substitute{ "rel_prop", in_rel.linked_as->property_name };
 	o + substitute{ "namesp", namesp };
 	o + substitute{ "vector_position", in_rel.rel_ptr->is_expandable ? "ve::unaligned_contiguous_tags" : "ve::contiguous_tags" };
 	o + substitute{ "prop_type", obj.name };
 	o + substitute{ "obj", obj.name };
 	o + substitute{ "id" , const_mode ? "_const_fat_id" : "_fat_id" };
 
-	if(in_rel.indexed_as == index_type::at_most_one) {
+	if(in_rel.linked_as->index == index_type::at_most_one) {
 		if(add_prefix) {
-			if(in_rel.as_primary_key) {
-				o + substitute{ "as_suffix", std::string("_as_") + in_rel.property_name };
-				primary_key_getter_setter_text(o);
+			if(in_rel.linked_as->is_primary_key) {
+				o + substitute{ "as_suffix", std::string("_as_") + in_rel.linked_as->property_name };
+				primary_key_getter_setter_text(o, in_rel.linked_as->multiplicity > 1);
 			} else {
-				o + substitute{ "as_suffix", std::string("_as_") + in_rel.property_name };
-				unique_getter_setter_text(o);
+				o + substitute{ "as_suffix", std::string("_as_") + in_rel.linked_as->property_name };
+				unique_getter_setter_text(o, in_rel.linked_as->multiplicity > 1);
 			}
 		} else {
 			o + "DCON_RELEASE_INLINE @rel@@id@ @namesp@get_@rel@_as_@rel_prop@() const noexcept" + block{
@@ -1979,18 +2415,18 @@ void make_related_member_declarations(basic_builder& o, file_def const& parsed_f
 
 		bool is_only_of_type = true;
 		for(auto& ir : in_rel.rel_ptr->indexed_objects) {
-			if(ir.type_name == obj.name && ir.property_name != in_rel.property_name)
+			if(ir.type_name == obj.name && ir.property_name != in_rel.linked_as->property_name)
 				is_only_of_type = false;
 		}
 		if(is_only_of_type) {
 
 			if(add_prefix) {
-				if(in_rel.as_primary_key) {
+				if(in_rel.linked_as->is_primary_key) {
 					o + substitute{ "as_suffix", "" };
-					primary_key_getter_setter_text(o);
+					primary_key_getter_setter_text(o, in_rel.linked_as->multiplicity > 1);
 				} else {
 					o + substitute{ "as_suffix", "" };
-					unique_getter_setter_text(o);
+					unique_getter_setter_text(o, in_rel.linked_as->multiplicity > 1);
 				}
 			} else {
 				o + "DCON_RELEASE_INLINE @rel@@id@ @namesp@get_@rel@() const noexcept" + block{
@@ -2003,7 +2439,7 @@ void make_related_member_declarations(basic_builder& o, file_def const& parsed_f
 				}
 			}
 
-			o + substitute{ "as_name", in_rel.property_name };
+			o + substitute{ "as_name", in_rel.linked_as->property_name };
 
 			for(auto& ir : in_rel.rel_ptr->indexed_objects) {
 				if(ir.related_to != &obj) {
@@ -2014,7 +2450,7 @@ void make_related_member_declarations(basic_builder& o, file_def const& parsed_f
 
 						
 						if(add_prefix) {
-							if(in_rel.as_primary_key) {
+							if(in_rel.linked_as->is_primary_key) {
 								o + "DCON_RELEASE_INLINE @r_type@_id @obj@_get_@r_prop@_from_@rel@(@obj@_id ref_id) const" + block{
 									o + "return @rel@_get_@r_prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())));";
 								};
@@ -2058,7 +2494,7 @@ void make_related_member_declarations(basic_builder& o, file_def const& parsed_f
 
 					if(ir.protection != protection_type::read_only && ir.protection != protection_type::hidden) {
 						if(add_prefix) {
-							if(in_rel.as_primary_key) {
+							if(in_rel.linked_as->is_primary_key) {
 								o + "void @obj@_set_@r_prop@_from_@rel@(@obj@_id ref_id, @r_type@_id val)" + block{
 									o + "@rel@_set_@r_prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())), val);";
 								};
@@ -2084,28 +2520,28 @@ void make_related_member_declarations(basic_builder& o, file_def const& parsed_f
 
 				if(ip.protection != protection_type::hidden && ip.protection != protection_type::read_only) {
 					if(!const_mode && (!ip.is_derived || ip.hook_set)) {
-						join_setter_text(o, ip, add_prefix, in_rel.as_primary_key);
+						join_setter_text(o, ip, add_prefix, in_rel.linked_as->is_primary_key);
 					}
 				}
 
 				if(ip.protection != protection_type::hidden) {
 					if(!ip.is_derived || ip.hook_get) {
-						join_getter_text(o, ip, add_prefix, in_rel.as_primary_key, upresult);
+						join_getter_text(o, ip, add_prefix, in_rel.linked_as->is_primary_key, upresult);
 					}
 				}
 			} // end loop over properties in joined
 		} // end: is only of type
 
-	} else if(in_rel.indexed_as == index_type::many) {
+	} else if(in_rel.linked_as->index == index_type::many) {
 		if(add_prefix) {
-			o + substitute{ "as_suffix", std::string("_as_") + in_rel.property_name };
-			many_getter_setter_text(o, in_rel.listed_as, !in_rel.as_optional && in_rel.rel_ptr->store_type == storage_type::compactable);
+			o + substitute{ "as_suffix", std::string("_as_") + in_rel.linked_as->property_name };
+			many_getter_setter_text(o, in_rel.linked_as->ltype, !in_rel.linked_as->is_optional && in_rel.rel_ptr->store_type == storage_type::compactable, in_rel.linked_as->multiplicity > 1);
 		} else {
 			o + "template<typename T>";
 			o + "DCON_RELEASE_INLINE void @namesp@for_each_@rel@_as_@rel_prop@(T&& func) const" + block{
 				o + "container.@obj@_for_each_@rel@_as_@rel_prop@(id, [&, t = this](@rel@_id i){func(fatten(t->container, i));});";
 			};
-			if(in_rel.listed_as == list_type::array || in_rel.listed_as == list_type::std_vector) {
+			if(in_rel.linked_as->ltype == list_type::array || in_rel.linked_as->ltype == list_type::std_vector) {
 				o + "DCON_RELEASE_INLINE std::pair<@rel@_id const*, @rel@_id const*> @namesp@range_of_@rel@_as_@rel_prop@() const" + block{
 					o + "return container.@obj@_range_of_@rel@_as_@rel_prop@(id);";
 				};
@@ -2118,19 +2554,19 @@ void make_related_member_declarations(basic_builder& o, file_def const& parsed_f
 		}
 		bool is_only_of_type = true;
 		for(auto& ir : in_rel.rel_ptr->indexed_objects) {
-			if(ir.type_name == obj.name && ir.property_name != in_rel.property_name)
+			if(ir.type_name == obj.name && ir.property_name != in_rel.linked_as->property_name)
 				is_only_of_type = false;
 		}
 		if(is_only_of_type) {
 			if(add_prefix) {
 				o + substitute{ "as_suffix", "" };
-				many_getter_setter_text(o, in_rel.listed_as, !in_rel.as_optional && in_rel.rel_ptr->store_type == storage_type::compactable);
+				many_getter_setter_text(o, in_rel.linked_as->ltype, !in_rel.linked_as->is_optional && in_rel.rel_ptr->store_type == storage_type::compactable, in_rel.linked_as->multiplicity > 1);
 			} else {
 				o + "template<typename T>";
 				o + "DCON_RELEASE_INLINE void @namesp@for_each_@rel@(T&& func) const" + block{
 					o + "container.@obj@_for_each_@rel@(id, [&, t = this](@rel@_id i){func(fatten(t->container, i));});";
 				};
-				if(in_rel.listed_as == list_type::array || in_rel.listed_as == list_type::std_vector) {
+				if(in_rel.linked_as->ltype == list_type::array || in_rel.linked_as->ltype == list_type::std_vector) {
 					o + "DCON_RELEASE_INLINE std::pair<@rel@_id const*, @rel@_id const*> @namesp@range_of_@rel@() const" + block{
 						o + "return container.@obj@_range_of_@rel@(id);";
 					};
@@ -2142,7 +2578,7 @@ void make_related_member_declarations(basic_builder& o, file_def const& parsed_f
 				}
 			}
 
-			o + substitute{ "as_name", in_rel.property_name };
+			o + substitute{ "as_name", in_rel.linked_as->property_name };
 
 			for(auto& ir : in_rel.rel_ptr->indexed_objects) {
 				if(ir.related_to != &obj) {
@@ -2153,7 +2589,7 @@ void make_related_member_declarations(basic_builder& o, file_def const& parsed_f
 					if(ir.protection != protection_type::hidden) {
 						if(add_prefix) {
 							o + substitute{ "ref", "" };
-							relation_many_join_getters_setters_text(o, in_rel.listed_as, in_rel.rel_ptr->primary_key == ir);
+							relation_many_join_getters_setters_text(o, in_rel.linked_as->ltype, in_rel.rel_ptr->primary_key == ir);
 						} else {
 							o + "template<typename T>";
 							o + "DCON_RELEASE_INLINE void @namesp@for_each_@r_prop@_from_@rel@(T&& func) const" + block{
@@ -2176,7 +2612,7 @@ void make_related_member_declarations(basic_builder& o, file_def const& parsed_f
 					if(ip.protection != protection_type::hidden) {
 						if(add_prefix) {
 							o + substitute{ "ref", is_common_type(ip.data_type) ? "" : " const&" };
-							relation_many_join_getters_setters_text(o, in_rel.listed_as, false);
+							relation_many_join_getters_setters_text(o, in_rel.linked_as->ltype, false);
 						} else {
 							if(upresult.has_value()) {
 								o + "template<typename T>";

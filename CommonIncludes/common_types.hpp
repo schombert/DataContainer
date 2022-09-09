@@ -552,6 +552,19 @@ namespace dcon {
 			pop_back(storage, i);
 		}
 	}
+	template<typename object_type, uint32_t minimum_size, size_t memory_size>
+	void remove_all_items(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag& i, object_type obj) {
+		const auto range = get_range(storage, i);
+
+		auto old_size = get_size(storage, i);
+		for(int32_t j = int32_t(old_size) - 1; j >= 0; --j) {
+			if(*(range.first + j) == obj) {
+				*(range.first + j) = *(range.first + old_size - 1);
+				--old_size;
+			}
+		}
+		resize(storage, i, old_size);
+	}
 
 	template<typename object_type, uint32_t minimum_size, size_t memory_size>
 	void replace_unique_item(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag i, object_type obj, object_type new_val) {

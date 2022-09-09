@@ -83,17 +83,14 @@ struct related_object {
 	bool is_optional = false;
 	bool is_distinct = false;
 	bool is_covered_by_composite_key = false;
+	bool is_primary_key = false;
 	protection_type protection = protection_type::none;
 	relationship_object_def* related_to = nullptr;
 };
 
 struct in_relation_information {
 	std::string relation_name;
-	std::string property_name;
-	bool as_primary_key = false;
-	bool as_optional = false;
-	index_type indexed_as = index_type::at_most_one;
-	list_type listed_as = list_type::list;
+	related_object const* linked_as;
 	relationship_object_def const* rel_ptr;
 };
 
@@ -217,8 +214,9 @@ inline std::string make_relationship_parameters(relationship_object_def const& o
 		if(i.multiplicity == 1) {
 			result += i.type_name + "_id " + i.property_name + "_p";
 		} else {
-			for(int32_t j = 0; j < i.multiplicity; ++j) {
-				result += i.type_name + "_id " + i.property_name + "_p" + std::to_string(j);
+			result += i.type_name + "_id " + i.property_name + "_p0";
+			for(int32_t j = 1; j < i.multiplicity; ++j) {
+				result += ", " + i.type_name + "_id " + i.property_name + "_p" + std::to_string(j);
 			}
 		}
 	}

@@ -126,6 +126,10 @@ int main(int argc, char *argv[]) {
 						error_to_file(output_file_name, std::string("Unsupported combination of list type storage with multiplicity > 1 in link ")
 							+ l.property_name + " in relationship: " + r.name);
 					}
+
+					if(l.multiplicity > 1 && l.index == index_type::at_most_one) {
+						l.is_distinct = true;
+					}
 				}
 
 				
@@ -152,14 +156,19 @@ int main(int argc, char *argv[]) {
 
 				for(auto& link : r.indexed_objects) {
 					if(link.index != index_type::none)
-						link.related_to->relationships_involved_in.push_back(in_relation_information{ r.name, link.property_name,
-							r.primary_key.points_to == link.related_to, link.is_optional, link.index, link.ltype, &r });
+						link.related_to->relationships_involved_in.push_back(in_relation_information{ r.name, &link, &r });
 				}
 
 				if(r.primary_key.points_to) {
 					r.size = r.primary_key.points_to->size;
 					r.store_type = storage_type::contiguous;
 					r.is_expandable = r.primary_key.points_to->is_expandable;
+
+					for(auto& l : r.indexed_objects) {
+						if(r.primary_key == l) {
+							l.is_primary_key = true;
+						}
+					}
 				} else {
 					if(r.store_type != storage_type::erasable && r.store_type != storage_type::compactable)
 						error_to_file(output_file_name, std::string("Relationship ") + r.name + 
