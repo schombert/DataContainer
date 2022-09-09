@@ -773,6 +773,61 @@ basic_builder& move_array_value(basic_builder& o, std::string const& object_name
 	return o;
 }
 
+
+void make_composite_key_internal_assign(basic_builder& o, relationship_object_def const& in_obj, related_object const& link_to_update, std::string const& target_id) {
+	if(link_to_update.is_covered_by_composite_key) {
+		for(auto& cc : in_obj.composite_indexes) {
+			std::string params;
+			bool needs_adjust = false;
+
+			for(auto& idx : cc.component_indexes) {
+				if(idx.property_name == link_to_update.property_name) {
+					needs_adjust = true;
+				}
+				if(params.length() > 0)
+					params += ", ";
+				if(idx.property_name == in_obj.primary_key.property_name)
+					params += idx.object_type + "_id(" + idx.object_type + "_id::value_base_t(" + target_id + ".index()))";
+				else
+					params += in_obj.name + ".m_" + idx.property_name + ".vptr()[" + target_id + ".index()]";
+			}
+			if(needs_adjust) {
+				o + substitute{ "params", params } +substitute{ "ckname", cc.name };
+				o + substitute{ "target_id", target_id };
+				o + substitute{ "index_in", in_obj.name };
+				o + "@index_in@.hashm_@ckname@.insert_or_assign(@index_in@.to_@ckname@_keydata(@params@), @target_id@);";
+			}
+		}
+	}
+}
+
+void make_composite_key_internal_delete(basic_builder& o, relationship_object_def const& in_obj, related_object const& link_to_update, std::string const& target_id) {
+	if(link_to_update.is_covered_by_composite_key) {
+		for(auto& cc : in_obj.composite_indexes) {
+			std::string params;
+			bool needs_adjust = false;
+
+			for(auto& idx : cc.component_indexes) {
+				if(idx.property_name == link_to_update.property_name) {
+					needs_adjust = true;
+				}
+				if(params.length() > 0)
+					params += ", ";
+				if(idx.property_name == in_obj.primary_key.property_name)
+					params += idx.object_type + "_id(" + idx.object_type + "_id::value_base_t(" + target_id + ".index()))";
+				else
+					params += in_obj.name + ".m_" + idx.property_name + ".vptr()[" + target_id + ".index()]";
+			}
+			if(needs_adjust) {
+				o + substitute{ "params", params } +substitute{ "ckname", cc.name };
+				o + substitute{ "target_id", target_id };
+				o + substitute{ "index_in", in_obj.name };
+				o + "@index_in@.hashm_@ckname@.erase(@index_in@.to_@ckname@_keydata(@params@));";
+			}
+		}
+	}
+}
+
 basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def const& cob) {
 	o + substitute{ "obj", cob.name };
 	o + heading{ "container compactable delete for @obj@" };
@@ -904,35 +959,43 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 			} else if(cr.linked_as->index == index_type::at_most_one) {
 				o + "@obj@_remove_@rel@_as_@r_prop@(id_removed);";
 				o + "if(auto bk = @rel@.m_link_back_@r_prop@.vptr()[last_id.index()]; bool(bk))" + block{
+					if(cr.linked_as->is_covered_by_composite_key)
+						make_composite_key_internal_delete(o, *cr.rel_ptr, *cr.linked_as, "bk");
 					if(cr.linked_as->multiplicity > 1) {
 						for(int32_t j = 0; j < cr.linked_as->multiplicity; ++j) {
 							o + substitute{ "i", std::to_string(j) };
 							o + "if(@rel@.m_@r_prop@.vptr()[bk.index()][@i@] == last_id) @rel@.m_@r_prop@.vptr()[bk.index()][@i@] = id_removed;";
-							if(cr.linked_as->is_covered_by_composite_key) {
-								o + "std::sort(@rel@.m_@r_prop@.vptr()[bk.index()].begin(), @rel@.m_@r_prop@.vptr()[bk.index()].end(), [](@obj@_id l, @obj@_id r){ return l.value < r.value; });";
-							}
+						}
+						if(cr.linked_as->is_covered_by_composite_key) {
+							o + "std::sort(@rel@.m_@r_prop@.vptr()[bk.index()].begin(), @rel@.m_@r_prop@.vptr()[bk.index()].end(), [](@obj@_id l, @obj@_id r){ return l.value < r.value; });";
 						}
 					} else {
 						o + "@rel@.m_@r_prop@.vptr()[bk.index()] = id_removed;";
 					}
+					if(cr.linked_as->is_covered_by_composite_key)
+						make_composite_key_internal_assign(o, *cr.rel_ptr, *cr.linked_as, "bk");
 				};
 				move_value_from_back(o, cr.relation_name, std::string("link_back_") + cr.linked_as->property_name,
 					"last_id", "id_removed", cr.relation_name + "_id()", cob.is_expandable, 1);
 			} else if(cr.linked_as->index == index_type::many) {
 				o + "@obj@_remove_all_@rel@_as_@r_prop@(id_removed);";
 				o + "@obj@_for_each_@rel@_as_@r_prop@(last_id, "
-					"[t = this, id_removed, last_id](@rel@_id i)" + block{
+					"[this, id_removed, last_id](@rel@_id i)" + block{
+						if(cr.linked_as->is_covered_by_composite_key)
+							make_composite_key_internal_delete(o, *cr.rel_ptr, *cr.linked_as, "i");
 						if(cr.linked_as->multiplicity > 1) {
 							for(int32_t j = 0; j < cr.linked_as->multiplicity; ++j) {
 								o + substitute{ "i", std::to_string(j) };
-								o + "if(t->@rel@.m_@r_prop@.vptr()[i.index()][@i@] == last_id) t->@rel@.m_@r_prop@.vptr()[i.index()][@i@] = id_removed;";
-								if(cr.linked_as->is_covered_by_composite_key) {
-									o + "std::sort(t->@rel@.m_@r_prop@.vptr()[i.index()].begin(), t->@rel@.m_@r_prop@.vptr()[i.index()].end(), [](@obj@_id l, @obj@_id r){ return l.value < r.value; });";
-								}
+								o + "if(@rel@.m_@r_prop@.vptr()[i.index()][@i@] == last_id) @rel@.m_@r_prop@.vptr()[i.index()][@i@] = id_removed;";
+							}
+							if(cr.linked_as->is_covered_by_composite_key) {
+								o + "std::sort(@rel@.m_@r_prop@.vptr()[i.index()].begin(), @rel@.m_@r_prop@.vptr()[i.index()].end(), [](@obj@_id l, @obj@_id r){ return l.value < r.value; });";
 							}
 						} else {
-							o + "t->@rel@.m_@r_prop@.vptr()[i.index()] = id_removed;";
+							o + "@rel@.m_@r_prop@.vptr()[i.index()] = id_removed;";
 						}
+						if(cr.linked_as->is_covered_by_composite_key)
+							make_composite_key_internal_assign(o, *cr.rel_ptr, *cr.linked_as, "i");
 				} +append{ ");" };
 
 				if(cr.linked_as->ltype == list_type::list) {
@@ -1524,8 +1587,8 @@ basic_builder& make_relation_try_create(basic_builder& o, relationship_object_de
 						o + "if(bool(@prop@_p@i@) && bool(@obj@.m_link_back_@prop@.vptr()[@prop@_p@i@.index()])) return @obj@_id();";
 					}
 					if(iob.is_distinct) {
-						o + substitute{ "j", std::to_string(i) };
 						for(int32_t j = i + 1; j < iob.multiplicity; ++j) {
+							o + substitute{ "j", std::to_string(j) };
 							o + "if(bool(@prop@_p@i@) && @prop@_p@i@ == @prop@_p@j@) return @obj@_id();";
 						}
 					}

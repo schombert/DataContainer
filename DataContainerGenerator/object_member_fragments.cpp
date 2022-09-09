@@ -253,7 +253,7 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 					o + "DCON_RELEASE_INLINE @type@ const& @obj@_get_@prop@(@obj@_id id) const noexcept" + block{
 						o + "return @obj@.m_@prop@.vptr()[id.index()];";
 					};
-					if(prop.protection != protection_type::read_only) {
+					if(prop.protection != protection_type::read_only && !prop.hook_set) {
 						o + "DCON_RELEASE_INLINE @type@& @obj@_get_@prop@(@obj@_id id) noexcept" + block{
 							o + "return @obj@.m_@prop@.vptr()[id.index()];";
 						};
@@ -285,7 +285,7 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 						o + "DCON_RELEASE_INLINE @type@ @namesp@get_@prop@() const noexcept" + block{
 							o + "return @type@(container, container.@obj@_get_@prop@(id));";
 						};
-					else if(const_mode || prop.protection == protection_type::read_only)
+					else if(const_mode || prop.protection == protection_type::read_only || prop.hook_set)
 						o + "DCON_RELEASE_INLINE @type@ @namesp@get_@prop@() const noexcept" + block{
 							o + "return container.@obj@_get_@prop@(id);";
 						};
@@ -300,7 +300,7 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 					o + "DCON_RELEASE_INLINE @type@ const& @obj@_get_@prop@(@obj@_id id) const noexcept" + block{
 						o + "return @obj@.m_@prop@.vptr()[id.index()];";
 					};
-					if(prop.protection != protection_type::read_only) {
+					if(prop.protection != protection_type::read_only && !prop.hook_set) {
 						o + "DCON_RELEASE_INLINE @type@& @obj@_get_@prop@(@obj@_id id) noexcept" + block{
 							o + "return @obj@.m_@prop@.vptr()[id.index()];";
 						};
@@ -312,7 +312,7 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 					}
 
 				} else {
-					if(const_mode || prop.protection == protection_type::read_only) {
+					if(const_mode || prop.protection == protection_type::read_only || prop.hook_set) {
 						o + "DCON_RELEASE_INLINE @type@ const& @namesp@get_@prop@() const noexcept" + block{
 							o + "return container.@obj@_get_@prop@(id);";
 						};
@@ -328,7 +328,7 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 					o + "DCON_RELEASE_INLINE @type@ const& @obj@_get_@prop@(@obj@_id id) const noexcept" + block{
 						o + "return @obj@.m_@prop@.vptr()[id.index()];";
 					};
-					if(prop.protection != protection_type::read_only) {
+					if(prop.protection != protection_type::read_only && !prop.hook_set) {
 						o + "DCON_RELEASE_INLINE @type@& @obj@_get_@prop@(@obj@_id id) noexcept" + block{
 							o + "return @obj@.m_@prop@.vptr()[id.index()];";
 						};
@@ -338,7 +338,7 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 						o + "friend @obj@_const_fat_id::get_@prop@() const noexcept;";
 					}
 				} else {
-					if(const_mode || prop.protection == protection_type::read_only)
+					if(const_mode || prop.protection == protection_type::read_only || prop.hook_set)
 						o + "DCON_RELEASE_INLINE @type@ const& @namesp@get_@prop@() const noexcept" + block{
 							o + "return container.@obj@_get_@prop@(id);";
 						};
@@ -389,7 +389,7 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 					o + "DCON_RELEASE_INLINE @type@ const& @obj@_get_@prop@(@obj@_id id, @index_type@ n) const noexcept" + block{
 						o + "return @obj@.m_@prop@.vptr(dcon::get_index(n))[id.index()];";
 					};
-					if(prop.protection != protection_type::read_only) {
+					if(prop.protection != protection_type::read_only && !prop.hook_set) {
 						o + "DCON_RELEASE_INLINE @type@& @obj@_get_@prop@(@obj@_id id, @index_type@ n) noexcept" + block{
 							o + "return @obj@.m_@prop@.vptr(dcon::get_index(n))[id.index()];";
 						};
@@ -405,7 +405,7 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 						o + "friend uint32_t @obj@_const_fat_id::get_@prop@_size( ) const noexcept;";
 					}
 				} else {
-					if(const_mode || prop.protection == protection_type::read_only)
+					if(const_mode || prop.protection == protection_type::read_only || prop.hook_set)
 						o + "DCON_RELEASE_INLINE @type@ const& @namesp@get_@prop@(@index_type@ i) const noexcept" + block {
 							o + "return container.@obj@_get_@prop@(id, i);";
 						};
@@ -423,7 +423,7 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 					o + "DCON_RELEASE_INLINE @type@ const& @obj@_get_@prop@(@obj@_id id, @index_type@ n) const noexcept" + block{
 						o + "return @obj@.m_@prop@.vptr(dcon::get_index(n))[id.index()];";
 					};
-					if(prop.protection != protection_type::read_only) {
+					if(prop.protection != protection_type::read_only && !prop.hook_set) {
 						o + "DCON_RELEASE_INLINE @type@& @obj@_get_@prop@(@obj@_id id, @index_type@ n) noexcept" + block{
 							o + "return @obj@.m_@prop@.vptr(dcon::get_index(n))[id.index()];";
 						};
@@ -461,7 +461,7 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 						o + "DCON_RELEASE_INLINE @type@ @namesp@get_@prop@(@index_type@ i) const noexcept" + block{
 							o + "return @type@(container, container.@obj@_get_@prop@(id, i));";
 						};
-					else if(const_mode || prop.protection == protection_type::read_only)
+					else if(const_mode || prop.protection == protection_type::read_only || prop.hook_set)
 						o + "DCON_RELEASE_INLINE @type@ @namesp@get_@prop@(@index_type@ i) const noexcept" + block{
 							o + "return container.@obj@_get_@prop@(id, i);";
 						};
@@ -1499,8 +1499,8 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 						o + "if(@obj@.m_@prop@.vptr()[id.index()][@i@] == oldvalue)" + block{
 							o + "return @obj@_try_set_@prop@(id, @i@, newvalue);";
 						};
-						o + "return false;";
 					}
+					o + "return false;";
 				};
 			}
 
@@ -1753,8 +1753,8 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 						o + "if(@obj@.m_@prop@.vptr()[id.index()][@i@] == oldvalue)" + block{
 							o + "return @obj@_try_set_@prop@(id, @i@, newvalue);";
 						};
-						o + "return false;";
 					}
+					o + "return false;";
 				};
 			}
 			if(i.protection == protection_type::read_only || i.protection == protection_type::hidden)
@@ -1910,8 +1910,8 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 						o + "if(@obj@.m_@prop@.vptr()[id.index()][@i@] == oldvalue)" + block{
 							o + "return @obj@_try_set_@prop@(id, @i@, newvalue);";
 						};
-						o + "return false;";
 					}
+					o + "return false;";
 				};
 			}
 

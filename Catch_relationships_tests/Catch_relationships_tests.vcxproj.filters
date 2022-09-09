@@ -20,11 +20,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="relation.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="relation.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="relation.txt" />
   </ItemGroup>
 </Project>

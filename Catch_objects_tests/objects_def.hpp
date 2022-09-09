@@ -97,14 +97,14 @@ namespace dcon {
 		public:
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint16_t value = 0;
-	
+		
 		constexpr thingy_id() noexcept = default;
 		explicit constexpr thingy_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr thingy_id(thingy_id const& v) noexcept = default;
 		constexpr thingy_id(thingy_id&& v) noexcept = default;
-	
+		
 		thingy_id& operator=(thingy_id const& v) noexcept = default;
 		thingy_id& operator=(thingy_id&& v) noexcept = default;
 		constexpr bool operator==(thingy_id v) const noexcept { return value == v.value; }
@@ -130,14 +130,14 @@ namespace dcon {
 		public:
 		using value_base_t = uint32_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint32_t value = 0;
-	
+		
 		constexpr thingy2_id() noexcept = default;
 		explicit constexpr thingy2_id(uint32_t v) noexcept : value(v + 1) {}
 		constexpr thingy2_id(thingy2_id const& v) noexcept = default;
 		constexpr thingy2_id(thingy2_id&& v) noexcept = default;
-	
+		
 		thingy2_id& operator=(thingy2_id const& v) noexcept = default;
 		thingy2_id& operator=(thingy2_id&& v) noexcept = default;
 		constexpr bool operator==(thingy2_id v) const noexcept { return value == v.value; }
@@ -163,14 +163,14 @@ namespace dcon {
 		public:
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint16_t value = 0;
-	
+		
 		constexpr dummy_rel_id() noexcept = default;
 		explicit constexpr dummy_rel_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr dummy_rel_id(dummy_rel_id const& v) noexcept = default;
 		constexpr dummy_rel_id(dummy_rel_id&& v) noexcept = default;
-	
+		
 		dummy_rel_id& operator=(dummy_rel_id const& v) noexcept = default;
 		dummy_rel_id& operator=(dummy_rel_id&& v) noexcept = default;
 		constexpr bool operator==(dummy_rel_id v) const noexcept { return value == v.value; }
@@ -196,14 +196,14 @@ namespace dcon {
 		public:
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint16_t value = 0;
-	
+		
 		constexpr oop_thingy_id() noexcept = default;
 		explicit constexpr oop_thingy_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr oop_thingy_id(oop_thingy_id const& v) noexcept = default;
 		constexpr oop_thingy_id(oop_thingy_id&& v) noexcept = default;
-	
+		
 		oop_thingy_id& operator=(oop_thingy_id const& v) noexcept = default;
 		oop_thingy_id& operator=(oop_thingy_id&& v) noexcept = default;
 		constexpr bool operator==(oop_thingy_id v) const noexcept { return value == v.value; }
@@ -229,14 +229,14 @@ namespace dcon {
 		public:
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint16_t value = 0;
-	
+		
 		constexpr dummy_rel_B_id() noexcept = default;
 		explicit constexpr dummy_rel_B_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr dummy_rel_B_id(dummy_rel_B_id const& v) noexcept = default;
 		constexpr dummy_rel_B_id(dummy_rel_B_id&& v) noexcept = default;
-	
+		
 		dummy_rel_B_id& operator=(dummy_rel_B_id const& v) noexcept = default;
 		dummy_rel_B_id& operator=(dummy_rel_B_id&& v) noexcept = default;
 		constexpr bool operator==(dummy_rel_B_id v) const noexcept { return value == v.value; }
@@ -734,7 +734,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE thingy2_fat_id get_right_from_dummy_rel() const noexcept;
 		DCON_RELEASE_INLINE void set_right_from_dummy_rel(thingy2_id v) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE thingy_fat_id fatten(data_container& c, thingy_id id) noexcept {
 		return thingy_fat_id(c, id);
@@ -803,7 +803,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE dummy_rel_const_fat_id get_dummy_rel() const noexcept;
 		DCON_RELEASE_INLINE thingy2_const_fat_id get_right_from_dummy_rel() const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(thingy_fat_id const& l, thingy_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -881,7 +881,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE thingy_fat_id get_left_from_dummy_rel() const noexcept;
 		DCON_RELEASE_INLINE void set_left_from_dummy_rel(thingy_id v) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE thingy2_fat_id fatten(data_container& c, thingy2_id id) noexcept {
 		return thingy2_fat_id(c, id);
@@ -949,7 +949,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE dummy_rel_const_fat_id get_dummy_rel() const noexcept;
 		DCON_RELEASE_INLINE thingy_const_fat_id get_left_from_dummy_rel() const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(thingy2_fat_id const& l, thingy2_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -1002,7 +1002,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE void set_right(thingy2_id val) const noexcept;
 		DCON_RELEASE_INLINE bool try_set_right(thingy2_id val) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE dummy_rel_fat_id fatten(data_container& c, dummy_rel_id id) noexcept {
 		return dummy_rel_fat_id(c, id);
@@ -1057,7 +1057,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE thingy_const_fat_id get_left() const noexcept;
 		DCON_RELEASE_INLINE thingy2_const_fat_id get_right() const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(dummy_rel_fat_id const& l, dummy_rel_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -1120,7 +1120,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 		void reset_internal() ;
 		inline int get_a_value(float offset);
-	
+		
 	};
 	DCON_RELEASE_INLINE oop_thingy_fat_id fatten(data_container& c, oop_thingy_id id) noexcept {
 		return oop_thingy_fat_id(c, id);
@@ -1184,7 +1184,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE dummy_rel_B_const_fat_id get_dummy_rel_B_as_right() const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 		int get_a_value(float offset) ;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(oop_thingy_fat_id const& l, oop_thingy_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -1237,7 +1237,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE void set_right(oop_thingy_id val) const noexcept;
 		DCON_RELEASE_INLINE bool try_set_right(oop_thingy_id val) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE dummy_rel_B_fat_id fatten(data_container& c, dummy_rel_B_id id) noexcept {
 		return dummy_rel_B_fat_id(c, id);
@@ -1292,7 +1292,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE oop_thingy_const_fat_id get_left() const noexcept;
 		DCON_RELEASE_INLINE oop_thingy_const_fat_id get_right() const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(dummy_rel_B_fat_id const& l, dummy_rel_B_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -2811,7 +2811,7 @@ namespace dcon {
 					total_size += sizeof(uint16_t);
 					total_size += sizeof(int16_t) * (rng.second - rng.first);
 				} );
-		 {
+				 {
 					total_size += 8;
 					dcon::record_header iheader(0, "stable_mk_2_tag", "thingy", "pooled_v");
 					total_size += iheader.serialize_size();
@@ -2857,7 +2857,7 @@ namespace dcon {
 					total_size += sizeof(uint16_t);
 					total_size += sizeof(int16_t) * (rng.second - rng.first);
 				} );
-		 {
+				 {
 					total_size += 8;
 					dcon::record_header iheader(0, "stable_mk_2_tag", "thingy2", "pooled_v");
 					total_size += iheader.serialize_size();
@@ -3086,7 +3086,7 @@ namespace dcon {
 				header.serialize(output_buffer);
 				*(reinterpret_cast<uint32_t*>(output_buffer)) = dummy_rel.size_used;
 				output_buffer += sizeof(uint32_t);
-		 {
+				 {
 					dcon::record_header iheader(sizeof(thingy2_id) * dummy_rel.size_used, "uint32_t", "dummy_rel", "right");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<thingy2_id*>(output_buffer), dummy_rel.m_right.vptr(), sizeof(thingy2_id) * dummy_rel.size_used);
@@ -3100,7 +3100,7 @@ namespace dcon {
 				header.serialize(output_buffer);
 				*(reinterpret_cast<uint32_t*>(output_buffer)) = dummy_rel_B.size_used;
 				output_buffer += sizeof(uint32_t);
-		 {
+				 {
 					dcon::record_header iheader(sizeof(oop_thingy_id) * dummy_rel_B.size_used, "uint16_t", "dummy_rel_B", "left");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<oop_thingy_id*>(output_buffer), dummy_rel_B.m_left.vptr(), sizeof(oop_thingy_id) * dummy_rel_B.size_used);

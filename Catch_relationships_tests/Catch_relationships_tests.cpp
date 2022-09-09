@@ -516,3 +516,147 @@ TEST_CASE("optional behavior (vs non optional)", "[relationships_tests]") {
 	ptr->delete_thingyB(p4);
 	REQUIRE(r1.is_valid());
 }
+
+TEST_CASE("undirected graph like", "[relationships_tests]") {
+	auto ptr = std::make_unique< dcon::data_container >();
+
+	auto o1 = fatten(*ptr, ptr->create_thingyA());
+	auto o2 = fatten(*ptr, ptr->create_thingyA());
+	auto o3 = fatten(*ptr, ptr->create_thingyA());
+	auto o4 = fatten(*ptr, ptr->create_thingyA());
+	auto o5 = fatten(*ptr, ptr->create_thingyA());
+	auto o6 = fatten(*ptr, ptr->create_thingyA());
+	auto o7 = fatten(*ptr, ptr->create_thingyA());
+	auto o8 = fatten(*ptr, ptr->create_thingyA());
+
+	auto r1 = fatten(*ptr, ptr->try_create_relate_as_multipleA(o4, o2));
+	REQUIRE(bool(r1));
+
+	auto r2 = fatten(*ptr, ptr->try_create_relate_as_multipleA(o2, o4));
+	REQUIRE(!bool(r2));
+
+	REQUIRE(r1 == ptr->get_relate_as_multipleA_by_joint(o2, o4));
+	r1.set_left(0, o5);
+
+	REQUIRE(r1.has_left(o4));
+
+	REQUIRE(r1 == ptr->get_relate_as_multipleA_by_joint(o4, o5));
+
+	REQUIRE(ptr->try_create_relate_as_multipleA(o4, o2));
+	REQUIRE(ptr->try_create_relate_as_multipleA(o7, o3));
+	REQUIRE(ptr->try_create_relate_as_multipleA(o7, o2));
+	REQUIRE(ptr->try_create_relate_as_multipleA(o5, o1));
+	REQUIRE(ptr->try_create_relate_as_multipleA(o7, o7));
+
+	bool found = false;
+	o5.for_each_relate_as_multipleA([&found, &r1](auto id) { found = found || id == r1; });
+	REQUIRE(found);
+
+	ptr->delete_thingyA(o5);
+	REQUIRE(!r1.is_valid());
+
+	REQUIRE(bool(ptr->get_relate_as_multipleA_by_joint(o2, o4)));
+	REQUIRE(!bool(ptr->get_relate_as_multipleA_by_joint(o5, o1)));
+}
+
+TEST_CASE("two unique like", "[relationships_tests]") {
+	auto ptr = std::make_unique< dcon::data_container >();
+
+	auto o1 = fatten(*ptr, ptr->create_thingyA());
+	auto o2 = fatten(*ptr, ptr->create_thingyA());
+	auto o3 = fatten(*ptr, ptr->create_thingyA());
+	auto o4 = fatten(*ptr, ptr->create_thingyA());
+	auto o5 = fatten(*ptr, ptr->create_thingyA());
+	auto o6 = fatten(*ptr, ptr->create_thingyA());
+	auto o7 = fatten(*ptr, ptr->create_thingyA());
+	auto o8 = fatten(*ptr, ptr->create_thingyA());
+
+	auto r1 = fatten(*ptr, ptr->try_create_relate_as_multipleB(o4, o2));
+	REQUIRE(bool(r1));
+
+	auto r2 = fatten(*ptr, ptr->try_create_relate_as_multipleB(o2, o4));
+	REQUIRE(!bool(r2));
+
+	r1.set_left(0, o5);
+	REQUIRE(o5.get_relate_as_multipleB() == r1);
+
+	REQUIRE(r1.has_left(o2));
+	REQUIRE(r1.has_left(o5));
+
+	REQUIRE(!ptr->try_create_relate_as_multipleB(o4, o2));
+	REQUIRE(ptr->try_create_relate_as_multipleB(o7, o3));
+	REQUIRE(!ptr->try_create_relate_as_multipleB(o7, o2));
+	REQUIRE(!ptr->try_create_relate_as_multipleB(o5, o1));
+	REQUIRE(!ptr->try_create_relate_as_multipleB(o7, o7));
+
+	ptr->delete_thingyA(o5);
+	REQUIRE(!r1.is_valid());
+
+	REQUIRE(ptr->try_create_relate_as_multipleB(o4, o2));
+}
+
+TEST_CASE("undirected non reflexive graph like", "[relationships_tests]") {
+	auto ptr = std::make_unique< dcon::data_container >();
+
+	auto o1 = fatten(*ptr, ptr->create_thingyA());
+	auto o2 = fatten(*ptr, ptr->create_thingyA());
+	auto o3 = fatten(*ptr, ptr->create_thingyA());
+	auto o4 = fatten(*ptr, ptr->create_thingyA());
+	auto o5 = fatten(*ptr, ptr->create_thingyA());
+	auto o6 = fatten(*ptr, ptr->create_thingyA());
+	auto o7 = fatten(*ptr, ptr->create_thingyA());
+	auto o8 = fatten(*ptr, ptr->create_thingyA());
+
+	auto r1 = fatten(*ptr, ptr->try_create_relate_as_multipleC(o4, o2));
+	REQUIRE(bool(r1));
+
+	auto r2 = fatten(*ptr, ptr->try_create_relate_as_multipleC(o2, o4));
+	REQUIRE(bool(r2));
+
+	r1.set_left(0, o5);
+
+	REQUIRE(r1.has_left(o2));
+
+	REQUIRE(ptr->try_create_relate_as_multipleC(o4, o2));
+	REQUIRE(ptr->try_create_relate_as_multipleC(o7, o3));
+	REQUIRE(ptr->try_create_relate_as_multipleC(o7, o2));
+	REQUIRE(ptr->try_create_relate_as_multipleC(o5, o1));
+	REQUIRE(!ptr->try_create_relate_as_multipleC(o7, o7));
+
+	ptr->delete_thingyA(o5);
+	REQUIRE(!r1.is_valid());
+
+}
+
+TEST_CASE("undirected unindexed non reflexive graph like", "[relationships_tests]") {
+	auto ptr = std::make_unique< dcon::data_container >();
+
+	auto o1 = fatten(*ptr, ptr->create_thingyA());
+	auto o2 = fatten(*ptr, ptr->create_thingyA());
+	auto o3 = fatten(*ptr, ptr->create_thingyA());
+	auto o4 = fatten(*ptr, ptr->create_thingyA());
+	auto o5 = fatten(*ptr, ptr->create_thingyA());
+	auto o6 = fatten(*ptr, ptr->create_thingyA());
+	auto o7 = fatten(*ptr, ptr->create_thingyA());
+	auto o8 = fatten(*ptr, ptr->create_thingyA());
+
+	auto r1 = fatten(*ptr, ptr->try_create_relate_as_multipleD(o4, o2));
+	REQUIRE(bool(r1));
+
+	auto r2 = fatten(*ptr, ptr->try_create_relate_as_multipleD(o2, o4));
+	REQUIRE(bool(r2));
+
+	r1.set_left(0, o5);
+
+	REQUIRE(r1.has_left(o2));
+
+	REQUIRE(ptr->try_create_relate_as_multipleD(o4, o2));
+	REQUIRE(ptr->try_create_relate_as_multipleD(o7, o3));
+	REQUIRE(ptr->try_create_relate_as_multipleD(o7, o2));
+	REQUIRE(ptr->try_create_relate_as_multipleD(o5, o1));
+	REQUIRE(ptr->try_create_relate_as_multipleD(o7, o7));
+
+	ptr->delete_thingyA(o5);
+	REQUIRE(r1.is_valid());
+
+}

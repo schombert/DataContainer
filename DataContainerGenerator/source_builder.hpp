@@ -82,7 +82,7 @@ public:
 		return trailing_semicolon_state{ *this };
 	}
 	basic_builder&  operator+(line_break const&) {
-		lines.push_back("");
+		lines.push_back(std::string(extra_tabs, '\t'));
 		return *this;
 	}
 	

@@ -130,14 +130,14 @@ namespace dcon {
 		public:
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint16_t value = 0;
-	
+		
 		constexpr thingyA_id() noexcept = default;
 		explicit constexpr thingyA_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr thingyA_id(thingyA_id const& v) noexcept = default;
 		constexpr thingyA_id(thingyA_id&& v) noexcept = default;
-	
+		
 		thingyA_id& operator=(thingyA_id const& v) noexcept = default;
 		thingyA_id& operator=(thingyA_id&& v) noexcept = default;
 		constexpr bool operator==(thingyA_id v) const noexcept { return value == v.value; }
@@ -163,14 +163,14 @@ namespace dcon {
 		public:
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint16_t value = 0;
-	
+		
 		constexpr thingyB_id() noexcept = default;
 		explicit constexpr thingyB_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr thingyB_id(thingyB_id const& v) noexcept = default;
 		constexpr thingyB_id(thingyB_id&& v) noexcept = default;
-	
+		
 		thingyB_id& operator=(thingyB_id const& v) noexcept = default;
 		thingyB_id& operator=(thingyB_id&& v) noexcept = default;
 		constexpr bool operator==(thingyB_id v) const noexcept { return value == v.value; }
@@ -196,14 +196,14 @@ namespace dcon {
 		public:
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint16_t value = 0;
-	
+		
 		constexpr relate_same_id() noexcept = default;
 		explicit constexpr relate_same_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr relate_same_id(relate_same_id const& v) noexcept = default;
 		constexpr relate_same_id(relate_same_id&& v) noexcept = default;
-	
+		
 		relate_same_id& operator=(relate_same_id const& v) noexcept = default;
 		relate_same_id& operator=(relate_same_id&& v) noexcept = default;
 		constexpr bool operator==(relate_same_id v) const noexcept { return value == v.value; }
@@ -229,14 +229,14 @@ namespace dcon {
 		public:
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint16_t value = 0;
-	
+		
 		constexpr relate_in_array_id() noexcept = default;
 		explicit constexpr relate_in_array_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr relate_in_array_id(relate_in_array_id const& v) noexcept = default;
 		constexpr relate_in_array_id(relate_in_array_id&& v) noexcept = default;
-	
+		
 		relate_in_array_id& operator=(relate_in_array_id const& v) noexcept = default;
 		relate_in_array_id& operator=(relate_in_array_id&& v) noexcept = default;
 		constexpr bool operator==(relate_in_array_id v) const noexcept { return value == v.value; }
@@ -262,14 +262,14 @@ namespace dcon {
 		public:
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint16_t value = 0;
-	
+		
 		constexpr relate_in_list_id() noexcept = default;
 		explicit constexpr relate_in_list_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr relate_in_list_id(relate_in_list_id const& v) noexcept = default;
 		constexpr relate_in_list_id(relate_in_list_id&& v) noexcept = default;
-	
+		
 		relate_in_list_id& operator=(relate_in_list_id const& v) noexcept = default;
 		relate_in_list_id& operator=(relate_in_list_id&& v) noexcept = default;
 		constexpr bool operator==(relate_in_list_id v) const noexcept { return value == v.value; }
@@ -295,14 +295,14 @@ namespace dcon {
 		public:
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint16_t value = 0;
-	
+		
 		constexpr many_many_id() noexcept = default;
 		explicit constexpr many_many_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr many_many_id(many_many_id const& v) noexcept = default;
 		constexpr many_many_id(many_many_id&& v) noexcept = default;
-	
+		
 		many_many_id& operator=(many_many_id const& v) noexcept = default;
 		many_many_id& operator=(many_many_id&& v) noexcept = default;
 		constexpr bool operator==(many_many_id v) const noexcept { return value == v.value; }
@@ -328,14 +328,14 @@ namespace dcon {
 		public:
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint16_t value = 0;
-	
+		
 		constexpr relate_as_optional_id() noexcept = default;
 		explicit constexpr relate_as_optional_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr relate_as_optional_id(relate_as_optional_id const& v) noexcept = default;
 		constexpr relate_as_optional_id(relate_as_optional_id&& v) noexcept = default;
-	
+		
 		relate_as_optional_id& operator=(relate_as_optional_id const& v) noexcept = default;
 		relate_as_optional_id& operator=(relate_as_optional_id&& v) noexcept = default;
 		constexpr bool operator==(relate_as_optional_id v) const noexcept { return value == v.value; }
@@ -361,14 +361,14 @@ namespace dcon {
 		public:
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint16_t value = 0;
-	
+		
 		constexpr relate_as_non_optional_id() noexcept = default;
 		explicit constexpr relate_as_non_optional_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr relate_as_non_optional_id(relate_as_non_optional_id const& v) noexcept = default;
 		constexpr relate_as_non_optional_id(relate_as_non_optional_id&& v) noexcept = default;
-	
+		
 		relate_as_non_optional_id& operator=(relate_as_non_optional_id const& v) noexcept = default;
 		relate_as_non_optional_id& operator=(relate_as_non_optional_id&& v) noexcept = default;
 		constexpr bool operator==(relate_as_non_optional_id v) const noexcept { return value == v.value; }
@@ -394,14 +394,14 @@ namespace dcon {
 		public:
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint16_t value = 0;
-	
+		
 		constexpr relate_as_multipleA_id() noexcept = default;
 		explicit constexpr relate_as_multipleA_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr relate_as_multipleA_id(relate_as_multipleA_id const& v) noexcept = default;
 		constexpr relate_as_multipleA_id(relate_as_multipleA_id&& v) noexcept = default;
-	
+		
 		relate_as_multipleA_id& operator=(relate_as_multipleA_id const& v) noexcept = default;
 		relate_as_multipleA_id& operator=(relate_as_multipleA_id&& v) noexcept = default;
 		constexpr bool operator==(relate_as_multipleA_id v) const noexcept { return value == v.value; }
@@ -427,14 +427,14 @@ namespace dcon {
 		public:
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint16_t value = 0;
-	
+		
 		constexpr relate_as_multipleB_id() noexcept = default;
 		explicit constexpr relate_as_multipleB_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr relate_as_multipleB_id(relate_as_multipleB_id const& v) noexcept = default;
 		constexpr relate_as_multipleB_id(relate_as_multipleB_id&& v) noexcept = default;
-	
+		
 		relate_as_multipleB_id& operator=(relate_as_multipleB_id const& v) noexcept = default;
 		relate_as_multipleB_id& operator=(relate_as_multipleB_id&& v) noexcept = default;
 		constexpr bool operator==(relate_as_multipleB_id v) const noexcept { return value == v.value; }
@@ -460,14 +460,14 @@ namespace dcon {
 		public:
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint16_t value = 0;
-	
+		
 		constexpr relate_as_multipleC_id() noexcept = default;
 		explicit constexpr relate_as_multipleC_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr relate_as_multipleC_id(relate_as_multipleC_id const& v) noexcept = default;
 		constexpr relate_as_multipleC_id(relate_as_multipleC_id&& v) noexcept = default;
-	
+		
 		relate_as_multipleC_id& operator=(relate_as_multipleC_id const& v) noexcept = default;
 		relate_as_multipleC_id& operator=(relate_as_multipleC_id&& v) noexcept = default;
 		constexpr bool operator==(relate_as_multipleC_id v) const noexcept { return value == v.value; }
@@ -493,14 +493,14 @@ namespace dcon {
 		public:
 		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
-	
+		
 		uint16_t value = 0;
-	
+		
 		constexpr relate_as_multipleD_id() noexcept = default;
 		explicit constexpr relate_as_multipleD_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr relate_as_multipleD_id(relate_as_multipleD_id const& v) noexcept = default;
 		constexpr relate_as_multipleD_id(relate_as_multipleD_id&& v) noexcept = default;
-	
+		
 		relate_as_multipleD_id& operator=(relate_as_multipleD_id const& v) noexcept = default;
 		relate_as_multipleD_id& operator=(relate_as_multipleD_id&& v) noexcept = default;
 		constexpr bool operator==(relate_as_multipleD_id v) const noexcept { return value == v.value; }
@@ -1345,7 +1345,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE std::pair<relate_as_multipleC_id const*, relate_as_multipleC_id const*> range_of_relate_as_multipleC() const;
 		DCON_RELEASE_INLINE void remove_all_relate_as_multipleC() const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE thingyA_fat_id fatten(data_container& c, thingyA_id id) noexcept {
 		return thingyA_fat_id(c, id);
@@ -1438,7 +1438,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE void for_each_relate_as_multipleC(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<relate_as_multipleC_id const*, relate_as_multipleC_id const*> range_of_relate_as_multipleC() const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(thingyA_fat_id const& l, thingyA_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -1529,7 +1529,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE void for_each_left_from_relate_as_non_optional(T&& func) const;
 		DCON_RELEASE_INLINE bool has_left_from_relate_as_non_optional(thingyA_id target) const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE thingyB_fat_id fatten(data_container& c, thingyB_id id) noexcept {
 		return thingyB_fat_id(c, id);
@@ -1617,7 +1617,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE void for_each_left_from_relate_as_non_optional(T&& func) const;
 		DCON_RELEASE_INLINE bool has_left_from_relate_as_non_optional(thingyA_id target) const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(thingyB_fat_id const& l, thingyB_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -1670,7 +1670,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE void set_right(thingyA_id val) const noexcept;
 		DCON_RELEASE_INLINE bool try_set_right(thingyA_id val) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE relate_same_fat_id fatten(data_container& c, relate_same_id id) noexcept {
 		return relate_same_fat_id(c, id);
@@ -1725,7 +1725,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE thingyA_const_fat_id get_left() const noexcept;
 		DCON_RELEASE_INLINE thingyA_const_fat_id get_right() const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(relate_same_fat_id const& l, relate_same_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -1778,7 +1778,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE void set_right(thingyB_id val) const noexcept;
 		DCON_RELEASE_INLINE bool try_set_right(thingyB_id val) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE relate_in_array_fat_id fatten(data_container& c, relate_in_array_id id) noexcept {
 		return relate_in_array_fat_id(c, id);
@@ -1833,7 +1833,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE thingyA_const_fat_id get_left() const noexcept;
 		DCON_RELEASE_INLINE thingyB_const_fat_id get_right() const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(relate_in_array_fat_id const& l, relate_in_array_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -1886,7 +1886,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE void set_right(thingyB_id val) const noexcept;
 		DCON_RELEASE_INLINE bool try_set_right(thingyB_id val) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE relate_in_list_fat_id fatten(data_container& c, relate_in_list_id id) noexcept {
 		return relate_in_list_fat_id(c, id);
@@ -1941,7 +1941,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE thingyA_const_fat_id get_left() const noexcept;
 		DCON_RELEASE_INLINE thingyB_const_fat_id get_right() const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(relate_in_list_fat_id const& l, relate_in_list_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -2009,7 +2009,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE void set_ignore(thingyA_id val) const noexcept;
 		DCON_RELEASE_INLINE bool try_set_ignore(thingyA_id val) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE many_many_fat_id fatten(data_container& c, many_many_id id) noexcept {
 		return many_many_fat_id(c, id);
@@ -2069,7 +2069,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE thingyA_const_fat_id get_F() const noexcept;
 		DCON_RELEASE_INLINE thingyA_const_fat_id get_ignore() const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(many_many_fat_id const& l, many_many_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -2122,7 +2122,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE void set_right(thingyB_id val) const noexcept;
 		DCON_RELEASE_INLINE bool try_set_right(thingyB_id val) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE relate_as_optional_fat_id fatten(data_container& c, relate_as_optional_id id) noexcept {
 		return relate_as_optional_fat_id(c, id);
@@ -2177,7 +2177,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE thingyA_const_fat_id get_left() const noexcept;
 		DCON_RELEASE_INLINE thingyB_const_fat_id get_right() const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(relate_as_optional_fat_id const& l, relate_as_optional_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -2230,7 +2230,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE void set_right(thingyB_id val) const noexcept;
 		DCON_RELEASE_INLINE bool try_set_right(thingyB_id val) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE relate_as_non_optional_fat_id fatten(data_container& c, relate_as_non_optional_id id) noexcept {
 		return relate_as_non_optional_fat_id(c, id);
@@ -2285,7 +2285,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE thingyA_const_fat_id get_left() const noexcept;
 		DCON_RELEASE_INLINE thingyB_const_fat_id get_right() const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(relate_as_non_optional_fat_id const& l, relate_as_non_optional_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -2338,7 +2338,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE void replace_left(thingyA_id newval, thingyA_id oldval) const noexcept;
 		DCON_RELEASE_INLINE bool try_replace_left(thingyA_id newval, thingyA_id oldval) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE relate_as_multipleA_fat_id fatten(data_container& c, relate_as_multipleA_id id) noexcept {
 		return relate_as_multipleA_fat_id(c, id);
@@ -2393,7 +2393,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE thingyA_const_fat_id get_left(int32_t i) const noexcept;
 		DCON_RELEASE_INLINE bool has_left(thingyA_id val) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(relate_as_multipleA_fat_id const& l, relate_as_multipleA_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -2446,7 +2446,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE void replace_left(thingyA_id newval, thingyA_id oldval) const noexcept;
 		DCON_RELEASE_INLINE bool try_replace_left(thingyA_id newval, thingyA_id oldval) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE relate_as_multipleB_fat_id fatten(data_container& c, relate_as_multipleB_id id) noexcept {
 		return relate_as_multipleB_fat_id(c, id);
@@ -2501,7 +2501,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE thingyA_const_fat_id get_left(int32_t i) const noexcept;
 		DCON_RELEASE_INLINE bool has_left(thingyA_id val) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(relate_as_multipleB_fat_id const& l, relate_as_multipleB_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -2554,7 +2554,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE void replace_left(thingyA_id newval, thingyA_id oldval) const noexcept;
 		DCON_RELEASE_INLINE bool try_replace_left(thingyA_id newval, thingyA_id oldval) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE relate_as_multipleC_fat_id fatten(data_container& c, relate_as_multipleC_id id) noexcept {
 		return relate_as_multipleC_fat_id(c, id);
@@ -2609,7 +2609,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE thingyA_const_fat_id get_left(int32_t i) const noexcept;
 		DCON_RELEASE_INLINE bool has_left(thingyA_id val) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(relate_as_multipleC_fat_id const& l, relate_as_multipleC_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -2662,7 +2662,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE void replace_left(thingyA_id newval, thingyA_id oldval) const noexcept;
 		DCON_RELEASE_INLINE bool try_replace_left(thingyA_id newval, thingyA_id oldval) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE relate_as_multipleD_fat_id fatten(data_container& c, relate_as_multipleD_id id) noexcept {
 		return relate_as_multipleD_fat_id(c, id);
@@ -2717,7 +2717,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE thingyA_const_fat_id get_left(int32_t i) const noexcept;
 		DCON_RELEASE_INLINE bool has_left(thingyA_id val) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
-	
+		
 	};
 	DCON_RELEASE_INLINE bool operator==(relate_as_multipleD_fat_id const& l, relate_as_multipleD_const_fat_id const& other) noexcept {
 		assert(&l.container == &other.container);
@@ -4182,7 +4182,6 @@ namespace dcon {
 			if(relate_as_multipleA.m_left.vptr()[id.index()][0] == oldvalue) {
 				return relate_as_multipleA_try_set_left(id, 0, newvalue);
 			}
-			return false;
 			if(relate_as_multipleA.m_left.vptr()[id.index()][1] == oldvalue) {
 				return relate_as_multipleA_try_set_left(id, 1, newvalue);
 			}
@@ -4263,7 +4262,6 @@ namespace dcon {
 			if(relate_as_multipleB.m_left.vptr()[id.index()][0] == oldvalue) {
 				return relate_as_multipleB_try_set_left(id, 0, newvalue);
 			}
-			return false;
 			if(relate_as_multipleB.m_left.vptr()[id.index()][1] == oldvalue) {
 				return relate_as_multipleB_try_set_left(id, 1, newvalue);
 			}
@@ -4328,7 +4326,6 @@ namespace dcon {
 			if(relate_as_multipleC.m_left.vptr()[id.index()][0] == oldvalue) {
 				return relate_as_multipleC_try_set_left(id, 0, newvalue);
 			}
-			return false;
 			if(relate_as_multipleC.m_left.vptr()[id.index()][1] == oldvalue) {
 				return relate_as_multipleC_try_set_left(id, 1, newvalue);
 			}
@@ -4384,7 +4381,6 @@ namespace dcon {
 			if(relate_as_multipleD.m_left.vptr()[id.index()][0] == oldvalue) {
 				return relate_as_multipleD_try_set_left(id, 0, newvalue);
 			}
-			return false;
 			if(relate_as_multipleD.m_left.vptr()[id.index()][1] == oldvalue) {
 				return relate_as_multipleD_try_set_left(id, 1, newvalue);
 			}
@@ -4477,25 +4473,26 @@ namespace dcon {
 			internal_move_relationship_relate_in_list(relate_in_list_id(relate_in_list_id::value_base_t(last_id.index())), relate_in_list_id(relate_in_list_id::value_base_t(id_removed.index())));
 			relate_in_list.size_used = thingyA.size_used - 1;
 			thingyA_remove_all_relate_as_optional_as_left(id_removed);
-			thingyA_for_each_relate_as_optional_as_left(last_id, [t = this, id_removed, last_id](relate_as_optional_id i) {
-				t->relate_as_optional.m_left.vptr()[i.index()] = id_removed;
+			thingyA_for_each_relate_as_optional_as_left(last_id, [this, id_removed, last_id](relate_as_optional_id i) {
+				relate_as_optional.m_left.vptr()[i.index()] = id_removed;
 			} );
 			relate_as_optional.left_storage.release(relate_as_optional.m_array_left.vptr()[id_removed.index()]);
 			relate_as_optional.m_array_left.vptr()[id_removed.index()] = std::move(relate_as_optional.m_array_left.vptr()[last_id.index()]);
 			relate_as_optional.m_array_left.vptr()[last_id.index()] = std::numeric_limits<dcon::stable_mk_2_tag>::max();
 			thingyA_remove_all_relate_as_non_optional_as_left(id_removed);
-			thingyA_for_each_relate_as_non_optional_as_left(last_id, [t = this, id_removed, last_id](relate_as_non_optional_id i) {
-				t->relate_as_non_optional.m_left.vptr()[i.index()] = id_removed;
+			thingyA_for_each_relate_as_non_optional_as_left(last_id, [this, id_removed, last_id](relate_as_non_optional_id i) {
+				relate_as_non_optional.m_left.vptr()[i.index()] = id_removed;
 			} );
 			relate_as_non_optional.left_storage.release(relate_as_non_optional.m_array_left.vptr()[id_removed.index()]);
 			relate_as_non_optional.m_array_left.vptr()[id_removed.index()] = std::move(relate_as_non_optional.m_array_left.vptr()[last_id.index()]);
 			relate_as_non_optional.m_array_left.vptr()[last_id.index()] = std::numeric_limits<dcon::stable_mk_2_tag>::max();
 			thingyA_remove_all_relate_as_multipleA_as_left(id_removed);
-			thingyA_for_each_relate_as_multipleA_as_left(last_id, [t = this, id_removed, last_id](relate_as_multipleA_id i) {
-				if(t->relate_as_multipleA.m_left.vptr()[i.index()][0] == last_id) t->relate_as_multipleA.m_left.vptr()[i.index()][0] = id_removed;
-				std::sort(t->relate_as_multipleA.m_left.vptr()[i.index()].begin(), t->relate_as_multipleA.m_left.vptr()[i.index()].end(), [](thingyA_id l, thingyA_id r){ return l.value < r.value; });
-				if(t->relate_as_multipleA.m_left.vptr()[i.index()][1] == last_id) t->relate_as_multipleA.m_left.vptr()[i.index()][1] = id_removed;
-				std::sort(t->relate_as_multipleA.m_left.vptr()[i.index()].begin(), t->relate_as_multipleA.m_left.vptr()[i.index()].end(), [](thingyA_id l, thingyA_id r){ return l.value < r.value; });
+			thingyA_for_each_relate_as_multipleA_as_left(last_id, [this, id_removed, last_id](relate_as_multipleA_id i) {
+				relate_as_multipleA.hashm_joint.erase(relate_as_multipleA.to_joint_keydata(relate_as_multipleA.m_left.vptr()[i.index()]));
+				if(relate_as_multipleA.m_left.vptr()[i.index()][0] == last_id) relate_as_multipleA.m_left.vptr()[i.index()][0] = id_removed;
+				if(relate_as_multipleA.m_left.vptr()[i.index()][1] == last_id) relate_as_multipleA.m_left.vptr()[i.index()][1] = id_removed;
+				std::sort(relate_as_multipleA.m_left.vptr()[i.index()].begin(), relate_as_multipleA.m_left.vptr()[i.index()].end(), [](thingyA_id l, thingyA_id r){ return l.value < r.value; });
+				relate_as_multipleA.hashm_joint.insert_or_assign(relate_as_multipleA.to_joint_keydata(relate_as_multipleA.m_left.vptr()[i.index()]), i);
 			} );
 			relate_as_multipleA.left_storage.release(relate_as_multipleA.m_array_left.vptr()[id_removed.index()]);
 			relate_as_multipleA.m_array_left.vptr()[id_removed.index()] = std::move(relate_as_multipleA.m_array_left.vptr()[last_id.index()]);
@@ -4508,9 +4505,9 @@ namespace dcon {
 			relate_as_multipleB.m_link_back_left.vptr()[id_removed.index()] = std::move(relate_as_multipleB.m_link_back_left.vptr()[last_id.index()]);
 			relate_as_multipleB.m_link_back_left.vptr()[last_id.index()] = relate_as_multipleB_id();
 			thingyA_remove_all_relate_as_multipleC_as_left(id_removed);
-			thingyA_for_each_relate_as_multipleC_as_left(last_id, [t = this, id_removed, last_id](relate_as_multipleC_id i) {
-				if(t->relate_as_multipleC.m_left.vptr()[i.index()][0] == last_id) t->relate_as_multipleC.m_left.vptr()[i.index()][0] = id_removed;
-				if(t->relate_as_multipleC.m_left.vptr()[i.index()][1] == last_id) t->relate_as_multipleC.m_left.vptr()[i.index()][1] = id_removed;
+			thingyA_for_each_relate_as_multipleC_as_left(last_id, [this, id_removed, last_id](relate_as_multipleC_id i) {
+				if(relate_as_multipleC.m_left.vptr()[i.index()][0] == last_id) relate_as_multipleC.m_left.vptr()[i.index()][0] = id_removed;
+				if(relate_as_multipleC.m_left.vptr()[i.index()][1] == last_id) relate_as_multipleC.m_left.vptr()[i.index()][1] = id_removed;
 			} );
 			relate_as_multipleC.left_storage.release(relate_as_multipleC.m_array_left.vptr()[id_removed.index()]);
 			relate_as_multipleC.m_array_left.vptr()[id_removed.index()] = std::move(relate_as_multipleC.m_array_left.vptr()[last_id.index()]);
@@ -4669,7 +4666,7 @@ namespace dcon {
 		relate_same_id force_create_relate_same(thingyA_id left_p, thingyA_id right_p) {
 			relate_same_id new_id(relate_same_id::value_base_t(left_p.index()));
 			if(relate_same.size_used < uint32_t(left_p.value)) relate_same_resize(uint32_t(left_p.value));
-		 {
+			 {
 				auto key_dat = relate_same.to_joint_keydata(left_p, right_p);
 				if(auto it = relate_same.hashm_joint.find(key_dat); it !=  relate_same.hashm_joint.end()) {
 					delete_relate_same(it->second);
@@ -4950,7 +4947,7 @@ namespace dcon {
 			many_many.first_free = many_many.m__index.vptr()[many_many.first_free.index()];
 			many_many.m__index.vptr()[new_id.index()] = new_id;
 			many_many.size_used = std::max(many_many.size_used, uint32_t(new_id.index() + 1));
-		 {
+			 {
 				auto key_dat = many_many.to_joint_keydata(A_p, B_p, C_p, D_p, E_p, F_p);
 				if(auto it = many_many.hashm_joint.find(key_dat); it !=  many_many.hashm_joint.end()) {
 					delete_many_many(it->second);
@@ -5262,7 +5259,7 @@ namespace dcon {
 			relate_as_multipleA.first_free = relate_as_multipleA.m__index.vptr()[relate_as_multipleA.first_free.index()];
 			relate_as_multipleA.m__index.vptr()[new_id.index()] = new_id;
 			relate_as_multipleA.size_used = std::max(relate_as_multipleA.size_used, uint32_t(new_id.index() + 1));
-		 {
+			 {
 				auto key_dat = relate_as_multipleA.to_joint_keydata(left_p);
 				if(auto it = relate_as_multipleA.hashm_joint.find(key_dat); it !=  relate_as_multipleA.hashm_joint.end()) {
 					delete_relate_as_multipleA(it->second);
@@ -5337,7 +5334,7 @@ namespace dcon {
 		relate_as_multipleB_id try_create_relate_as_multipleB(thingyA_id left_p0, thingyA_id left_p1) {
 			if(!bool(left_p0)) return relate_as_multipleB_id();
 			if(bool(left_p0) && bool(relate_as_multipleB.m_link_back_left.vptr()[left_p0.index()])) return relate_as_multipleB_id();
-			if(bool(left_p0) && left_p0 == left_p0) return relate_as_multipleB_id();
+			if(bool(left_p0) && left_p0 == left_p1) return relate_as_multipleB_id();
 			if(!bool(left_p1)) return relate_as_multipleB_id();
 			if(bool(left_p1) && bool(relate_as_multipleB.m_link_back_left.vptr()[left_p1.index()])) return relate_as_multipleB_id();
 			#ifndef DCON_USE_EXCEPTIONS
@@ -5434,7 +5431,7 @@ namespace dcon {
 		//
 		relate_as_multipleC_id try_create_relate_as_multipleC(thingyA_id left_p0, thingyA_id left_p1) {
 			if(!bool(left_p0)) return relate_as_multipleC_id();
-			if(bool(left_p0) && left_p0 == left_p0) return relate_as_multipleC_id();
+			if(bool(left_p0) && left_p0 == left_p1) return relate_as_multipleC_id();
 			if(!bool(left_p1)) return relate_as_multipleC_id();
 			#ifndef DCON_USE_EXCEPTIONS
 			if(!bool(relate_as_multipleC.first_free)) std::abort();
@@ -6208,7 +6205,7 @@ namespace dcon {
 				header.serialize(output_buffer);
 				*(reinterpret_cast<uint32_t*>(output_buffer)) = relate_same.size_used;
 				output_buffer += sizeof(uint32_t);
-		 {
+				 {
 					dcon::record_header iheader(sizeof(thingyA_id) * relate_same.size_used, "uint16_t", "relate_same", "right");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), relate_same.m_right.vptr(), sizeof(thingyA_id) * relate_same.size_used);
@@ -6222,7 +6219,7 @@ namespace dcon {
 				header.serialize(output_buffer);
 				*(reinterpret_cast<uint32_t*>(output_buffer)) = relate_in_array.size_used;
 				output_buffer += sizeof(uint32_t);
-		 {
+				 {
 					dcon::record_header iheader(sizeof(thingyB_id) * relate_in_array.size_used, "uint16_t", "relate_in_array", "right");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<thingyB_id*>(output_buffer), relate_in_array.m_right.vptr(), sizeof(thingyB_id) * relate_in_array.size_used);
@@ -6236,7 +6233,7 @@ namespace dcon {
 				header.serialize(output_buffer);
 				*(reinterpret_cast<uint32_t*>(output_buffer)) = relate_in_list.size_used;
 				output_buffer += sizeof(uint32_t);
-		 {
+				 {
 					dcon::record_header iheader(sizeof(thingyB_id) * relate_in_list.size_used, "uint16_t", "relate_in_list", "right");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<thingyB_id*>(output_buffer), relate_in_list.m_right.vptr(), sizeof(thingyB_id) * relate_in_list.size_used);
@@ -6250,43 +6247,43 @@ namespace dcon {
 				header.serialize(output_buffer);
 				*(reinterpret_cast<uint32_t*>(output_buffer)) = many_many.size_used;
 				output_buffer += sizeof(uint32_t);
-		 {
+				 {
 					dcon::record_header iheader(sizeof(thingyA_id) * many_many.size_used, "uint16_t", "many_many", "A");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), many_many.m_A.vptr(), sizeof(thingyA_id) * many_many.size_used);
 					output_buffer += sizeof(thingyA_id) *  many_many.size_used;
 				}
-		 {
+				 {
 					dcon::record_header iheader(sizeof(thingyA_id) * many_many.size_used, "uint16_t", "many_many", "B");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), many_many.m_B.vptr(), sizeof(thingyA_id) * many_many.size_used);
 					output_buffer += sizeof(thingyA_id) *  many_many.size_used;
 				}
-		 {
+				 {
 					dcon::record_header iheader(sizeof(thingyA_id) * many_many.size_used, "uint16_t", "many_many", "C");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), many_many.m_C.vptr(), sizeof(thingyA_id) * many_many.size_used);
 					output_buffer += sizeof(thingyA_id) *  many_many.size_used;
 				}
-		 {
+				 {
 					dcon::record_header iheader(sizeof(thingyA_id) * many_many.size_used, "uint16_t", "many_many", "D");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), many_many.m_D.vptr(), sizeof(thingyA_id) * many_many.size_used);
 					output_buffer += sizeof(thingyA_id) *  many_many.size_used;
 				}
-		 {
+				 {
 					dcon::record_header iheader(sizeof(thingyA_id) * many_many.size_used, "uint16_t", "many_many", "E");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), many_many.m_E.vptr(), sizeof(thingyA_id) * many_many.size_used);
 					output_buffer += sizeof(thingyA_id) *  many_many.size_used;
 				}
-		 {
+				 {
 					dcon::record_header iheader(sizeof(thingyA_id) * many_many.size_used, "uint16_t", "many_many", "F");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), many_many.m_F.vptr(), sizeof(thingyA_id) * many_many.size_used);
 					output_buffer += sizeof(thingyA_id) *  many_many.size_used;
 				}
-		 {
+				 {
 					dcon::record_header iheader(sizeof(thingyA_id) * many_many.size_used, "uint16_t", "many_many", "ignore");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), many_many.m_ignore.vptr(), sizeof(thingyA_id) * many_many.size_used);
@@ -6306,13 +6303,13 @@ namespace dcon {
 				header.serialize(output_buffer);
 				*(reinterpret_cast<uint32_t*>(output_buffer)) = relate_as_optional.size_used;
 				output_buffer += sizeof(uint32_t);
-		 {
+				 {
 					dcon::record_header iheader(sizeof(thingyA_id) * relate_as_optional.size_used, "uint16_t", "relate_as_optional", "left");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), relate_as_optional.m_left.vptr(), sizeof(thingyA_id) * relate_as_optional.size_used);
 					output_buffer += sizeof(thingyA_id) *  relate_as_optional.size_used;
 				}
-		 {
+				 {
 					dcon::record_header iheader(sizeof(thingyB_id) * relate_as_optional.size_used, "uint16_t", "relate_as_optional", "right");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<thingyB_id*>(output_buffer), relate_as_optional.m_right.vptr(), sizeof(thingyB_id) * relate_as_optional.size_used);
@@ -6332,13 +6329,13 @@ namespace dcon {
 				header.serialize(output_buffer);
 				*(reinterpret_cast<uint32_t*>(output_buffer)) = relate_as_non_optional.size_used;
 				output_buffer += sizeof(uint32_t);
-		 {
+				 {
 					dcon::record_header iheader(sizeof(thingyA_id) * relate_as_non_optional.size_used, "uint16_t", "relate_as_non_optional", "left");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), relate_as_non_optional.m_left.vptr(), sizeof(thingyA_id) * relate_as_non_optional.size_used);
 					output_buffer += sizeof(thingyA_id) *  relate_as_non_optional.size_used;
 				}
-		 {
+				 {
 					dcon::record_header iheader(sizeof(thingyB_id) * relate_as_non_optional.size_used, "uint16_t", "relate_as_non_optional", "right");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<thingyB_id*>(output_buffer), relate_as_non_optional.m_right.vptr(), sizeof(thingyB_id) * relate_as_non_optional.size_used);
@@ -6358,7 +6355,7 @@ namespace dcon {
 				header.serialize(output_buffer);
 				*(reinterpret_cast<uint32_t*>(output_buffer)) = relate_as_multipleA.size_used;
 				output_buffer += sizeof(uint32_t);
-		 {
+				 {
 					dcon::record_header iheader(sizeof(std::array<thingyA_id, 2>) * relate_as_multipleA.size_used, "std::array<uint16_t,2>", "relate_as_multipleA", "left");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<std::array<thingyA_id, 2>*>(output_buffer), relate_as_multipleA.m_left.vptr(), sizeof(std::array<thingyA_id, 2>) * relate_as_multipleA.size_used);
@@ -6378,7 +6375,7 @@ namespace dcon {
 				header.serialize(output_buffer);
 				*(reinterpret_cast<uint32_t*>(output_buffer)) = relate_as_multipleB.size_used;
 				output_buffer += sizeof(uint32_t);
-		 {
+				 {
 					dcon::record_header iheader(sizeof(std::array<thingyA_id, 2>) * relate_as_multipleB.size_used, "std::array<uint16_t,2>", "relate_as_multipleB", "left");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<std::array<thingyA_id, 2>*>(output_buffer), relate_as_multipleB.m_left.vptr(), sizeof(std::array<thingyA_id, 2>) * relate_as_multipleB.size_used);
@@ -6398,7 +6395,7 @@ namespace dcon {
 				header.serialize(output_buffer);
 				*(reinterpret_cast<uint32_t*>(output_buffer)) = relate_as_multipleC.size_used;
 				output_buffer += sizeof(uint32_t);
-		 {
+				 {
 					dcon::record_header iheader(sizeof(std::array<thingyA_id, 2>) * relate_as_multipleC.size_used, "std::array<uint16_t,2>", "relate_as_multipleC", "left");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<std::array<thingyA_id, 2>*>(output_buffer), relate_as_multipleC.m_left.vptr(), sizeof(std::array<thingyA_id, 2>) * relate_as_multipleC.size_used);
@@ -6418,7 +6415,7 @@ namespace dcon {
 				header.serialize(output_buffer);
 				*(reinterpret_cast<uint32_t*>(output_buffer)) = relate_as_multipleD.size_used;
 				output_buffer += sizeof(uint32_t);
-		 {
+				 {
 					dcon::record_header iheader(sizeof(std::array<thingyA_id, 2>) * relate_as_multipleD.size_used, "std::array<uint16_t,2>", "relate_as_multipleD", "left");
 					iheader.serialize(output_buffer);
 					std::memcpy(reinterpret_cast<std::array<thingyA_id, 2>*>(output_buffer), relate_as_multipleD.m_left.vptr(), sizeof(std::array<thingyA_id, 2>) * relate_as_multipleD.size_used);
@@ -7192,12 +7189,12 @@ namespace dcon {
 						else if(header.is_property("$index_end")) {
 							if(serialize_selection.relate_as_multipleA_left == true) {
 								for(uint32_t i = 0; i < relate_as_multipleA.size_used; ++i) {
-		 {
+									 {
 										auto tmp = relate_as_multipleA.m_left.vptr()[i][0];
 										relate_as_multipleA.m_left.vptr()[i][0] = thingyA_id();
 										internal_relate_as_multipleA_set_left(relate_as_multipleA_id(relate_as_multipleA_id::value_base_t(i)), 0, tmp);
 									}
-		 {
+									 {
 										auto tmp = relate_as_multipleA.m_left.vptr()[i][1];
 										relate_as_multipleA.m_left.vptr()[i][1] = thingyA_id();
 										internal_relate_as_multipleA_set_left(relate_as_multipleA_id(relate_as_multipleA_id::value_base_t(i)), 1, tmp);
@@ -7277,12 +7274,12 @@ namespace dcon {
 						else if(header.is_property("$index_end")) {
 							if(serialize_selection.relate_as_multipleB_left == true) {
 								for(uint32_t i = 0; i < relate_as_multipleB.size_used; ++i) {
-		 {
+									 {
 										auto tmp = relate_as_multipleB.m_left.vptr()[i][0];
 										relate_as_multipleB.m_left.vptr()[i][0] = thingyA_id();
 										internal_relate_as_multipleB_set_left(relate_as_multipleB_id(relate_as_multipleB_id::value_base_t(i)), 0, tmp);
 									}
-		 {
+									 {
 										auto tmp = relate_as_multipleB.m_left.vptr()[i][1];
 										relate_as_multipleB.m_left.vptr()[i][1] = thingyA_id();
 										internal_relate_as_multipleB_set_left(relate_as_multipleB_id(relate_as_multipleB_id::value_base_t(i)), 1, tmp);
@@ -7352,12 +7349,12 @@ namespace dcon {
 						else if(header.is_property("$index_end")) {
 							if(serialize_selection.relate_as_multipleC_left == true) {
 								for(uint32_t i = 0; i < relate_as_multipleC.size_used; ++i) {
-		 {
+									 {
 										auto tmp = relate_as_multipleC.m_left.vptr()[i][0];
 										relate_as_multipleC.m_left.vptr()[i][0] = thingyA_id();
 										internal_relate_as_multipleC_set_left(relate_as_multipleC_id(relate_as_multipleC_id::value_base_t(i)), 0, tmp);
 									}
-		 {
+									 {
 										auto tmp = relate_as_multipleC.m_left.vptr()[i][1];
 										relate_as_multipleC.m_left.vptr()[i][1] = thingyA_id();
 										internal_relate_as_multipleC_set_left(relate_as_multipleC_id(relate_as_multipleC_id::value_base_t(i)), 1, tmp);
@@ -7427,12 +7424,12 @@ namespace dcon {
 						else if(header.is_property("$index_end")) {
 							if(serialize_selection.relate_as_multipleD_left == true) {
 								for(uint32_t i = 0; i < relate_as_multipleD.size_used; ++i) {
-		 {
+									 {
 										auto tmp = relate_as_multipleD.m_left.vptr()[i][0];
 										relate_as_multipleD.m_left.vptr()[i][0] = thingyA_id();
 										internal_relate_as_multipleD_set_left(relate_as_multipleD_id(relate_as_multipleD_id::value_base_t(i)), 0, tmp);
 									}
-		 {
+									 {
 										auto tmp = relate_as_multipleD.m_left.vptr()[i][1];
 										relate_as_multipleD.m_left.vptr()[i][1] = thingyA_id();
 										internal_relate_as_multipleD_set_left(relate_as_multipleD_id(relate_as_multipleD_id::value_base_t(i)), 1, tmp);
@@ -8203,12 +8200,12 @@ namespace dcon {
 						else if(header.is_property("$index_end") && mask.relate_as_multipleA) {
 							if(serialize_selection.relate_as_multipleA_left == true) {
 								for(uint32_t i = 0; i < relate_as_multipleA.size_used; ++i) {
-		 {
+									 {
 										auto tmp = relate_as_multipleA.m_left.vptr()[i][0];
 										relate_as_multipleA.m_left.vptr()[i][0] = thingyA_id();
 										internal_relate_as_multipleA_set_left(relate_as_multipleA_id(relate_as_multipleA_id::value_base_t(i)), 0, tmp);
 									}
-		 {
+									 {
 										auto tmp = relate_as_multipleA.m_left.vptr()[i][1];
 										relate_as_multipleA.m_left.vptr()[i][1] = thingyA_id();
 										internal_relate_as_multipleA_set_left(relate_as_multipleA_id(relate_as_multipleA_id::value_base_t(i)), 1, tmp);
@@ -8288,12 +8285,12 @@ namespace dcon {
 						else if(header.is_property("$index_end") && mask.relate_as_multipleB) {
 							if(serialize_selection.relate_as_multipleB_left == true) {
 								for(uint32_t i = 0; i < relate_as_multipleB.size_used; ++i) {
-		 {
+									 {
 										auto tmp = relate_as_multipleB.m_left.vptr()[i][0];
 										relate_as_multipleB.m_left.vptr()[i][0] = thingyA_id();
 										internal_relate_as_multipleB_set_left(relate_as_multipleB_id(relate_as_multipleB_id::value_base_t(i)), 0, tmp);
 									}
-		 {
+									 {
 										auto tmp = relate_as_multipleB.m_left.vptr()[i][1];
 										relate_as_multipleB.m_left.vptr()[i][1] = thingyA_id();
 										internal_relate_as_multipleB_set_left(relate_as_multipleB_id(relate_as_multipleB_id::value_base_t(i)), 1, tmp);
@@ -8363,12 +8360,12 @@ namespace dcon {
 						else if(header.is_property("$index_end") && mask.relate_as_multipleC) {
 							if(serialize_selection.relate_as_multipleC_left == true) {
 								for(uint32_t i = 0; i < relate_as_multipleC.size_used; ++i) {
-		 {
+									 {
 										auto tmp = relate_as_multipleC.m_left.vptr()[i][0];
 										relate_as_multipleC.m_left.vptr()[i][0] = thingyA_id();
 										internal_relate_as_multipleC_set_left(relate_as_multipleC_id(relate_as_multipleC_id::value_base_t(i)), 0, tmp);
 									}
-		 {
+									 {
 										auto tmp = relate_as_multipleC.m_left.vptr()[i][1];
 										relate_as_multipleC.m_left.vptr()[i][1] = thingyA_id();
 										internal_relate_as_multipleC_set_left(relate_as_multipleC_id(relate_as_multipleC_id::value_base_t(i)), 1, tmp);
@@ -8438,12 +8435,12 @@ namespace dcon {
 						else if(header.is_property("$index_end") && mask.relate_as_multipleD) {
 							if(serialize_selection.relate_as_multipleD_left == true) {
 								for(uint32_t i = 0; i < relate_as_multipleD.size_used; ++i) {
-		 {
+									 {
 										auto tmp = relate_as_multipleD.m_left.vptr()[i][0];
 										relate_as_multipleD.m_left.vptr()[i][0] = thingyA_id();
 										internal_relate_as_multipleD_set_left(relate_as_multipleD_id(relate_as_multipleD_id::value_base_t(i)), 0, tmp);
 									}
-		 {
+									 {
 										auto tmp = relate_as_multipleD.m_left.vptr()[i][1];
 										relate_as_multipleD.m_left.vptr()[i][1] = thingyA_id();
 										internal_relate_as_multipleD_set_left(relate_as_multipleD_id(relate_as_multipleD_id::value_base_t(i)), 1, tmp);
