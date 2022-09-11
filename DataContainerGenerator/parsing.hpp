@@ -274,3 +274,89 @@ inline std::string size_to_tag_type(size_t sz) {
 	}
 	return "uint32_t";
 }
+
+struct qualified_name {
+	std::string type_name;
+	std::string member_name;
+	std::string as_name;
+};
+
+qualified_name parse_qual_name(char const* &start, char const * end, char const * global_start, error_record & err);
+
+struct selection_item {
+	qualified_name property;
+	std::string aggregate_name;
+	bool is_aggregate = false;
+};
+
+selection_item parse_selection_item(char const* &start, char const * end, char const * global_start, error_record & err);
+
+std::vector<selection_item> parse_all_selection_items(char const* &start, char const * end, char const * global_start, error_record & err);
+
+enum class from_type { none, join, join_plus, parameter };
+
+struct from_item {
+	qualified_name table_identifier;
+
+	std::string left_of_join;
+	std::string join_on;
+
+	from_type type = from_type::none;
+};
+
+from_item parse_from_item(char const* &start, char const * end, char const * global_start, error_record & err);
+std::vector<from_item> parse_all_from_items(char const* &start, char const * end, char const * global_start, error_record & err);
+
+struct select_statement_definition {
+	std::vector<selection_item> returned_values;
+	std::vector<from_item> from;
+	std::string where_clause;
+	std::string group_by;
+};
+
+select_statement_definition parse_select_statement(char const* &start, char const * end, char const * global_start, error_record & err);
+
+struct type_name_pair {
+	std::string name;
+	std::string type;
+};
+
+type_name_pair parse_type_and_name(char const* start, char const * end);
+
+struct query_definition {
+	select_statement_definition select;
+	std::vector<type_name_pair> parameters;
+	std::string name;
+};
+
+struct query_table_slot {
+	std::string reference_name;
+	std::string internally_named_as;
+	
+	relationship_object_def const* actual_table = nullptr;
+	query_table_slot const* joined_to = nullptr;
+	related_object const* joind_by_link = nullptr;
+
+	bool is_parameter_type = false;
+	bool is_join_plus = false;
+	bool is_group_slot = false;
+};
+
+struct perpared_selection_item {
+	std::string aggregate_name;
+	std::string as_member_of_slot;
+	std::string exposed_name;
+	query_table_slot const* derived_from_slot;
+	bool is_aggregate = false;
+};
+
+struct prepared_query_definition {
+	std::vector<perpared_selection_item> exposed_values;
+	std::vector<query_table_slot> table_slots;
+	std::vector<type_name_pair> parameters;
+
+	std::string where_conditional;
+	bool has_group = false;
+};
+
+prepared_query_definition make_prepared_definition(file_def const& parsed_file, query_definition const& def, error_record & err);

@@ -2,17 +2,48 @@
 
 char const * advance_to_closing_bracket(char const * pos, char const * end) {
 	int32_t depth_count = 0;
-	while(pos < end) {
-		if(*pos == '{')
-			++depth_count;
-		else if(*pos == '}')
-			--depth_count;
+	bool in_quote = false;
 
+	while(pos < end) {
+		if(*pos == '{' && !in_quote)
+			++depth_count;
+		else if(*pos == '}' && !in_quote)
+			--depth_count;
+		else if(*pos == '\"')
+			in_quote = !in_quote;
+		else if(*pos == '\\' && in_quote) {
+			++pos;
+		}
 		if(depth_count < 0)
 			return pos;
 		++pos;
 	}
 	return pos;
+}
+
+char const * advance_to_closing_parenthesis(char const * pos, char const * end) {
+	int32_t depth_count = 0;
+	bool in_quote = false;
+
+	while(pos < end) {
+		if(*pos == '(' && !in_quote)
+			++depth_count;
+		else if(*pos == ')' && !in_quote)
+			--depth_count;
+		else if(*pos == '\"')
+			in_quote = !in_quote;
+		else if(*pos == '\\' && in_quote) {
+			++pos;
+		}
+		if(depth_count < 0)
+			return pos;
+		++pos;
+	}
+	return pos;
+}
+
+bool is_ascii_ws(char v) {
+	return v == ' ' || v == '\t' || v == '\n' || v == '\r';
 }
 
 char const * advance_to_non_whitespace(char const * pos, char const * end) {
@@ -24,11 +55,23 @@ char const * advance_to_non_whitespace(char const * pos, char const * end) {
 	return pos;
 }
 
+char const * advance_to_non_whitespace_non_comma(char const * pos, char const * end) {
+	while(pos < end) {
+		if(*pos != ' ' && *pos != '\t' && *pos != '\n' && *pos != '\r' && *pos != ',')
+			return pos;
+		++pos;
+	}
+	return pos;
+}
+
 char const * advance_to_identifier_end(char const * pos, char const * end) {
 	while(pos < end) {
 		if(*pos == ' ' || *pos == '\t' || *pos == '\n' || *pos == '\r'
 			|| *pos == ',' || *pos == '(' || *pos == ')' || *pos == '[' || *pos == ']' || *pos == '{'
-			|| *pos == '}' || *pos == ';')
+			|| *pos == '}' || *pos == ';' || *pos == '.' || *pos == '?' || *pos == '/' || *pos == '<'
+			|| *pos == '>' || *pos == ':' || *pos == '\'' || *pos == '\"' || *pos == '|' || *pos == '\\'
+			|| *pos == '=' || *pos == '+' || *pos == '-' || *pos == '~' || *pos == '!' || *pos == '#'
+			|| *pos == '$' || *pos == '%' || *pos == '^' || *pos == '&' || *pos == '*')
 			return pos;
 		++pos;
 	}
@@ -75,6 +118,20 @@ char const * advance_to_whitespace_or_brace(char const * pos, char const * end) 
 	return pos;
 }
 
+bool check_for_identifier(char const* identifier, char const * start, char const * end) {
+	char const* pos = advance_to_non_whitespace_non_comma(start, end);
+	char const* id_end = advance_to_identifier_end(pos, end);
+	while(pos < id_end) {
+		if(*identifier == 0)
+			return pos == id_end;
+		if(*identifier != *pos)
+			return false;
+		++identifier;
+		++pos;
+	}
+	return *identifier == 0;
+}
+
 char const * reverse_to_non_whitespace(char const * start, char const * pos) {
 	while(pos > start) {
 		if(*(pos - 1) != ' ' && *(pos - 1) != '\t' && *(pos - 1) != '\n' && *(pos - 1) != '\r')
@@ -82,6 +139,211 @@ char const * reverse_to_non_whitespace(char const * start, char const * pos) {
 		--pos;
 	}
 	return pos;
+}
+
+std::vector<selection_item> parse_all_selection_items(char const* &start, char const * end, char const * global_start, error_record & err) {
+	std::vector<selection_item> result;
+
+	while(start < end) {
+		if(check_for_identifier("from", start, end)) {
+			start = advance_to_identifier_end(advance_to_non_whitespace_non_comma(start, end), end);
+			return result;
+		}
+		start = advance_to_non_whitespace_non_comma(start, end);
+		if(start != end)
+			result.push_back(parse_selection_item(start, end, global_start, err));
+	}
+	
+	return result;
+}
+
+std::vector<from_item> parse_all_from_items(char const* &start, char const * end, char const * global_start, error_record & err) {
+	std::vector<from_item> result;
+
+	while(start < end) {
+		if(check_for_identifier("where", start, end) || check_for_identifier("group", start, end)) {
+			return result;
+		}
+		start = advance_to_non_whitespace_non_comma(start, end);
+		if(start != end)
+			result.push_back(parse_from_item(start, end, global_start, err));
+	}
+
+	return result;
+
+}
+
+select_statement_definition parse_select_statement(char const* &start, char const * end, char const * global_start, error_record & err) {
+	select_statement_definition result;
+
+	result.returned_values = parse_all_selection_items(start, end, global_start, err);
+	result.from = parse_all_from_items(start, end, global_start, err);
+
+	if(check_for_identifier("where", start, end)) {
+		start = advance_to_identifier_end(advance_to_non_whitespace_non_comma(start, end), end);
+		while(start < end) {
+			start = advance_to_non_whitespace(start, end);
+			if(start < end && *start == '(') {
+				char const* block_end = advance_to_closing_parenthesis(start + 1, end);
+				if(block_end < end)
+					++block_end;
+				if(result.where_clause.length() > 0) result.where_clause += " ";
+				result.where_clause += std::string(start, block_end);
+				start = block_end;
+			} else if(check_for_identifier("group", start, end)) {
+				break;
+			} else {
+				char const* block_end = advance_to_whitespace(start, end);
+				if(result.where_clause.length() > 0) result.where_clause += " ";
+				result.where_clause += std::string(start, block_end);
+				start = block_end;
+			}
+		}
+	}
+	if(check_for_identifier("group", start, end)) {
+		start = advance_to_identifier_end(advance_to_non_whitespace_non_comma(start, end), end);
+		result.group_by = std::string(advance_to_non_whitespace_non_comma(start, end), end);
+		start = end;
+	}
+	return result;
+}
+
+from_item parse_from_item(char const* &start, char const * end, char const * global_start, error_record & err) {
+	from_item result;
+
+	start = advance_to_non_whitespace_non_comma(start, end);
+
+	if(start < end && *start == '@') {
+		result.type = from_type::parameter;
+		++start;
+
+		char const* id_start = advance_to_non_whitespace(start, end);
+		char const* id_end = advance_to_identifier_end(id_start, end);
+
+		result.left_of_join = std::string(id_start, id_end);
+		start = id_end;
+		return result;
+	}
+
+	const char* ident_end = advance_to_identifier_end(start, end);
+	if(char const* non_ws = advance_to_non_whitespace(ident_end, end); non_ws < end && *non_ws == '.') {
+		result.left_of_join = std::string(start, ident_end);
+		start = non_ws + 1;
+	}
+
+	if(check_for_identifier("join", start, end)) {
+		start = advance_to_identifier_end(advance_to_non_whitespace(start, end), end);
+		if(start < end && *start == '+') {
+			result.type = from_type::join_plus;
+			++start;
+		} else {
+			result.type = from_type::join;
+		}
+	}
+
+	start = advance_to_non_whitespace(start, end);
+	if(check_for_identifier("on", start, end)) {
+		start = advance_to_non_whitespace(advance_to_identifier_end(start, end), end);
+		char const* id_end = advance_to_identifier_end(start, end);
+		result.join_on = std::string(start, id_end);
+		start = advance_to_non_whitespace(id_end, end);
+	}
+
+	result.table_identifier = parse_qual_name(start, end, global_start, err);
+
+	return result;
+}
+
+type_name_pair parse_type_and_name(char const* start, char const * end) {
+	type_name_pair result;
+
+	char const* first_id_end = advance_to_identifier_end(start, end);
+
+	if(first_id_end < end && *first_id_end == '.') {
+		char const* member_end = advance_to_identifier_end(first_id_end + 1, end);
+
+		result.type = std::string(start, first_id_end);
+		result.name = std::string(first_id_end + 1, member_end);
+
+		char const* trailing_second_id = advance_to_non_whitespace(member_end, end);
+	} else {
+		result.name = std::string(start, first_id_end);
+	}
+
+	return result;
+}
+
+qualified_name parse_qual_name(char const* &start, char const * end, char const * global_start, error_record & err) {
+	qualified_name result;
+
+	char const* non_ws_start = advance_to_non_whitespace_non_comma(start, end);
+	char const* first_id_end = advance_to_identifier_end(non_ws_start, end);
+	char const* trailing_first_id = advance_to_non_whitespace(first_id_end, end);
+
+	if(trailing_first_id < end && *trailing_first_id == '.') {
+		char const* member_non_ws_start = advance_to_non_whitespace(trailing_first_id + 1, end);
+		char const* member_end = advance_to_identifier_end(member_non_ws_start, end);
+
+		result.type_name = std::string(non_ws_start, first_id_end);
+		result.member_name = std::string(member_non_ws_start, member_end);
+
+		char const* trailing_second_id = advance_to_non_whitespace(member_end, end);
+
+		if(trailing_second_id < end + 2 && *trailing_second_id == 'a' && *(trailing_second_id + 1) == 's'
+			&& is_ascii_ws(*(trailing_second_id + 2))) {
+
+			char const* as_non_ws_start = advance_to_non_whitespace(trailing_second_id + 2, end);
+			char const* as_id_end = advance_to_identifier_end(as_non_ws_start, end);
+
+			result.as_name = std::string(as_non_ws_start, as_id_end);
+			start = as_id_end;
+		} else {
+
+			result.as_name = result.type_name + "_" + result.member_name;
+			start = trailing_second_id;
+		}
+
+	} else if(trailing_first_id < end + 2 && *trailing_first_id == 'a' && *(trailing_first_id + 1) == 's'
+		&& is_ascii_ws(*(trailing_first_id + 2))) {
+
+		char const* as_non_ws_start = advance_to_non_whitespace(trailing_first_id + 2, end);
+		char const* as_id_end = advance_to_identifier_end(as_non_ws_start, end);
+
+		result.member_name = std::string(non_ws_start, first_id_end);
+		result.as_name = std::string(as_non_ws_start, as_id_end);
+
+		start = as_id_end;
+	} else {
+		result.member_name = std::string(non_ws_start, first_id_end);
+		result.as_name = result.member_name;
+
+		start = trailing_first_id;
+	}
+
+	return result;
+}
+
+selection_item parse_selection_item(char const* &start, char const * end, char const * global_start, error_record & err) {
+	selection_item result;
+
+	char const* non_ws_start = advance_to_non_whitespace(start, end);
+	char const* first_id_end = advance_to_identifier_end(non_ws_start, end);
+	char const* trailing_first_id = advance_to_non_whitespace(first_id_end, end);
+
+	if(trailing_first_id < end && *trailing_first_id == '(') { // is aggregate
+		result.is_aggregate = true;
+		result.aggregate_name = std::string(non_ws_start, first_id_end);
+
+		char const* inner_start = trailing_first_id + 1;
+		char const* inner_end = advance_to_closing_parenthesis(inner_start, end);
+
+		result.property = parse_qual_name(inner_start, inner_end, global_start, err);
+		start = inner_end + 1;
+	} else {
+		result.property = parse_qual_name(start, end, global_start, err);
+	}
+
+	return result;
 }
 
 int32_t calculate_line_from_position(char const * start, char const * pos) {
@@ -911,4 +1173,136 @@ file_def parse_file(char const * start, char const * end, error_record & err_out
 	}
 
 	return parsed_file;
+}
+
+related_object const* find_link_by_name(std::string const& name,
+	relationship_object_def const& obja, relationship_object_def const& objb) {
+
+	for(auto& link : obja.indexed_objects) {
+		if(link.property_name == name)
+			return &link;
+	}
+	for(auto& link : objb.indexed_objects) {
+		if(link.property_name == name)
+			return &link;
+	}
+	return nullptr;
+}
+
+related_object const* find_common_link(relationship_object_def const& obja, relationship_object_def const& objb) {
+	related_object const* found = nullptr;
+	for(auto& links_in_a : obja.indexed_objects) {
+		if(links_in_a.related_to == &objb) {
+			if(!found) found = &links_in_a;
+			else return nullptr;
+		}
+	}
+	for(auto& links_in_b : objb.indexed_objects) {
+		if(links_in_b.related_to == &obja) {
+			if(!found) found = &links_in_b;
+			else return nullptr;
+		}
+	}
+	return found;
+}
+
+prepared_query_definition make_prepared_definition(file_def const& parsed_file, query_definition const& def, error_record & err) {
+	prepared_query_definition result;
+
+	result.parameters = def.parameters;
+
+	result.table_slots.resize(def.select.from.size());
+	for(uint32_t i = 0; i < def.select.from.size(); ++i) {
+		result.table_slots[i].is_join_plus = def.select.from[i].type == from_type::join_plus;
+		result.table_slots[i].is_parameter_type = def.select.from[i].type == from_type::parameter;
+
+		if(result.table_slots[i].is_parameter_type) {
+			if(i != 0) {
+				err.add("Only the first target in a from clause can be a parameter; use \"where\" to filter other targets");
+			}
+			result.table_slots[i].internally_named_as = std::string("m_parameters.") + def.select.from[i].left_of_join;
+			result.table_slots[i].reference_name = def.select.from[i].left_of_join;
+			auto parameter = std::find_if(def.parameters.begin(), def.parameters.end(),
+				[&](type_name_pair const& p) { return def.select.from[i].left_of_join == p.name; });
+			if(parameter != def.parameters.end()) {
+				std::string derived_type = parameter->type.substr(0, parameter->type.length() - 3);
+				result.table_slots[i].actual_table = find_by_name(parsed_file, derived_type);
+				if(!result.table_slots[i].actual_table) {
+					err.add(std::string("Could not find an object or relationship named ")
+						+ derived_type + " as required by usage of parameter "
+						+ def.select.from[i].left_of_join  +" in a from clause");
+				}
+			} else {
+				err.add(std::string("Could not find query parameter refernced as ")
+					+ def.select.from[i].left_of_join + " in from clause of a query in its the parameter list");
+			}
+		} else {
+			//first find base name
+			result.table_slots[i].reference_name = def.select.from[i].table_identifier.as_name;
+			result.table_slots[i].actual_table = find_by_name(parsed_file, def.select.from[i].table_identifier.member_name);
+			if(!result.table_slots[i].actual_table) {
+				err.add(std::string("Could not find an object or relationship named ")
+					+ def.select.from[i].table_identifier.member_name + " referenced in a from clause");
+			}
+			
+			if(def.select.from[i].left_of_join == "") {
+				if(i != 0) {
+					result.table_slots[i].joined_to = &(result.table_slots[i - 1]);
+				}
+			} else {
+				for(uint32_t j = 0; j < i; ++j) {
+					if(result.table_slots[j].internally_named_as == def.select.from[i].left_of_join) {
+						result.table_slots[i].joined_to = &(result.table_slots[j]);
+					}
+				}
+				if(!result.table_slots[i].joined_to) {
+					err.add(std::string("Could not find item in from cause referenced by ")
+						+ def.select.from[i].left_of_join + " as the target of a join");
+				}
+			}
+
+			if(result.table_slots[i].joined_to) {
+				if(def.select.from[i].join_on == "") {
+					result.table_slots[i].joind_by_link = find_common_link(*(result.table_slots[i].joined_to->actual_table),
+						*(result.table_slots[i].actual_table));
+					if(!result.table_slots[i].joind_by_link) {
+						err.add(std::string("Could not automatically pick a link between ")
+							+ result.table_slots[i].joined_to->actual_table->name
+							+ " and " + result.table_slots[i].actual_table->name + " to join on");
+					}
+				} else {
+					result.table_slots[i].joind_by_link = find_link_by_name(def.select.from[i].join_on, *(result.table_slots[i].joined_to->actual_table),
+						*(result.table_slots[i].actual_table));
+					if(!result.table_slots[i].joind_by_link) {
+						err.add(std::string("Could not find a link named ")
+							+ def.select.from[i].join_on + " between " + result.table_slots[i].joined_to->actual_table->name
+							+ " and " + result.table_slots[i].actual_table->name);
+					}
+				}
+			}
+		}
+	}
+
+	for(auto& val : def.select.returned_values) {
+		query_table_slot const* found = nullptr;
+		for(auto& s : result.table_slots) {
+			if(s.reference_name == val.property.type_name) {
+				found = &s;
+			}
+		}
+		if(!found) {
+			err.add(std::string("From target named ")
+				+ val.property.type_name
+				+ " could not be found");
+		}
+		result.exposed_values.push_back(perpared_selection_item{
+			val.aggregate_name,
+			val.property.member_name,
+			val.property.as_name,
+			found,
+			val.is_aggregate
+		});
+	}
+
+	return result;
 }
