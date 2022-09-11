@@ -343,15 +343,28 @@ struct query_table_slot {
 };
 
 struct perpared_selection_item {
-	std::string aggregate_name;
-	std::string as_member_of_slot;
 	std::string exposed_name;
+
+	property_def const* from_property;
+	related_object const* from_link;
 	query_table_slot const* derived_from_slot;
-	bool is_aggregate = false;
 };
+
+struct perpared_aggregate_item {
+	std::string aggregate_name;
+	std::string exposed_name;
+
+	property_def const* from_property;
+	related_object const* from_link;
+	query_table_slot const* derived_from_slot;
+};
+
 
 struct prepared_query_definition {
 	std::vector<perpared_selection_item> exposed_values;
+	std::vector<perpared_aggregate_item> exposed_aggregates;
+	std::vector<perpared_selection_item> exposed_min_max_terms;
+
 	std::vector<query_table_slot> table_slots;
 	std::vector<type_name_pair> parameters;
 

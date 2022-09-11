@@ -69,7 +69,7 @@ char const * advance_to_identifier_end(char const * pos, char const * end) {
 		if(*pos == ' ' || *pos == '\t' || *pos == '\n' || *pos == '\r'
 			|| *pos == ',' || *pos == '(' || *pos == ')' || *pos == '[' || *pos == ']' || *pos == '{'
 			|| *pos == '}' || *pos == ';' || *pos == '.' || *pos == '?' || *pos == '/' || *pos == '<'
-			|| *pos == '>' || *pos == ':' || *pos == '\'' || *pos == '\"' || *pos == '|' || *pos == '\\'
+			|| *pos == '>' || *pos == '\'' || *pos == '\"' || *pos == '|' || *pos == '\\'
 			|| *pos == '=' || *pos == '+' || *pos == '-' || *pos == '~' || *pos == '!' || *pos == '#'
 			|| *pos == '$' || *pos == '%' || *pos == '^' || *pos == '&' || *pos == '*')
 			return pos;
@@ -264,8 +264,6 @@ type_name_pair parse_type_and_name(char const* start, char const * end) {
 
 		result.type = std::string(start, first_id_end);
 		result.name = std::string(first_id_end + 1, member_end);
-
-		char const* trailing_second_id = advance_to_non_whitespace(member_end, end);
 	} else {
 		result.name = std::string(start, first_id_end);
 	}
@@ -1239,6 +1237,7 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 		} else {
 			//first find base name
 			result.table_slots[i].reference_name = def.select.from[i].table_identifier.as_name;
+			result.table_slots[i].internally_named_as = std::string("m_tableindex") + std::to_string(i);
 			result.table_slots[i].actual_table = find_by_name(parsed_file, def.select.from[i].table_identifier.member_name);
 			if(!result.table_slots[i].actual_table) {
 				err.add(std::string("Could not find an object or relationship named ")
@@ -1251,7 +1250,7 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 				}
 			} else {
 				for(uint32_t j = 0; j < i; ++j) {
-					if(result.table_slots[j].internally_named_as == def.select.from[i].left_of_join) {
+					if(result.table_slots[j].reference_name == def.select.from[i].left_of_join) {
 						result.table_slots[i].joined_to = &(result.table_slots[j]);
 					}
 				}
@@ -1281,27 +1280,167 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 				}
 			}
 		}
+	} // end loop over from items
+
+	bool any_is_min_max = false;
+	for(auto& val : def.select.returned_values) {
+		if(val.aggregate_name == "min" || val.aggregate_name == "max" ||
+			val.aggregate_name == "std::min" || val.aggregate_name == "std::max") {
+			any_is_min_max = true;
+		}
+	}
+	if(def.select.group_by.length() > 0) {
+		for(auto& s : result.table_slots) {
+			if(s.reference_name == def.select.group_by) {
+				result.has_group = true;
+				s.is_group_slot = true;
+			}
+		}
 	}
 
 	for(auto& val : def.select.returned_values) {
 		query_table_slot const* found = nullptr;
+		bool after_group_slot = false;
 		for(auto& s : result.table_slots) {
 			if(s.reference_name == val.property.type_name) {
 				found = &s;
+				break;
+			}
+			if(val.property.type_name == "") {
+				if(std::find_if(s.actual_table->properties.begin(), s.actual_table->properties.end(), 
+					[&](property_def const& prop) { return prop.name == val.property.member_name; }) != s.actual_table->properties.end()) {
+					found = &s;
+					break;
+				}
+				if(std::find_if(s.actual_table->indexed_objects.begin(), s.actual_table->indexed_objects.end(),
+					[&](related_object const& prop) { return prop.property_name == val.property.member_name; }) != s.actual_table->indexed_objects.end()) {
+					found = &s;
+					break;
+				}
+			}
+			if(s.is_group_slot)
+				after_group_slot = true;
+		}
+		
+		if(!found) {
+			if(val.property.type_name != "") {
+				err.add(std::string("From target named ")
+					+ val.property.type_name
+					+ " could not be found for " + val.property.as_name);
+			} else {
+				err.add(std::string("From target with property named ")
+					+ val.property.member_name
+					+ " could not be found for " + val.property.as_name);
+			}
+		} else {
+			property_def const* referred_property = nullptr;
+			related_object const* referred_link = nullptr;
+
+			for(auto& prop : found->actual_table->properties) {
+				if(prop.name == val.property.member_name) {
+					referred_property = &prop;
+				}
+			}
+			for(auto& link : found->actual_table->indexed_objects) {
+				if(link.property_name == val.property.member_name) {
+					referred_link = &link;
+				}
+			}
+			if(!referred_property && !referred_link) {
+				err.add(std::string("No property named ")
+					+ val.property.member_name
+					+ " could be found in target " + val.property.type_name);
+			} else {
+				if(!val.is_aggregate) {
+					if(any_is_min_max && after_group_slot) {
+						result.exposed_min_max_terms.push_back(perpared_selection_item{
+							val.property.as_name,
+							referred_property,
+							referred_link,
+							found
+							});
+					} else {
+						result.exposed_values.push_back(perpared_selection_item{
+							val.property.as_name,
+							referred_property,
+							referred_link,
+							found
+							});
+					}
+				} else {
+					result.exposed_aggregates.push_back(perpared_aggregate_item{
+						val.aggregate_name,
+						val.property.as_name,
+						referred_property,
+						referred_link,
+						found
+						});
+				}
 			}
 		}
-		if(!found) {
-			err.add(std::string("From target named ")
-				+ val.property.type_name
-				+ " could not be found");
+	} // end loop over returned values
+
+	char const* where_start = def.select.where_clause.data();
+	char const* where_end = where_start + def.select.where_clause.length();
+
+	while(where_start < where_end) {
+		char const* next_at = advance_to_at(where_start, where_end);
+		result.where_conditional += std::string(where_start, next_at);
+		char const* at_end = advance_to_identifier_end(next_at + 1, where_end);
+		if(at_end < where_end && *at_end == '.') {
+			at_end = advance_to_identifier_end(at_end + 1, where_end);
 		}
-		result.exposed_values.push_back(perpared_selection_item{
-			val.aggregate_name,
-			val.property.member_name,
-			val.property.as_name,
-			found,
-			val.is_aggregate
-		});
+
+		auto at_value = parse_type_and_name(next_at + 1, at_end);
+
+		bool found = false;
+		if(at_value.type.length() > 0) {
+			for(auto& slot : result.table_slots) {
+				if(slot.reference_name == at_value.type) {
+					for(auto& prop : slot.actual_table->properties) {
+						if(prop.name == at_value.name && !found) {
+							result.where_conditional += "m_container."
+								+ slot.actual_table->name + ".m_"
+								+ prop.name
+								+ ".vptr()[" + slot.internally_named_as + ".index()]";
+							found = true;
+						}
+					}
+					for(auto& prop : slot.actual_table->indexed_objects) {
+						if(prop.property_name == at_value.name && !found) {
+							result.where_conditional += "m_container."
+								+ slot.actual_table->name + ".m_"
+								+ prop.property_name
+								+ ".vptr()[" + slot.internally_named_as + ".index()]";
+							found = true;
+						}
+					}
+				}
+			}
+		} else {
+			for(auto& param : result.parameters) {
+				if(param.name == at_value.name && !found) {
+					result.where_conditional += "m_parameters." + at_value.name;
+					found = true;
+				}
+			}
+			for(auto& val : result.exposed_values) {
+				if(val.exposed_name == at_value.name && !found) {
+					result.where_conditional += "m_container."
+						+ val.derived_from_slot->actual_table->name + ".m_"
+						+ (val.from_link ? val.from_link->property_name : (val.from_property ? val.from_property->name : std::string("")))
+						+ ".vptr()[" + val.derived_from_slot->internally_named_as + ".index()]";
+					found = true;
+				}
+			}
+		}
+
+		if(!found) {
+			err.add(std::string("No replacement found for ")
+				+ std::string(next_at, at_end));
+		}
+
+		where_start = at_end;
 	}
 
 	return result;
