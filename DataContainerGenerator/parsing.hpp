@@ -165,19 +165,6 @@ struct made_id {
 	std::string base_type;
 };
 
-struct file_def {
-	std::string namspace = "dcon";
-	std::vector<std::string> includes;
-	std::vector<std::string> globals;
-	std::vector<std::string> legacy_types;
-	std::vector<made_id> extra_ids;
-
-	std::vector<relationship_object_def> relationship_objects;
-	std::vector<load_save_def> load_save_routines;
-	std::vector<conversion_def> conversion_list;
-
-	std::vector<std::string> object_types;
-};
 
 related_object parse_link_def(char const* start, char const* end, char const* global_start, error_record& err_out);
 property_def parse_property_def(char const* start, char const* end, char const* global_start, error_record& err_out);
@@ -185,56 +172,8 @@ relationship_object_def parse_relationship(char const* start, char const* end, c
 relationship_object_def parse_object(char const* start, char const* end, char const* global_start, error_record& err_out);
 std::vector<std::string> parse_legacy_types(char const* start, char const* end, char const* global_start, error_record& err_out);
 conversion_def parse_conversion_def(char const* start, char const* end, char const* global_start, error_record& err_out);
-file_def parse_file(char const* start, char const* end, error_record& err_out);
 load_save_def parse_load_save_def(char const* start, char const* end, char const* global_start, error_record& err_out);
 
-inline relationship_object_def const* find_by_name(file_def const& def, std::string const& name) {
-	if(auto r = std::find_if(
-		def.relationship_objects.begin(), def.relationship_objects.end(),
-		[&name](relationship_object_def const& o) { return o.name == name; }); r != def.relationship_objects.end()) {
-		return &(*r);
-	}
-	return nullptr;
-}
-
-inline relationship_object_def* find_by_name(file_def& def, std::string const& name) {
-	if(auto r = std::find_if(
-		def.relationship_objects.begin(), def.relationship_objects.end(),
-		[&name](relationship_object_def const& o) { return o.name == name; }); r != def.relationship_objects.end()) {
-		return &(*r);
-	}
-	return nullptr;
-}
-
-inline std::string make_relationship_parameters(relationship_object_def const& o) {
-	std::string result;
-	for(auto& i : o.indexed_objects) {
-		if(result.length() != 0)
-			result += ", ";
-		if(i.multiplicity == 1) {
-			result += i.type_name + "_id " + i.property_name + "_p";
-		} else {
-			result += i.type_name + "_id " + i.property_name + "_p0";
-			for(int32_t j = 1; j < i.multiplicity; ++j) {
-				result += ", " + i.type_name + "_id " + i.property_name + "_p" + std::to_string(j);
-			}
-		}
-	}
-	return result;
-}
-
-inline bool is_vectorizable_type(file_def const& def, std::string const& name) {
-	return name == "char" || name == "bool" || name == "int" || name == "short" || name == "unsigned short" ||
-		name == "unsigned int" || name == "unsigned char" || name == "signed char" ||
-		name == "float" || name == "int8_t" || name == "uint8_t" ||
-		name == "int16_t" || name == "uint16_t" || name == "int32_t" || name == "uint32_t"
-		|| std::find_if(def.extra_ids.begin(), def.extra_ids.end(), [&](made_id const& mi) {
-			return mi.name == name; }) != def.extra_ids.end()
-		|| [&]() {
-		return name.length() >= 4 && name[name.length() - 1] == 'd' && name[name.length() - 2] == 'i' &&
-			name[name.length() - 3] == '_' && find_by_name(def, name.substr(0, name.length() - 3)) != nullptr;
-	}();
-}
 
 inline std::vector<std::string> common_types{ std::string("int8_t"), std::string("uint8_t"), std::string("int16_t"), std::string("uint16_t")
 	, std::string("int32_t"), std::string("uint32_t"), std::string("int64_t"), std::string("uint64_t"), std::string("float"), std::string("double") };
@@ -327,7 +266,10 @@ struct query_definition {
 	select_statement_definition select;
 	std::vector<type_name_pair> parameters;
 	std::string name;
+	int32_t line = 0;
 };
+
+query_definition parse_query_definition(char const* &start, char const * end, char const * global_start, error_record & err);
 
 struct query_table_slot {
 	std::string reference_name;
@@ -340,6 +282,7 @@ struct query_table_slot {
 	bool is_parameter_type = false;
 	bool is_join_plus = false;
 	bool is_group_slot = false;
+	bool expose_has_name = false;
 };
 
 struct perpared_selection_item {
@@ -369,7 +312,75 @@ struct prepared_query_definition {
 	std::vector<type_name_pair> parameters;
 
 	std::string where_conditional;
+	std::string name;
 	bool has_group = false;
 };
 
+struct file_def {
+	std::string namspace = "dcon";
+	std::vector<std::string> includes;
+	std::vector<std::string> globals;
+	std::vector<std::string> legacy_types;
+	std::vector<made_id> extra_ids;
+
+	std::vector<relationship_object_def> relationship_objects;
+	std::vector<load_save_def> load_save_routines;
+	std::vector<conversion_def> conversion_list;
+
+	std::vector<std::string> object_types;
+
+	std::vector< query_definition> unprepared_queries;
+	std::vector< prepared_query_definition> prepared_queries;
+};
+
 prepared_query_definition make_prepared_definition(file_def const& parsed_file, query_definition const& def, error_record & err);
+
+file_def parse_file(char const* start, char const* end, error_record& err_out);
+
+inline relationship_object_def const* find_by_name(file_def const& def, std::string const& name) {
+	if(auto r = std::find_if(
+		def.relationship_objects.begin(), def.relationship_objects.end(),
+		[&name](relationship_object_def const& o) { return o.name == name; }); r != def.relationship_objects.end()) {
+		return &(*r);
+	}
+	return nullptr;
+}
+
+inline relationship_object_def* find_by_name(file_def& def, std::string const& name) {
+	if(auto r = std::find_if(
+		def.relationship_objects.begin(), def.relationship_objects.end(),
+		[&name](relationship_object_def const& o) { return o.name == name; }); r != def.relationship_objects.end()) {
+		return &(*r);
+	}
+	return nullptr;
+}
+
+inline std::string make_relationship_parameters(relationship_object_def const& o) {
+	std::string result;
+	for(auto& i : o.indexed_objects) {
+		if(result.length() != 0)
+			result += ", ";
+		if(i.multiplicity == 1) {
+			result += i.type_name + "_id " + i.property_name + "_p";
+		} else {
+			result += i.type_name + "_id " + i.property_name + "_p0";
+			for(int32_t j = 1; j < i.multiplicity; ++j) {
+				result += ", " + i.type_name + "_id " + i.property_name + "_p" + std::to_string(j);
+			}
+		}
+	}
+	return result;
+}
+
+inline bool is_vectorizable_type(file_def const& def, std::string const& name) {
+	return name == "char" || name == "bool" || name == "int" || name == "short" || name == "unsigned short" ||
+		name == "unsigned int" || name == "unsigned char" || name == "signed char" ||
+		name == "float" || name == "int8_t" || name == "uint8_t" ||
+		name == "int16_t" || name == "uint16_t" || name == "int32_t" || name == "uint32_t"
+		|| std::find_if(def.extra_ids.begin(), def.extra_ids.end(), [&](made_id const& mi) {
+		return mi.name == name; }) != def.extra_ids.end()
+			|| [&]() {
+			return name.length() >= 4 && name[name.length() - 1] == 'd' && name[name.length() - 2] == 'i' &&
+				name[name.length() - 3] == '_' && find_by_name(def, name.substr(0, name.length() - 3)) != nullptr;
+		}();
+}

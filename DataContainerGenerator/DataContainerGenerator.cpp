@@ -101,10 +101,10 @@ int main(int argc, char *argv[]) {
 		
 		file_def parsed_file = parse_file(file_contents.c_str(), file_contents.c_str() + file_contents.length(), err);
 
+		input_file.close();
+
 		if(err.accumulated.length() > 0)
 			error_to_file(output_file_name, err.accumulated);
-
-		input_file.close();
 
 		// patchup relationship pointers & other information
 
@@ -258,6 +258,14 @@ int main(int argc, char *argv[]) {
 				}
 			}
 		}
+
+		// make prepared queries
+
+		for(auto& q : parsed_file.unprepared_queries) {
+			parsed_file.prepared_queries.push_back(make_prepared_definition(parsed_file, q, err));
+		}
+		if(err.accumulated.length() > 0)
+			error_to_file(output_file_name, err.accumulated);
 
 		// compose contents of generated file
 		std::string output;

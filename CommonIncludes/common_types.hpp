@@ -80,6 +80,7 @@ namespace dcon {
 #ifdef DCON_USE_EXCEPTIONS
 	struct out_of_space {};
 #endif
+	struct invalid_iterator_type {};
 
 	template<typename T>
 	class local_vector {

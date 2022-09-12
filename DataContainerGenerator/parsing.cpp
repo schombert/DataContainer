@@ -1086,6 +1086,76 @@ conversion_def parse_conversion_def(char const * start, char const * end, char c
 	return result;
 }
 
+std::vector<type_name_pair> parse_query_parameters_list(char const* &start, char const * end, char const * global_start, error_record & err) {
+	std::vector<type_name_pair> result;
+
+	char const* pos = start;
+	while(pos < end) {
+		auto extracted = extract_item(pos, end, global_start, err);
+		pos = extracted.terminal;
+
+		if(extracted.key.start != extracted.key.end) {
+			std::string kstr = extracted.key.to_string();
+			
+			if(extracted.values.size() == 0) {
+					err.add(std::string("missing type declaration on line ")
+					+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+
+			} else if(extracted.values.size() > 1) {
+				err.add(std::string("too many type declarations on line ")
+					+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+			} else {
+				result.push_back(type_name_pair{ kstr, extracted.values[0].to_string() });
+			}
+		}
+	}
+
+	return result;
+}
+
+query_definition parse_query_definition(char const* &start, char const * end, char const * global_start, error_record & err) {
+	query_definition result;
+	char const* pos = start;
+	while(pos < end) {
+		auto extracted = extract_item(pos, end, global_start, err);
+		pos = extracted.terminal;
+
+		if(extracted.key.start != extracted.key.end) {
+			std::string kstr = extracted.key.to_string();
+			if(kstr == "name") {
+				if(extracted.values.size() != 1) {
+					err.add(std::string("wrong number of parameters for \"name\" on line ")
+						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				} else if(result.name.length() == 0) {
+					result.name = extracted.values[0].to_string();
+				} else {
+					err.add(std::string("multiple defintion of \"name\" while parsing query defintion on line ")
+						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				}
+			} else if(kstr == "select") {
+				if(extracted.values.size() != 1) {
+					err.add(std::string("wrong number of parameters for \"select\" on line ")
+						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				} else {
+					result.line = calculate_line_from_position(global_start, extracted.values[0].start);
+					result.select = parse_select_statement(extracted.values[0].start, extracted.values[0].end, global_start, err);
+				}
+			} else if(kstr == "parameters") {
+				if(extracted.values.size() != 1) {
+					err.add(std::string("wrong number of parameters for \"parameters\" on line ")
+						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				} else {
+					result.parameters = parse_query_parameters_list(extracted.values[0].start, extracted.values[0].end, global_start, err);
+				}
+			} else {
+				err.add(std::string("unexpected token \"") + kstr + "\" while parsing query defintion on line "
+					+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+			}
+		}
+	}
+	return result;
+}
+
 file_def parse_file(char const * start, char const * end, error_record & err_out) {
 	file_def parsed_file;
 
@@ -1166,6 +1236,17 @@ file_def parse_file(char const * start, char const * end, error_record & err_out
 					parsed_file.relationship_objects.push_back(
 						parse_relationship(extracted.values[0].start, extracted.values[0].end, start, err_out));
 				}
+			} else if(kstr == "query") {
+				if(extracted.values.size() != 1) {
+					err_out.add(std::string("wrong number of parameters for \"query\" on line ")
+						+ std::to_string(calculate_line_from_position(start, extracted.key.start)));
+				} else {
+					parsed_file.unprepared_queries.push_back(
+						parse_query_definition(extracted.values[0].start, extracted.values[0].end, start, err_out));
+				}
+			} else {
+				err_out.add(std::string("unexpetected top level key: ") + kstr + " on line "
+					+ std::to_string(calculate_line_from_position(start, extracted.key.start)));
 			}
 		}
 	}
@@ -1208,6 +1289,9 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 	prepared_query_definition result;
 
 	result.parameters = def.parameters;
+	result.name = def.name;
+
+	std::vector<std::string> exposed_table_names;
 
 	result.table_slots.resize(def.select.from.size());
 	for(uint32_t i = 0; i < def.select.from.size(); ++i) {
@@ -1216,7 +1300,8 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 
 		if(result.table_slots[i].is_parameter_type) {
 			if(i != 0) {
-				err.add("Only the first target in a from clause can be a parameter; use \"where\" to filter other targets");
+				err.add(std::string("query on line ") + std::to_string(def.line)
+					+ ": Only the first target in a from clause can be a parameter; use \"where\" to filter other targets");
 			}
 			result.table_slots[i].internally_named_as = std::string("m_parameters.") + def.select.from[i].left_of_join;
 			result.table_slots[i].reference_name = def.select.from[i].left_of_join;
@@ -1231,16 +1316,22 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 						+ def.select.from[i].left_of_join  +" in a from clause");
 				}
 			} else {
-				err.add(std::string("Could not find query parameter refernced as ")
+				err.add(std::string("query on line ") + std::to_string(def.line) +
+					std::string(": Could not find query parameter refernced as ")
 					+ def.select.from[i].left_of_join + " in from clause of a query in its the parameter list");
 			}
 		} else {
 			//first find base name
 			result.table_slots[i].reference_name = def.select.from[i].table_identifier.as_name;
+			if(std::find(exposed_table_names.begin(), exposed_table_names.end(), def.select.from[i].table_identifier.as_name) == exposed_table_names.end()) {
+				result.table_slots[i].expose_has_name = true;
+				exposed_table_names.push_back(def.select.from[i].table_identifier.as_name);
+			}
 			result.table_slots[i].internally_named_as = std::string("m_tableindex") + std::to_string(i);
 			result.table_slots[i].actual_table = find_by_name(parsed_file, def.select.from[i].table_identifier.member_name);
 			if(!result.table_slots[i].actual_table) {
-				err.add(std::string("Could not find an object or relationship named ")
+				err.add(std::string("query on line ") + std::to_string(def.line)
+					+ std::string(": Could not find an object or relationship named ")
 					+ def.select.from[i].table_identifier.member_name + " referenced in a from clause");
 			}
 			
@@ -1255,7 +1346,8 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 					}
 				}
 				if(!result.table_slots[i].joined_to) {
-					err.add(std::string("Could not find item in from cause referenced by ")
+					err.add(std::string("query on line ") + std::to_string(def.line)
+						+ std::string(": Could not find item in from cause referenced by ")
 						+ def.select.from[i].left_of_join + " as the target of a join");
 				}
 			}
@@ -1265,7 +1357,8 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 					result.table_slots[i].joind_by_link = find_common_link(*(result.table_slots[i].joined_to->actual_table),
 						*(result.table_slots[i].actual_table));
 					if(!result.table_slots[i].joind_by_link) {
-						err.add(std::string("Could not automatically pick a link between ")
+						err.add(std::string("query on line ") + std::to_string(def.line)
+							+ std::string(": Could not automatically pick a link between ")
 							+ result.table_slots[i].joined_to->actual_table->name
 							+ " and " + result.table_slots[i].actual_table->name + " to join on");
 					}
@@ -1273,7 +1366,8 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 					result.table_slots[i].joind_by_link = find_link_by_name(def.select.from[i].join_on, *(result.table_slots[i].joined_to->actual_table),
 						*(result.table_slots[i].actual_table));
 					if(!result.table_slots[i].joind_by_link) {
-						err.add(std::string("Could not find a link named ")
+						err.add(std::string("query on line ") + std::to_string(def.line)
+							+ std::string(": Could not find a link named ")
 							+ def.select.from[i].join_on + " between " + result.table_slots[i].joined_to->actual_table->name
 							+ " and " + result.table_slots[i].actual_table->name);
 					}
@@ -1324,11 +1418,13 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 		
 		if(!found) {
 			if(val.property.type_name != "") {
-				err.add(std::string("From target named ")
+				err.add(std::string("query on line ") + std::to_string(def.line)
+					+ ": From target named "
 					+ val.property.type_name
 					+ " could not be found for " + val.property.as_name);
 			} else {
-				err.add(std::string("From target with property named ")
+				err.add(std::string("query on line ") + std::to_string(def.line)
+					+ std::string(": From target with property named ")
 					+ val.property.member_name
 					+ " could not be found for " + val.property.as_name);
 			}
@@ -1347,7 +1443,8 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 				}
 			}
 			if(!referred_property && !referred_link) {
-				err.add(std::string("No property named ")
+				err.add(std::string("query on line ") + std::to_string(def.line)
+					+ std::string(": No property named ")
 					+ val.property.member_name
 					+ " could be found in target " + val.property.type_name);
 			} else {
@@ -1436,7 +1533,8 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 		}
 
 		if(!found) {
-			err.add(std::string("No replacement found for ")
+			err.add(std::string("query on line ") + std::to_string(def.line)
+				+ std::string(": No replacement found for ")
 				+ std::string(next_at, at_end));
 		}
 

@@ -51,3 +51,5 @@ basic_builder& make_object_member_declarations(basic_builder& o, file_def const&
 	bool add_prefix, bool declaration_mode, std::string const& namesp, bool const_mode);
 
 std::optional<std::string> to_fat_index_type(file_def const& parsed_file, std::string const& original_name, bool is_const);
+
+basic_builder& make_query_instance_types(basic_builder& o, prepared_query_definition const& pdef);

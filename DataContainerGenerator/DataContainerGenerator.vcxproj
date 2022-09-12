@@ -157,6 +157,7 @@
     <ClCompile Include="DataContainerGenerator.cpp" />
     <ClCompile Include="object_member_fragments.cpp" />
     <ClCompile Include="parsing.cpp" />
+    <ClCompile Include="query_fragments.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="code_fragments.hpp" />

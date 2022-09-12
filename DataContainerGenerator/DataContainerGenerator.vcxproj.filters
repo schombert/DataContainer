@@ -27,6 +27,9 @@
     <ClCompile Include="object_member_fragments.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="query_fragments.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source_builder.hpp">
