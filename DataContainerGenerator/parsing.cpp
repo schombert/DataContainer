@@ -42,6 +42,27 @@ char const * advance_to_closing_parenthesis(char const * pos, char const * end) 
 	return pos;
 }
 
+char const * advance_to_closing_square_bracket(char const * pos, char const * end) {
+	int32_t depth_count = 0;
+	bool in_quote = false;
+
+	while(pos < end) {
+		if(*pos == '[' && !in_quote)
+			++depth_count;
+		else if(*pos == ']' && !in_quote)
+			--depth_count;
+		else if(*pos == '\"')
+			in_quote = !in_quote;
+		else if(*pos == '\\' && in_quote) {
+			++pos;
+		}
+		if(depth_count < 0)
+			return pos;
+		++pos;
+	}
+	return pos;
+}
+
 bool is_ascii_ws(char v) {
 	return v == ' ' || v == '\t' || v == '\n' || v == '\r';
 }
@@ -1401,6 +1422,10 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 				break;
 			}
 			if(val.property.type_name == "") {
+				if(val.property.member_name == "id") {
+					found = &s;
+					break;
+				}
 				if(std::find_if(s.actual_table->properties.begin(), s.actual_table->properties.end(), 
 					[&](property_def const& prop) { return prop.name == val.property.member_name; }) != s.actual_table->properties.end()) {
 					found = &s;
@@ -1442,7 +1467,7 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 					referred_link = &link;
 				}
 			}
-			if(!referred_property && !referred_link) {
+			if(!referred_property && !referred_link && val.property.member_name != "id") {
 				err.add(std::string("query on line ") + std::to_string(def.line)
 					+ std::string(": No property named ")
 					+ val.property.member_name
@@ -1496,10 +1521,30 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 				if(slot.reference_name == at_value.type) {
 					for(auto& prop : slot.actual_table->properties) {
 						if(prop.name == at_value.name && !found) {
-							result.where_conditional += "m_container."
-								+ slot.actual_table->name + ".m_"
-								+ prop.name
-								+ ".vptr()[" + slot.internally_named_as + ".index()]";
+							if(prop.type == property_type::array_bitfield || prop.type == property_type::array_other
+								|| prop.type == property_type::array_vectorizable) {
+
+								if(at_end < where_end && *at_end == '[') {
+									char const* bracket_end = advance_to_closing_square_bracket(at_end + 1, where_end);
+
+									result.where_conditional += "m_container."
+										+ slot.actual_table->name + ".m_"
+										+ prop.name
+										+ ".vptr(" + std::string(at_end + 1, bracket_end) + ")["
+										+ slot.internally_named_as + ".index()]";
+									at_end = bracket_end + 1;
+								} else {
+									err.add(std::string("query on line ") + std::to_string(def.line)
+										+ std::string(": variable of array type missing an indexing expression: ")
+										+ std::string(next_at, at_end));
+								}
+
+							} else {
+								result.where_conditional += "m_container."
+									+ slot.actual_table->name + ".m_"
+									+ prop.name
+									+ ".vptr()[" + slot.internally_named_as + ".index()]";
+							}
 							found = true;
 						}
 					}
@@ -1523,11 +1568,32 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 			}
 			for(auto& val : result.exposed_values) {
 				if(val.exposed_name == at_value.name && !found) {
-					result.where_conditional += "m_container."
-						+ val.derived_from_slot->actual_table->name + ".m_"
-						+ (val.from_link ? val.from_link->property_name : (val.from_property ? val.from_property->name : std::string("")))
-						+ ".vptr()[" + val.derived_from_slot->internally_named_as + ".index()]";
-					found = true;
+
+					if(val.from_property && val.from_property->type == property_type::array_bitfield || val.from_property->type == property_type::array_other
+						|| val.from_property->type == property_type::array_vectorizable) {
+
+						if(at_end < where_end && *at_end == '[') {
+							char const* bracket_end = advance_to_closing_square_bracket(at_end + 1, where_end);
+
+							result.where_conditional += "m_container."
+								+ val.derived_from_slot->actual_table->name + ".m_"
+								+ val.from_property->name
+								+ ".vptr(" + std::string(at_end + 1, bracket_end) + ")["
+								+ val.derived_from_slot->internally_named_as + ".index()]";
+							at_end = bracket_end + 1;
+						} else {
+							err.add(std::string("query on line ") + std::to_string(def.line)
+								+ std::string(": variable of array type missing an indexing expression: ")
+								+ at_value.name);
+						}
+
+					} else {
+						result.where_conditional += "m_container."
+							+ val.derived_from_slot->actual_table->name + ".m_"
+							+ (val.from_link ? val.from_link->property_name : (val.from_property ? val.from_property->name : std::string("")))
+							+ ".vptr()[" + val.derived_from_slot->internally_named_as + ".index()]";
+						found = true;
+					}
 				}
 			}
 		}

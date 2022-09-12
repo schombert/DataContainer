@@ -53,3 +53,6 @@ basic_builder& make_object_member_declarations(basic_builder& o, file_def const&
 std::optional<std::string> to_fat_index_type(file_def const& parsed_file, std::string const& original_name, bool is_const);
 
 basic_builder& make_query_instance_types(basic_builder& o, prepared_query_definition const& pdef);
+basic_builder& make_query_instance_definitions(basic_builder& o, prepared_query_definition const& pdef);
+basic_builder& make_query_iterator_declarations(basic_builder& o, prepared_query_definition const& pdef);
+basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definition const& pdef, std::string const& ns, bool is_const);
