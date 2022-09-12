@@ -102,11 +102,11 @@ namespace old {
 			// storage space for red of type float
 			//
 			struct alignas(64) dtype_red {
-				uint8_t padding[(63 + sizeof(float)) & ~63ui64];
-				float values[(sizeof(float) <= 64 ? (uint32_t(3000) + (64ui32 / uint32_t(sizeof(float))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(float)) - 1ui32) : uint32_t(3000))];
+				uint8_t padding[(63 + sizeof(float)) & ~uint64_t(63)];
+				float values[(sizeof(float) <= 64 ? (uint32_t(3000) + (uint32_t(64) / uint32_t(sizeof(float))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(float)) - uint32_t(1)) : uint32_t(3000))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_red() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(float) <= 64 ? (uint32_t(3000) + (64ui32 / uint32_t(sizeof(float))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(float)) - 1ui32) : uint32_t(3000))); }
+				dtype_red() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(float) <= 64 ? (uint32_t(3000) + (uint32_t(64) / uint32_t(sizeof(float))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(float)) - uint32_t(1)) : uint32_t(3000))); }
 			}
 			m_red;
 			
@@ -114,11 +114,11 @@ namespace old {
 			// storage space for green of type float
 			//
 			struct alignas(64) dtype_green {
-				uint8_t padding[(63 + sizeof(float)) & ~63ui64];
-				float values[(sizeof(float) <= 64 ? (uint32_t(3000) + (64ui32 / uint32_t(sizeof(float))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(float)) - 1ui32) : uint32_t(3000))];
+				uint8_t padding[(63 + sizeof(float)) & ~uint64_t(63)];
+				float values[(sizeof(float) <= 64 ? (uint32_t(3000) + (uint32_t(64) / uint32_t(sizeof(float))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(float)) - uint32_t(1)) : uint32_t(3000))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_green() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(float) <= 64 ? (uint32_t(3000) + (64ui32 / uint32_t(sizeof(float))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(float)) - 1ui32) : uint32_t(3000))); }
+				dtype_green() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(float) <= 64 ? (uint32_t(3000) + (uint32_t(64) / uint32_t(sizeof(float))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(float)) - uint32_t(1)) : uint32_t(3000))); }
 			}
 			m_green;
 			
@@ -126,11 +126,11 @@ namespace old {
 			// storage space for blue of type float
 			//
 			struct alignas(64) dtype_blue {
-				uint8_t padding[(63 + sizeof(float)) & ~63ui64];
-				float values[(sizeof(float) <= 64 ? (uint32_t(3000) + (64ui32 / uint32_t(sizeof(float))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(float)) - 1ui32) : uint32_t(3000))];
+				uint8_t padding[(63 + sizeof(float)) & ~uint64_t(63)];
+				float values[(sizeof(float) <= 64 ? (uint32_t(3000) + (uint32_t(64) / uint32_t(sizeof(float))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(float)) - uint32_t(1)) : uint32_t(3000))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_blue() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(float) <= 64 ? (uint32_t(3000) + (64ui32 / uint32_t(sizeof(float))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(float)) - 1ui32) : uint32_t(3000))); }
+				dtype_blue() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(float) <= 64 ? (uint32_t(3000) + (uint32_t(64) / uint32_t(sizeof(float))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(float)) - uint32_t(1)) : uint32_t(3000))); }
 			}
 			m_blue;
 			

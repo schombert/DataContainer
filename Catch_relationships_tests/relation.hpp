@@ -599,11 +599,11 @@ namespace dcon {
 			// storage space for some_value of type int32_t
 			//
 			struct alignas(64) dtype_some_value {
-				uint8_t padding[(63 + sizeof(int32_t)) & ~63ui64];
-				int32_t values[(sizeof(int32_t) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(int32_t))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(int32_t)) - 1ui32) : uint32_t(1200))];
+				uint8_t padding[(63 + sizeof(int32_t)) & ~uint64_t(63)];
+				int32_t values[(sizeof(int32_t) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(int32_t))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(int32_t)) - uint32_t(1)) : uint32_t(1200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_some_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(int32_t) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(int32_t))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(int32_t)) - 1ui32) : uint32_t(1200))); }
+				dtype_some_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(int32_t) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(int32_t))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(int32_t)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_some_value;
 			
@@ -631,11 +631,11 @@ namespace dcon {
 			// storage space for some_value of type int32_t
 			//
 			struct alignas(64) dtype_some_value {
-				uint8_t padding[(63 + sizeof(int32_t)) & ~63ui64];
-				int32_t values[(sizeof(int32_t) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(int32_t))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(int32_t)) - 1ui32) : uint32_t(1200))];
+				uint8_t padding[(63 + sizeof(int32_t)) & ~uint64_t(63)];
+				int32_t values[(sizeof(int32_t) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(int32_t))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(int32_t)) - uint32_t(1)) : uint32_t(1200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_some_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(int32_t) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(int32_t))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(int32_t)) - 1ui32) : uint32_t(1200))); }
+				dtype_some_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(int32_t) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(int32_t))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(int32_t)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_some_value;
 			
@@ -659,11 +659,11 @@ namespace dcon {
 			// storage space for right of type thingyA_id
 			//
 			struct alignas(64) dtype_right {
-				uint8_t padding[(63 + sizeof(thingyA_id)) & ~63ui64];
-				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(1200))];
+				uint8_t padding[(63 + sizeof(thingyA_id)) & ~uint64_t(63)];
+				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(1200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(1200))); }
+				dtype_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_right;
 			
@@ -688,11 +688,11 @@ namespace dcon {
 			// storage space for right of type thingyB_id
 			//
 			struct alignas(64) dtype_right {
-				uint8_t padding[(63 + sizeof(thingyB_id)) & ~63ui64];
-				thingyB_id values[(sizeof(thingyB_id) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(thingyB_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyB_id)) - 1ui32) : uint32_t(1200))];
+				uint8_t padding[(63 + sizeof(thingyB_id)) & ~uint64_t(63)];
+				thingyB_id values[(sizeof(thingyB_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(thingyB_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyB_id)) - uint32_t(1)) : uint32_t(1200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyB_id) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(thingyB_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyB_id)) - 1ui32) : uint32_t(1200))); }
+				dtype_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyB_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(thingyB_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyB_id)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_right;
 			
@@ -721,11 +721,11 @@ namespace dcon {
 			// storage space for right of type thingyB_id
 			//
 			struct alignas(64) dtype_right {
-				uint8_t padding[(63 + sizeof(thingyB_id)) & ~63ui64];
-				thingyB_id values[(sizeof(thingyB_id) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(thingyB_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyB_id)) - 1ui32) : uint32_t(1200))];
+				uint8_t padding[(63 + sizeof(thingyB_id)) & ~uint64_t(63)];
+				thingyB_id values[(sizeof(thingyB_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(thingyB_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyB_id)) - uint32_t(1)) : uint32_t(1200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyB_id) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(thingyB_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyB_id)) - 1ui32) : uint32_t(1200))); }
+				dtype_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyB_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(thingyB_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyB_id)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_right;
 			
@@ -744,11 +744,11 @@ namespace dcon {
 			// storage space for head_back_right of type relate_in_list_id
 			//
 			struct alignas(64) dtype_head_back_right {
-				uint8_t padding[(63 + sizeof(relate_in_list_id)) & ~63ui64];
-				relate_in_list_id values[(sizeof(relate_in_list_id) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(relate_in_list_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(relate_in_list_id)) - 1ui32) : uint32_t(1200))];
+				uint8_t padding[(63 + sizeof(relate_in_list_id)) & ~uint64_t(63)];
+				relate_in_list_id values[(sizeof(relate_in_list_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(relate_in_list_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(relate_in_list_id)) - uint32_t(1)) : uint32_t(1200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_head_back_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(relate_in_list_id) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(relate_in_list_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(relate_in_list_id)) - 1ui32) : uint32_t(1200))); }
+				dtype_head_back_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(relate_in_list_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(relate_in_list_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(relate_in_list_id)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_head_back_right;
 			
@@ -776,11 +776,11 @@ namespace dcon {
 			// storage space for A of type thingyA_id
 			//
 			struct alignas(64) dtype_A {
-				uint8_t padding[(63 + sizeof(thingyA_id)) & ~63ui64];
-				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))];
+				uint8_t padding[(63 + sizeof(thingyA_id)) & ~uint64_t(63)];
+				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_A() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))); }
+				dtype_A() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))); }
 			}
 			m_A;
 			
@@ -788,11 +788,11 @@ namespace dcon {
 			// storage space for B of type thingyA_id
 			//
 			struct alignas(64) dtype_B {
-				uint8_t padding[(63 + sizeof(thingyA_id)) & ~63ui64];
-				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))];
+				uint8_t padding[(63 + sizeof(thingyA_id)) & ~uint64_t(63)];
+				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_B() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))); }
+				dtype_B() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))); }
 			}
 			m_B;
 			
@@ -800,11 +800,11 @@ namespace dcon {
 			// storage space for C of type thingyA_id
 			//
 			struct alignas(64) dtype_C {
-				uint8_t padding[(63 + sizeof(thingyA_id)) & ~63ui64];
-				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))];
+				uint8_t padding[(63 + sizeof(thingyA_id)) & ~uint64_t(63)];
+				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_C() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))); }
+				dtype_C() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))); }
 			}
 			m_C;
 			
@@ -812,11 +812,11 @@ namespace dcon {
 			// storage space for D of type thingyA_id
 			//
 			struct alignas(64) dtype_D {
-				uint8_t padding[(63 + sizeof(thingyA_id)) & ~63ui64];
-				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))];
+				uint8_t padding[(63 + sizeof(thingyA_id)) & ~uint64_t(63)];
+				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_D() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))); }
+				dtype_D() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))); }
 			}
 			m_D;
 			
@@ -824,11 +824,11 @@ namespace dcon {
 			// storage space for E of type thingyA_id
 			//
 			struct alignas(64) dtype_E {
-				uint8_t padding[(63 + sizeof(thingyA_id)) & ~63ui64];
-				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))];
+				uint8_t padding[(63 + sizeof(thingyA_id)) & ~uint64_t(63)];
+				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_E() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))); }
+				dtype_E() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))); }
 			}
 			m_E;
 			
@@ -836,11 +836,11 @@ namespace dcon {
 			// storage space for F of type thingyA_id
 			//
 			struct alignas(64) dtype_F {
-				uint8_t padding[(63 + sizeof(thingyA_id)) & ~63ui64];
-				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))];
+				uint8_t padding[(63 + sizeof(thingyA_id)) & ~uint64_t(63)];
+				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_F() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))); }
+				dtype_F() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))); }
 			}
 			m_F;
 			
@@ -848,11 +848,11 @@ namespace dcon {
 			// storage space for ignore of type thingyA_id
 			//
 			struct alignas(64) dtype_ignore {
-				uint8_t padding[(63 + sizeof(thingyA_id)) & ~63ui64];
-				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))];
+				uint8_t padding[(63 + sizeof(thingyA_id)) & ~uint64_t(63)];
+				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_ignore() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(200))); }
+				dtype_ignore() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))); }
 			}
 			m_ignore;
 			
@@ -899,11 +899,11 @@ namespace dcon {
 			// storage space for left of type thingyA_id
 			//
 			struct alignas(64) dtype_left {
-				uint8_t padding[(63 + sizeof(thingyA_id)) & ~63ui64];
-				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(400) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(400))];
+				uint8_t padding[(63 + sizeof(thingyA_id)) & ~uint64_t(63)];
+				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(400) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(400))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_left() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(400) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(400))); }
+				dtype_left() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(400) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(400))); }
 			}
 			m_left;
 			
@@ -923,11 +923,11 @@ namespace dcon {
 			// storage space for right of type thingyB_id
 			//
 			struct alignas(64) dtype_right {
-				uint8_t padding[(63 + sizeof(thingyB_id)) & ~63ui64];
-				thingyB_id values[(sizeof(thingyB_id) <= 64 ? (uint32_t(400) + (64ui32 / uint32_t(sizeof(thingyB_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyB_id)) - 1ui32) : uint32_t(400))];
+				uint8_t padding[(63 + sizeof(thingyB_id)) & ~uint64_t(63)];
+				thingyB_id values[(sizeof(thingyB_id) <= 64 ? (uint32_t(400) + (uint32_t(64) / uint32_t(sizeof(thingyB_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyB_id)) - uint32_t(1)) : uint32_t(400))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyB_id) <= 64 ? (uint32_t(400) + (64ui32 / uint32_t(sizeof(thingyB_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyB_id)) - 1ui32) : uint32_t(400))); }
+				dtype_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyB_id) <= 64 ? (uint32_t(400) + (uint32_t(64) / uint32_t(sizeof(thingyB_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyB_id)) - uint32_t(1)) : uint32_t(400))); }
 			}
 			m_right;
 			
@@ -974,11 +974,11 @@ namespace dcon {
 			// storage space for left of type thingyA_id
 			//
 			struct alignas(64) dtype_left {
-				uint8_t padding[(63 + sizeof(thingyA_id)) & ~63ui64];
-				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(400) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(400))];
+				uint8_t padding[(63 + sizeof(thingyA_id)) & ~uint64_t(63)];
+				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(400) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(400))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_left() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(400) + (64ui32 / uint32_t(sizeof(thingyA_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyA_id)) - 1ui32) : uint32_t(400))); }
+				dtype_left() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(400) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(400))); }
 			}
 			m_left;
 			
@@ -998,11 +998,11 @@ namespace dcon {
 			// storage space for right of type thingyB_id
 			//
 			struct alignas(64) dtype_right {
-				uint8_t padding[(63 + sizeof(thingyB_id)) & ~63ui64];
-				thingyB_id values[(sizeof(thingyB_id) <= 64 ? (uint32_t(400) + (64ui32 / uint32_t(sizeof(thingyB_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyB_id)) - 1ui32) : uint32_t(400))];
+				uint8_t padding[(63 + sizeof(thingyB_id)) & ~uint64_t(63)];
+				thingyB_id values[(sizeof(thingyB_id) <= 64 ? (uint32_t(400) + (uint32_t(64) / uint32_t(sizeof(thingyB_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyB_id)) - uint32_t(1)) : uint32_t(400))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyB_id) <= 64 ? (uint32_t(400) + (64ui32 / uint32_t(sizeof(thingyB_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingyB_id)) - 1ui32) : uint32_t(400))); }
+				dtype_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyB_id) <= 64 ? (uint32_t(400) + (uint32_t(64) / uint32_t(sizeof(thingyB_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyB_id)) - uint32_t(1)) : uint32_t(400))); }
 			}
 			m_right;
 			
@@ -1118,11 +1118,11 @@ namespace dcon {
 			// storage space for link_back_left of type relate_as_multipleB_id
 			//
 			struct alignas(64) dtype_link_back_left {
-				uint8_t padding[(63 + sizeof(relate_as_multipleB_id)) & ~63ui64];
-				relate_as_multipleB_id values[(sizeof(relate_as_multipleB_id) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(relate_as_multipleB_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(relate_as_multipleB_id)) - 1ui32) : uint32_t(1200))];
+				uint8_t padding[(63 + sizeof(relate_as_multipleB_id)) & ~uint64_t(63)];
+				relate_as_multipleB_id values[(sizeof(relate_as_multipleB_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(relate_as_multipleB_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(relate_as_multipleB_id)) - uint32_t(1)) : uint32_t(1200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_link_back_left() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(relate_as_multipleB_id) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(relate_as_multipleB_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(relate_as_multipleB_id)) - 1ui32) : uint32_t(1200))); }
+				dtype_link_back_left() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(relate_as_multipleB_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(relate_as_multipleB_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(relate_as_multipleB_id)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_link_back_left;
 			

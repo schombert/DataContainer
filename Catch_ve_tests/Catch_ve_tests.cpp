@@ -400,7 +400,7 @@ TEST_CASE("fp_vector reduction test", "[ve_tests]") {
 TEST_CASE("vectorizable buffer", "[ve_tests]") {
 	ve::vectorizable_buffer<float, dummy_id> buf(31);
 
-	REQUIRE((reinterpret_cast<size_t>(&(buf.get(dummy_id(0)))) & 63ui64) == 0); // first address is aligned
+	REQUIRE((reinterpret_cast<size_t>(&(buf.get(dummy_id(0)))) & uint64_t(63)) == 0); // first address is aligned
 	REQUIRE(&(buf.get(dummy_id(0))) - &(buf.get(dummy_id())) == 1); // invalid address is one prior
 
 	REQUIRE(buf.get(dummy_id(0)) == 0.0f); // values are initially zero
@@ -852,13 +852,13 @@ TEST_CASE("loads and stores", "[ve_tests]") {
 	uint16_t* uint16_data = dcon::cache_aligned_allocator<uint16_t>().allocate(32);
 	memcpy(uint16_data, reference_uint16_data, sizeof(uint16_t) * 32);
 
-	int8_t reference_int8_data[] = { 1i8, 23i8, 5i8, 1i8, -3i8, 5i8, 0i8, 1i8, 5i8, 23i8, 5i8, 2i8, 6i8, 235i8, 23i8, 35i8, 235i8, 253i8, 36i8, 186i8, 86i8,
-		100i8, 101i8, 102i8, 104i8, 102i8, 104i8, 34i8, 234i8, 88i8, 77i8, 66i8 };
+	int8_t reference_int8_data[] = { 1, 23, 5, 1, -3, 5, 0, 1, 5, 23, 5, 2, 6, 235, 23, 35, 235, 253, 36, 186, 86,
+		100, 101, 102, 104, 102, 104, 34, 234, 88, 77, 66 };
 	int8_t* int8_data = dcon::cache_aligned_allocator<int8_t>().allocate(32);
 	memcpy(int8_data, reference_int8_data, sizeof(int8_t) * 32);
 
-	uint8_t reference_uint8_data[] = { 1ui8, 23ui8, 5ui8, 1ui8, 3ui8, 5ui8, 0ui8, 1ui8, 5ui8, 23ui8, 5ui8, 2ui8, 6ui8, 235ui8, 23ui8, 35ui8, 235ui8, 253ui8, 36ui8, 186ui8, 86ui8,
-		100ui8, 101ui8, 102ui8, 104ui8, 102ui8, 104ui8, 34ui8, 234ui8, 88ui8, 77ui8, 66ui8 };
+	uint8_t reference_uint8_data[] = { 1, 23, 5, 1, 3, 5, 0, 1, 5, 23, 5, 2, 6, 235, 23, 35, 235, 253, 36, 186, 86,
+		100, 101, 102, 104, 102, 104, 34, 234, 88, 77, 66 };
 	uint8_t* uint8_data = dcon::cache_aligned_allocator<uint8_t>().allocate(32);
 	memcpy(uint8_data, reference_uint8_data, sizeof(uint8_t) * 32);
 
@@ -870,8 +870,8 @@ TEST_CASE("loads and stores", "[ve_tests]") {
 	dummy_id* t_data = dcon::cache_aligned_allocator<dummy_id>().allocate(32);
 	memcpy(t_data, reference_t_data, sizeof(dummy_id) * 32);
 
-	dcon::bitfield_type reference_b_data[] = { dcon::bitfield_type{ 0x8Bui8}, dcon::bitfield_type{ 0xA1ui8},
-		dcon::bitfield_type{ 0x04ui8}, dcon::bitfield_type{ 0xCDui8} };
+	dcon::bitfield_type reference_b_data[] = { dcon::bitfield_type{ 0x8B}, dcon::bitfield_type{ 0xA1},
+		dcon::bitfield_type{ 0x04}, dcon::bitfield_type{ 0xCD} };
 	dcon::bitfield_type* b_data = dcon::cache_aligned_allocator<dcon::bitfield_type>().allocate(4);
 	memcpy(b_data, reference_b_data, sizeof(dcon::bitfield_type) * 4);
 
@@ -1735,7 +1735,7 @@ public:
 	dummy_signed_id& operator=(dummy_signed_id const& v) noexcept = default;
 	bool operator==(dummy_signed_id v) const noexcept { return value == v.value; }
 	bool operator!=(dummy_signed_id v) const noexcept { return value != v.value; }
-	explicit constexpr operator bool() const noexcept { return value != -1i16; }
+	explicit constexpr operator bool() const noexcept { return value != -1; }
 
 	//index_function
 	constexpr int32_t index() const noexcept {

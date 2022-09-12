@@ -4,7 +4,7 @@
 // This file provided as part of the DataContainer project
 //
 
-#include <intrin.h>
+#include <immintrin.h>
 #include <cstdint>
 #include <new>
 #include <cassert>
@@ -45,8 +45,8 @@ namespace ve {
 		T* values = nullptr;
 	public:
 		vectorizable_buffer(uint32_t count) {
-			values = (T*)(::operator new(64ui64 + ((count * sizeof(T) + 63ui64) & ~63ui64), std::align_val_t{ 64 }));
-			std::uninitialized_value_construct_n(values + 64ui64 / sizeof(T) - 1, ((count * sizeof(T) + 63ui64) & ~63ui64) / sizeof(T) + 1);
+			values = (T*)(::operator new(uint64_t(64) + ((count * sizeof(T) + uint64_t(63)) & ~uint64_t(63)), std::align_val_t{ 64 }));
+			std::uninitialized_value_construct_n(values + uint64_t(64) / sizeof(T) - 1, ((count * sizeof(T) + uint64_t(63)) & ~uint64_t(63)) / sizeof(T) + 1);
 		};
 		vectorizable_buffer(vectorizable_buffer&& other) noexcept {
 			std::swap(values, other.values);
@@ -60,7 +60,7 @@ namespace ve {
 			std::swap(values, other.values);
 		}
 
-		T* vptr() const noexcept { return values + 64ui64 / sizeof(T); }
+		T* vptr() const noexcept { return values + uint64_t(64) / sizeof(T); }
 
 		RELEASE_INLINE T const& get(index_type i) const noexcept { return vptr()[i.index()]; }
 		RELEASE_INLINE T& get(index_type i) noexcept { return vptr()[i.index()]; }
@@ -189,8 +189,8 @@ namespace ve {
 #ifndef VE_NO_TBB
 	template<typename tag_type, typename F>
 	RELEASE_INLINE void execute_parallel(uint32_t start, uint32_t count, F&& functor) {
-		const uint32_t full_units = (count + 15ui32) & ~15ui32;
-		concurrency::parallel_for(start, full_units, 16ui32, [&functor](uint32_t offset) {
+		const uint32_t full_units = (count + uint32_t(15)) & ~uint32_t(15);
+		concurrency::parallel_for(start, full_units, uint32_t(16), [&functor](uint32_t offset) {
 			if constexpr(vector_size == 16) {
 				functor(contiguous_tags<tag_type>(offset));
 			} else if constexpr(vector_size == 8) {
@@ -214,9 +214,9 @@ namespace ve {
 
 	template<typename tag_type, typename F>
 	RELEASE_INLINE void execute_parallel_exact(uint32_t start, uint32_t count, F&& functor) {
-		const uint32_t full_units = count & ~15ui32;
+		const uint32_t full_units = count & ~uint32_t(15);
 		const uint32_t remainder = count - full_units;
-		concurrency::parallel_for(start, full_units, 16ui32, [&functor](uint32_t offset) {
+		concurrency::parallel_for(start, full_units, uint32_t(16), [&functor](uint32_t offset) {
 			if constexpr(vector_size == 16) {
 				functor(contiguous_tags<tag_type>(offset));
 			} else if constexpr(vector_size == 8) {
@@ -236,35 +236,35 @@ namespace ve {
 				functor(partial_contiguous_tags<tag_type>(full_units, remainder));
 			}
 		} else if constexpr(vector_size == 8) {
-			if(remainder > 8ui32) {
+			if(remainder > uint32_t(8)) {
 				functor(contiguous_tags<tag_type>(full_units));
-				functor(partial_contiguous_tags<tag_type>(full_units + 8ui32, remainder - 8ui32));
-			} else if(remainder == 8ui32) {
+				functor(partial_contiguous_tags<tag_type>(full_units + uint32_t(8), remainder - uint32_t(8)));
+			} else if(remainder == uint32_t(8)) {
 				functor(contiguous_tags<tag_type>(full_units));
 			} else if(remainder != 0) {
 				functor(partial_contiguous_tags<tag_type>(full_units, remainder));
 			}
 		} else if constexpr(vector_size == 4) {
-			if(remainder > 12ui32) {
+			if(remainder > uint32_t(12)) {
 				functor(contiguous_tags<tag_type>(full_units));
-				functor(contiguous_tags<tag_type>(full_units + 4ui32));
-				functor(contiguous_tags<tag_type>(full_units + 8ui32));
-				functor(partial_contiguous_tags<tag_type>(full_units + 12ui32, remainder - 12ui32));
-			} else if(remainder == 12ui32) {
+				functor(contiguous_tags<tag_type>(full_units + uint32_t(4)));
+				functor(contiguous_tags<tag_type>(full_units + uint32_t(8)));
+				functor(partial_contiguous_tags<tag_type>(full_units + uint32_t(12), remainder - uint32_t(12)));
+			} else if(remainder == uint32_t(12)) {
 				functor(contiguous_tags<tag_type>(full_units));
-				functor(contiguous_tags<tag_type>(full_units + 4ui32));
-				functor(contiguous_tags<tag_type>(full_units + 8ui32));
-			} else if(remainder > 8ui32) {
+				functor(contiguous_tags<tag_type>(full_units + uint32_t(4)));
+				functor(contiguous_tags<tag_type>(full_units + uint32_t(8)));
+			} else if(remainder > uint32_t(8)) {
 				functor(contiguous_tags<tag_type>(full_units));
-				functor(contiguous_tags<tag_type>(full_units + 4ui32));
-				functor(partial_contiguous_tags<tag_type>(full_units + 8ui32, remainder - 8ui32));
-			} else if(remainder == 8ui32) {
+				functor(contiguous_tags<tag_type>(full_units + uint32_t(4)));
+				functor(partial_contiguous_tags<tag_type>(full_units + uint32_t(8), remainder - uint32_t(8)));
+			} else if(remainder == uint32_t(8)) {
 				functor(contiguous_tags<tag_type>(full_units));
-				functor(contiguous_tags<tag_type>(full_units + 4ui32));
-			} else if(remainder > 4ui32) {
+				functor(contiguous_tags<tag_type>(full_units + uint32_t(4)));
+			} else if(remainder > uint32_t(4)) {
 				functor(contiguous_tags<tag_type>(full_units));
-				functor(partial_contiguous_tags<tag_type>(full_units + 4ui32, remainder - 4ui32));
-			} else if(remainder == 4ui32) {
+				functor(partial_contiguous_tags<tag_type>(full_units + uint32_t(4), remainder - uint32_t(4)));
+			} else if(remainder == uint32_t(4)) {
 				functor(contiguous_tags<tag_type>(full_units));
 			} else if(remainder != 0) {
 				functor(partial_contiguous_tags<tag_type>(full_units, remainder));
@@ -274,9 +274,9 @@ namespace ve {
 
 	template<typename tag_type, typename F>
 	RELEASE_INLINE void execute_parallel_unaligned(uint32_t start, uint32_t count, F&& functor) {
-		const uint32_t full_units = count & ~15ui32;
+		const uint32_t full_units = count & ~uint32_t(15);
 		const uint32_t remainder = count - full_units;
-		concurrency::parallel_for(start, full_units, 16ui32, [&functor](uint32_t offset) {
+		concurrency::parallel_for(start, full_units, uint32_t(16), [&functor](uint32_t offset) {
 			if constexpr(vector_size == 16) {
 				functor(unaligned_contiguous_tags<tag_type>(offset));
 			} else if constexpr(vector_size == 8) {
@@ -296,35 +296,35 @@ namespace ve {
 				functor(partial_contiguous_tags<tag_type>(full_units, remainder));
 			}
 		} else if constexpr(vector_size == 8) {
-			if(remainder > 8ui32) {
+			if(remainder > uint32_t(8)) {
 				functor(unaligned_contiguous_tags<tag_type>(full_units));
-				functor(partial_contiguous_tags<tag_type>(full_units + 8ui32, remainder - 8ui32));
-			} else if(remainder == 8ui32) {
+				functor(partial_contiguous_tags<tag_type>(full_units + uint32_t(8), remainder - uint32_t(8)));
+			} else if(remainder == uint32_t(8)) {
 				functor(unaligned_contiguous_tags<tag_type>(full_units));
 			} else if(remainder != 0) {
 				functor(partial_contiguous_tags<tag_type>(full_units, remainder));
 			}
 		} else if constexpr(vector_size == 4) {
-			if(remainder > 12ui32) {
+			if(remainder > uint32_t(12)) {
 				functor(unaligned_contiguous_tags<tag_type>(full_units));
-				functor(unaligned_contiguous_tags<tag_type>(full_units + 4ui32));
-				functor(unaligned_contiguous_tags<tag_type>(full_units + 8ui32));
-				functor(partial_contiguous_tags<tag_type>(full_units + 12ui32, remainder - 12ui32));
-			} else if(remainder == 12ui32) {
+				functor(unaligned_contiguous_tags<tag_type>(full_units + uint32_t(4)));
+				functor(unaligned_contiguous_tags<tag_type>(full_units + uint32_t(8)));
+				functor(partial_contiguous_tags<tag_type>(full_units + uint32_t(12), remainder - uint32_t(12)));
+			} else if(remainder == uint32_t(12)) {
 				functor(unaligned_contiguous_tags<tag_type>(full_units));
-				functor(unaligned_contiguous_tags<tag_type>(full_units + 4ui32));
-				functor(unaligned_contiguous_tags<tag_type>(full_units + 8ui32));
-			} else if(remainder > 8ui32) {
+				functor(unaligned_contiguous_tags<tag_type>(full_units + uint32_t(4)));
+				functor(unaligned_contiguous_tags<tag_type>(full_units + uint32_t(8)));
+			} else if(remainder > uint32_t(8)) {
 				functor(unaligned_contiguous_tags<tag_type>(full_units));
-				functor(unaligned_contiguous_tags<tag_type>(full_units + 4ui32));
-				functor(partial_contiguous_tags<tag_type>(full_units + 8ui32, remainder - 8ui32));
-			} else if(remainder == 8ui32) {
+				functor(unaligned_contiguous_tags<tag_type>(full_units + uint32_t(4)));
+				functor(partial_contiguous_tags<tag_type>(full_units + uint32_t(8), remainder - uint32_t(8)));
+			} else if(remainder == uint32_t(8)) {
 				functor(unaligned_contiguous_tags<tag_type>(full_units));
-				functor(unaligned_contiguous_tags<tag_type>(full_units + 4ui32));
-			} else if(remainder > 4ui32) {
+				functor(unaligned_contiguous_tags<tag_type>(full_units + uint32_t(4)));
+			} else if(remainder > uint32_t(4)) {
 				functor(unaligned_contiguous_tags<tag_type>(full_units));
-				functor(partial_contiguous_tags<tag_type>(full_units + 4ui32, remainder - 4ui32));
-			} else if(remainder == 4ui32) {
+				functor(partial_contiguous_tags<tag_type>(full_units + uint32_t(4), remainder - uint32_t(4)));
+			} else if(remainder == uint32_t(4)) {
 				functor(unaligned_contiguous_tags<tag_type>(full_units));
 			} else if(remainder != 0) {
 				functor(partial_contiguous_tags<tag_type>(full_units, remainder));
@@ -381,7 +381,7 @@ namespace ve {
 #endif
 
 	constexpr inline uint32_t to_vector_size(uint32_t i) {
-		return (i + (ve::vector_size - 1ui32)) & ~(ve::vector_size - 1ui32);
+		return (i + (ve::vector_size - uint32_t(1))) & ~(ve::vector_size - uint32_t(1));
 	}
 
 }

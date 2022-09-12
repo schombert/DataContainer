@@ -8,6 +8,7 @@
 #include <filesystem> 
 #include <iostream> 
 #include <algorithm>
+#include <cstring>
 
 #include "parsing.hpp"
 #include "code_fragments.hpp"
@@ -392,7 +393,7 @@ int main(int argc, char *argv[]) {
 					// no data for a derived property
 				} else if(p.type == property_type::bitfield) {
 					output += make_member_container(o, p.name, "dcon::bitfield_type",
-						std::string("((uint32_t(") + std::to_string(ob.size) + " + 7)) / 8ui32 + 63ui32) & ~63ui32",
+						std::string("((uint32_t(") + std::to_string(ob.size) + " + 7)) / uint32_t(8) + uint32_t(63)) & ~uint32_t(63)",
 						struct_padding::fixed, ob.is_expandable).to_string(3);
 				} else if(p.type == property_type::object) {
 					output += make_member_container(o, p.name, p.data_type,

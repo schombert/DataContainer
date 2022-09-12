@@ -78,6 +78,7 @@ basic_builder& make_query_instance_definitions(basic_builder& o, prepared_query_
 	o + "query_@name@_const_iterator query_@name@_const_instance::begin() const" + block{
 			o + "return query_@name@_const_iterator(c, *this);";
 	};
+	return o;
 }
 
 basic_builder& make_query_iterator_declarations(basic_builder& o, prepared_query_definition const& pdef) {
@@ -127,31 +128,15 @@ basic_builder& make_query_iterator_declarations(basic_builder& o, prepared_query
 		o + "public:";
 
 		o + "query_@name@_iterator(data_container& c, query_@name@_instance const& p) : m_container(c), m_parameters(p)" + block{
-			for(auto& ts : pdef.table_slots) {
-				o + substitute{"id_name", ts.internally_named_as};
-				o + substitute{ "obj", ts.actual_table->name };
-				if(ts.is_parameter_type) {
-					
-				} else if(ts.joined_to) {
-					o + substitute{ "parent", ts.joined_to->internally_named_as };
-					o + substitute{ "pobj", ts.joined_to->actual_table->name };
-					o + substitute{ "lname", ts.joind_by_link->property_name };
-					if(ts.actual_table->is_relationship) {
-						if(ts.joind_by_link->index == index_type::at_most_one) {
-							o + "@id_name@ = bool(@parent@) ? m_container.@pobj@_get_@obj@_as_@lname@(@parent@) : @obj@_id();";
-						} else if(ts.joind_by_link->index == index_type::many) {
-
-						} else { // type none
-
-						}
-					} else {
-						if(ts.joind_by_link->multiplicity == 1)
-							o + "@id_name@ = bool(@parent@) ? m_container.@pobj@_get_@lname@(@parent@) : @obj@_id();";
-						else
-							o + "@id_name@ = bool(@parent@) ? m_container.@pobj@_get_@lname@(@parent@, 0) : @obj@_id();";
-					}
-				} else { // first
-					o + "@id_name@ = m_container.@obj@_size() > 0 ? @obj@_id(@obj@_id::value_base_t(0)) : @obj@_id();";
+			if(pdef.table_slots.size() > 0) {
+				o + substitute{ "fname", pdef.table_slots[0].internally_named_as };
+				o + substitute{ "obj", pdef.table_slots[0].actual_table->name };
+				if(pdef.table_slots[0].is_parameter_type) {
+					o + "internal_set_first(@fname@);";
+				} else {
+					o + "if(m_container.@obj@_size() > 0)" + block{
+						o + "internal_set_@fname@(@obj@_id(@obj@_id::value_base_t(0)));";
+					};
 				}
 			}
 		};
@@ -200,7 +185,19 @@ basic_builder& make_query_iterator_declarations(basic_builder& o, prepared_query
 
 		o + "public:";
 
-		o + "query_@name@_const_iterator(data_container const& c, query_@name@_instance const& p) : m_container(c), m_parameters(p) {}";
+		o + "query_@name@_const_iterator(data_container const& c, query_@name@_instance const& p) : m_container(c), m_parameters(p)" + block{
+			if(pdef.table_slots.size() > 0) {
+				o + substitute{ "fname", pdef.table_slots[0].internally_named_as };
+				o + substitute{ "obj", pdef.table_slots[0].actual_table->name };
+				if(pdef.table_slots[0].is_parameter_type) {
+					o + "internal_set_first(@fname@);";
+				} else {
+					o + "if(m_container.@obj@_size() > 0)" + block{
+						o + "internal_set_@fname@(@obj@_id(@obj@_id::value_base_t(0)));";
+					};
+				}
+			}
+		};
 		
 		make_query_iterator_body(o, pdef, "", true);
 
@@ -242,6 +239,60 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 			o + "return *this;";
 		};
 	}
+
+	/* internals */
+
+	if(o.declaration_mode)
+		o + "private:";
+	for(int32_t i = 0; i < pdef.table_slots.size(); ++i) {
+		auto& table = pdef.table_slots[i];
+		o + substitute{ "fname", table.internally_named_as };
+		o + substitute{ "obj", table.actual_table->name };
+		o + substitute{ "next_name",  i + 1 < pdef.table_slots.size() ? pdef.table_slots[i+1].internally_named_as : std::string("")};
+		
+		o + (table.is_parameter_type ? "bool internal_set_first(@obj@_id v)" : "internal_set_@fname@(@obj@_id v)") + block{
+			if(!table.is_parameter_type) {
+				o + "@fname@ = v;";
+			}
+			
+			if(i + 1 < pdef.table_slots.size()) {
+				o + substitute{ "extra_cond", !table.is_join_plus ? "" : "|| !bool(v)" };
+
+				auto& ts = pdef.table_slots[i+1];
+				o + substitute{ "lname", ts.joind_by_link->property_name};
+				o + substitute{ "cobj", ts.actual_table->name };
+				if(ts.actual_table->is_relationship) {
+					if(ts.joind_by_link->index == index_type::at_most_one) {
+						o + "return internal_set_@next_name@( bool(@fname@) ?"
+							"m_container.@obj@_get_@cobj@_as_@lname@(@fname@) : @cobj@_id() ) @extra_cond@;";
+
+					} else if(ts.joind_by_link->index == index_type::many) {
+
+					} else { // type none
+
+					}
+				} else {
+					if(ts.joind_by_link->multiplicity == 1) {
+						o + "return internal_set_@next_name@(bool(@fname@) ? m_container.@obj@_get_@lname@(@fname@) : @cobj@_id()) @extra_cond@;";
+					} else {
+						o + substitute{ "mul", std::to_string(ts.joind_by_link->multiplicity) };
+						o + "for(m_index_into_@fname@ = 0; m_index_into_@fname@ < @mul@; ++m_index_into_@fname@)" + block{
+							o + "if(internal_set_@next_name@(bool(@fname@) ? m_container.@obj@_get_@lname@(@fname@, m_index_into_@fname@) : @cobj@_id()) @extra_cond@)" + block{
+								o + "return true;";
+							};
+						};
+						o + "return false @extra_cond@;";
+					}
+				}
+			} else if(!table.is_join_plus) {
+				o + "return bool(v);";
+			} else {
+				o + "return true;";
+			}
+		};
+	}
+	if(o.declaration_mode)
+		o + "public:";
 
 	/* getters and setters */
 

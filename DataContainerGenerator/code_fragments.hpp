@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <cstring>
 #include "source_builder.hpp"
 #include "parsing.hpp"
 

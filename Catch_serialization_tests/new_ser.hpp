@@ -193,11 +193,11 @@ namespace ns {
 			// storage space for i_value of type int16_t
 			//
 			struct alignas(64) dtype_i_value {
-				uint8_t padding[(63 + sizeof(int16_t)) & ~63ui64];
-				int16_t values[(sizeof(int16_t) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(int16_t))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(int16_t)) - 1ui32) : uint32_t(1200))];
+				uint8_t padding[(63 + sizeof(int16_t)) & ~uint64_t(63)];
+				int16_t values[(sizeof(int16_t) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(int16_t))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(int16_t)) - uint32_t(1)) : uint32_t(1200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_i_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(int16_t) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(int16_t))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(int16_t)) - 1ui32) : uint32_t(1200))); }
+				dtype_i_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(int16_t) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(int16_t))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(int16_t)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_i_value;
 			
@@ -205,11 +205,11 @@ namespace ns {
 			// storage space for f_value of type float
 			//
 			struct alignas(64) dtype_f_value {
-				uint8_t padding[(63 + sizeof(float)) & ~63ui64];
-				float values[(sizeof(float) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(float))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(float)) - 1ui32) : uint32_t(1200))];
+				uint8_t padding[(63 + sizeof(float)) & ~uint64_t(63)];
+				float values[(sizeof(float) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(float))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(float)) - uint32_t(1)) : uint32_t(1200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_f_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(float) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(float))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(float)) - 1ui32) : uint32_t(1200))); }
+				dtype_f_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(float) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(float))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(float)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_f_value;
 			
@@ -217,11 +217,11 @@ namespace ns {
 			// storage space for obj_value of type c_struct_b
 			//
 			struct alignas(64) dtype_obj_value {
-				uint8_t padding[(63 + sizeof(c_struct_b)) & ~63ui64];
-				c_struct_b values[(sizeof(c_struct_b) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(c_struct_b))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(c_struct_b)) - 1ui32) : uint32_t(1200))];
+				uint8_t padding[(63 + sizeof(c_struct_b)) & ~uint64_t(63)];
+				c_struct_b values[(sizeof(c_struct_b) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(c_struct_b))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(c_struct_b)) - uint32_t(1)) : uint32_t(1200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_obj_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(c_struct_b) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(c_struct_b))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(c_struct_b)) - 1ui32) : uint32_t(1200))); }
+				dtype_obj_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(c_struct_b) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(c_struct_b))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(c_struct_b)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_obj_value;
 			
@@ -229,11 +229,11 @@ namespace ns {
 			// storage space for custom_struct of type c_struct
 			//
 			struct alignas(64) dtype_custom_struct {
-				uint8_t padding[(63 + sizeof(c_struct)) & ~63ui64];
-				c_struct values[(sizeof(c_struct) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(c_struct))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(c_struct)) - 1ui32) : uint32_t(1200))];
+				uint8_t padding[(63 + sizeof(c_struct)) & ~uint64_t(63)];
+				c_struct values[(sizeof(c_struct) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(c_struct))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(c_struct)) - uint32_t(1)) : uint32_t(1200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_custom_struct() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(c_struct) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(c_struct))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(c_struct)) - 1ui32) : uint32_t(1200))); }
+				dtype_custom_struct() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(c_struct) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(c_struct))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(c_struct)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_custom_struct;
 			
@@ -250,11 +250,11 @@ namespace ns {
 			// storage space for some_value of type int32_t
 			//
 			struct alignas(64) dtype_some_value {
-				uint8_t padding[(63 + sizeof(int32_t)) & ~63ui64];
-				int32_t values[(sizeof(int32_t) <= 64 ? (uint32_t(300) + (64ui32 / uint32_t(sizeof(int32_t))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(int32_t)) - 1ui32) : uint32_t(300))];
+				uint8_t padding[(63 + sizeof(int32_t)) & ~uint64_t(63)];
+				int32_t values[(sizeof(int32_t) <= 64 ? (uint32_t(300) + (uint32_t(64) / uint32_t(sizeof(int32_t))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(int32_t)) - uint32_t(1)) : uint32_t(300))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_some_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(int32_t) <= 64 ? (uint32_t(300) + (64ui32 / uint32_t(sizeof(int32_t))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(int32_t)) - 1ui32) : uint32_t(300))); }
+				dtype_some_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(int32_t) <= 64 ? (uint32_t(300) + (uint32_t(64) / uint32_t(sizeof(int32_t))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(int32_t)) - uint32_t(1)) : uint32_t(300))); }
 			}
 			m_some_value;
 			
@@ -271,11 +271,11 @@ namespace ns {
 			// storage space for left of type thingy_id
 			//
 			struct alignas(64) dtype_left {
-				uint8_t padding[(63 + sizeof(thingy_id)) & ~63ui64];
-				thingy_id values[(sizeof(thingy_id) <= 64 ? (uint32_t(300) + (64ui32 / uint32_t(sizeof(thingy_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingy_id)) - 1ui32) : uint32_t(300))];
+				uint8_t padding[(63 + sizeof(thingy_id)) & ~uint64_t(63)];
+				thingy_id values[(sizeof(thingy_id) <= 64 ? (uint32_t(300) + (uint32_t(64) / uint32_t(sizeof(thingy_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingy_id)) - uint32_t(1)) : uint32_t(300))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_left() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingy_id) <= 64 ? (uint32_t(300) + (64ui32 / uint32_t(sizeof(thingy_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingy_id)) - 1ui32) : uint32_t(300))); }
+				dtype_left() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingy_id) <= 64 ? (uint32_t(300) + (uint32_t(64) / uint32_t(sizeof(thingy_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingy_id)) - uint32_t(1)) : uint32_t(300))); }
 			}
 			m_left;
 			

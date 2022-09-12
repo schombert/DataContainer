@@ -99,11 +99,11 @@ namespace dcon {
 			// storage space for color of type rgb_color
 			//
 			struct alignas(64) dtype_color {
-				uint8_t padding[(63 + sizeof(rgb_color)) & ~63ui64];
-				rgb_color values[(sizeof(rgb_color) <= 64 ? (uint32_t(3000) + (64ui32 / uint32_t(sizeof(rgb_color))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(rgb_color)) - 1ui32) : uint32_t(3000))];
+				uint8_t padding[(63 + sizeof(rgb_color)) & ~uint64_t(63)];
+				rgb_color values[(sizeof(rgb_color) <= 64 ? (uint32_t(3000) + (uint32_t(64) / uint32_t(sizeof(rgb_color))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(rgb_color)) - uint32_t(1)) : uint32_t(3000))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_color() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(rgb_color) <= 64 ? (uint32_t(3000) + (64ui32 / uint32_t(sizeof(rgb_color))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(rgb_color)) - 1ui32) : uint32_t(3000))); }
+				dtype_color() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(rgb_color) <= 64 ? (uint32_t(3000) + (uint32_t(64) / uint32_t(sizeof(rgb_color))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(rgb_color)) - uint32_t(1)) : uint32_t(3000))); }
 			}
 			m_color;
 			

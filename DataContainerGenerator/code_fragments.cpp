@@ -100,7 +100,7 @@ basic_builder& make_member_container(basic_builder& o,
 			o + "DCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }";
 		} else {
 			if(pad == struct_padding::fixed)
-				o + "uint8_t padding[(63 + sizeof(@type@)) & ~63ui64];";
+				o + "uint8_t padding[(63 + sizeof(@type@)) & ~uint64_t(63)];";
 			if(multiplicity == 1) {
 				o + "@type@ values[@size@];";
 			} else {
@@ -136,17 +136,17 @@ basic_builder& make_array_member_container(basic_builder& o,
 
 	std::string size = is_bitfield ?
 		std::string("( (") + std::to_string(raw_size) + " + 7) / 8" +
-		" + 64ui64 - (( (" + std::to_string(raw_size) + " + 7) / 8) & 63ui64)"
+		" + uint64_t(64) - (( (" + std::to_string(raw_size) + " + 7) / 8) & uint64_t(63))"
 		" )"
 		:
 		std::string("(sizeof(") + type_name + ") * " + std::to_string(raw_size) +
-		 " + 64ui64 - ((sizeof(" + type_name + ") * " + std::to_string(raw_size) + ") & 63ui64)"
-		" + ((sizeof(" + type_name + ") + 63ui64) & ~63ui64))";
+		 " + uint64_t(64) - ((sizeof(" + type_name + ") * " + std::to_string(raw_size) + ") & uint64_t(63))"
+		" + ((sizeof(" + type_name + ") + uint64_t(63)) & ~uint64_t(63)))";
 	// = size of all values in bytes + number of bytes to get the end to a multiple of 64 + 64 * number of cachelines
 	// required to fit the type
 
 	o + substitute("type", type_name) + substitute("name", member_name) + substitute{ "size", size };
-	o + substitute{ "pad_value", std::string("((63ui64 + sizeof(") + type_name + ")) & ~63ui64)" };
+	o + substitute{ "pad_value", std::string("((uint64_t(63) + sizeof(") + type_name + ")) & ~uint64_t(63))" };
 
 	o + heading{ "storage space for @name@ of type array of @type@" };
 	o + "struct dtype_@name@" + block{
@@ -264,8 +264,8 @@ basic_builder& make_array_member_container(basic_builder& o,
 
 std::string expand_size_to_fill_cacheline_calculation(std::string const& member_type, size_t base_size) {
 	return std::string("(sizeof(") + member_type + ") <= 64 ? ("
-		"uint32_t(" + std::to_string(base_size) + ") + (64ui32 / uint32_t(sizeof(" + member_type + "))) - 1ui32) "
-		"& ~(64ui32 / uint32_t(sizeof(" + member_type + ")) - 1ui32) : uint32_t(" + std::to_string(base_size) + "))";
+		"uint32_t(" + std::to_string(base_size) + ") + (uint32_t(64) / uint32_t(sizeof(" + member_type + "))) - uint32_t(1)) "
+		"& ~(uint32_t(64) / uint32_t(sizeof(" + member_type + ")) - uint32_t(1)) : uint32_t(" + std::to_string(base_size) + "))";
 }
 
 basic_builder& make_erasable_object_constructor(basic_builder& o, std::string const& name, size_t size) {

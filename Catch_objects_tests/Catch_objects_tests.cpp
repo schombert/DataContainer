@@ -93,7 +93,7 @@ TEST_CASE("property_types", "[objects_and_properties_tests]") {
 	ptr->thingy_set_bf_value(target, true);
 	ptr->thingy_get_obj_value(target).push_back(3.0f);
 	ptr->thingy_get_obj_value(target).push_back(4.0f);
-	ptr->thingy_pooled_v_add_unique(target, -5i16);
+	ptr->thingy_pooled_v_add_unique(target, int16_t(-5));
 	ptr->thingy_resize_big_array(2);
 	ptr->thingy_resize_big_array_bf(4);
 
@@ -122,7 +122,7 @@ TEST_CASE("property_types", "[objects_and_properties_tests]") {
 	REQUIRE(ptr->thingy_get_bf_value(target) == true);
 	REQUIRE(ptr->thingy_get_obj_value(target).size() == 2);
 	REQUIRE(ptr->thingy_get_obj_value(target)[1] == 4.0f);
-	REQUIRE(ptr->thingy_pooled_v_contains(target, -5i16) == true);
+	REQUIRE(ptr->thingy_pooled_v_contains(target, int16_t(-5)) == true);
 	REQUIRE(ptr->thingy_get_big_array(target, 0) == 1.5f);
 	REQUIRE(ptr->thingy_get_big_array(target, 1) == 3.5f);
 	REQUIRE(ptr->thingy_get_big_array_bf(target, 3) == true);
@@ -159,7 +159,7 @@ TEST_CASE("expandable_property_types", "[objects_and_properties_tests]") {
 	ptr->thingy2_set_bf_value(target, true);
 	ptr->thingy2_get_obj_value(target).push_back(3.0f);
 	ptr->thingy2_get_obj_value(target).push_back(4.0f);
-	ptr->thingy2_pooled_v_add_unique(target, -5i16);
+	ptr->thingy2_pooled_v_add_unique(target, int16_t(-5));
 	ptr->thingy2_resize_big_array(2);
 	ptr->thingy2_resize_big_array_bf(4);
 
@@ -178,7 +178,7 @@ TEST_CASE("expandable_property_types", "[objects_and_properties_tests]") {
 	REQUIRE(ptr->thingy2_get_bf_value(target) == true);
 	REQUIRE(ptr->thingy2_get_obj_value(target).size() == 2);
 	REQUIRE(ptr->thingy2_get_obj_value(target)[1] == 4.0f);
-	REQUIRE(ptr->thingy2_pooled_v_contains(target, -5i16) == true);
+	REQUIRE(ptr->thingy2_pooled_v_contains(target, int16_t(-5)) == true);
 	REQUIRE(ptr->thingy2_get_pooled_v_size(target) == 1);
 	REQUIRE(ptr->thingy2_get_big_array(target, 0) == 1.5f);
 	REQUIRE(ptr->thingy2_get_big_array(target, 1) == 3.5f);

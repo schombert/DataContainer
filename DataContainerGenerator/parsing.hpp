@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <cstring>
+#include <limits>
 
 struct char_range {
 	char const* start;

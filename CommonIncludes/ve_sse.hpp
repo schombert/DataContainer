@@ -473,67 +473,67 @@ namespace ve {
 		if constexpr(any_is_partial<PARAMS ...>) {
 			const uint32_t limit = minimum_partial(params ...);
 
-			if constexpr(std::is_same_v<decltype(f(nth_item<0ui32>(params) ...)), void>) {
+			if constexpr(std::is_same_v<decltype(f(nth_item<uint32_t(0)>(params) ...)), void>) {
 				switch(limit) {
 					default:;
-					case 4ui32: f(nth_item<3ui32>(params) ...);
-					case 3ui32: f(nth_item<2ui32>(params) ...);
-					case 2ui32: f(nth_item<1ui32>(params) ...);
-					case 1ui32: f(nth_item<0ui32>(params) ...);
-					case 0ui32:;
+					case uint32_t(4): f(nth_item<uint32_t(3)>(params) ...);
+					case uint32_t(3): f(nth_item<uint32_t(2)>(params) ...);
+					case uint32_t(2): f(nth_item<uint32_t(1)>(params) ...);
+					case uint32_t(1): f(nth_item<uint32_t(0)>(params) ...);
+					case uint32_t(0):;
 				}
 			} else {
 				switch(limit) {
 					default:;
-					case 4ui32:
-						return value_to_vector_type<decltype(f(nth_item<0ui32>(params) ...))>(
-							f(nth_item<0ui32>(params) ...),
-							f(nth_item<1ui32>(params) ...),
-							f(nth_item<2ui32>(params) ...),
-							f(nth_item<3ui32>(params) ...)
+					case uint32_t(4):
+						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
+							f(nth_item<uint32_t(0)>(params) ...),
+							f(nth_item<uint32_t(1)>(params) ...),
+							f(nth_item<uint32_t(2)>(params) ...),
+							f(nth_item<uint32_t(3)>(params) ...)
 							);
-					case 3ui32:
-						return value_to_vector_type<decltype(f(nth_item<0ui32>(params) ...))>(
-							f(nth_item<0ui32>(params) ...),
-							f(nth_item<1ui32>(params) ...),
-							f(nth_item<2ui32>(params) ...),
-							decltype(f(nth_item<0ui32>(params) ...))()
+					case uint32_t(3):
+						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
+							f(nth_item<uint32_t(0)>(params) ...),
+							f(nth_item<uint32_t(1)>(params) ...),
+							f(nth_item<uint32_t(2)>(params) ...),
+							decltype(f(nth_item<uint32_t(0)>(params) ...))()
 							);
-					case 2ui32:
-						return value_to_vector_type<decltype(f(nth_item<0ui32>(params) ...))>(
-							f(nth_item<0ui32>(params) ...),
-							f(nth_item<1ui32>(params) ...),
-							decltype(f(nth_item<0ui32>(params) ...))(),
-							decltype(f(nth_item<0ui32>(params) ...))()
+					case uint32_t(2):
+						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
+							f(nth_item<uint32_t(0)>(params) ...),
+							f(nth_item<uint32_t(1)>(params) ...),
+							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
+							decltype(f(nth_item<uint32_t(0)>(params) ...))()
 							);
-					case 1ui32:
-						return value_to_vector_type<decltype(f(nth_item<0ui32>(params) ...))>(
-							f(nth_item<0ui32>(params) ...),
-							decltype(f(nth_item<0ui32>(params) ...))(),
-							decltype(f(nth_item<0ui32>(params) ...))(),
-							decltype(f(nth_item<0ui32>(params) ...))()
+					case uint32_t(1):
+						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
+							f(nth_item<uint32_t(0)>(params) ...),
+							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
+							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
+							decltype(f(nth_item<uint32_t(0)>(params) ...))()
 							);
-					case 0ui32:;
-						return value_to_vector_type<decltype(f(nth_item<0ui32>(params) ...))>(
-							decltype(f(nth_item<0ui32>(params) ...))(),
-							decltype(f(nth_item<0ui32>(params) ...))(),
-							decltype(f(nth_item<0ui32>(params) ...))(),
-							decltype(f(nth_item<0ui32>(params) ...))()
+					case uint32_t(0):;
+						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
+							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
+							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
+							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
+							decltype(f(nth_item<uint32_t(0)>(params) ...))()
 							);
 				}
 			}
 		} else if constexpr(any_is_vector_type<PARAMS ...>::value) {
-			if constexpr(std::is_same_v<decltype(f(nth_item<0ui32>(params) ...)), void>) {
-				f(nth_item<0ui32>(params) ...);
-				f(nth_item<1ui32>(params) ...);
-				f(nth_item<2ui32>(params) ...);
-				f(nth_item<3ui32>(params) ...);
+			if constexpr(std::is_same_v<decltype(f(nth_item<uint32_t(0)>(params) ...)), void>) {
+				f(nth_item<uint32_t(0)>(params) ...);
+				f(nth_item<uint32_t(1)>(params) ...);
+				f(nth_item<uint32_t(2)>(params) ...);
+				f(nth_item<uint32_t(3)>(params) ...);
 			} else {
-				return value_to_vector_type<decltype(f(nth_item<0ui32>(params) ...))>(
-					f(nth_item<0ui32>(params) ...),
-					f(nth_item<1ui32>(params) ...),
-					f(nth_item<2ui32>(params) ...),
-					f(nth_item<3ui32>(params) ...)
+				return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
+					f(nth_item<uint32_t(0)>(params) ...),
+					f(nth_item<uint32_t(1)>(params) ...),
+					f(nth_item<uint32_t(2)>(params) ...),
+					f(nth_item<uint32_t(3)>(params) ...)
 					);
 			}
 		} else {
@@ -543,70 +543,70 @@ namespace ve {
 
 	template<typename FUNC, typename ... PARAMS>
 	RELEASE_INLINE auto apply_with_indices(FUNC&& f, PARAMS ... params)
-		->  value_to_vector_type<decltype(f(0ui32, nth_item<0ui32>(params) ...))> {
+		->  value_to_vector_type<decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))> {
 		if constexpr(any_is_partial<PARAMS ...>) {
 			const uint32_t limit = minimum_partial(params ...);
 
-			if constexpr(std::is_same_v<decltype(f(0ui32, nth_item<0ui32>(params) ...)), void>) {
+			if constexpr(std::is_same_v<decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...)), void>) {
 				switch(limit) {
 					default:;
-					case 4ui32: f(3ui32, nth_item<3ui32>(params) ...);
-					case 3ui32: f(2ui32, nth_item<2ui32>(params) ...);
-					case 2ui32: f(1ui32, nth_item<1ui32>(params) ...);
-					case 1ui32: f(0ui32, nth_item<0ui32>(params) ...);
-					case 0ui32:;
+					case uint32_t(4): f(uint32_t(3), nth_item<uint32_t(3)>(params) ...);
+					case uint32_t(3): f(uint32_t(2), nth_item<uint32_t(2)>(params) ...);
+					case uint32_t(2): f(uint32_t(1), nth_item<uint32_t(1)>(params) ...);
+					case uint32_t(1): f(uint32_t(0), nth_item<uint32_t(0)>(params) ...);
+					case uint32_t(0):;
 				}
 			} else {
 				switch(limit) {
 					default:;
-					case 4ui32:
-						return value_to_vector_type<decltype(f(nth_item<0ui32>(params) ...))>(
-							f(0ui32, nth_item<0ui32>(params) ...),
-							f(1ui32, nth_item<1ui32>(params) ...),
-							f(2ui32, nth_item<2ui32>(params) ...),
-							f(3ui32, nth_item<3ui32>(params) ...)
+					case uint32_t(4):
+						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
+							f(uint32_t(0), nth_item<uint32_t(0)>(params) ...),
+							f(uint32_t(1), nth_item<uint32_t(1)>(params) ...),
+							f(uint32_t(2), nth_item<uint32_t(2)>(params) ...),
+							f(uint32_t(3), nth_item<uint32_t(3)>(params) ...)
 							);
-					case 3ui32:
-						return value_to_vector_type<decltype(f(nth_item<0ui32>(params) ...))>(
-							f(0ui32, nth_item<0ui32>(params) ...),
-							f(1ui32, nth_item<1ui32>(params) ...),
-							f(2ui32, nth_item<2ui32>(params) ...),
-							decltype(f(0ui32, nth_item<0ui32>(params) ...))()
+					case uint32_t(3):
+						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
+							f(uint32_t(0), nth_item<uint32_t(0)>(params) ...),
+							f(uint32_t(1), nth_item<uint32_t(1)>(params) ...),
+							f(uint32_t(2), nth_item<uint32_t(2)>(params) ...),
+							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))()
 							);
-					case 2ui32:
-						return value_to_vector_type<decltype(f(nth_item<0ui32>(params) ...))>(
-							f(0ui32, nth_item<0ui32>(params) ...),
-							f(1ui32, nth_item<1ui32>(params) ...),
-							decltype(f(0ui32, nth_item<0ui32>(params) ...))(),
-							decltype(f(0ui32, nth_item<0ui32>(params) ...))()
+					case uint32_t(2):
+						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
+							f(uint32_t(0), nth_item<uint32_t(0)>(params) ...),
+							f(uint32_t(1), nth_item<uint32_t(1)>(params) ...),
+							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
+							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))()
 							);
-					case 1ui32:
-						return value_to_vector_type<decltype(f(nth_item<0ui32>(params) ...))>(
-							f(0ui32, nth_item<0ui32>(params) ...),
-							decltype(f(0ui32, nth_item<0ui32>(params) ...))(),
-							decltype(f(0ui32, nth_item<0ui32>(params) ...))(),
-							decltype(f(0ui32, nth_item<0ui32>(params) ...))()
+					case uint32_t(1):
+						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
+							f(uint32_t(0), nth_item<uint32_t(0)>(params) ...),
+							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
+							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
+							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))()
 							);
-					case 0ui32:;
-						return value_to_vector_type<decltype(f(nth_item<0ui32>(params) ...))>(
-							decltype(f(0ui32, nth_item<0ui32>(params) ...))(),
-							decltype(f(0ui32, nth_item<0ui32>(params) ...))(),
-							decltype(f(0ui32, nth_item<0ui32>(params) ...))(),
-							decltype(f(0ui32, nth_item<0ui32>(params) ...))()
+					case uint32_t(0):;
+						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
+							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
+							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
+							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
+							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))()
 							);
 				}
 			}
-		} else if constexpr(std::is_same_v<decltype(f(0ui32, nth_item<0ui32>(params) ...)), void>) {
-			f(0ui32, nth_item<0ui32>(params) ...);
-			f(1ui32, nth_item<1ui32>(params) ...);
-			f(2ui32, nth_item<2ui32>(params) ...);
-			f(3ui32, nth_item<3ui32>(params) ...);
+		} else if constexpr(std::is_same_v<decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...)), void>) {
+			f(uint32_t(0), nth_item<uint32_t(0)>(params) ...);
+			f(uint32_t(1), nth_item<uint32_t(1)>(params) ...);
+			f(uint32_t(2), nth_item<uint32_t(2)>(params) ...);
+			f(uint32_t(3), nth_item<uint32_t(3)>(params) ...);
 		} else {
-			return value_to_vector_type<decltype(f(nth_item<0ui32>(params) ...))>(
-				f(0ui32, nth_item<0ui32>(params) ...),
-				f(1ui32, nth_item<1ui32>(params) ...),
-				f(2ui32, nth_item<2ui32>(params) ...),
-				f(3ui32, nth_item<3ui32>(params) ...)
+			return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
+				f(uint32_t(0), nth_item<uint32_t(0)>(params) ...),
+				f(uint32_t(1), nth_item<uint32_t(1)>(params) ...),
+				f(uint32_t(2), nth_item<uint32_t(2)>(params) ...),
+				f(uint32_t(3), nth_item<uint32_t(3)>(params) ...)
 				);
 		}
 	}
@@ -865,20 +865,20 @@ namespace ve {
 
 	template<typename T>
 	RELEASE_INLINE vbitfield_type load(contiguous_tags<T> e, dcon::bitfield_type const* source) {
-		return vbitfield_type{ uint8_t(((source[e.value / 8ui32].v) >> (e.value & 0x00000004)) & 0x0000000F) };
+		return vbitfield_type{ uint8_t(((source[e.value / uint32_t(8)].v) >> (e.value & 0x00000004)) & 0x0000000F) };
 	}
 	template<typename T>
 	RELEASE_INLINE vbitfield_type load(unaligned_contiguous_tags<T> e, dcon::bitfield_type const* source) {
 		return vbitfield_type{ uint8_t(0x0F & (
-			((source[e.value / 8ui32].v) >> (e.value & 0x07))
-			| ((((e.value & 0x7) > 4) ? (source[1 + e.value / 8ui32].v) : 0) << (8 - (e.value & 0x07))))
+			((source[e.value / uint32_t(8)].v) >> (e.value & 0x07))
+			| ((((e.value & 0x7) > 4) ? (source[1 + e.value / uint32_t(8)].v) : 0) << (8 - (e.value & 0x07))))
 		) };
 	}
 	template<typename T>
 	RELEASE_INLINE vbitfield_type load(partial_contiguous_tags<T> e, dcon::bitfield_type const* source) {
 		return vbitfield_type{ uint8_t((0x00FF >> (8 - e.subcount)) & (
-			((source[e.value / 8ui32].v) >> (e.value & 0x07))
-			| ((((e.value & 0x7) > 4) ? (source[1 + e.value / 8ui32].v) : 0) << (8 - (e.value & 0x07))))
+			((source[e.value / uint32_t(8)].v) >> (e.value & 0x07))
+			| ((((e.value & 0x7) > 4) ? (source[1 + e.value / uint32_t(8)].v) : 0) << (8 - (e.value & 0x07))))
 		) };
 	}
 	template<typename T>
@@ -917,28 +917,28 @@ namespace ve {
 
 	template<typename T>
 	RELEASE_INLINE fp_vector load(partial_contiguous_tags<T> e, float const* source) {
-		auto const mask = _mm_loadu_ps((float const*)(load_masks)+4ui32 - e.subcount);
+		auto const mask = _mm_loadu_ps((float const*)(load_masks)+uint32_t(4) - e.subcount);
 		auto const v = _mm_loadu_ps(source + e.value);
 		return _mm_blendv_ps(_mm_setzero_ps(), v, mask);
 	}
 
 	template<typename T>
 	RELEASE_INLINE int_vector load(partial_contiguous_tags<T> e, int32_t const* source) {
-		auto const mask = _mm_loadu_si128((__m128i const*)(load_masks + 4ui32 - e.subcount));
+		auto const mask = _mm_loadu_si128((__m128i const*)(load_masks + uint32_t(4) - e.subcount));
 		auto const v = _mm_loadu_si128((__m128i const*)(source + e.value));
 		return _mm_blendv_epi8(_mm_setzero_si128(), v, mask);
 	}
 
 	template<typename T>
 	RELEASE_INLINE int_vector load(partial_contiguous_tags<T> e, uint32_t const* source) {
-		auto const mask = _mm_loadu_si128((__m128i const*)(load_masks + 4ui32 - e.subcount));
+		auto const mask = _mm_loadu_si128((__m128i const*)(load_masks + uint32_t(4) - e.subcount));
 		auto const v = _mm_loadu_si128((__m128i const*)(source + e.value));
 		return _mm_blendv_epi8(_mm_setzero_si128(), v, mask);
 	}
 
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(partial_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 4, tagged_vector<U>> {
-		auto const mask = _mm_loadu_si128((__m128i const*)(load_masks + 4ui32 - e.subcount));
+		auto const mask = _mm_loadu_si128((__m128i const*)(load_masks + uint32_t(4) - e.subcount));
 		auto const v = _mm_loadu_si128((__m128i const*)(source + e.value));
 		return _mm_blendv_epi8(_mm_setzero_si128(), v, mask);
 	}
@@ -1109,7 +1109,7 @@ namespace ve {
 		auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
 		auto const cl = _mm_cvtepi16_epi32(vl);
 
-		auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + 4ui32 - e.subcount));
+		auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + uint32_t(4) - e.subcount));
 		return _mm_blendv_epi8(_mm_setzero_si128(), cl, mask_l);
 	}
 	template<typename T>
@@ -1117,7 +1117,7 @@ namespace ve {
 		auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
 		auto const cl = _mm_cvtepu16_epi32(vl);
 
-		auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + 4ui32 - e.subcount));
+		auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + uint32_t(4) - e.subcount));
 		return _mm_blendv_epi8(_mm_setzero_si128(), cl, mask_l);
 	}
 	template<typename T, typename U>
@@ -1126,13 +1126,13 @@ namespace ve {
 			auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
 			auto const cl = _mm_cvtepi16_epi32(vl);
 
-			auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + 4ui32 - e.subcount));
+			auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + uint32_t(4) - e.subcount));
 			return _mm_blendv_epi8(_mm_setzero_si128(), cl, mask_l);
 		} else {
 			auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
 			auto const cl = _mm_cvtepu16_epi32(vl);
 
-			auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + 4ui32 - e.subcount));
+			auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + uint32_t(4) - e.subcount));
 			return _mm_blendv_epi8(_mm_setzero_si128(), cl, mask_l);
 		}
 	}
@@ -1184,7 +1184,7 @@ namespace ve {
 		auto const vl = _mm_loadu_si32(source + e.value);
 		auto const cl = _mm_cvtepi8_epi32(vl);
 
-		auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + 4ui32 - e.subcount));
+		auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + uint32_t(4) - e.subcount));
 		return _mm_blendv_epi8(_mm_setzero_si128(), cl, mask_l);
 	}
 	template<typename T>
@@ -1192,7 +1192,7 @@ namespace ve {
 		auto const vl = _mm_loadu_si32(source + e.value);
 		auto const cl = _mm_cvtepu8_epi32(vl);
 
-		auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + 4ui32 - e.subcount));
+		auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + uint32_t(4) - e.subcount));
 		return _mm_blendv_epi8(_mm_setzero_si128(), cl, mask_l);
 	}
 	template<typename T, typename U>
@@ -1201,13 +1201,13 @@ namespace ve {
 			auto const vl = _mm_loadu_si32(source + e.value);
 			auto const cl = _mm_cvtepi8_epi32(vl);
 
-			auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + 4ui32 - e.subcount));
+			auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + uint32_t(4) - e.subcount));
 			return _mm_blendv_epi8(_mm_setzero_si128(), cl, mask_l);
 		} else {
 			auto const vl = _mm_loadu_si32(source + e.value);
 			auto const cl = _mm_cvtepu8_epi32(vl);
 
-			auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + 4ui32 - e.subcount));
+			auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + uint32_t(4) - e.subcount));
 			return _mm_blendv_epi8(_mm_setzero_si128(), cl, mask_l);
 		}
 	}
@@ -1339,43 +1339,43 @@ namespace ve {
 	}
 	template<typename T>
 	RELEASE_INLINE void store(contiguous_tags<T> e, dcon::bitfield_type* dest, vbitfield_type values) {
-		auto old_value = dest[e.value / 8ui32].v;
+		auto old_value = dest[e.value / uint32_t(8)].v;
 		auto mask = 0x0F << (e.value & 0x04);
 		auto adju_value = values.v << (e.value & 0x04);
 
-		dest[e.value / 8ui32].v = uint8_t((old_value & ~mask) | adju_value);
+		dest[e.value / uint32_t(8)].v = uint8_t((old_value & ~mask) | adju_value);
 	}
 	template<typename T>
 	RELEASE_INLINE void store(unaligned_contiguous_tags<T> e, dcon::bitfield_type* dest, vbitfield_type values) {
 		{
-			auto old_value = dest[e.value / 8ui32].v;
+			auto old_value = dest[e.value / uint32_t(8)].v;
 			auto mask = 0x0F << (e.value & 0x07);
 			auto adju_value = values.v << (e.value & 0x07);
-			dest[e.value / 8ui32].v = uint8_t((old_value & ~mask) | adju_value);
+			dest[e.value / uint32_t(8)].v = uint8_t((old_value & ~mask) | adju_value);
 		}
 		{
 			if((e.value & 0x07) > 4) {
-				auto old_value = dest[1 + e.value / 8ui32].v;
+				auto old_value = dest[1 + e.value / uint32_t(8)].v;
 				auto mask = 0x0F >> (8 - (e.value & 0x07));
 				auto adju_value = values.v >> (8 - (e.value & 0x07));
-				dest[1 + e.value / 8ui32].v = uint8_t((old_value & ~mask) | (adju_value & mask));
+				dest[1 + e.value / uint32_t(8)].v = uint8_t((old_value & ~mask) | (adju_value & mask));
 			}
 		}
 	}
 	template<typename T>
 	RELEASE_INLINE void store(partial_contiguous_tags<T> e, dcon::bitfield_type* dest, vbitfield_type values) {
 		{
-			auto old_value = dest[e.value / 8ui32].v;
+			auto old_value = dest[e.value / uint32_t(8)].v;
 			auto mask = (0x0F >> e.subcount) << (e.value & 0x07);
 			auto adju_value = values.v << (e.value & 0x07);
-			dest[e.value / 8ui32].v = uint8_t((old_value & ~mask) | (adju_value & mask));
+			dest[e.value / uint32_t(8)].v = uint8_t((old_value & ~mask) | (adju_value & mask));
 		}
 		{
 			if((e.value & 0x07) > 4) {
-				auto old_value = dest[1 + e.value / 8ui32].v;
+				auto old_value = dest[1 + e.value / uint32_t(8)].v;
 				auto mask = (0x0F >> e.subcount) >> (8 - (e.value & 0x07));
 				auto adju_value = values.v >> (8 - (e.value & 0x07));
-				dest[1 + e.value / 8ui32].v = uint8_t((old_value & ~mask) | (adju_value & mask));
+				dest[1 + e.value / uint32_t(8)].v = uint8_t((old_value & ~mask) | (adju_value & mask));
 			}
 		}
 	}

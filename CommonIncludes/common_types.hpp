@@ -7,13 +7,18 @@
 #include <cstdint>
 #include <utility>
 #include <algorithm>
-#include <intrin.h>
 #include <atomic>
 #include <cstddef>
 #include <type_traits>
 #include <new>
 #include <array>
 #include <cstring>
+
+#ifdef _MSC_VER 
+#include <intrin.h>
+#else
+#include <x86intrin.h>
+#endif
 
 #ifdef NDEBUG 
 #ifdef _MSC_VER 
@@ -36,17 +41,17 @@ namespace dcon {
 
 	inline void bit_vector_set(bitfield_type* v, int32_t index, bool value) {
 		const int32_t real_index = index >> 3;
-		const uint32_t sub_index = uint32_t(index) & 7ui32;
+		const uint32_t sub_index = uint32_t(index) & uint32_t(7);
 		if(value)
-			v[real_index].v |= uint8_t(1ui32 << sub_index);
+			v[real_index].v |= uint8_t(uint32_t(1) << sub_index);
 		else
-			v[real_index].v &= uint8_t(~(1ui32 << sub_index));
+			v[real_index].v &= uint8_t(~(uint32_t(1) << sub_index));
 	}
 
 	inline bool bit_vector_test(bitfield_type const* v, int32_t index) {
 		const int32_t real_index = index >> 3;
-		const uint32_t sub_index = uint32_t(index) & 7ui32;
-		return (v[real_index].v & (1ui32 << sub_index)) != 0;
+		const uint32_t sub_index = uint32_t(index) & uint32_t(7);
+		return (v[real_index].v & (uint32_t(1) << sub_index)) != 0;
 	}
 
 	inline bool char_span_equals_str(char const* start, char const* end, char const* n) {
@@ -295,17 +300,17 @@ namespace dcon {
 
 		inline uint32_t rt_log2_round_up(uint32_t n) {
 #ifndef _MSC_VER
-			return n > 1ui32 ? 32ui32 - uint32_t(__builtin_clz(n - 1ui32)) : 0ui32;
+			return n > uint32_t(1) ? uint32_t(32) - uint32_t(__builtin_clz(n - uint32_t(1))) : uint32_t(0);
 #else
-			return n > 1ui32 ? 32ui32 - uint32_t(__lzcnt(n - 1ui32)) : 0ui32;
+			return n > uint32_t(1) ? uint32_t(32) - uint32_t(__lzcnt(n - uint32_t(1))) : uint32_t(0);
 #endif
 		}
 
 		inline uint32_t rt_log2(uint32_t n) {
 #ifndef _MSC_VER
-			return 31ui32 - uint32_t(__builtin_clz(n | 1ui32));
+			return uint32_t(31) - uint32_t(__builtin_clz(n | uint32_t(1)));
 #else
-			return 31ui32 - uint32_t(__lzcnt(n | 1ui32));
+			return uint32_t(31) - uint32_t(__lzcnt(n | uint32_t(1)));
 #endif
 		}
 
@@ -323,7 +328,7 @@ namespace dcon {
 				free_list_value,
 				concurrent_key_pair_helper(ptr->next_free, concurrent_key_pair_helper(free_list_value).parts.counter + 1).value, std::memory_order_acq_rel));
 
-			ptr->size = 0ui16;
+			ptr->size = uint16_t(0);
 			return concurrent_key_pair_helper(free_list_value).parts.index;
 		}
 
@@ -337,7 +342,7 @@ namespace dcon {
 		using contents_type = object_type;
 
 		uint64_t backing_storage[memory_size];
-		std::atomic<uint32_t> first_free = 0ui32;
+		std::atomic<uint32_t> first_free = uint32_t(0);
 
 		std::atomic<uint64_t> free_lists[17] = {
 			detail::concurrent_key_pair_helper(std::numeric_limits<stable_mk_2_tag>::max(), 0).value, detail::concurrent_key_pair_helper(std::numeric_limits<stable_mk_2_tag>::max(), 0).value, detail::concurrent_key_pair_helper(std::numeric_limits<stable_mk_2_tag>::max(), 0).value, detail::concurrent_key_pair_helper(std::numeric_limits<stable_mk_2_tag>::max(), 0).value,
@@ -348,7 +353,7 @@ namespace dcon {
 
 
 		void reset() {
-			first_free = 0ui32;
+			first_free = uint32_t(0);
 			for(uint32_t i = 0; i < std::extent_v<decltype(free_lists)>; ++i)
 				free_lists[i].store(detail::concurrent_key_pair_helper(std::numeric_limits<stable_mk_2_tag>::max(), 0).value, std::memory_order_release);
 		}
@@ -383,7 +388,7 @@ namespace dcon {
 		void shrink_capacity(stable_mk_2_tag& i) {
 			detail::mk_2_header* header = (detail::mk_2_header*)(backing_storage + i);
 
-			if(header->size == 0ui16) {
+			if(header->size == uint16_t(0)) {
 				release(i);
 				return;
 			}
@@ -413,7 +418,7 @@ namespace dcon {
 			uint64_t free_list_value = free_lists[free_list_pos].load(std::memory_order_acquire);
 			do {
 				header->next_free = detail::concurrent_key_pair_helper(free_list_value).parts.index;
-				header->size = 0ui16;
+				header->size = uint16_t(0);
 			} while(!free_lists[free_list_pos].compare_exchange_strong(
 				free_list_value,
 				detail::concurrent_key_pair_helper(i, detail::concurrent_key_pair_helper(free_list_value).parts.counter + 1).value, std::memory_order_acq_rel));
@@ -426,13 +431,13 @@ namespace dcon {
 	namespace detail {
 		template<typename object_type, uint32_t minimum_size, size_t memory_size>
 		stable_mk_2_tag return_new_memory(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, uint32_t requested_capacity) {
-			const uint32_t real_capacity = 1ui32 << rt_log2_round_up(requested_capacity > minimum_size ? requested_capacity : minimum_size);
+			const uint32_t real_capacity = uint32_t(1) << rt_log2_round_up(requested_capacity > minimum_size ? requested_capacity : minimum_size);
 
 			mk_2_header* new_header;
 			stable_mk_2_tag new_mem;
 
 
-			const uint32_t qword_size = 1ui32 + (real_capacity * sizeof(object_type) + 7ui32) / 8ui32;
+			const uint32_t qword_size = uint32_t(1) + (real_capacity * sizeof(object_type) + uint32_t(7)) / uint32_t(8);
 			auto old_position = storage.first_free.fetch_add(qword_size, std::memory_order_acq_rel);
 
 			new_mem = old_position;
@@ -449,7 +454,7 @@ namespace dcon {
 
 
 			new_header->capacity = uint16_t(real_capacity);
-			new_header->size = 0ui16;
+			new_header->size = uint16_t(0);
 			new_header->next_free = std::numeric_limits<stable_mk_2_tag>::max();
 
 			object_type* objects = detail::to_data<object_type>(new_header);
@@ -483,7 +488,7 @@ namespace dcon {
 			detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
 			return header->capacity;
 		} else {
-			return 0ui32;
+			return uint32_t(0);
 		}
 	}
 
@@ -493,7 +498,7 @@ namespace dcon {
 			detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
 			return header->size;
 		} else {
-			return 0ui32;
+			return uint32_t(0);
 		}
 	}
 
@@ -504,7 +509,7 @@ namespace dcon {
 			detail::mk_2_header*header = (detail::mk_2_header*)(storage.backing_storage + i);
 
 			*detail::to_data<object_type>(header) = obj;
-			header->size = 1ui16;
+			header->size = uint16_t(1);
 		} else {
 			detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
 			if(header->size >= header->capacity) {

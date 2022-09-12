@@ -201,11 +201,11 @@ namespace os {
 			// storage space for i_value of type int16_t
 			//
 			struct alignas(64) dtype_i_value {
-				uint8_t padding[(63 + sizeof(int16_t)) & ~63ui64];
-				int16_t values[(sizeof(int16_t) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(int16_t))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(int16_t)) - 1ui32) : uint32_t(1200))];
+				uint8_t padding[(63 + sizeof(int16_t)) & ~uint64_t(63)];
+				int16_t values[(sizeof(int16_t) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(int16_t))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(int16_t)) - uint32_t(1)) : uint32_t(1200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_i_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(int16_t) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(int16_t))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(int16_t)) - 1ui32) : uint32_t(1200))); }
+				dtype_i_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(int16_t) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(int16_t))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(int16_t)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_i_value;
 			
@@ -213,11 +213,11 @@ namespace os {
 			// storage space for f_value of type float
 			//
 			struct alignas(64) dtype_f_value {
-				uint8_t padding[(63 + sizeof(float)) & ~63ui64];
-				float values[(sizeof(float) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(float))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(float)) - 1ui32) : uint32_t(1200))];
+				uint8_t padding[(63 + sizeof(float)) & ~uint64_t(63)];
+				float values[(sizeof(float) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(float))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(float)) - uint32_t(1)) : uint32_t(1200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_f_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(float) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(float))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(float)) - 1ui32) : uint32_t(1200))); }
+				dtype_f_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(float) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(float))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(float)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_f_value;
 			
@@ -225,11 +225,11 @@ namespace os {
 			// storage space for bf_value of type dcon::bitfield_type
 			//
 			struct alignas(64) dtype_bf_value {
-				uint8_t padding[(63 + sizeof(dcon::bitfield_type)) & ~63ui64];
-				dcon::bitfield_type values[((uint32_t(1200 + 7)) / 8ui32 + 63ui32) & ~63ui32];
+				uint8_t padding[(63 + sizeof(dcon::bitfield_type)) & ~uint64_t(63)];
+				dcon::bitfield_type values[((uint32_t(1200 + 7)) / uint32_t(8) + uint32_t(63)) & ~uint32_t(63)];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_bf_value() { std::uninitialized_value_construct_n(values - 1, 1 + ((uint32_t(1200 + 7)) / 8ui32 + 63ui32) & ~63ui32); }
+				dtype_bf_value() { std::uninitialized_value_construct_n(values - 1, 1 + ((uint32_t(1200 + 7)) / uint32_t(8) + uint32_t(63)) & ~uint32_t(63)); }
 			}
 			m_bf_value;
 			
@@ -263,22 +263,22 @@ namespace os {
 				std::byte* values = nullptr;
 				uint32_t size = 0;
 				DCON_RELEASE_INLINE auto vptr(int32_t i) const {
-					return reinterpret_cast<float const*>(values + ((63ui64 + sizeof(float)) & ~63ui64) + i * (sizeof(float) * 1200 + 64ui64 - ((sizeof(float) * 1200) & 63ui64) + ((sizeof(float) + 63ui64) & ~63ui64)));
+					return reinterpret_cast<float const*>(values + ((uint64_t(63) + sizeof(float)) & ~uint64_t(63)) + i * (sizeof(float) * 1200 + uint64_t(64) - ((sizeof(float) * 1200) & uint64_t(63)) + ((sizeof(float) + uint64_t(63)) & ~uint64_t(63))));
 				}
 				DCON_RELEASE_INLINE auto vptr(int32_t i) {
-					return reinterpret_cast<float*>(values + ((63ui64 + sizeof(float)) & ~63ui64) + i * (sizeof(float) * 1200 + 64ui64 - ((sizeof(float) * 1200) & 63ui64) + ((sizeof(float) + 63ui64) & ~63ui64)));
+					return reinterpret_cast<float*>(values + ((uint64_t(63) + sizeof(float)) & ~uint64_t(63)) + i * (sizeof(float) * 1200 + uint64_t(64) - ((sizeof(float) * 1200) & uint64_t(63)) + ((sizeof(float) + uint64_t(63)) & ~uint64_t(63))));
 				}
 				DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t) {
-					std::byte* temp = (std::byte*)(::operator new(((63ui64 + sizeof(float)) & ~63ui64) + sz * (sizeof(float) * 1200 + 64ui64 - ((sizeof(float) * 1200) & 63ui64) + ((sizeof(float) + 63ui64) & ~63ui64)), std::align_val_t{ 64 }));
+					std::byte* temp = (std::byte*)(::operator new(((uint64_t(63) + sizeof(float)) & ~uint64_t(63)) + sz * (sizeof(float) * 1200 + uint64_t(64) - ((sizeof(float) * 1200) & uint64_t(63)) + ((sizeof(float) + uint64_t(63)) & ~uint64_t(63))), std::align_val_t{ 64 }));
 					if(sz > size) {
 						if(values) {
-							std::memcpy(temp, values, ((63ui64 + sizeof(float)) & ~63ui64) + size * (sizeof(float) * 1200 + 64ui64 - ((sizeof(float) * 1200) & 63ui64) + ((sizeof(float) + 63ui64) & ~63ui64)));
-							std::memset(temp + ((63ui64 + sizeof(float)) & ~63ui64) + size * (sizeof(float) * 1200 + 64ui64 - ((sizeof(float) * 1200) & 63ui64) + ((sizeof(float) + 63ui64) & ~63ui64)), 0, (sz - size) * (sizeof(float) * 1200 + 64ui64 - ((sizeof(float) * 1200) & 63ui64) + ((sizeof(float) + 63ui64) & ~63ui64)));
+							std::memcpy(temp, values, ((uint64_t(63) + sizeof(float)) & ~uint64_t(63)) + size * (sizeof(float) * 1200 + uint64_t(64) - ((sizeof(float) * 1200) & uint64_t(63)) + ((sizeof(float) + uint64_t(63)) & ~uint64_t(63))));
+							std::memset(temp + ((uint64_t(63) + sizeof(float)) & ~uint64_t(63)) + size * (sizeof(float) * 1200 + uint64_t(64) - ((sizeof(float) * 1200) & uint64_t(63)) + ((sizeof(float) + uint64_t(63)) & ~uint64_t(63))), 0, (sz - size) * (sizeof(float) * 1200 + uint64_t(64) - ((sizeof(float) * 1200) & uint64_t(63)) + ((sizeof(float) + uint64_t(63)) & ~uint64_t(63))));
 						} else {
-							std::memset(temp, 0, ((63ui64 + sizeof(float)) & ~63ui64) + sz * (sizeof(float) * 1200 + 64ui64 - ((sizeof(float) * 1200) & 63ui64) + ((sizeof(float) + 63ui64) & ~63ui64)));
+							std::memset(temp, 0, ((uint64_t(63) + sizeof(float)) & ~uint64_t(63)) + sz * (sizeof(float) * 1200 + uint64_t(64) - ((sizeof(float) * 1200) & uint64_t(63)) + ((sizeof(float) + uint64_t(63)) & ~uint64_t(63))));
 						}
 					} else {
-						std::memcpy(temp, values, ((63ui64 + sizeof(float)) & ~63ui64) + sz * (sizeof(float) * 1200 + 64ui64 - ((sizeof(float) * 1200) & 63ui64) + ((sizeof(float) + 63ui64) & ~63ui64)));
+						std::memcpy(temp, values, ((uint64_t(63) + sizeof(float)) & ~uint64_t(63)) + sz * (sizeof(float) * 1200 + uint64_t(64) - ((sizeof(float) * 1200) & uint64_t(63)) + ((sizeof(float) + uint64_t(63)) & ~uint64_t(63))));
 					}
 					::operator delete(values, std::align_val_t{ 64 });
 					values = temp;
@@ -305,22 +305,22 @@ namespace os {
 				std::byte* values = nullptr;
 				uint32_t size = 0;
 				DCON_RELEASE_INLINE auto vptr(int32_t i) const {
-					return reinterpret_cast<dcon::bitfield_type const*>(values + ((63ui64 + sizeof(dcon::bitfield_type)) & ~63ui64) + i * ( (1200 + 7) / 8 + 64ui64 - (( (1200 + 7) / 8) & 63ui64) ));
+					return reinterpret_cast<dcon::bitfield_type const*>(values + ((uint64_t(63) + sizeof(dcon::bitfield_type)) & ~uint64_t(63)) + i * ( (1200 + 7) / 8 + uint64_t(64) - (( (1200 + 7) / 8) & uint64_t(63)) ));
 				}
 				DCON_RELEASE_INLINE auto vptr(int32_t i) {
-					return reinterpret_cast<dcon::bitfield_type*>(values + ((63ui64 + sizeof(dcon::bitfield_type)) & ~63ui64) + i * ( (1200 + 7) / 8 + 64ui64 - (( (1200 + 7) / 8) & 63ui64) ));
+					return reinterpret_cast<dcon::bitfield_type*>(values + ((uint64_t(63) + sizeof(dcon::bitfield_type)) & ~uint64_t(63)) + i * ( (1200 + 7) / 8 + uint64_t(64) - (( (1200 + 7) / 8) & uint64_t(63)) ));
 				}
 				DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t) {
-					std::byte* temp = (std::byte*)(::operator new(((63ui64 + sizeof(dcon::bitfield_type)) & ~63ui64) + sz * ( (1200 + 7) / 8 + 64ui64 - (( (1200 + 7) / 8) & 63ui64) ), std::align_val_t{ 64 }));
+					std::byte* temp = (std::byte*)(::operator new(((uint64_t(63) + sizeof(dcon::bitfield_type)) & ~uint64_t(63)) + sz * ( (1200 + 7) / 8 + uint64_t(64) - (( (1200 + 7) / 8) & uint64_t(63)) ), std::align_val_t{ 64 }));
 					if(sz > size) {
 						if(values) {
-							std::memcpy(temp, values, ((63ui64 + sizeof(dcon::bitfield_type)) & ~63ui64) + size * ( (1200 + 7) / 8 + 64ui64 - (( (1200 + 7) / 8) & 63ui64) ));
-							std::memset(temp + ((63ui64 + sizeof(dcon::bitfield_type)) & ~63ui64) + size * ( (1200 + 7) / 8 + 64ui64 - (( (1200 + 7) / 8) & 63ui64) ), 0, (sz - size) * ( (1200 + 7) / 8 + 64ui64 - (( (1200 + 7) / 8) & 63ui64) ));
+							std::memcpy(temp, values, ((uint64_t(63) + sizeof(dcon::bitfield_type)) & ~uint64_t(63)) + size * ( (1200 + 7) / 8 + uint64_t(64) - (( (1200 + 7) / 8) & uint64_t(63)) ));
+							std::memset(temp + ((uint64_t(63) + sizeof(dcon::bitfield_type)) & ~uint64_t(63)) + size * ( (1200 + 7) / 8 + uint64_t(64) - (( (1200 + 7) / 8) & uint64_t(63)) ), 0, (sz - size) * ( (1200 + 7) / 8 + uint64_t(64) - (( (1200 + 7) / 8) & uint64_t(63)) ));
 						} else {
-							std::memset(temp, 0, ((63ui64 + sizeof(dcon::bitfield_type)) & ~63ui64) + sz * ( (1200 + 7) / 8 + 64ui64 - (( (1200 + 7) / 8) & 63ui64) ));
+							std::memset(temp, 0, ((uint64_t(63) + sizeof(dcon::bitfield_type)) & ~uint64_t(63)) + sz * ( (1200 + 7) / 8 + uint64_t(64) - (( (1200 + 7) / 8) & uint64_t(63)) ));
 						}
 					} else {
-						std::memcpy(temp, values, ((63ui64 + sizeof(dcon::bitfield_type)) & ~63ui64) + sz * ( (1200 + 7) / 8 + 64ui64 - (( (1200 + 7) / 8) & 63ui64) ));
+						std::memcpy(temp, values, ((uint64_t(63) + sizeof(dcon::bitfield_type)) & ~uint64_t(63)) + sz * ( (1200 + 7) / 8 + uint64_t(64) - (( (1200 + 7) / 8) & uint64_t(63)) ));
 					}
 					::operator delete(values, std::align_val_t{ 64 });
 					values = temp;
@@ -344,11 +344,11 @@ namespace os {
 			// storage space for custom_struct of type c_struct
 			//
 			struct alignas(64) dtype_custom_struct {
-				uint8_t padding[(63 + sizeof(c_struct)) & ~63ui64];
-				c_struct values[(sizeof(c_struct) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(c_struct))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(c_struct)) - 1ui32) : uint32_t(1200))];
+				uint8_t padding[(63 + sizeof(c_struct)) & ~uint64_t(63)];
+				c_struct values[(sizeof(c_struct) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(c_struct))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(c_struct)) - uint32_t(1)) : uint32_t(1200))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_custom_struct() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(c_struct) <= 64 ? (uint32_t(1200) + (64ui32 / uint32_t(sizeof(c_struct))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(c_struct)) - 1ui32) : uint32_t(1200))); }
+				dtype_custom_struct() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(c_struct) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(c_struct))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(c_struct)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_custom_struct;
 			
@@ -365,11 +365,11 @@ namespace os {
 			// storage space for some_value of type int32_t
 			//
 			struct alignas(64) dtype_some_value {
-				uint8_t padding[(63 + sizeof(int32_t)) & ~63ui64];
-				int32_t values[(sizeof(int32_t) <= 64 ? (uint32_t(300) + (64ui32 / uint32_t(sizeof(int32_t))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(int32_t)) - 1ui32) : uint32_t(300))];
+				uint8_t padding[(63 + sizeof(int32_t)) & ~uint64_t(63)];
+				int32_t values[(sizeof(int32_t) <= 64 ? (uint32_t(300) + (uint32_t(64) / uint32_t(sizeof(int32_t))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(int32_t)) - uint32_t(1)) : uint32_t(300))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_some_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(int32_t) <= 64 ? (uint32_t(300) + (64ui32 / uint32_t(sizeof(int32_t))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(int32_t)) - 1ui32) : uint32_t(300))); }
+				dtype_some_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(int32_t) <= 64 ? (uint32_t(300) + (uint32_t(64) / uint32_t(sizeof(int32_t))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(int32_t)) - uint32_t(1)) : uint32_t(300))); }
 			}
 			m_some_value;
 			
@@ -386,11 +386,11 @@ namespace os {
 			// storage space for left of type thingy_id
 			//
 			struct alignas(64) dtype_left {
-				uint8_t padding[(63 + sizeof(thingy_id)) & ~63ui64];
-				thingy_id values[(sizeof(thingy_id) <= 64 ? (uint32_t(300) + (64ui32 / uint32_t(sizeof(thingy_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingy_id)) - 1ui32) : uint32_t(300))];
+				uint8_t padding[(63 + sizeof(thingy_id)) & ~uint64_t(63)];
+				thingy_id values[(sizeof(thingy_id) <= 64 ? (uint32_t(300) + (uint32_t(64) / uint32_t(sizeof(thingy_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingy_id)) - uint32_t(1)) : uint32_t(300))];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_left() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingy_id) <= 64 ? (uint32_t(300) + (64ui32 / uint32_t(sizeof(thingy_id))) - 1ui32) & ~(64ui32 / uint32_t(sizeof(thingy_id)) - 1ui32) : uint32_t(300))); }
+				dtype_left() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingy_id) <= 64 ? (uint32_t(300) + (uint32_t(64) / uint32_t(sizeof(thingy_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingy_id)) - uint32_t(1)) : uint32_t(300))); }
 			}
 			m_left;
 			
