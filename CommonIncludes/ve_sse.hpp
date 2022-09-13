@@ -4,6 +4,8 @@
 // This file provided as part of the DataContainer project
 //
 
+#include <smmintrin.h>
+
 namespace ve {
 	constexpr int32_t vector_size = 4;
 
