@@ -1827,59 +1827,59 @@ TEST_CASE("id variations", "[ve_tests]") {
 
 #ifdef __AVX2__
 	auto sres = ve::load(ve::contiguous_tags<int32_t>(0), sgnd);
-	REQUIRE(sres.value.m256i_i32[0] == 0);
-	REQUIRE(sres.value.m256i_i32[1] == -1);
-	REQUIRE(sres.value.m256i_i32[2] == 1);
-	REQUIRE(sres.value.m256i_i32[3] == 2);
+	REQUIRE(sres[0].index() == 0);
+	REQUIRE(sres[1].index() == -1);
+	REQUIRE(sres[2].index() == 1);
+	REQUIRE(sres[3].index() == 2);
 
 	auto ssres = ve::load(ve::contiguous_tags<int32_t>(0), sgnd_small);
-	REQUIRE(ssres.value.m256i_i32[0] == 0);
-	REQUIRE(ssres.value.m256i_i32[1] == -1);
-	REQUIRE(ssres.value.m256i_i32[2] == 1);
-	REQUIRE(ssres.value.m256i_i32[3] == 2);
+	REQUIRE(ssres[0].index() == 0);
+	REQUIRE(ssres[1].index() == -1);
+	REQUIRE(ssres[2].index() == 1);
+	REQUIRE(ssres[3].index() == 2);
 
 	auto ussres = ve::load(ve::contiguous_tags<int32_t>(0), usgnd_small);
-	REQUIRE(ussres.value.m256i_i32[0] == 0);
-	REQUIRE(ussres.value.m256i_i32[1] == -1);
-	REQUIRE(ussres.value.m256i_i32[2] == 1);
-	REQUIRE(ussres.value.m256i_i32[3] == 2);
+	REQUIRE(ussres[0].index() == 0);
+	REQUIRE(ussres[1].index() == -1);
+	REQUIRE(ussres[2].index() == 1);
+	REQUIRE(ussres[3].index() == 2);
 #else
 #ifdef __AVX__
 	auto sres = ve::load(ve::contiguous_tags<int32_t>(0), sgnd);
-	REQUIRE(sres.value.m256i_i32[0] == 0);
-	REQUIRE(sres.value.m256i_i32[1] == -1);
-	REQUIRE(sres.value.m256i_i32[2] == 1);
-	REQUIRE(sres.value.m256i_i32[3] == 2);
+	REQUIRE(sres[0].index() == 0);
+	REQUIRE(sres[1].index() == -1);
+	REQUIRE(sres[2].index() == 1);
+	REQUIRE(sres[3].index() == 2);
 
 	auto ssres = ve::load(ve::contiguous_tags<int32_t>(0), sgnd_small);
-	REQUIRE(ssres.value.m256i_i32[0] == 0);
-	REQUIRE(ssres.value.m256i_i32[1] == -1);
-	REQUIRE(ssres.value.m256i_i32[2] == 1);
-	REQUIRE(ssres.value.m256i_i32[3] == 2);
+	REQUIRE(ssres[0].index() == 0);
+	REQUIRE(ssres[1].index() == -1);
+	REQUIRE(ssres[2].index() == 1);
+	REQUIRE(ssres[3].index() == 2);
 
 	auto ussres = ve::load(ve::contiguous_tags<int32_t>(0), usgnd_small);
-	REQUIRE(ussres.value.m256i_i32[0] == 0);
-	REQUIRE(ussres.value.m256i_i32[1] == -1);
-	REQUIRE(ussres.value.m256i_i32[2] == 1);
-	REQUIRE(ussres.value.m256i_i32[3] == 2);
+	REQUIRE(ussres[0].index() == 0);
+	REQUIRE(ussres[1].index() == -1);
+	REQUIRE(ussres[2].index() == 1);
+	REQUIRE(ussres[3].index() == 2);
 #else // SSE
 	auto sres = ve::load(ve::contiguous_tags<int32_t>(0), sgnd);
-	REQUIRE(sres.value.m128i_i32[0] == 0);
-	REQUIRE(sres.value.m128i_i32[1] == -1);
-	REQUIRE(sres.value.m128i_i32[2] == 1);
-	REQUIRE(sres.value.m128i_i32[3] == 2);
+	REQUIRE(sres[0].index() == 0);
+	REQUIRE(sres[1].index() == -1);
+	REQUIRE(sres[2].index() == 1);
+	REQUIRE(sres[3].index() == 2);
 
 	auto ssres = ve::load(ve::contiguous_tags<int32_t>(0), sgnd_small);
-	REQUIRE(ssres.value.m128i_i32[0] == 0);
-	REQUIRE(ssres.value.m128i_i32[1] == -1);
-	REQUIRE(ssres.value.m128i_i32[2] == 1);
-	REQUIRE(ssres.value.m128i_i32[3] == 2);
+	REQUIRE(ssres[0].index() == 0);
+	REQUIRE(ssres[1].index() == -1);
+	REQUIRE(ssres[2].index() == 1);
+	REQUIRE(ssres[3].index() == 2);
 
 	auto ussres = ve::load(ve::contiguous_tags<int32_t>(0), usgnd_small);
-	REQUIRE(ussres.value.m128i_i32[0] == 0);
-	REQUIRE(ussres.value.m128i_i32[1] == -1);
-	REQUIRE(ussres.value.m128i_i32[2] == 1);
-	REQUIRE(ussres.value.m128i_i32[3] == 2);
+	REQUIRE(ussres[0].index() == 0);
+	REQUIRE(ussres[1].index() == -1);
+	REQUIRE(ussres[2].index() == 1);
+	REQUIRE(ussres[3].index() == 2);
 #endif
 #endif
 

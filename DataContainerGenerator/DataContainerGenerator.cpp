@@ -379,8 +379,7 @@ int main(int argc, char *argv[]) {
 
 		for(auto& pq : parsed_file.prepared_queries) {
 			output += make_query_instance_types(o, pq).to_string(2);
-			output += make_query_iterator_declarations(o, pq).to_string(2);
-			output += make_query_instance_definitions(o, pq).to_string(2);
+			
 		}
 
 		for(auto& ob : parsed_file.relationship_objects) {
@@ -733,8 +732,18 @@ int main(int argc, char *argv[]) {
 			output += make_fat_id_impl(o, obj, parsed_file).to_string(1);
 			output += make_const_fat_id_impl(o, obj, parsed_file).to_string(1);
 		}
+
+		output += "\n";
+		output += "\tnamespace internal {\n";
+		for(auto& pq : parsed_file.prepared_queries) {
+			//
+			output += make_query_iterator_declarations(o, pq).to_string(2);
+			output += make_query_instance_definitions(o, pq).to_string(2);
+		}
+		output += "\t};\n\n";
 		output += "\n";
 		for(auto& pq : parsed_file.prepared_queries) {
+
 			output += make_query_iterator_body(o, pq, std::string("internal::query_") + pq.name + "_const_iterator::", true).to_string(1);
 			output += make_query_iterator_body(o, pq, std::string("internal::query_") + pq.name + "_iterator::", false).to_string(1);
 		}

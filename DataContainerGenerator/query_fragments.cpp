@@ -356,11 +356,11 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 		if(pdef.table_slots.size() > 0) {
 			if(pdef.has_group) {
 				o + "internal_reset_aggregates();";
-				o + "bool first_time = false;";
+				o + "bool first_time = true;";
 				o + "while(bool(@first_id@))" + block{
 					o + "bool hit_group = false;";
 					
-					o + "while(bool(@first_id@) && !internal_increment_v@last_index@(false, hit_group))" + block{
+					o + "while(bool(@first_id@) && !internal_increment_v@last_index@(first_time, hit_group))" + block{
 
 					};
 					
@@ -490,7 +490,9 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 			}
 		};
 
-		o + "bool @namesp@internal_increment_v@index@(bool force, bool& hit_group)" + block{
+		o + substitute{ "inc_params", i == 0 && !table.is_group_slot ? "bool, bool&" : "bool force, bool& hit_group" };
+
+		o + "bool @namesp@internal_increment_v@index@(@inc_params@)" + block{
 			if(i == 0) {
 				if(table.is_group_slot) {
 					o + "if(!force)" + block{

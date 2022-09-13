@@ -232,7 +232,7 @@ namespace ve {
 					case 6: return tag_type(typename tag_type::value_base_t(_mm256_extract_epi32(value, 6)));
 					case 7: return tag_type(typename tag_type::value_base_t(_mm256_extract_epi32(value, 7)));
 				}
-				return 0;
+				return tag_type();
 			}
 		}
 		RELEASE_INLINE void set(uint32_t i, tag_type v) noexcept {

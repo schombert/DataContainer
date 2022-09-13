@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <assert.h>
 #include <cstring>
 #include "common_types.hpp"
 #ifndef DCON_NO_VE
@@ -203,98 +204,6 @@ namespace dcon {
 			}
 		};
 		
-		class query_q_all_owner_ages_instance;
-		class query_q_all_owner_ages_const_instance;
-		class query_q_all_owner_ages_iterator {
-			private:
-			data_container& m_container;
-			query_q_all_owner_ages_instance const& m_parameters;
-			car_id m_tableindex0;
-			car_ownership_id m_tableindex1;
-			person_id m_tableindex2;
-			public:
-			query_q_all_owner_ages_iterator(data_container& c, query_q_all_owner_ages_instance const& p) : m_container(c), m_parameters(p) {
-				if(m_container.car_size() > 0) {
-					if(!internal_set_v0(car_id(car_id::value_base_t(0))) ) {
-						internal_increment_to_result();
-					}
-				}
-			}
-			auto operator++() -> query_q_all_owner_ages_iterator&;
-			bool operator==(dcon::invalid_iterator_type);
-			bool operator!=(dcon::invalid_iterator_type);
-			auto operator*() -> query_q_all_owner_ages_iterator const&;
-			private:
-			void internal_reset_aggregates();
-			void internal_set_aggregates();
-			void internal_update_aggregates();
-			void internal_increment_to_result();
-			void internal_reset_v0();
-			bool internal_set_v0(car_id v);
-			bool internal_increment_v0(bool force, bool& hit_group);
-			void internal_reset_v1();
-			bool internal_set_v1(car_ownership_id v);
-			bool internal_increment_v1(bool force, bool& hit_group);
-			void internal_reset_v2();
-			bool internal_set_v2(person_id v);
-			bool internal_increment_v2(bool force, bool& hit_group);
-			public:
-			auto get_person_age() const -> decltype(m_container.person_get_age(person_id()));
-			void set_person_age(int32_t v) const;
-			person_fat_id get_person_id() const noexcept;
-			bool has_car() const noexcept;
-			bool has_car_ownership() const noexcept;
-			bool has_person() const noexcept;
-			
-		};
-		class query_q_all_owner_ages_const_iterator {
-			private:
-			data_container const& m_container;
-			query_q_all_owner_ages_const_instance const& m_parameters;
-			car_id m_tableindex0;
-			car_ownership_id m_tableindex1;
-			person_id m_tableindex2;
-			public:
-			query_q_all_owner_ages_const_iterator(data_container const& c, query_q_all_owner_ages_const_instance const& p) : m_container(c), m_parameters(p) {
-				if(m_container.car_size() > 0) {
-					if(!internal_set_v0(car_id(car_id::value_base_t(0))) ) {
-						internal_increment_to_result();
-					}
-				}
-			}
-			auto operator++() -> query_q_all_owner_ages_const_iterator&;
-			bool operator==(dcon::invalid_iterator_type);
-			bool operator!=(dcon::invalid_iterator_type);
-			auto operator*() -> query_q_all_owner_ages_const_iterator const&;
-			private:
-			void internal_reset_aggregates();
-			void internal_set_aggregates();
-			void internal_update_aggregates();
-			void internal_increment_to_result();
-			void internal_reset_v0();
-			bool internal_set_v0(car_id v);
-			bool internal_increment_v0(bool force, bool& hit_group);
-			void internal_reset_v1();
-			bool internal_set_v1(car_ownership_id v);
-			bool internal_increment_v1(bool force, bool& hit_group);
-			void internal_reset_v2();
-			bool internal_set_v2(person_id v);
-			bool internal_increment_v2(bool force, bool& hit_group);
-			public:
-			auto get_person_age() const -> decltype(m_container.person_get_age(person_id()));
-			person_const_fat_id get_person_id() const noexcept;
-			bool has_car() const noexcept;
-			bool has_car_ownership() const noexcept;
-			bool has_person() const noexcept;
-			
-		};
-		
-		query_q_all_owner_ages_iterator query_q_all_owner_ages_instance::begin() const {
-			return query_q_all_owner_ages_iterator(container, *this);
-		}
-		query_q_all_owner_ages_const_iterator query_q_all_owner_ages_const_instance::begin() const {
-			return query_q_all_owner_ages_const_iterator(container, *this);
-		}
 		class alignas(64) car_class {
 			private:
 			//
@@ -2315,6 +2224,102 @@ namespace dcon {
 	}
 	
 
+	namespace internal {
+		class query_q_all_owner_ages_instance;
+		class query_q_all_owner_ages_const_instance;
+		class query_q_all_owner_ages_iterator {
+			private:
+			data_container& m_container;
+			query_q_all_owner_ages_instance const& m_parameters;
+			car_id m_tableindex0;
+			car_ownership_id m_tableindex1;
+			person_id m_tableindex2;
+			public:
+			query_q_all_owner_ages_iterator(data_container& c, query_q_all_owner_ages_instance const& p) : m_container(c), m_parameters(p) {
+				if(m_container.car_size() > 0) {
+					if(!internal_set_v0(car_id(car_id::value_base_t(0))) ) {
+						internal_increment_to_result();
+					}
+				}
+			}
+			auto operator++() -> query_q_all_owner_ages_iterator&;
+			bool operator==(dcon::invalid_iterator_type);
+			bool operator!=(dcon::invalid_iterator_type);
+			auto operator*() -> query_q_all_owner_ages_iterator const&;
+			private:
+			void internal_reset_aggregates();
+			void internal_set_aggregates();
+			void internal_update_aggregates();
+			void internal_increment_to_result();
+			void internal_reset_v0();
+			bool internal_set_v0(car_id v);
+			bool internal_increment_v0(bool, bool&);
+			void internal_reset_v1();
+			bool internal_set_v1(car_ownership_id v);
+			bool internal_increment_v1(bool force, bool& hit_group);
+			void internal_reset_v2();
+			bool internal_set_v2(person_id v);
+			bool internal_increment_v2(bool force, bool& hit_group);
+			public:
+			auto get_person_age() const -> decltype(m_container.person_get_age(person_id()));
+			void set_person_age(int32_t v) const;
+			person_fat_id get_person_id() const noexcept;
+			bool has_car() const noexcept;
+			bool has_car_ownership() const noexcept;
+			bool has_person() const noexcept;
+			
+		};
+		class query_q_all_owner_ages_const_iterator {
+			private:
+			data_container const& m_container;
+			query_q_all_owner_ages_const_instance const& m_parameters;
+			car_id m_tableindex0;
+			car_ownership_id m_tableindex1;
+			person_id m_tableindex2;
+			public:
+			query_q_all_owner_ages_const_iterator(data_container const& c, query_q_all_owner_ages_const_instance const& p) : m_container(c), m_parameters(p) {
+				if(m_container.car_size() > 0) {
+					if(!internal_set_v0(car_id(car_id::value_base_t(0))) ) {
+						internal_increment_to_result();
+					}
+				}
+			}
+			auto operator++() -> query_q_all_owner_ages_const_iterator&;
+			bool operator==(dcon::invalid_iterator_type);
+			bool operator!=(dcon::invalid_iterator_type);
+			auto operator*() -> query_q_all_owner_ages_const_iterator const&;
+			private:
+			void internal_reset_aggregates();
+			void internal_set_aggregates();
+			void internal_update_aggregates();
+			void internal_increment_to_result();
+			void internal_reset_v0();
+			bool internal_set_v0(car_id v);
+			bool internal_increment_v0(bool, bool&);
+			void internal_reset_v1();
+			bool internal_set_v1(car_ownership_id v);
+			bool internal_increment_v1(bool force, bool& hit_group);
+			void internal_reset_v2();
+			bool internal_set_v2(person_id v);
+			bool internal_increment_v2(bool force, bool& hit_group);
+			public:
+			auto get_person_age() const -> decltype(m_container.person_get_age(person_id()));
+			person_const_fat_id get_person_id() const noexcept;
+			bool has_car() const noexcept;
+			bool has_car_ownership() const noexcept;
+			bool has_person() const noexcept;
+			
+		};
+		
+		query_q_all_owner_ages_iterator query_q_all_owner_ages_instance::begin() const {
+			return query_q_all_owner_ages_iterator(container, *this);
+		}
+		query_q_all_owner_ages_const_iterator query_q_all_owner_ages_const_instance::begin() const {
+			return query_q_all_owner_ages_const_iterator(container, *this);
+		}
+	};
+
+
 	auto internal::query_q_all_owner_ages_const_iterator::operator++() -> query_q_all_owner_ages_const_iterator& {
 		internal_increment_to_result();
 		return *this;
@@ -2353,7 +2358,7 @@ namespace dcon {
 		}
 		return internal_set_v1(m_container.car_get_car_ownership_as_owned_car(m_tableindex0)) ;
 	}
-	bool internal::query_q_all_owner_ages_const_iterator::internal_increment_v0(bool force, bool& hit_group) {
+	bool internal::query_q_all_owner_ages_const_iterator::internal_increment_v0(bool, bool&) {
 		if(uint32_t(m_tableindex0.index() + 1) < m_container.car_size()) {
 			m_tableindex0 = car_id( car_id::value_base_t(m_tableindex0.index() + 1) );
 			return true;
@@ -2449,7 +2454,7 @@ namespace dcon {
 		}
 		return internal_set_v1(m_container.car_get_car_ownership_as_owned_car(m_tableindex0)) ;
 	}
-	bool internal::query_q_all_owner_ages_iterator::internal_increment_v0(bool force, bool& hit_group) {
+	bool internal::query_q_all_owner_ages_iterator::internal_increment_v0(bool, bool&) {
 		if(uint32_t(m_tableindex0.index() + 1) < m_container.car_size()) {
 			m_tableindex0 = car_id( car_id::value_base_t(m_tableindex0.index() + 1) );
 			return true;

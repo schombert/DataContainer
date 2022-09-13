@@ -203,6 +203,7 @@ namespace ve {
 					case 2: return tag_type(typename tag_type::value_base_t(_mm_extract_epi32(value, 2)));
 					case 3: return tag_type(typename tag_type::value_base_t(_mm_extract_epi32(value, 3)));
 				}
+				return tag_type();
 			}
 		}
 		RELEASE_INLINE void set(uint32_t i, tag_type v) noexcept {
