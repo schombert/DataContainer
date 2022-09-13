@@ -376,6 +376,12 @@ int main(int argc, char *argv[]) {
 		//open internal namespace
 		output += "\tnamespace internal {\n";
 
+		for(auto& pq : parsed_file.prepared_queries) {
+			output += make_query_instance_types(o, pq).to_string(2);
+			output += make_query_iterator_declarations(o, pq).to_string(2);
+			output += make_query_instance_definitions(o, pq).to_string(2);
+		}
+
 		for(auto& ob : parsed_file.relationship_objects) {
 			//object class begin
 			output += "\t\tclass alignas(64) " + ob.name + "_class {\n";
@@ -604,6 +610,26 @@ int main(int argc, char *argv[]) {
 			output += make_iterate_over_objects(o, cob).to_string(2);
 		}
 
+		output += "\n";
+		for(auto& pq : parsed_file.prepared_queries) {
+			std::string param_list;
+			std::string arg_list;
+			for(auto& param : pq.parameters) {
+				if(param_list.length() > 0) {
+					param_list += ", ";
+				}
+				arg_list += ", ";
+				param_list += param.type + " " + param.name;
+				arg_list += param.name;
+			}
+			output += "\t\tfriend class internal::query_" + pq.name + "_const_iterator;\n";
+			output += "\t\tfriend class internal::query_" + pq.name + "_iterator;\n";
+			output += "\t\tinternal::query_" + pq.name + "_instance query_" + pq.name + "(" + param_list
+				+ ") { return internal::query_" + pq.name + "_instance(*this" + arg_list + "); }\n";
+			output += "\t\tinternal::query_" + pq.name + "_const_instance query_" + pq.name + "(" + param_list 
+				+ ") const { return internal::query_" + pq.name + "_const_instance(*this" + arg_list + "); }\n";
+		}
+
 		//write save and load object stubs
 		output += "\n";
 		for(auto& ostr : needs_serialize) {
@@ -705,6 +731,11 @@ int main(int argc, char *argv[]) {
 		for(auto& obj : parsed_file.relationship_objects) {
 			output += make_fat_id_impl(o, obj, parsed_file).to_string(1);
 			output += make_const_fat_id_impl(o, obj, parsed_file).to_string(1);
+		}
+		output += "\n";
+		for(auto& pq : parsed_file.prepared_queries) {
+			output += make_query_iterator_body(o, pq, std::string("internal::query_") + pq.name + "_const_iterator::", true).to_string(1);
+			output += make_query_iterator_body(o, pq, std::string("internal::query_") + pq.name + "_iterator::", false).to_string(1);
 		}
 
 		//close new namespace

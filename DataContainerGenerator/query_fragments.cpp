@@ -8,17 +8,15 @@ basic_builder& make_query_instance_types(basic_builder& o, prepared_query_defini
 	int32_t i = 0;
 
 	for(auto& param : pdef.parameters) {
-		if(param_list.length() > 0) {
-			param_list += ", ";
-			arg_list += ", ";
-		}
+		param_list += ", ";
+		arg_list += ", ";
 		param_list += param.type + " p" + std::to_string(i);
 		arg_list += param.name + "(p" + std::to_string(i) + ")";
 		++i;
 	}
 
-	o + substitute{ "cparams", param_list };
-	o + substitute{ "cinit", arg_list };
+	o + substitute{ "param_list", param_list };
+	o + substitute{ "arg_list", arg_list };
 
 	o + "class query_@name@_iterator;";
 	o + "class query_@name@_const_iterator;";
@@ -35,7 +33,7 @@ basic_builder& make_query_instance_types(basic_builder& o, prepared_query_defini
 			o + "@type@ @pname@;";
 		}
 
-		o + "query_@name@_instance(data_container& c, @param_list@) : container(c), @arg_list@ {}";
+		o + "query_@name@_instance(data_container& c @param_list@) : container(c) @arg_list@ {}";
 
 		o + "query_@name@_iterator begin() const;";
 
@@ -56,7 +54,7 @@ basic_builder& make_query_instance_types(basic_builder& o, prepared_query_defini
 			o + "@type@ @pname@;";
 		}
 
-		o + "query_@name@_const_instance(data_container const& c, @param_list@) : container(c), @arg_list@ {}";
+		o + "query_@name@_const_instance(data_container const& c @param_list@) : container(c) @arg_list@ {}";
 
 		o + "query_@name@_const_iterator begin() const;";
 
@@ -73,10 +71,10 @@ basic_builder& make_query_instance_definitions(basic_builder& o, prepared_query_
 	o + substitute{ "name", pdef.name };
 
 	o + "query_@name@_iterator query_@name@_instance::begin() const" + block{
-			o + "return query_@name@_iterator(c, *this);";
+			o + "return query_@name@_iterator(container, *this);";
 	};
 	o + "query_@name@_const_iterator query_@name@_const_instance::begin() const" + block{
-			o + "return query_@name@_const_iterator(c, *this);";
+			o + "return query_@name@_const_iterator(container, *this);";
 	};
 	return o;
 }
@@ -114,10 +112,10 @@ basic_builder& make_query_iterator_declarations(basic_builder& o, prepared_query
 				o + substitute{ "type", ts.actual_table->name + "_id" };
 				o + substitute{ "pname", ts.internally_named_as };
 
-				o + "@type@ m_@pname@;";
-				if(ts.joind_by_link->multiplicity > 1 && !ts.actual_table->is_relationship) {
+				o + "@type@ @pname@;";
+				if(ts.joind_by_link && ts.joind_by_link->multiplicity > 1 && !ts.actual_table->is_relationship) {
 					o + "in32_t m_index_into_@pname@ = 0;";
-				} else if(ts.joind_by_link->index == index_type::many && ts.joind_by_link->ltype != list_type::list
+				} else if(ts.joind_by_link && ts.joind_by_link->index == index_type::many && ts.joind_by_link->ltype != list_type::list
 					&& ts.actual_table->is_relationship) {
 					o + "in32_t m_index_into_@pname@ = 0;";
 					o + "in32_t m_size_of_@pname@ = 0;";
@@ -132,23 +130,27 @@ basic_builder& make_query_iterator_declarations(basic_builder& o, prepared_query
 				o + substitute{ "fname", pdef.table_slots[0].internally_named_as };
 				o + substitute{ "obj", pdef.table_slots[0].actual_table->name };
 				if(pdef.table_slots[0].is_parameter_type) {
-					o + "internal_set_first(@fname@);";
+					o + "if(!internal_set_v0(@fname@))" + block{
+						o + "internal_increment_to_result();";
+					};
 				} else {
 					o + "if(m_container.@obj@_size() > 0)" + block{
-						o + "internal_set_@fname@(@obj@_id(@obj@_id::value_base_t(0)));";
+						o + "if(!internal_set_v0(@obj@_id(@obj@_id::value_base_t(0))) )" + block{
+							o + "internal_increment_to_result();";
+						};
 					};
 				}
 			}
 		};
-
+		o.declaration_mode = true;
 		make_query_iterator_body(o, pdef, "", false);
-
+		o.declaration_mode = false;
 	};
 
 	o + "class query_@name@_const_iterator" + class_block{
 		o + "private:";
 		o + "data_container const& m_container;";
-		o + "query_@name@_instance const& m_parameters;";
+		o + "query_@name@_const_instance const& m_parameters;";
 
 		for(auto& agg : pdef.exposed_aggregates) {
 			if(agg.aggregate_name == "count")
@@ -172,10 +174,10 @@ basic_builder& make_query_iterator_declarations(basic_builder& o, prepared_query
 				o + substitute{ "type", ts.actual_table->name + "_id" };
 				o + substitute{ "pname", ts.internally_named_as };
 
-				o + "@type@ m_@pname@;";
-				if(ts.joind_by_link->multiplicity > 1 && !ts.actual_table->is_relationship) {
+				o + "@type@ @pname@;";
+				if(ts.joind_by_link && ts.joind_by_link->multiplicity > 1 && !ts.actual_table->is_relationship) {
 					o + "in32_t m_index_into_@pname@ = 0;";
-				} else if(ts.joind_by_link->index == index_type::many && ts.joind_by_link->ltype != list_type::list
+				} else if(ts.joind_by_link && ts.joind_by_link->index == index_type::many && ts.joind_by_link->ltype != list_type::list
 					&& ts.actual_table->is_relationship) {
 					o + "in32_t m_index_into_@pname@ = 0;";
 					o + "in32_t m_size_of_@pname@ = 0;";
@@ -185,21 +187,26 @@ basic_builder& make_query_iterator_declarations(basic_builder& o, prepared_query
 
 		o + "public:";
 
-		o + "query_@name@_const_iterator(data_container const& c, query_@name@_instance const& p) : m_container(c), m_parameters(p)" + block{
+		o + "query_@name@_const_iterator(data_container const& c, query_@name@_const_instance const& p) : m_container(c), m_parameters(p)" + block{
 			if(pdef.table_slots.size() > 0) {
 				o + substitute{ "fname", pdef.table_slots[0].internally_named_as };
 				o + substitute{ "obj", pdef.table_slots[0].actual_table->name };
 				if(pdef.table_slots[0].is_parameter_type) {
-					o + "internal_set_first(@fname@);";
+					o + "if(!internal_set_v0(@fname@))" + block{
+						o + "internal_increment_to_result();";
+					};
 				} else {
 					o + "if(m_container.@obj@_size() > 0)" + block{
-						o + "internal_set_@fname@(@obj@_id(@obj@_id::value_base_t(0)));";
+						o + "if(!internal_set_v0(@obj@_id(@obj@_id::value_base_t(0))) )" + block{
+							o + "internal_increment_to_result();";
+						};
 					};
 				}
 			}
 		};
-		
+		o.declaration_mode = true;
 		make_query_iterator_body(o, pdef, "", true);
+		o.declaration_mode = false;
 
 	};
 
@@ -209,11 +216,21 @@ basic_builder& make_query_iterator_declarations(basic_builder& o, prepared_query
 
 basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definition const& pdef, std::string const& ns, bool is_const) {
 	o + substitute{ "name", pdef.name };
-	o + substitute{ "namesp", pdef.name };
+	o + substitute{ "namesp", ns };
 	o + substitute{ "id_type", is_const ? "const_fat_id" : "fat_id" };
 	
 	
-	o + "query_@name@_iterator& @namesp@operator++();";
+	if(is_const) {
+		o + "auto @namesp@operator++() -> query_@name@_const_iterator&" + block{
+			o + "internal_increment_to_result();";
+			o + "return *this;";
+		};
+	} else {
+		o + "auto @namesp@operator++() -> query_@name@_iterator&" + block{
+			o + "internal_increment_to_result();";
+			o + "return *this;";
+		};
+	}
 	o + "bool @namesp@operator==(dcon::invalid_iterator_type)" + block{
 		if(pdef.table_slots.size() > 0) {
 			o + substitute{"first_id", pdef.table_slots[0].internally_named_as};
@@ -231,11 +248,11 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 		}
 	};
 	if(is_const) {
-		o + "query_@name@_iterator const& @namesp@operator*()" + block{
+		o + "auto @namesp@operator*() -> query_@name@_const_iterator const&" + block{
 			o + "return *this;";
 		};
 	} else {
-		o + "query_@name@_const_iterator const& @namesp@operator*()" + block{
+		o + "auto @namesp@operator*() -> query_@name@_iterator const&" + block{
 			o + "return *this;";
 		};
 	}
@@ -245,7 +262,7 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 	if(o.declaration_mode)
 		o + "private:";
 
-	o + "void internal_reset_aggragates()" + block{
+	o + "void @namesp@internal_reset_aggregates()" + block{
 		for(auto& agg : pdef.exposed_aggregates) {
 			if(agg.aggregate_name == "count")
 				o + substitute{ "type", "int32_t" };
@@ -264,7 +281,7 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 			o + "m_@pname@ = @type@{};";
 		}
 	};
-	o + "void internal_set_aggragates()" + block{
+	o + "void @namesp@internal_set_aggregates()" + block{
 		for(auto& agg : pdef.exposed_aggregates) {
 			o + substitute{ "pname", agg.exposed_name };
 
@@ -276,14 +293,14 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 				o + substitute{ "int_type", agg.derived_from_slot->actual_table->name };
 				o + substitute{ "agg", agg.aggregate_name };
 
-				o + "m_@pname@ = m_container.@int_type@.m_@link_name@.vptr()[@int_name@.index()]";
+				o + "m_@pname@ = m_container.@int_type@.m_@link_name@.vptr()[@int_name@.index()];";
 			} else if(agg.from_property) {
 				o + substitute{ "prop_name", agg.from_property->name };
 				o + substitute{ "int_name", agg.derived_from_slot->internally_named_as };
 				o + substitute{ "int_type", agg.derived_from_slot->actual_table->name };
 				o + substitute{ "agg", agg.aggregate_name };
 
-				o + "m_@pname@ = m_container.@int_type@.m_@prop_name@.vptr()[@int_name@.index()]";
+				o + "m_@pname@ = m_container.@int_type@.m_@prop_name@.vptr()[@int_name@.index()];";
 			}
 		}
 		for(auto& mm : pdef.exposed_min_max_terms) {
@@ -293,7 +310,7 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 			o + "m_@pname@ = @int_name@;";
 		}
 	};
-	o + "void internal_update_aggragates()" + block{
+	o + "void @namesp@internal_update_aggregates()" + block{
 		for(auto& agg : pdef.exposed_aggregates) {
 			o + substitute{ "pname", agg.exposed_name };
 
@@ -309,7 +326,7 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 			if(agg.aggregate_name == "count") {
 				o + "++m_@pname@;";
 			} else if(agg.aggregate_name == "std::min" || agg.aggregate_name == "min") {
-				o + "if(m_container.@int_type@.m_@prop_name@.vptr()[@int_name@.index()] < m_@pname@)" + block{
+				o + "if(bool(@int_name@) && m_container.@int_type@.m_@prop_name@.vptr()[@int_name@.index()] < m_@pname@)" + block{
 					for(auto& mm : pdef.exposed_min_max_terms) {
 						o + substitute{ "mm_name", mm.exposed_name };
 						o + substitute{ "mm_int", mm.derived_from_slot->internally_named_as };
@@ -318,7 +335,7 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 					o + "m_@pname@ = m_container.@int_type@.m_@prop_name@.vptr()[@int_name@.index()];";
 				};
 			} else if(agg.aggregate_name == "std::max" || agg.aggregate_name == "max") {
-				o + "if(m_container.@int_type@.m_@prop_name@.vptr()[@int_name@.index()] > m_@pname@)" + block{
+				o + "if(bool(@int_name@) && m_container.@int_type@.m_@prop_name@.vptr()[@int_name@.index()] > m_@pname@)" + block{
 					for(auto& mm : pdef.exposed_min_max_terms) {
 						o + substitute{ "mm_name", mm.exposed_name };
 						o + substitute{ "mm_int", mm.derived_from_slot->internally_named_as };
@@ -328,17 +345,50 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 				};
 			} else {
 				o + substitute{ "agg", agg.aggregate_name };
-				o + "m_@pname@ = @agg@(m_@pname@, m_container.@int_type@.m_@prop_name@.vptr()[@int_name@.index()])";
+				o + "m_@pname@ = @agg@(m_@pname@, m_container.@int_type@.m_@prop_name@.vptr()[@int_name@.index()]);";
 			}
 		}
 	};
-	o + "void internal_increment_to_result()" + block{
+	o + "void @namesp@internal_increment_to_result()" + block{
 		o + substitute{ "last_index", std::to_string(pdef.table_slots.size() - 1)};
 		o + substitute{ "first_id",  pdef.table_slots[0].internally_named_as };
 		o + substitute{ "where",  pdef.where_conditional };
 		if(pdef.table_slots.size() > 0) {
 			if(pdef.has_group) {
+				o + "internal_reset_aggregates();";
+				o + "bool first_time = false;";
+				o + "while(bool(@first_id@))" + block{
+					o + "bool hit_group = false;";
+					
+					o + "while(bool(@first_id@) && !internal_increment_v@last_index@(false, hit_group))" + block{
 
+					};
+					
+					o + "if(!hit_group)" + block{
+						if(pdef.where_conditional.length() > 0) {
+							o + "if(bool(@first_id@))" + block{
+								o + "if(@where@)" + block{
+									o + "if(first_time)" + block{
+										o + "first_time = false;";
+										o + "internal_set_aggregates();";
+									} +append{ "else" } +block{
+										o + "internal_update_aggregates();";
+									};
+								};
+							};
+						} else {
+							o + "if(first_time)" + block{
+								o + "first_time = false;";
+								o + "internal_set_aggregates();";
+							} +append{ "else" } +block{
+								o + "internal_update_aggregates();";
+							};
+						}
+					} +append{ "else" } +block{
+						o + "return;";
+					};
+					
+				};
 			} else {
 				o + "bool hit_group = false;";
 				o + "while(bool(@first_id@))" + block{
@@ -367,10 +417,10 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 		o + substitute{ "next_index", std::to_string(i + 1) };
 		o + substitute{ "prev_index", std::to_string(i - 1) };
 
-		o + "void internal_reset_v@index@()" + block{
-			if(table.joind_by_link->multiplicity > 1 && !table.actual_table->is_relationship) {
+		o + "void @namesp@internal_reset_v@index@()" + block{
+			if(table.joind_by_link && table.joind_by_link->multiplicity > 1 && !table.actual_table->is_relationship) {
 				o + "m_index_into_@fname@ = 0;";
-			} else if(table.joind_by_link->index == index_type::many && table.joind_by_link->ltype != list_type::list
+			} else if(table.joind_by_link && table.joind_by_link->index == index_type::many && table.joind_by_link->ltype != list_type::list
 					&& table.actual_table->is_relationship) {
 				o + "m_index_into_@fname@ = 0;";
 				o + "m_size_of_@fname@ = 0;";
@@ -383,7 +433,7 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 			}
 		};
 
-		o + "bool internal_set_v@index@(@obj@_id v)" + block{
+		o + "bool @namesp@internal_set_v@index@(@obj@_id v)" + block{
 			if(!table.is_parameter_type) {
 				o + "@fname@ = v;";
 			}
@@ -432,7 +482,7 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 						o + "return internal_set_v@next_index@( m_container.@obj@_get_@lname@(@fname@) );";
 					} else {
 						o + "m_index_into_@next_name@ = 0;";
-						o + "return internal_set_v@next_index@( m_container.@obj@_get_@lname@(@fname@, 0) )";
+						o + "return internal_set_v@next_index@( m_container.@obj@_get_@lname@(@fname@, 0) );";
 					}
 				}
 			} else {
@@ -440,7 +490,7 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 			}
 		};
 
-		o + "bool internal_increment_v@index@(bool force, bool& hit_group)" + block{
+		o + "bool @namesp@internal_increment_v@index@(bool force, bool& hit_group)" + block{
 			if(i == 0) {
 				if(table.is_group_slot) {
 					o + "if(!force)" + block{
@@ -518,7 +568,7 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 						o + substitute{ "mul",  std::to_string(table.joind_by_link->multiplicity) };
 						o + "if(m_index_into_@fname@ + 1 < @mul@)" + block{
 							o + "++m_index_into_@fname@;";
-							o + "return internal_set_v@index@( m_container.@pobj@_get_@lname@(@pname@, m_index_into_@fname@) )";
+							o + "return internal_set_v@index@( m_container.@pobj@_get_@lname@(@pname@, m_index_into_@fname@) );";
 						} +append{ "else" } +block{
 							o + "return internal_increment_v@prev_index@(force, hit_group);";
 						};
@@ -543,11 +593,11 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 			o + substitute{ "propname", prop.from_link->property_name };
 
 			o + "@rtype@_@id_type@ @namesp@get_@exname@() const noexcept" + block{
-				o + "return @rtype@_@id_type@(m_container, m_container.@obj@_get_@propname@( @internal_tag@ ))";
+				o + "return @rtype@_@id_type@(m_container, m_container.@obj@_get_@propname@( @internal_tag@ ));";
 			};
 			if(!is_const) {
 				o + "void @namesp@set_@exname@(@ptype@ v) const noexcept" + block{
-					o + "m_container.@obj@_set_@propname@( @internal_tag@, v )";
+					o + "m_container.@obj@_set_@propname@( @internal_tag@, v );";
 				};
 			}
 		} else if(prop.from_property) {
@@ -562,27 +612,27 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 					};
 					if(!is_const) {
 						o + "void @namesp@set_@exname@(@index_type@ i, bool v) const" + block{
-							o + "m_container.@obj@_set_@propname@( @internal_tag@, i, v )";
+							o + "m_container.@obj@_set_@propname@( @internal_tag@, i, v );";
 						};
 					}
 					break;
 				case property_type::array_other:
-					o + "decltype(m_container.@obj@_get_@propname@(@obj@_id(), @index_type@())) @namesp@get_@exname@(@internal_tag@ i) const" + block{
+					o + "auto @namesp@get_@exname@(@internal_tag@ i) const -> decltype(m_container.@obj@_get_@propname@(@obj@_id(), @index_type@()))" + block{
 						o + "return m_container.@obj@_get_@propname@( @internal_tag@, i );";
 					};
 					if(!is_const) {
 						o + "void @namesp@set_@exname@(@internal_tag@ i, @ptype@ const& v) const" + block{
-							o + "m_container.@obj@_set_@propname@( @internal_tag@, i, v )";
+							o + "m_container.@obj@_set_@propname@( @internal_tag@, i, v );";
 						};
 					}
 					break;
 				case property_type::array_vectorizable:
-					o + "decltype(m_container.@obj@_get_@propname@(@obj@_id(), @index_type@())) @namesp@get_@exname@(@internal_tag@ i) const" + block{
+					o + "auto @namesp@get_@exname@(@internal_tag@ i) const -> decltype(m_container.@obj@_get_@propname@(@obj@_id(), @index_type@()))" + block{
 						o + "return m_container.@obj@_get_@propname@( @internal_tag@, i );";
 					};
 					if(!is_const) {
 						o + "void @namesp@set_@exname@(@internal_tag@ i, @ptype@ v) const" + block{
-							o + "m_container.@obj@_set_@propname@( @internal_tag@, i, v )";
+							o + "m_container.@obj@_set_@propname@( @internal_tag@, i, v );";
 						};
 					}
 					break;
@@ -592,37 +642,37 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 					};
 					if(!is_const) {
 						o + "void @namesp@set_@exname@(bool v) const" + block{
-							o + "m_container.@obj@_set_@propname@( @internal_tag@, v )";
+							o + "m_container.@obj@_set_@propname@( @internal_tag@, v );";
 						};
 					}
 					break;
 				case property_type::object:
-					o + "decltype(m_container.@obj@_get_@propname@(@obj@_id())) @namesp@get_@exname@() const" + block{
+					o + "auto @namesp@get_@exname@() const -> decltype(m_container.@obj@_get_@propname@(@obj@_id()))" + block{
 						o + "return m_container.@obj@_get_@propname@( @internal_tag@ );";
 					};
 					if(!is_const) {
 						o + "void @namesp@set_@exname@(@ptype@ const& v) const" + block{
-							o + "m_container.@obj@_set_@propname@( @internal_tag@, v )";
+							o + "m_container.@obj@_set_@propname@( @internal_tag@, v );";
 						};
 					}
 					break;
 				case property_type::other:
-					o + "decltype(m_container.@obj@_get_@propname@(@obj@_id())) @namesp@get_@exname@() const" + block{
+					o + "auto @namesp@get_@exname@() const -> decltype(m_container.@obj@_get_@propname@(@obj@_id()))" + block{
 						o + "return m_container.@obj@_get_@propname@( @internal_tag@ );";
 					};
 					if(!is_const) {
 						o + "void @namesp@set_@exname@(@ptype@ const& v) const" + block{
-							o + "m_container.@obj@_set_@propname@( @internal_tag@, v )";
+							o + "m_container.@obj@_set_@propname@( @internal_tag@, v );";
 						};
 					}
 					break;
 				case property_type::vectorizable:
-					o + "decltype(m_container.@obj@_get_@propname@(@obj@_id())) @namesp@get_@exname@() const" + block{
+					o + "auto @namesp@get_@exname@() const -> decltype(m_container.@obj@_get_@propname@(@obj@_id()))" + block{
 						o + "return m_container.@obj@_get_@propname@( @internal_tag@ );";
 					};
 					if(!is_const) {
 						o + "void @namesp@set_@exname@(@ptype@ v) const" + block{
-							o + "m_container.@obj@_set_@propname@( @internal_tag@, v )";
+							o + "m_container.@obj@_set_@propname@( @internal_tag@, v );";
 						};
 					}
 					break;
@@ -632,7 +682,7 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 		} else {
 			o + substitute{ "rtype", prop.derived_from_slot->actual_table->name };
 			o + "@rtype@_@id_type@ @namesp@get_@exname@() const noexcept" + block{
-				o + "return @rtype@_@id_type@(m_container, @internal_tag@ )";
+				o + "return @rtype@_@id_type@(m_container, @internal_tag@ );";
 			};
 		}
 	}
@@ -647,11 +697,11 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 			o + substitute{ "propname", prop.from_link->property_name };
 
 			o + "@rtype@_@id_type@ @namesp@get_@exname@() const noexcept" + block{
-				o + "return @rtype@_@id_type@(m_container, m_container.@obj@_get_@propname@( @internal_tag@ ))";
+				o + "return @rtype@_@id_type@(m_container, m_container.@obj@_get_@propname@( @internal_tag@ ));";
 			};
 			if(!is_const) {
 				o + "void @namesp@set_@exname@(@ptype@ v) const noexcept" + block{
-					o + "m_container.@obj@_set_@propname@( @internal_tag@, v )";
+					o + "m_container.@obj@_set_@propname@( @internal_tag@, v );";
 				};
 			}
 		} else if(prop.from_property) {
@@ -666,27 +716,27 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 					};
 					if(!is_const) {
 						o + "void @namesp@set_@exname@(@index_type@ i, bool v) const" + block{
-							o + "m_container.@obj@_set_@propname@( @internal_tag@, i, v )";
+							o + "m_container.@obj@_set_@propname@( @internal_tag@, i, v );";
 						};
 					}
 					break;
 				case property_type::array_other:
-					o + "decltype(m_container.@obj@_get_@propname@(@obj@_id(), @index_type@())) @namesp@get_@exname@(@internal_tag@ i) const" + block{
+					o + "auto @namesp@get_@exname@(@internal_tag@ i) const -> decltype(m_container.@obj@_get_@propname@(@obj@_id(), @index_type@()))" + block{
 						o + "return m_container.@obj@_get_@propname@( @internal_tag@, i );";
 					};
 					if(!is_const) {
 						o + "void @namesp@set_@exname@(@internal_tag@ i, @ptype@ const& v) const" + block{
-							o + "m_container.@obj@_set_@propname@( @internal_tag@, i, v )";
+							o + "m_container.@obj@_set_@propname@( @internal_tag@, i, v );";
 						};
 					}
 					break;
 				case property_type::array_vectorizable:
-					o + "decltype(m_container.@obj@_get_@propname@(@obj@_id(), @index_type@())) @namesp@get_@exname@(@internal_tag@ i) const" + block{
+					o + "auto @namesp@get_@exname@(@internal_tag@ i) const -> decltype(m_container.@obj@_get_@propname@(@obj@_id(), @index_type@()))" + block{
 						o + "return m_container.@obj@_get_@propname@( @internal_tag@, i );";
 					};
 					if(!is_const) {
 						o + "void @namesp@set_@exname@(@internal_tag@ i, @ptype@ v) const" + block{
-							o + "m_container.@obj@_set_@propname@( @internal_tag@, i, v )";
+							o + "m_container.@obj@_set_@propname@( @internal_tag@, i, v );";
 						};
 					}
 					break;
@@ -696,37 +746,37 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 					};
 					if(!is_const) {
 						o + "void @namesp@set_@exname@(bool v) const" + block{
-							o + "m_container.@obj@_set_@propname@( @internal_tag@, v )";
+							o + "m_container.@obj@_set_@propname@( @internal_tag@, v );";
 						};
 					}
 					break;
 				case property_type::object:
-					o + "decltype(m_container.@obj@_get_@propname@(@obj@_id())) @namesp@get_@exname@() const" + block{
+					o + "auto @namesp@get_@exname@() const -> decltype(m_container.@obj@_get_@propname@(@obj@_id()))" + block{
 						o + "return m_container.@obj@_get_@propname@( @internal_tag@ );";
 					};
 					if(!is_const) {
 						o + "void @namesp@set_@exname@(@ptype@ const& v) const" + block{
-							o + "m_container.@obj@_set_@propname@( @internal_tag@, v )";
+							o + "m_container.@obj@_set_@propname@( @internal_tag@, v );";
 						};
 					}
 					break;
 				case property_type::other:
-					o + "decltype(m_container.@obj@_get_@propname@(@obj@_id())) @namesp@get_@exname@() const" + block{
+					o + "auto @namesp@get_@exname@() const -> decltype(m_container.@obj@_get_@propname@(@obj@_id()))" + block{
 						o + "return m_container.@obj@_get_@propname@( @internal_tag@ );";
 					};
 					if(!is_const) {
 						o + "void @namesp@set_@exname@(@ptype@ const& v) const" + block{
-							o + "m_container.@obj@_set_@propname@( @internal_tag@, v )";
+							o + "m_container.@obj@_set_@propname@( @internal_tag@, v );";
 						};
 					}
 					break;
 				case property_type::vectorizable:
-					o + "decltype(m_container.@obj@_get_@propname@(@obj@_id())) @namesp@get_@exname@() const" + block{
+					o + "auto @namesp@get_@exname@() const -> decltype(m_container.@obj@_get_@propname@(@obj@_id()))" + block{
 						o + "return m_container.@obj@_get_@propname@( @internal_tag@ );";
 					};
 					if(!is_const) {
 						o + "void @namesp@set_@exname@(@ptype@ v) const" + block{
-							o + "m_container.@obj@_set_@propname@( @internal_tag@, v )";
+							o + "m_container.@obj@_set_@propname@( @internal_tag@, v );";
 						};
 					}
 					break;
@@ -736,7 +786,7 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 		} else {
 			o + substitute{ "rtype", prop.derived_from_slot->actual_table->name };
 			o + "@rtype@_@id_type@ @namesp@get_@exname@() const noexcept" + block{
-				o + "return @rtype@_@id_type@(m_container, @internal_tag@ )";
+				o + "return @rtype@_@id_type@(m_container, @internal_tag@ );";
 			};
 		}
 	}
@@ -789,10 +839,10 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 	}
 	for(auto& table : pdef.table_slots) {
 		if(table.expose_has_name) {
-			o + substitute{ "tnaame", table.reference_name };
+			o + substitute{ "tname", table.reference_name };
 			o + substitute{ "int", table.internally_named_as };
 			o + "bool @namesp@has_@tname@() const noexcept" + block{
-				o + "return bool(@int@)";
+				o + "return bool(@int@);";
 			};
 		}
 	}
