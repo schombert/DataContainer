@@ -611,7 +611,7 @@ namespace dcon {
 
 
 			public:
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) thingyB_class {
@@ -650,7 +650,7 @@ namespace dcon {
 					first_free = thingyB_id(uint16_t(i));
 				}
 			}
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) relate_same_class {
@@ -679,7 +679,7 @@ namespace dcon {
 			
 
 			public:
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) relate_in_array_class {
@@ -712,7 +712,7 @@ namespace dcon {
 
 
 			public:
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) relate_in_list_class {
@@ -756,7 +756,7 @@ namespace dcon {
 
 
 			public:
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) many_many_class {
@@ -879,7 +879,7 @@ namespace dcon {
 					first_free = many_many_id(uint16_t(i));
 				}
 			}
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) relate_as_optional_class {
@@ -954,7 +954,7 @@ namespace dcon {
 					first_free = relate_as_optional_id(uint16_t(i));
 				}
 			}
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) relate_as_non_optional_class {
@@ -1029,7 +1029,7 @@ namespace dcon {
 					first_free = relate_as_non_optional_id(uint16_t(i));
 				}
 			}
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) relate_as_multipleA_class {
@@ -1087,7 +1087,7 @@ namespace dcon {
 					first_free = relate_as_multipleA_id(uint16_t(i));
 				}
 			}
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) relate_as_multipleB_class {
@@ -1137,7 +1137,7 @@ namespace dcon {
 					first_free = relate_as_multipleB_id(uint16_t(i));
 				}
 			}
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) relate_as_multipleC_class {
@@ -1187,7 +1187,7 @@ namespace dcon {
 					first_free = relate_as_multipleC_id(uint16_t(i));
 				}
 			}
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) relate_as_multipleD_class {
@@ -1225,7 +1225,7 @@ namespace dcon {
 					first_free = relate_as_multipleD_id(uint16_t(i));
 				}
 			}
-			friend class data_container;
+			friend data_container;
 		};
 
 	}
@@ -1255,7 +1255,7 @@ namespace dcon {
 	class relate_as_multipleD_const_fat_id;
 	class relate_as_multipleD_fat_id;
 	class thingyA_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		thingyA_id id;
@@ -1352,7 +1352,7 @@ namespace dcon {
 	}
 	
 	class thingyA_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		thingyA_id id;
@@ -1453,7 +1453,7 @@ namespace dcon {
 	}
 	
 	class thingyB_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		thingyB_id id;
@@ -1536,7 +1536,7 @@ namespace dcon {
 	}
 	
 	class thingyB_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		thingyB_id id;
@@ -1632,7 +1632,7 @@ namespace dcon {
 	}
 	
 	class relate_same_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		relate_same_id id;
@@ -1677,7 +1677,7 @@ namespace dcon {
 	}
 	
 	class relate_same_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		relate_same_id id;
@@ -1740,7 +1740,7 @@ namespace dcon {
 	}
 	
 	class relate_in_array_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		relate_in_array_id id;
@@ -1785,7 +1785,7 @@ namespace dcon {
 	}
 	
 	class relate_in_array_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		relate_in_array_id id;
@@ -1848,7 +1848,7 @@ namespace dcon {
 	}
 	
 	class relate_in_list_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		relate_in_list_id id;
@@ -1893,7 +1893,7 @@ namespace dcon {
 	}
 	
 	class relate_in_list_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		relate_in_list_id id;
@@ -1956,7 +1956,7 @@ namespace dcon {
 	}
 	
 	class many_many_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		many_many_id id;
@@ -2016,7 +2016,7 @@ namespace dcon {
 	}
 	
 	class many_many_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		many_many_id id;
@@ -2084,7 +2084,7 @@ namespace dcon {
 	}
 	
 	class relate_as_optional_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		relate_as_optional_id id;
@@ -2129,7 +2129,7 @@ namespace dcon {
 	}
 	
 	class relate_as_optional_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		relate_as_optional_id id;
@@ -2192,7 +2192,7 @@ namespace dcon {
 	}
 	
 	class relate_as_non_optional_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		relate_as_non_optional_id id;
@@ -2237,7 +2237,7 @@ namespace dcon {
 	}
 	
 	class relate_as_non_optional_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		relate_as_non_optional_id id;
@@ -2300,7 +2300,7 @@ namespace dcon {
 	}
 	
 	class relate_as_multipleA_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		relate_as_multipleA_id id;
@@ -2345,7 +2345,7 @@ namespace dcon {
 	}
 	
 	class relate_as_multipleA_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		relate_as_multipleA_id id;
@@ -2408,7 +2408,7 @@ namespace dcon {
 	}
 	
 	class relate_as_multipleB_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		relate_as_multipleB_id id;
@@ -2453,7 +2453,7 @@ namespace dcon {
 	}
 	
 	class relate_as_multipleB_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		relate_as_multipleB_id id;
@@ -2516,7 +2516,7 @@ namespace dcon {
 	}
 	
 	class relate_as_multipleC_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		relate_as_multipleC_id id;
@@ -2561,7 +2561,7 @@ namespace dcon {
 	}
 	
 	class relate_as_multipleC_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		relate_as_multipleC_id id;
@@ -2624,7 +2624,7 @@ namespace dcon {
 	}
 	
 	class relate_as_multipleD_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		relate_as_multipleD_id id;
@@ -2669,7 +2669,7 @@ namespace dcon {
 	}
 	
 	class relate_as_multipleD_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		relate_as_multipleD_id id;
@@ -5655,6 +5655,7 @@ namespace dcon {
 			}
 		}
 		
+
 
 
 		void reset() {
@@ -9296,6 +9297,7 @@ namespace dcon {
 		return container.relate_as_multipleD_is_valid(id);
 	}
 	
+
 }
 
 #undef DCON_RELEASE_INLINE

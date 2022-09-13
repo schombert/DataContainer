@@ -212,7 +212,7 @@ namespace car_owner_basic {
 
 
 			public:
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) person_class {
@@ -233,7 +233,7 @@ namespace car_owner_basic {
 
 
 			public:
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) car_ownership_class {
@@ -277,7 +277,7 @@ namespace car_owner_basic {
 
 
 			public:
-			friend class data_container;
+			friend data_container;
 		};
 
 	}
@@ -1230,6 +1230,7 @@ namespace car_owner_basic {
 			}
 		}
 		
+
 
 
 		void reset() {
@@ -2196,6 +2197,7 @@ namespace car_owner_basic {
 		return container.car_ownership_is_valid(id);
 	}
 	
+
 }
 
 #undef DCON_RELEASE_INLINE

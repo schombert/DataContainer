@@ -1,7 +1,7 @@
 #pragma once
 
 //
-// This file was automatically generated from: ..\Catch_query_tests\query_objs.txt
+// This file was automatically generated from: query_objs.txt
 // EDIT AT YOUR OWN RISK; all changes will be lost upon regeneration
 // NOT SUITABLE FOR USE IN CRITICAL SOFTWARE WHERE LIVES OR LIVELIHOODS DEPEND ON THE CORRECT OPERATION
 //
@@ -325,7 +325,7 @@ namespace dcon {
 
 
 			public:
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) person_class {
@@ -346,7 +346,7 @@ namespace dcon {
 
 
 			public:
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) car_ownership_class {
@@ -390,7 +390,7 @@ namespace dcon {
 
 
 			public:
-			friend class data_container;
+			friend data_container;
 		};
 
 	}
@@ -402,7 +402,7 @@ namespace dcon {
 	class car_ownership_const_fat_id;
 	class car_ownership_fat_id;
 	class car_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		car_id id;
@@ -453,7 +453,7 @@ namespace dcon {
 	}
 	
 	class car_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		car_id id;
@@ -520,7 +520,7 @@ namespace dcon {
 	}
 	
 	class person_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		person_id id;
@@ -575,7 +575,7 @@ namespace dcon {
 	}
 	
 	class person_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		person_id id;
@@ -649,7 +649,7 @@ namespace dcon {
 	}
 	
 	class car_ownership_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		car_ownership_id id;
@@ -696,7 +696,7 @@ namespace dcon {
 	}
 	
 	class car_ownership_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		car_ownership_id id;
@@ -1344,8 +1344,8 @@ namespace dcon {
 		}
 		
 
-		friend class internal::query_q_all_owner_ages_const_iterator;
-		friend class internal::query_q_all_owner_ages_iterator;
+		friend internal::query_q_all_owner_ages_const_iterator;
+		friend internal::query_q_all_owner_ages_iterator;
 		internal::query_q_all_owner_ages_instance query_q_all_owner_ages() { return internal::query_q_all_owner_ages_instance(*this); }
 		internal::query_q_all_owner_ages_const_instance query_q_all_owner_ages() const { return internal::query_q_all_owner_ages_const_instance(*this); }
 

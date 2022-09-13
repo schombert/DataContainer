@@ -431,7 +431,7 @@ namespace dcon {
 
 
 			public:
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) thingy2_class {
@@ -555,7 +555,7 @@ namespace dcon {
 
 
 			public:
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) dummy_rel_class {
@@ -587,7 +587,7 @@ namespace dcon {
 
 
 			public:
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) oop_thingy_class {
@@ -620,7 +620,7 @@ namespace dcon {
 
 
 			public:
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) dummy_rel_B_class {
@@ -653,7 +653,7 @@ namespace dcon {
 
 
 			public:
-			friend class data_container;
+			friend data_container;
 		};
 
 	}
@@ -669,7 +669,7 @@ namespace dcon {
 	class dummy_rel_B_const_fat_id;
 	class dummy_rel_B_fat_id;
 	class thingy_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		thingy_id id;
@@ -741,7 +741,7 @@ namespace dcon {
 	}
 	
 	class thingy_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		thingy_id id;
@@ -818,7 +818,7 @@ namespace dcon {
 	}
 	
 	class thingy2_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		thingy2_id id;
@@ -888,7 +888,7 @@ namespace dcon {
 	}
 	
 	class thingy2_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		thingy2_id id;
@@ -964,7 +964,7 @@ namespace dcon {
 	}
 	
 	class dummy_rel_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		dummy_rel_id id;
@@ -1009,7 +1009,7 @@ namespace dcon {
 	}
 	
 	class dummy_rel_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		dummy_rel_id id;
@@ -1072,7 +1072,7 @@ namespace dcon {
 	}
 	
 	class oop_thingy_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		oop_thingy_id id;
@@ -1127,7 +1127,7 @@ namespace dcon {
 	}
 	
 	class oop_thingy_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		oop_thingy_id id;
@@ -1199,7 +1199,7 @@ namespace dcon {
 	}
 	
 	class dummy_rel_B_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		dummy_rel_B_id id;
@@ -1244,7 +1244,7 @@ namespace dcon {
 	}
 	
 	class dummy_rel_B_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		dummy_rel_B_id id;
@@ -2652,6 +2652,7 @@ namespace dcon {
 			}
 		}
 		
+
 
 		uint64_t serialize_size(std::vector<float> const& obj) const;
 		void serialize(std::byte*& output_buffer, std::vector<float> const& obj) const;
@@ -4985,6 +4986,7 @@ namespace dcon {
 		return container.dummy_rel_B_is_valid(id);
 	}
 	
+
 }
 
 #undef DCON_RELEASE_INLINE

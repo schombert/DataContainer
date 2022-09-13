@@ -13,6 +13,7 @@
 #include <new>
 #include <array>
 #include <cstring>
+#include <limits>
 
 #ifdef _MSC_VER 
 #include <intrin.h>

@@ -504,7 +504,7 @@ int main(int argc, char *argv[]) {
 			}
 
 			//object class end
-			output += "\t\t\tfriend class data_container;\n";
+			output += "\t\t\tfriend data_container;\n";
 			output += "\t\t};\n\n";
 		}
 
@@ -622,8 +622,8 @@ int main(int argc, char *argv[]) {
 				param_list += param.type + " " + param.name;
 				arg_list += param.name;
 			}
-			output += "\t\tfriend class internal::query_" + pq.name + "_const_iterator;\n";
-			output += "\t\tfriend class internal::query_" + pq.name + "_iterator;\n";
+			output += "\t\tfriend internal::query_" + pq.name + "_const_iterator;\n";
+			output += "\t\tfriend internal::query_" + pq.name + "_iterator;\n";
 			output += "\t\tinternal::query_" + pq.name + "_instance query_" + pq.name + "(" + param_list
 				+ ") { return internal::query_" + pq.name + "_instance(*this" + arg_list + "); }\n";
 			output += "\t\tinternal::query_" + pq.name + "_const_instance query_" + pq.name + "(" + param_list 

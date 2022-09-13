@@ -9,6 +9,7 @@
 #include <new>
 #include <cassert>
 #include <type_traits>
+#include <cstdint>
 #include "common_types.hpp"
 
 
