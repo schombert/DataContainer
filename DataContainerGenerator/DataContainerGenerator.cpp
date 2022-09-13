@@ -288,6 +288,7 @@ int main(int argc, char *argv[]) {
 		output += "#include <algorithm>\n";
 		output += "#include <array>\n";
 		output += "#include <memory>\n";
+		output += "#include <assert.h>\n";
 		output += "#include <cstring>\n";
 		output += "#include \"common_types.hpp\"\n";
 		output += "#ifndef DCON_NO_VE\n";

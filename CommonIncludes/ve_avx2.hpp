@@ -78,12 +78,30 @@ namespace ve {
 			return value;
 		}
 		RELEASE_INLINE bool operator[](uint32_t i) const noexcept {
-			return _mm256_castps_si256(value).m256i_i32[i] != 0;
+			switch(i) {
+				case 0: return _mm256_extract_epi32(_mm256_castps_si256(value), 0) != 0;
+				case 1: return _mm256_extract_epi32(_mm256_castps_si256(value), 1) != 0;
+				case 2: return _mm256_extract_epi32(_mm256_castps_si256(value), 2) != 0;
+				case 3: return _mm256_extract_epi32(_mm256_castps_si256(value), 3) != 0;
+				case 4: return _mm256_extract_epi32(_mm256_castps_si256(value), 4) != 0;
+				case 5: return _mm256_extract_epi32(_mm256_castps_si256(value), 5) != 0;
+				case 6: return _mm256_extract_epi32(_mm256_castps_si256(value), 6) != 0;
+				case 7: return _mm256_extract_epi32(_mm256_castps_si256(value), 7) != 0;
+			}
+			return false;
 		}
 		RELEASE_INLINE void set(uint32_t i, bool v) noexcept {
 			auto tmp = _mm256_castps_si256(value);
-			tmp.m256i_i32[i] = -(int32_t(v));
-			value = _mm256_castsi256_ps(tmp);
+			switch(i) {
+				case 0: value = _mm256_castsi256_ps(_mm256_insert_epi32(tmp, -(int32_t(v)), 0)); break;
+				case 1: value = _mm256_castsi256_ps(_mm256_insert_epi32(tmp, -(int32_t(v)), 1)); break;
+				case 2: value = _mm256_castsi256_ps(_mm256_insert_epi32(tmp, -(int32_t(v)), 2)); break;
+				case 3: value = _mm256_castsi256_ps(_mm256_insert_epi32(tmp, -(int32_t(v)), 3)); break;
+				case 4: value = _mm256_castsi256_ps(_mm256_insert_epi32(tmp, -(int32_t(v)), 4)); break;
+				case 5: value = _mm256_castsi256_ps(_mm256_insert_epi32(tmp, -(int32_t(v)), 5)); break;
+				case 6: value = _mm256_castsi256_ps(_mm256_insert_epi32(tmp, -(int32_t(v)), 6)); break;
+				case 7: value = _mm256_castsi256_ps(_mm256_insert_epi32(tmp, -(int32_t(v)), 7)); break;
+			}
 		}
 	};
 
@@ -113,10 +131,18 @@ namespace ve {
 			return _mm_cvtss_f32(sums);
 		}
 		RELEASE_INLINE float operator[](uint32_t i) const noexcept {
+#ifdef _MSC_VER 
 			return value.m256_f32[i];
+#else
+			return value[i];
+#endif
 		}
 		RELEASE_INLINE void set(uint32_t i, float v) noexcept {
+#ifdef _MSC_VER 
 			value.m256_f32[i] = v;
+#else
+			return value[i] = v;
+#endif
 		}
 	};
 
@@ -134,10 +160,29 @@ namespace ve {
 			value(_mm256_setr_epi32(int32_t(a), int32_t(b), int32_t(c), int32_t(d), int32_t(e), int32_t(f), int32_t(g), int32_t(h))) {}
 
 		RELEASE_INLINE int32_t operator[](uint32_t i) const noexcept {
-			return value.m256i_i32[i];
+			switch(i) {
+				case 0: return _mm256_extract_epi32(value, 0);
+				case 1: return _mm256_extract_epi32(value, 1);
+				case 2: return _mm256_extract_epi32(value, 2);
+				case 3: return _mm256_extract_epi32(value, 3);
+				case 4: return _mm256_extract_epi32(value, 4);
+				case 5: return _mm256_extract_epi32(value, 5);
+				case 6: return _mm256_extract_epi32(value, 6);
+				case 7: return _mm256_extract_epi32(value, 7);
+			}
+			return 0;
 		}
 		RELEASE_INLINE void set(uint32_t i, int32_t v) noexcept {
-			value.m256i_i32[i] = v;
+			switch(i) {
+				case 0: value = _mm256_insert_epi32(value, v, 0); break;
+				case 1: value = _mm256_insert_epi32(value, v, 1); break;
+				case 2: value = _mm256_insert_epi32(value, v, 2); break;
+				case 3: value = _mm256_insert_epi32(value, v, 3); break;
+				case 4: value = _mm256_insert_epi32(value, v, 4); break;
+				case 5: value = _mm256_insert_epi32(value, v, 5); break;
+				case 6: value = _mm256_insert_epi32(value, v, 6); break;
+				case 7: value = _mm256_insert_epi32(value, v, 7); break;
+			}
 		}
 	};
 
@@ -164,13 +209,43 @@ namespace ve {
 		RELEASE_INLINE tag_type operator[](uint32_t i) const noexcept {
 			if constexpr(tag_type::zero_is_null_t::value) {
 				tag_type r;
-				r.value = typename tag_type::value_base_t(value.m256i_i32[i] + 1);
+				switch(i) {
+					case 0: r.value = typename tag_type::value_base_t(_mm256_extract_epi32(value, 0) + 1); break;
+					case 1: r.value = typename tag_type::value_base_t(_mm256_extract_epi32(value, 1) + 1); break;
+					case 2: r.value = typename tag_type::value_base_t(_mm256_extract_epi32(value, 2) + 1); break;
+					case 3: r.value = typename tag_type::value_base_t(_mm256_extract_epi32(value, 3) + 1); break;
+					case 4: r.value = typename tag_type::value_base_t(_mm256_extract_epi32(value, 4) + 1); break;
+					case 5: r.value = typename tag_type::value_base_t(_mm256_extract_epi32(value, 5) + 1); break;
+					case 6: r.value = typename tag_type::value_base_t(_mm256_extract_epi32(value, 6) + 1); break;
+					case 7: r.value = typename tag_type::value_base_t(_mm256_extract_epi32(value, 7) + 1); break;
+				}
+
 				return r;
-			} else
-				return tag_type(typename tag_type::value_base_t(value.m256i_i32[i]));
+			} else {
+				switch(i) {
+					case 0: return tag_type(typename tag_type::value_base_t(_mm256_extract_epi32(value, 0)));
+					case 1: return tag_type(typename tag_type::value_base_t(_mm256_extract_epi32(value, 1)));
+					case 2: return tag_type(typename tag_type::value_base_t(_mm256_extract_epi32(value, 2)));
+					case 3: return tag_type(typename tag_type::value_base_t(_mm256_extract_epi32(value, 3)));
+					case 4: return tag_type(typename tag_type::value_base_t(_mm256_extract_epi32(value, 4)));
+					case 5: return tag_type(typename tag_type::value_base_t(_mm256_extract_epi32(value, 5)));
+					case 6: return tag_type(typename tag_type::value_base_t(_mm256_extract_epi32(value, 6)));
+					case 7: return tag_type(typename tag_type::value_base_t(_mm256_extract_epi32(value, 7)));
+				}
+				return 0;
+			}
 		}
 		RELEASE_INLINE void set(uint32_t i, tag_type v) noexcept {
-			value.m256i_i32[i] = v.index();
+			switch(i) {
+				case 0: value = _mm256_insert_epi32(value, v.index(), 0); break;
+				case 1: value = _mm256_insert_epi32(value, v.index(), 1); break;
+				case 2: value = _mm256_insert_epi32(value, v.index(), 2); break;
+				case 3: value = _mm256_insert_epi32(value, v.index(), 3); break;
+				case 4: value = _mm256_insert_epi32(value, v.index(), 4); break;
+				case 5: value = _mm256_insert_epi32(value, v.index(), 5); break;
+				case 6: value = _mm256_insert_epi32(value, v.index(), 6); break;
+				case 7: value = _mm256_insert_epi32(value, v.index(), 7); break;
+			}
 		}
 	};
 
@@ -191,10 +266,29 @@ namespace ve {
 		}
 
 		RELEASE_INLINE int32_t operator[](uint32_t i) const noexcept {
-			return value.m256i_i32[i];
+			switch(i) {
+				case 0: return _mm256_extract_epi32(value, 0);
+				case 1: return _mm256_extract_epi32(value, 1);
+				case 2: return _mm256_extract_epi32(value, 2);
+				case 3: return _mm256_extract_epi32(value, 3);
+				case 4: return _mm256_extract_epi32(value, 4);
+				case 5: return _mm256_extract_epi32(value, 5);
+				case 6: return _mm256_extract_epi32(value, 6);
+				case 7: return _mm256_extract_epi32(value, 7);
+			}
+			return 0;
 		}
 		RELEASE_INLINE void set(uint32_t i, int32_t v) noexcept {
-			value.m256i_i32[i] = v;
+			switch(i) {
+				case 0: value = _mm256_insert_epi32(value, v, 0); break;
+				case 1: value = _mm256_insert_epi32(value, v, 1); break;
+				case 2: value = _mm256_insert_epi32(value, v, 2); break;
+				case 3: value = _mm256_insert_epi32(value, v, 3); break;
+				case 4: value = _mm256_insert_epi32(value, v, 4); break;
+				case 5: value = _mm256_insert_epi32(value, v, 5); break;
+				case 6: value = _mm256_insert_epi32(value, v, 6); break;
+				case 7: value = _mm256_insert_epi32(value, v, 7); break;
+			}
 		}
 	};
 
@@ -491,108 +585,20 @@ namespace ve {
 					case uint32_t(0): ;
 				}
 			} else {
+				value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))> temp;
 				switch(limit) {
 					default: ;
-					case uint32_t(8):
-						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
-							f(nth_item<uint32_t(0)>(params) ...),
-							f(nth_item<uint32_t(1)>(params) ...),
-							f(nth_item<uint32_t(2)>(params) ...),
-							f(nth_item<uint32_t(3)>(params) ...),
-							f(nth_item<uint32_t(4)>(params) ...),
-							f(nth_item<uint32_t(5)>(params) ...),
-							f(nth_item<uint32_t(6)>(params) ...),
-							f(nth_item<uint32_t(7)>(params) ...)
-							);
-					case uint32_t(7):
-						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
-							f(nth_item<uint32_t(0)>(params) ...),
-							f(nth_item<uint32_t(1)>(params) ...),
-							f(nth_item<uint32_t(2)>(params) ...),
-							f(nth_item<uint32_t(3)>(params) ...),
-							f(nth_item<uint32_t(4)>(params) ...),
-							f(nth_item<uint32_t(5)>(params) ...),
-							f(nth_item<uint32_t(6)>(params) ...),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))()
-							);
-					case uint32_t(6):
-						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
-							f(nth_item<uint32_t(0)>(params) ...),
-							f(nth_item<uint32_t(1)>(params) ...),
-							f(nth_item<uint32_t(2)>(params) ...),
-							f(nth_item<uint32_t(3)>(params) ...),
-							f(nth_item<uint32_t(4)>(params) ...),
-							f(nth_item<uint32_t(5)>(params) ...),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))()
-							);
-					case uint32_t(5):
-						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
-							f(nth_item<uint32_t(0)>(params) ...),
-							f(nth_item<uint32_t(1)>(params) ...),
-							f(nth_item<uint32_t(2)>(params) ...),
-							f(nth_item<uint32_t(3)>(params) ...),
-							f(nth_item<uint32_t(4)>(params) ...),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))()
-							);
-					case uint32_t(4):
-						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
-							f(nth_item<uint32_t(0)>(params) ...),
-							f(nth_item<uint32_t(1)>(params) ...),
-							f(nth_item<uint32_t(2)>(params) ...),
-							f(nth_item<uint32_t(3)>(params) ...),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))()
-							);
-					case uint32_t(3):
-						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
-							f(nth_item<uint32_t(0)>(params) ...),
-							f(nth_item<uint32_t(1)>(params) ...),
-							f(nth_item<uint32_t(2)>(params) ...),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))()
-							);
-					case uint32_t(2):
-						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
-							f(nth_item<uint32_t(0)>(params) ...),
-							f(nth_item<uint32_t(1)>(params) ...),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))()
-							);
-					case uint32_t(1):
-						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
-							f(nth_item<uint32_t(0)>(params) ...),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))()
-							);
-					case uint32_t(0):;
-						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(nth_item<uint32_t(0)>(params) ...))()
-							);
+					case uint32_t(8): temp.set(7, f(nth_item<uint32_t(7)>(params) ...));
+					case uint32_t(7): temp.set(6, f(nth_item<uint32_t(6)>(params) ...));
+					case uint32_t(6): temp.set(5, f(nth_item<uint32_t(5)>(params) ...));
+					case uint32_t(5): temp.set(4, f(nth_item<uint32_t(4)>(params) ...));
+					case uint32_t(4): temp.set(3, f(nth_item<uint32_t(3)>(params) ...));
+					case uint32_t(3): temp.set(2, f(nth_item<uint32_t(2)>(params) ...));
+					case uint32_t(2): temp.set(1, f(nth_item<uint32_t(1)>(params) ...));
+					case uint32_t(1): temp.set(0, f(nth_item<uint32_t(0)>(params) ...));
+					case uint32_t(0): ;
 				}
+				return temp;
 			}
 		} else if constexpr(any_is_vector_type<PARAMS ...>::value) {
 			if constexpr(std::is_same_v<decltype(f(nth_item<uint32_t(0)>(params) ...)), void>) {
@@ -641,108 +647,20 @@ namespace ve {
 					case uint32_t(0):;
 				}
 			} else {
+				value_to_vector_type<decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))> temp;
 				switch(limit) {
 					default:;
-					case uint32_t(8):
-						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
-							f(uint32_t(0), nth_item<uint32_t(0)>(params) ...),
-							f(uint32_t(1), nth_item<uint32_t(1)>(params) ...),
-							f(uint32_t(2), nth_item<uint32_t(2)>(params) ...),
-							f(uint32_t(3), nth_item<uint32_t(3)>(params) ...),
-							f(uint32_t(4), nth_item<uint32_t(4)>(params) ...),
-							f(uint32_t(5), nth_item<uint32_t(5)>(params) ...),
-							f(uint32_t(6), nth_item<uint32_t(6)>(params) ...),
-							f(uint32_t(7), nth_item<uint32_t(7)>(params) ...)
-							);
-					case uint32_t(7):
-						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
-							f(uint32_t(0), nth_item<uint32_t(0)>(params) ...),
-							f(uint32_t(1), nth_item<uint32_t(1)>(params) ...),
-							f(uint32_t(2), nth_item<uint32_t(2)>(params) ...),
-							f(uint32_t(3), nth_item<uint32_t(3)>(params) ...),
-							f(uint32_t(4), nth_item<uint32_t(4)>(params) ...),
-							f(uint32_t(5), nth_item<uint32_t(5)>(params) ...),
-							f(uint32_t(6), nth_item<uint32_t(6)>(params) ...),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))()
-							);
-					case uint32_t(6):
-						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
-							f(uint32_t(0), nth_item<uint32_t(0)>(params) ...),
-							f(uint32_t(1), nth_item<uint32_t(1)>(params) ...),
-							f(uint32_t(2), nth_item<uint32_t(2)>(params) ...),
-							f(uint32_t(3), nth_item<uint32_t(3)>(params) ...),
-							f(uint32_t(4), nth_item<uint32_t(4)>(params) ...),
-							f(uint32_t(5), nth_item<uint32_t(5)>(params) ...),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))()
-							);
-					case uint32_t(5):
-						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
-							f(uint32_t(0), nth_item<uint32_t(0)>(params) ...),
-							f(uint32_t(1), nth_item<uint32_t(1)>(params) ...),
-							f(uint32_t(2), nth_item<uint32_t(2)>(params) ...),
-							f(uint32_t(3), nth_item<uint32_t(3)>(params) ...),
-							f(uint32_t(4), nth_item<uint32_t(4)>(params) ...),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))()
-							);
-					case uint32_t(4):
-						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
-							f(uint32_t(0), nth_item<uint32_t(0)>(params) ...),
-							f(uint32_t(1), nth_item<uint32_t(1)>(params) ...),
-							f(uint32_t(2), nth_item<uint32_t(2)>(params) ...),
-							f(uint32_t(3), nth_item<uint32_t(3)>(params) ...),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))()
-							);
-					case uint32_t(3):
-						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
-							f(uint32_t(0), nth_item<uint32_t(0)>(params) ...),
-							f(uint32_t(1), nth_item<uint32_t(1)>(params) ...),
-							f(uint32_t(2), nth_item<uint32_t(2)>(params) ...),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))()
-							);
-					case uint32_t(2):
-						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
-							f(uint32_t(0), nth_item<uint32_t(0)>(params) ...),
-							f(uint32_t(1), nth_item<uint32_t(1)>(params) ...),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))()
-							);
-					case uint32_t(1):
-						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
-							f(uint32_t(0), nth_item<uint32_t(0)>(params) ...),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))()
-							);
+					case uint32_t(8): temp.set(7, f(uint32_t(7), nth_item<uint32_t(7)>(params) ...));
+					case uint32_t(7): temp.set(6, f(uint32_t(6), nth_item<uint32_t(6)>(params) ...));
+					case uint32_t(6): temp.set(5, f(uint32_t(5), nth_item<uint32_t(5)>(params) ...));
+					case uint32_t(5): temp.set(4, f(uint32_t(4), nth_item<uint32_t(4)>(params) ...));
+					case uint32_t(4): temp.set(3, f(uint32_t(3), nth_item<uint32_t(3)>(params) ...));
+					case uint32_t(3): temp.set(2, f(uint32_t(2), nth_item<uint32_t(2)>(params) ...));
+					case uint32_t(2): temp.set(1, f(uint32_t(1), nth_item<uint32_t(1)>(params) ...));
+					case uint32_t(1): temp.set(0, f(uint32_t(0), nth_item<uint32_t(0)>(params) ...));
 					case uint32_t(0):;
-						return value_to_vector_type<decltype(f(nth_item<uint32_t(0)>(params) ...))>(
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))(),
-							decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...))()
-							);
 				}
+				return temp;
 			}
 		} else if constexpr(std::is_same_v<decltype(f(uint32_t(0), nth_item<uint32_t(0)>(params) ...)), void>) {
 			f(uint32_t(0), nth_item<uint32_t(0)>(params) ...);
@@ -1596,35 +1514,35 @@ namespace ve {
 	template<typename U>
 	RELEASE_INLINE void store(tagged_vector<U> indices, float* dest, fp_vector values) {
 		for(int32_t i = 0; i < vector_size; ++i)
-			dest[indices.value.m256i_i32[i]] = values[i];
+			dest[indices[i].index()] = values[i];
 
 	}
 	template<typename U, typename I>
 	RELEASE_INLINE auto store(tagged_vector<U> indices, I* dest, int_vector values) -> std::enable_if_t<std::numeric_limits<I>::is_integer && sizeof(I) <= 4, void> {
 		for(int32_t i = 0; i < vector_size; ++i)
-			dest[indices.value.m256i_i32[i]] = I(values[i]);
+			dest[indices[i].index()] = I(values[i]);
 	}
 	template<typename U, typename T>
 	RELEASE_INLINE void store(tagged_vector<U> indices, T* dest, tagged_vector<T> values) {
 		for(int32_t i = 0; i < vector_size; ++i)
-			dest[indices.value.m256i_i32[i]] = values[i];
+			dest[indices[i].index()] = values[i];
 	}
 	template<typename U>
 	RELEASE_INLINE void store(tagged_vector<U> indices, dcon::bitfield_type* dest, vbitfield_type values) {
 		for(int32_t i = 0; i < vector_size; ++i)
-			dcon::bit_vector_set(dest, indices.value.m256i_i32[i], (values.v >> i) != 0);
+			dcon::bit_vector_set(dest, indices[i].index(), (values.v >> i) != 0);
 	}
 	template<typename U>
 	RELEASE_INLINE void store(tagged_vector<U> indices, dcon::bitfield_type* dest, mask_vector values) {
 		for(int32_t i = 0; i < vector_size; ++i)
-			dcon::bit_vector_set(dest, indices.value.m256i_i32[i], values[i]);
+			dcon::bit_vector_set(dest, indices[i].index(), values[i]);
 	}
 
 	template<typename U>
 	RELEASE_INLINE void store(tagged_vector<U> indices, vbitfield_type mask, float* dest, fp_vector values) {
 		for(int32_t i = 0; i < vector_size; ++i) {
 			if((mask.v >> i) != 0)
-				dest[indices.value.m256i_i32[i]] = values[i];
+				dest[indices[i].index()] = values[i];
 		}
 
 	}
@@ -1632,28 +1550,28 @@ namespace ve {
 	RELEASE_INLINE auto store(tagged_vector<U> indices, vbitfield_type mask, I* dest, int_vector values) -> std::enable_if_t<std::numeric_limits<I>::is_integer && sizeof(I) <= 4, void> {
 		for(int32_t i = 0; i < vector_size; ++i) {
 			if((mask.v >> i) != 0)
-				dest[indices.value.m256i_i32[i]] = I(values[i]);
+				dest[indices[i].index()] = I(values[i]);
 		}
 	}
 	template<typename U, typename T>
 	RELEASE_INLINE void store(tagged_vector<U> indices, vbitfield_type mask, T* dest, tagged_vector<T> values) {
 		for(int32_t i = 0; i < vector_size; ++i) {
 			if((mask.v >> i) != 0)
-				dest[indices.value.m256i_i32[i]] = values[i];
+				dest[indices[i].index()] = values[i];
 		}
 	}
 	template<typename U>
 	RELEASE_INLINE void store(tagged_vector<U> indices, vbitfield_type mask, dcon::bitfield_type* dest, vbitfield_type values) {
 		for(int32_t i = 0; i < vector_size; ++i) {
 			if((mask.v >> i) != 0)
-				dcon::bit_vector_set(dest, indices.value.m256i_i32[i], (values.v >> i) != 0);
+				dcon::bit_vector_set(dest, indices[i].index(), (values.v >> i) != 0);
 		}
 	}
 	template<typename U>
 	RELEASE_INLINE void store(tagged_vector<U> indices, vbitfield_type mask, dcon::bitfield_type* dest, mask_vector values) {
 		for(int32_t i = 0; i < vector_size; ++i) {
 			if((mask.v >> i) != 0)
-				dcon::bit_vector_set(dest, indices.value.m256i_i32[i], values[i]);
+				dcon::bit_vector_set(dest, indices[i].index(), values[i]);
 		}
 	}
 
@@ -1661,7 +1579,7 @@ namespace ve {
 	RELEASE_INLINE void store(tagged_vector<U> indices, mask_vector mask, float* dest, fp_vector values) {
 		for(int32_t i = 0; i < vector_size; ++i) {
 			if(mask[i])
-				dest[indices.value.m256i_i32[i]] = values[i];
+				dest[indices[i].index()] = values[i];
 		}
 
 	}
@@ -1669,28 +1587,28 @@ namespace ve {
 	RELEASE_INLINE auto store(tagged_vector<U> indices, mask_vector mask, I* dest, int_vector values) -> std::enable_if_t<std::numeric_limits<I>::is_integer && sizeof(I) <= 4, void> {
 		for(int32_t i = 0; i < vector_size; ++i) {
 			if(mask[i])
-				dest[indices.value.m256i_i32[i]] = I(values[i]);
+				dest[indices[i].index()] = I(values[i]);
 		}
 	}
 	template<typename U, typename T>
 	RELEASE_INLINE void store(tagged_vector<U> indices, mask_vector mask, T* dest, tagged_vector<T> values) {
 		for(int32_t i = 0; i < vector_size; ++i) {
 			if(mask[i])
-				dest[indices.value.m256i_i32[i]] = values[i];
+				dest[indices[i].index()] = values[i];
 		}
 	}
 	template<typename U>
 	RELEASE_INLINE void store(tagged_vector<U> indices, mask_vector mask, dcon::bitfield_type* dest, vbitfield_type values) {
 		for(int32_t i = 0; i < vector_size; ++i) {
 			if(mask[i])
-				dcon::bit_vector_set(dest, indices.value.m256i_i32[i], (values.v >> i) != 0);
+				dcon::bit_vector_set(dest, indices[i].index(), (values.v >> i) != 0);
 		}
 	}
 	template<typename U>
 	RELEASE_INLINE void store(tagged_vector<U> indices, mask_vector mask, dcon::bitfield_type* dest, mask_vector values) {
 		for(int32_t i = 0; i < vector_size; ++i) {
 			if(mask[i])
-				dcon::bit_vector_set(dest, indices.value.m256i_i32[i], values[i]);
+				dcon::bit_vector_set(dest, indices[i].index(), values[i]);
 		}
 	}
 }
