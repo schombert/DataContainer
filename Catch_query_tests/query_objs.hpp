@@ -2593,16 +2593,18 @@ namespace dcon {
 			return false;
 		}
 		m_tableindex0 = v;
-		if(! internal_set_v1(m_container.car_get_car_ownership_as_owned_car(m_tableindex0)) ) return false;
+		if(! internal_set_v1(m_container.car_get_car_ownership_as_owned_car(m_tableindex0)) ) {
+			m_tableindex0 = car_id();
+			return false;
+		}
 		return true;
 	}
 	bool internal::query_q_all_owner_ages_const_iterator::internal_increment_v0(bool, bool&) {
-		if(uint32_t(m_tableindex0.index() + 1) < m_container.car_size()) {
-			return internal_set_v0(car_id( car_id::value_base_t(m_tableindex0.index() + 1) ));
-		} else {
-			m_tableindex0 = car_id( );
-			return false;
+		for(uint32_t i = uint32_t(m_tableindex0.index() + 1); i < m_container.car_size(); ++i) {
+			if(internal_set_v0( car_id(car_id::value_base_t(i)) )) return true;
 		}
+		m_tableindex0 = car_id( );
+		return false;
 	}
 	void internal::query_q_all_owner_ages_const_iterator::internal_reset_v1() {
 		m_tableindex1 = car_ownership_id();
@@ -2614,7 +2616,10 @@ namespace dcon {
 			return false;
 		}
 		m_tableindex1 = v;
-		if(! internal_set_v2( m_container.car_ownership_get_owner(m_tableindex1) ) ) return false;
+		if(! internal_set_v2( m_container.car_ownership_get_owner(m_tableindex1) ) ) {
+			m_tableindex1 = car_ownership_id();
+			return false;
+		}
 		return true;
 	}
 	bool internal::query_q_all_owner_ages_const_iterator::internal_increment_v1(bool force, bool& hit_group) {
@@ -2693,16 +2698,18 @@ namespace dcon {
 			return false;
 		}
 		m_tableindex0 = v;
-		if(! internal_set_v1(m_container.car_get_car_ownership_as_owned_car(m_tableindex0)) ) return false;
+		if(! internal_set_v1(m_container.car_get_car_ownership_as_owned_car(m_tableindex0)) ) {
+			m_tableindex0 = car_id();
+			return false;
+		}
 		return true;
 	}
 	bool internal::query_q_all_owner_ages_iterator::internal_increment_v0(bool, bool&) {
-		if(uint32_t(m_tableindex0.index() + 1) < m_container.car_size()) {
-			return internal_set_v0(car_id( car_id::value_base_t(m_tableindex0.index() + 1) ));
-		} else {
-			m_tableindex0 = car_id( );
-			return false;
+		for(uint32_t i = uint32_t(m_tableindex0.index() + 1); i < m_container.car_size(); ++i) {
+			if(internal_set_v0( car_id(car_id::value_base_t(i)) )) return true;
 		}
+		m_tableindex0 = car_id( );
+		return false;
 	}
 	void internal::query_q_all_owner_ages_iterator::internal_reset_v1() {
 		m_tableindex1 = car_ownership_id();
@@ -2714,7 +2721,10 @@ namespace dcon {
 			return false;
 		}
 		m_tableindex1 = v;
-		if(! internal_set_v2( m_container.car_ownership_get_owner(m_tableindex1) ) ) return false;
+		if(! internal_set_v2( m_container.car_ownership_get_owner(m_tableindex1) ) ) {
+			m_tableindex1 = car_ownership_id();
+			return false;
+		}
 		return true;
 	}
 	bool internal::query_q_all_owner_ages_iterator::internal_increment_v1(bool force, bool& hit_group) {
@@ -2800,19 +2810,24 @@ namespace dcon {
 		m_index_into_m_tableindex1 = 0;
 		m_size_of_m_tableindex1 = int32_t(range.second - range.first);
 		if(m_size_of_m_tableindex1 == 0) {
-			if(! internal_set_v1( car_ownership_id() ) ) return false;
+			if(! internal_set_v1( car_ownership_id() ) ) {
+				m_tableindex0 = person_id();
+				return false;
+			}
 		} else {
-			if(! internal_set_v1( *range.first ) ) return false;
+			if(! internal_set_v1( *range.first ) ) {
+				m_tableindex0 = person_id();
+				return false;
+			}
 		}
 		return true;
 	}
 	bool internal::query_rev_car_from_owner_const_iterator::internal_increment_v0(bool, bool&) {
-		if(uint32_t(m_tableindex0.index() + 1) < m_container.person_size()) {
-			return internal_set_v0(person_id( person_id::value_base_t(m_tableindex0.index() + 1) ));
-		} else {
-			m_tableindex0 = person_id( );
-			return false;
+		for(uint32_t i = uint32_t(m_tableindex0.index() + 1); i < m_container.person_size(); ++i) {
+			if(internal_set_v0( person_id(person_id::value_base_t(i)) )) return true;
 		}
+		m_tableindex0 = person_id( );
+		return false;
 	}
 	void internal::query_rev_car_from_owner_const_iterator::internal_reset_v1() {
 		m_index_into_m_tableindex1 = 0;
@@ -2826,7 +2841,10 @@ namespace dcon {
 			return false;
 		}
 		m_tableindex1 = v;
-		if(! internal_set_v2( m_container.car_ownership_get_owned_car(m_tableindex1) ) ) return false;
+		if(! internal_set_v2( m_container.car_ownership_get_owned_car(m_tableindex1) ) ) {
+			m_tableindex1 = car_ownership_id();
+			return false;
+		}
 		return true;
 	}
 	bool internal::query_rev_car_from_owner_const_iterator::internal_increment_v1(bool force, bool& hit_group) {
@@ -2838,6 +2856,7 @@ namespace dcon {
 			auto range = m_container.person_range_of_car_ownership_as_owner(m_tableindex0);
 			return internal_set_v1( *(range.first + m_index_into_m_tableindex1) );
 		} else {
+			m_tableindex1 = car_ownership_id();
 			return internal_increment_v0(force, hit_group);
 		}
 	}
@@ -2915,19 +2934,24 @@ namespace dcon {
 		m_index_into_m_tableindex1 = 0;
 		m_size_of_m_tableindex1 = int32_t(range.second - range.first);
 		if(m_size_of_m_tableindex1 == 0) {
-			if(! internal_set_v1( car_ownership_id() ) ) return false;
+			if(! internal_set_v1( car_ownership_id() ) ) {
+				m_tableindex0 = person_id();
+				return false;
+			}
 		} else {
-			if(! internal_set_v1( *range.first ) ) return false;
+			if(! internal_set_v1( *range.first ) ) {
+				m_tableindex0 = person_id();
+				return false;
+			}
 		}
 		return true;
 	}
 	bool internal::query_rev_car_from_owner_iterator::internal_increment_v0(bool, bool&) {
-		if(uint32_t(m_tableindex0.index() + 1) < m_container.person_size()) {
-			return internal_set_v0(person_id( person_id::value_base_t(m_tableindex0.index() + 1) ));
-		} else {
-			m_tableindex0 = person_id( );
-			return false;
+		for(uint32_t i = uint32_t(m_tableindex0.index() + 1); i < m_container.person_size(); ++i) {
+			if(internal_set_v0( person_id(person_id::value_base_t(i)) )) return true;
 		}
+		m_tableindex0 = person_id( );
+		return false;
 	}
 	void internal::query_rev_car_from_owner_iterator::internal_reset_v1() {
 		m_index_into_m_tableindex1 = 0;
@@ -2941,7 +2965,10 @@ namespace dcon {
 			return false;
 		}
 		m_tableindex1 = v;
-		if(! internal_set_v2( m_container.car_ownership_get_owned_car(m_tableindex1) ) ) return false;
+		if(! internal_set_v2( m_container.car_ownership_get_owned_car(m_tableindex1) ) ) {
+			m_tableindex1 = car_ownership_id();
+			return false;
+		}
 		return true;
 	}
 	bool internal::query_rev_car_from_owner_iterator::internal_increment_v1(bool force, bool& hit_group) {
@@ -2953,6 +2980,7 @@ namespace dcon {
 			auto range = m_container.person_range_of_car_ownership_as_owner(m_tableindex0);
 			return internal_set_v1( *(range.first + m_index_into_m_tableindex1) );
 		} else {
+			m_tableindex1 = car_ownership_id();
 			return internal_increment_v0(force, hit_group);
 		}
 	}
@@ -3030,9 +3058,15 @@ namespace dcon {
 		m_index_into_m_tableindex1 = 0;
 		m_size_of_m_tableindex1 = int32_t(range.second - range.first);
 		if(m_size_of_m_tableindex1 == 0) {
-			if(! internal_set_v1( car_ownership_id() ) ) return false;
+			if(! internal_set_v1( car_ownership_id() ) ) {
+				m_parameters.from_person = person_id();
+				return false;
+			}
 		} else {
-			if(! internal_set_v1( *range.first ) ) return false;
+			if(! internal_set_v1( *range.first ) ) {
+				m_parameters.from_person = person_id();
+				return false;
+			}
 		}
 		return true;
 	}
@@ -3052,7 +3086,10 @@ namespace dcon {
 			return false;
 		}
 		m_tableindex1 = v;
-		if(! internal_set_v2( m_container.car_ownership_get_owned_car(m_tableindex1) ) ) return false;
+		if(! internal_set_v2( m_container.car_ownership_get_owned_car(m_tableindex1) ) ) {
+			m_tableindex1 = car_ownership_id();
+			return false;
+		}
 		return true;
 	}
 	bool internal::query_param_car_from_owner_const_iterator::internal_increment_v1(bool force, bool& hit_group) {
@@ -3064,6 +3101,7 @@ namespace dcon {
 			auto range = m_container.person_range_of_car_ownership_as_owner(m_parameters.from_person);
 			return internal_set_v1( *(range.first + m_index_into_m_tableindex1) );
 		} else {
+			m_tableindex1 = car_ownership_id();
 			return internal_increment_v0(force, hit_group);
 		}
 	}
@@ -3135,9 +3173,15 @@ namespace dcon {
 		m_index_into_m_tableindex1 = 0;
 		m_size_of_m_tableindex1 = int32_t(range.second - range.first);
 		if(m_size_of_m_tableindex1 == 0) {
-			if(! internal_set_v1( car_ownership_id() ) ) return false;
+			if(! internal_set_v1( car_ownership_id() ) ) {
+				m_parameters.from_person = person_id();
+				return false;
+			}
 		} else {
-			if(! internal_set_v1( *range.first ) ) return false;
+			if(! internal_set_v1( *range.first ) ) {
+				m_parameters.from_person = person_id();
+				return false;
+			}
 		}
 		return true;
 	}
@@ -3157,7 +3201,10 @@ namespace dcon {
 			return false;
 		}
 		m_tableindex1 = v;
-		if(! internal_set_v2( m_container.car_ownership_get_owned_car(m_tableindex1) ) ) return false;
+		if(! internal_set_v2( m_container.car_ownership_get_owned_car(m_tableindex1) ) ) {
+			m_tableindex1 = car_ownership_id();
+			return false;
+		}
 		return true;
 	}
 	bool internal::query_param_car_from_owner_iterator::internal_increment_v1(bool force, bool& hit_group) {
@@ -3169,6 +3216,7 @@ namespace dcon {
 			auto range = m_container.person_range_of_car_ownership_as_owner(m_parameters.from_person);
 			return internal_set_v1( *(range.first + m_index_into_m_tableindex1) );
 		} else {
+			m_tableindex1 = car_ownership_id();
 			return internal_increment_v0(force, hit_group);
 		}
 	}

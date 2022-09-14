@@ -412,7 +412,6 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 		auto& table = pdef.table_slots[i];
 		o + substitute{ "fname", table.internally_named_as };
 		o + substitute{ "obj", table.actual_table->name };
-		o + substitute{ "next_name",  i + 1 < pdef.table_slots.size() ? pdef.table_slots[i+1].internally_named_as : std::string("")};
 		o + substitute{ "index", std::to_string(i) };
 		o + substitute{ "prev_index", std::to_string(i - 1) };
 
@@ -447,6 +446,12 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 			} else {
 				o + "if(!bool(v))" + block{
 					o + "internal_reset_v@index@();";
+					for(int32_t k = i + 1; k < pdef.table_slots.size(); ++k) {
+						if(pdef.table_slots[k].joined_to < &table) {
+							o + substitute{ "k_index", std::to_string(k) };
+							o + "internal_reset_v@k_index@();";
+						}
+					}
 					o + "return true;";
 				};
 			}
@@ -454,44 +459,120 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 				o + "@fname@ = v;";
 			}
 			for(int32_t j = i + 1; j < pdef.table_slots.size(); ++j) {
-				if(pdef.table_slots[j].joined_to == &table) {
+				if(pdef.table_slots[j].joined_to <= &table) {
 					auto& ts = pdef.table_slots[j];
+					o + substitute{ "par_name", ts.joined_to->internally_named_as };
+					o + substitute{ "par_obj",  ts.joined_to->actual_table->name };
+
 					o + substitute{ "lname", ts.joind_by_link->property_name };
 					o + substitute{ "cobj", ts.actual_table->name };
 					o + substitute{ "next_index", std::to_string(j) };
+					o + substitute{ "next_name", pdef.table_slots[j].internally_named_as };
 
 					if(ts.actual_table->is_relationship) {
 						if(ts.joind_by_link->index == index_type::at_most_one) {
-							o + "if(! internal_set_v@next_index@(m_container.@obj@_get_@cobj@_as_@lname@(@fname@)) ) return false;";
+							o + "if(! internal_set_v@next_index@(m_container.@par_obj@_get_@cobj@_as_@lname@(@par_name@)) )" + block{
+								for(int32_t k = i + 1; k < j; ++k) {
+									if(pdef.table_slots[k].joined_to <= &table) {
+										o + substitute{ "k_index", std::to_string(k) };
+										o + "internal_reset_v@k_index@();";
+									}
+								}
+								o + "@fname@ = @obj@_id();";
+								o + "return false;";
+							};
 
 						} else if(ts.joind_by_link->index == index_type::many) {
 							if(ts.joind_by_link->ltype == list_type::list) {
-								o + "auto head = m_container.@cobj@.m_head_back_@lname@.vptr()[@fname@.index()];";
-								o + "if(! internal_set_v@next_index@(head) ) return false;";
+								o + "auto head = m_container.@cobj@.m_head_back_@lname@.vptr()[@par_name@.index()];";
+								o + "if(! internal_set_v@next_index@(head) )" + block{
+									for(int32_t k = i + 1; k < j; ++k) {
+										if(pdef.table_slots[k].joined_to <= &table) {
+											o + substitute{ "k_index", std::to_string(k) };
+											o + "internal_reset_v@k_index@();";
+										}
+									}
+									o + "@fname@ = @obj@_id();";
+									o + "return false;";
+								};
 							} else {
-								o + "auto range = m_container.@obj@_range_of_@cobj@_as_@lname@(@fname@);";
+								o + "auto range = m_container.@par_obj@_range_of_@cobj@_as_@lname@(@par_name@);";
 								o + "m_index_into_@next_name@ = 0;";
 								o + "m_size_of_@next_name@ = int32_t(range.second - range.first);";
 								o + "if(m_size_of_@next_name@ == 0)" + block{
-									o + "if(! internal_set_v@next_index@( @cobj@_id() ) ) return false;";
+									o + "if(! internal_set_v@next_index@( @cobj@_id() ) )" + block{
+										for(int32_t k = i + 1; k < j; ++k) {
+											if(pdef.table_slots[k].joined_to <= &table) {
+												o + substitute{ "k_index", std::to_string(k) };
+												o + "internal_reset_v@k_index@();";
+											}
+										}
+										o + "@fname@ = @obj@_id();";
+										o + "return false;";
+									};
 								} +append{ "else" } +block{
-									o + "if(! internal_set_v@next_index@( *range.first ) ) return false;";
+									o + "if(! internal_set_v@next_index@( *range.first ) )" + block{
+										for(int32_t k = i + 1; k < j; ++k) {
+											if(pdef.table_slots[k].joined_to <= &table) {
+												o + substitute{ "k_index", std::to_string(k) };
+												o + "internal_reset_v@k_index@();";
+											}
+										}
+										o + "@fname@ = @obj@_id();";
+										o + "return false;";
+									};
 								};
 							}
 						} else { // type none
 							o + "for(uint32_t i = 0; i < m_container.@cobj@_size(); ++i)" + block{
-								o + "if(m_container.@cobj@_get_@lname@(@cobj@_id(@cobj@_id::value_base_t(i))) == @fname@)" + block{
-									o + "if(! internal_set_v@next_index@( @cobj@_id(@cobj@_id::value_base_t(i)) ) ) return false;";
+								o + "if(m_container.@cobj@_get_@lname@(@cobj@_id(@cobj@_id::value_base_t(i))) == @par_name@)" + block{
+									o + "if(! internal_set_v@next_index@( @cobj@_id(@cobj@_id::value_base_t(i)) ) )" + block{
+										for(int32_t k = i + 1; k < j; ++k) {
+											if(pdef.table_slots[k].joined_to <= &table) {
+												o + substitute{ "k_index", std::to_string(k) };
+												o + "internal_reset_v@k_index@();";
+											}
+										}
+										o + "@fname@ = @obj@_id();";
+										o + "return false;";
+									};
 								};
 							};
-							o + "if(! internal_set_v@next_index@( @cobj@_id() ) ) return false;";
+							o + "if(! internal_set_v@next_index@( @cobj@_id() ) )" + block{
+								for(int32_t k = i + 1; k < j; ++k) {
+									if(pdef.table_slots[k].joined_to <= &table) {
+										o + substitute{ "k_index", std::to_string(k) };
+										o + "internal_reset_v@k_index@();";
+									}
+								}
+								o + "@fname@ = @obj@_id();";
+								o + "return false;";
+							};
 						}
 					} else {
 						if(ts.joind_by_link->multiplicity == 1) {
-							o + "if(! internal_set_v@next_index@( m_container.@obj@_get_@lname@(@fname@) ) ) return false;";
+							o + "if(! internal_set_v@next_index@( m_container.@par_obj@_get_@lname@(@par_name@) ) )" + block{
+								for(int32_t k = i + 1; k < j; ++k) {
+									if(pdef.table_slots[k].joined_to <= &table) {
+										o + substitute{ "k_index", std::to_string(k) };
+										o + "internal_reset_v@k_index@();";
+									}
+								}
+								o + "@fname@ = @obj@_id();";
+								o + "return false;";
+							};
 						} else {
 							o + "m_index_into_@next_name@ = 0;";
-							o + "if(! internal_set_v@next_index@( m_container.@obj@_get_@lname@(@fname@, 0) ) return false;";
+							o + "if(! internal_set_v@next_index@( m_container.@par_obj@_get_@lname@(@par_name@, 0) )" + block{
+								for(int32_t k = i + 1; k < j; ++k) {
+									if(pdef.table_slots[k].joined_to <= &table) {
+										o + substitute{ "k_index", std::to_string(k) };
+										o + "internal_reset_v@k_index@();";
+									}
+								}
+								o + "@fname@ = @obj@_id();";
+								o + "return false;";
+							};
 						}
 					}
 				}
@@ -517,18 +598,17 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 					if(table.actual_table->store_type == storage_type::erasable) {
 						o + "for(uint32_t i = uint32_t(@fname@.index() + 1); i < m_container.@obj@_size(); ++i)" + block{
 							o + "if(m_container.@obj@_is_valid( @obj@_id(@obj@_id::value_base_t(i)) ))" + block{
-								o + "return internal_set_v0( @obj@_id(@obj@_id::value_base_t(i)) );";
+								o + "if(internal_set_v0( @obj@_id(@obj@_id::value_base_t(i)) )) return true;";
 							};
 						};
 						o + "@fname@ = @obj@_id( );";
 						o + "return false;";
 					} else {
-						o + "if(uint32_t(@fname@.index() + 1) < m_container.@obj@_size())" + block{
-							o + "return internal_set_v0(@obj@_id( @obj@_id::value_base_t(@fname@.index() + 1) ));";
-						} +append{ "else" } +block{
-							o + "@fname@ = @obj@_id( );";
-							o + "return false;";
+						o + "for(uint32_t i = uint32_t(@fname@.index() + 1); i < m_container.@obj@_size(); ++i)" + block{
+							o + "if(internal_set_v0( @obj@_id(@obj@_id::value_base_t(i)) )) return true;";
 						};
+						o + "@fname@ = @obj@_id( );";
+						o + "return false;";
 					}
 				}
 			} else {
@@ -545,20 +625,26 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 
 				o + substitute{ "lname", table.joind_by_link->property_name };
 				if(table.actual_table->is_relationship) {
-					o + substitute{ "pname",  pdef.table_slots[i - 1].internally_named_as };
-					o + substitute{ "pobj",  pdef.table_slots[i - 1].actual_table->name };
+					o + substitute{ "pname",  table.joined_to->internally_named_as };
+					o + substitute{ "pobj",  table.joined_to->actual_table->name };
 					if(table.joind_by_link->index == index_type::at_most_one) {
 						o + "return internal_increment_v@prev_index@(force, hit_group);";
 					} else if(table.joind_by_link->index == index_type::many) {
 						if(table.joind_by_link->ltype == list_type::list) {
 							o + "auto next = m_container.@obj@.m_link_@lname@.vptr()[@fname@.index()].right;";
-							o + "return internal_set_v@index@(next);";
+							o + "if(bool(next))" + block{
+								o + "return internal_set_v@index@(next);";
+							} +append{ "else" } +block{
+								o + "@fname@ = @obj@_id();";
+								o + "return internal_increment_v@prev_index@(force, hit_group);";
+							};
 						} else {
 							o + "if(m_index_into_@fname@ + 1 < m_size_of_@fname@)" + block{
 								o + "++m_index_into_@fname@;";
 								o + "auto range = m_container.@pobj@_range_of_@obj@_as_@lname@(@pname@);";
 								o + "return internal_set_v@index@( *(range.first + m_index_into_@fname@) );";
 							} +append{ "else" } +block{
+								o + "@fname@ = @obj@_id();";
 								o + "return internal_increment_v@prev_index@(force, hit_group);";
 							};
 						}
@@ -568,11 +654,12 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 								o + "return internal_set_v@index@( @obj@_id(@obj@_id::value_base_t(i)) );";
 							};
 						};
+						o + "@fname@ = @obj@_id();";
 						o + "return internal_increment_v@prev_index@(force, hit_group);";
 					}
 				} else {
-					o + substitute{ "pname",  pdef.table_slots[i - 1].internally_named_as };
-					o + substitute{ "pobj",  pdef.table_slots[i - 1].actual_table->name };
+					o + substitute{ "pname",  table.joined_to->internally_named_as };
+					o + substitute{ "pobj",  table.joined_to->actual_table->name };
 
 					if(table.joind_by_link->multiplicity == 1) {
 						o + "return internal_increment_v@prev_index@(force, hit_group);";
@@ -582,6 +669,7 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 							o + "++m_index_into_@fname@;";
 							o + "return internal_set_v@index@( m_container.@pobj@_get_@lname@(@pname@, m_index_into_@fname@) );";
 						} +append{ "else" } +block{
+							o + "@fname@ = @obj@_id();";
 							o + "return internal_increment_v@prev_index@(force, hit_group);";
 						};
 					}
