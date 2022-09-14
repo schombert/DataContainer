@@ -1326,6 +1326,18 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 			}
 			result.table_slots[i].internally_named_as = std::string("m_parameters.") + def.select.from[i].left_of_join;
 			result.table_slots[i].reference_name = def.select.from[i].left_of_join;
+			std::string param_id;
+			for(auto &p : def.parameters) {
+				if(p.name == def.select.from[i].left_of_join)
+					param_id = p.type;
+			}
+			param_id.pop_back(); param_id.pop_back(); param_id.pop_back();
+			result.table_slots[i].actual_table = find_by_name(parsed_file, param_id);
+			if(!result.table_slots[i].actual_table) {
+				err.add(std::string("Could not find an object or relationship named ")
+					+ param_id + " as required by usage of parameter "
+					+ def.select.from[i].left_of_join + " in a from clause");
+			}
 			auto parameter = std::find_if(def.parameters.begin(), def.parameters.end(),
 				[&](type_name_pair const& p) { return def.select.from[i].left_of_join == p.name; });
 			if(parameter != def.parameters.end()) {
