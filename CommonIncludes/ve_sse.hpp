@@ -126,7 +126,7 @@ namespace ve {
 #ifdef _MSC_VER 
 			value.m128_f32[i] = v;
 #else
-			return value[i] = v;
+			value[i] = v;
 #endif
 		}
 	};

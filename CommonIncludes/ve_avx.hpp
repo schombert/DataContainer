@@ -139,7 +139,7 @@ namespace ve {
 #ifdef _MSC_VER 
 			value.m256_f32[i] = v;
 #else
-			return value[i] = v;
+			value[i] = v;
 #endif
 		}
 	};

@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <assert.h>
 #include <cstring>
 #include "common_types.hpp"
 #ifndef DCON_NO_VE
@@ -9297,6 +9298,10 @@ namespace dcon {
 		return container.relate_as_multipleD_is_valid(id);
 	}
 	
+
+	namespace internal {
+	};
+
 
 }
 
