@@ -20,11 +20,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="query_objs.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="query_objs.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="query_objs.txt" />
   </ItemGroup>
 </Project>

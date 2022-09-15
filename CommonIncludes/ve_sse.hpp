@@ -167,7 +167,7 @@ namespace ve {
 	template<typename tag_type>
 	struct alignas(__m128i) tagged_vector {
 		using wrapped_value = tag_type;
-		static_assert(sizeof(tag_type::value_base_t) <= 4);
+		static_assert(sizeof(typename tag_type::value_base_t) <= 4);
 
 		__m128i value;
 
@@ -337,13 +337,13 @@ namespace ve {
 		uint32_t value = 0;
 		uint32_t subcount = vector_size;
 
-		constexpr partial_contiguous_tags() : uint32_t(0), subcount(vector_size) {}
+		constexpr partial_contiguous_tags() : value(0), subcount(vector_size) {}
 		constexpr explicit partial_contiguous_tags(uint32_t v, uint32_t s) : value(v), subcount(s) {}
 		constexpr partial_contiguous_tags(const partial_contiguous_tags& v) noexcept = default;
 		constexpr partial_contiguous_tags(partial_contiguous_tags&& v) noexcept = default;
 
 		template<typename T, typename = std::enable_if_t<std::is_constructible_v<tag_type, T> && !std::is_same_v<tag_type, T>> >
-		constexpr partial_contiguous_tags(partial_contiguous_tags<T> v) : uint32_t(v.value), subcount(v.subcount) {}
+		constexpr partial_contiguous_tags(partial_contiguous_tags<T> v) : value(v.value), subcount(v.subcount) {}
 
 		partial_contiguous_tags& operator=(partial_contiguous_tags&& v) noexcept = default;
 		partial_contiguous_tags& operator=(partial_contiguous_tags const& v) noexcept = default;

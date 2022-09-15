@@ -46,6 +46,22 @@ relationship{
 	}
 }
 
+relationship {
+	name{parentage}
+	link{
+		object{person}
+		name{child}
+		type{unique}
+	}
+	link{
+		object{person}
+		name{bio_parent}
+		type{many}
+		index_storage{array}
+		multiple{2}{distinct}
+	}
+}
+
 query{
 	name{q_all_owner_ages}
 	parameters{}
@@ -65,3 +81,36 @@ query{
 	}
 	select{car.resale_value as rv, car.id from @from_person join car_ownership join car}
 }
+
+query{
+	name{q_all_owner_ages_plus}
+	parameters{}
+	select{person.age, person.id from car join+ car_ownership join+ person}
+}
+
+query{
+	name{rev_car_from_owner_plus}
+	parameters{}
+	select{car.resale_value as rv, car.id from person join+ car_ownership join car}
+}
+
+query{
+	name{grandparents}
+	parameters{
+		from_person{person_id}
+	}
+	select{gp.id as grandparent, par.id as parent from @from_person join on child parentage, join on bio_parent person as par,
+		join on child parentage, join on bio_parent person as gp}
+}
+
+query{
+	name{grandchildren}
+	parameters{
+		from_person{person_id}
+		age_filter{int32_t}
+	}
+	select{gch.id as grandchild, ch.id as child from @from_person join on bio_parent parentage, join on child person as ch,
+			join on bio_parent parentage, join on child person as gch
+		where @gch.age < @age_filter }
+}
+

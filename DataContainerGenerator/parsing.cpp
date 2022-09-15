@@ -1540,10 +1540,9 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 									char const* bracket_end = advance_to_closing_square_bracket(at_end + 1, where_end);
 
 									result.where_conditional += "m_container."
-										+ slot.actual_table->name + ".m_"
-										+ prop.name
-										+ ".vptr(" + std::string(at_end + 1, bracket_end) + ")["
-										+ slot.internally_named_as + ".index()]";
+										+ slot.actual_table->name + "_get_"
+										+ prop.name + "(" + slot.internally_named_as + ", "
+										+ std::string(at_end + 1, bracket_end) + ")";
 									at_end = bracket_end + 1;
 								} else {
 									err.add(std::string("query on line ") + std::to_string(def.line)
@@ -1553,9 +1552,9 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 
 							} else {
 								result.where_conditional += "m_container."
-									+ slot.actual_table->name + ".m_"
+									+ slot.actual_table->name + "_get_"
 									+ prop.name
-									+ ".vptr()[" + slot.internally_named_as + ".index()]";
+									+ "(" + slot.internally_named_as + ")";
 							}
 							found = true;
 						}
@@ -1563,9 +1562,9 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 					for(auto& prop : slot.actual_table->indexed_objects) {
 						if(prop.property_name == at_value.name && !found) {
 							result.where_conditional += "m_container."
-								+ slot.actual_table->name + ".m_"
+								+ slot.actual_table->name + "_get_"
 								+ prop.property_name
-								+ ".vptr()[" + slot.internally_named_as + ".index()]";
+								+ "(" + slot.internally_named_as + ")";
 							found = true;
 						}
 					}
@@ -1588,10 +1587,10 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 							char const* bracket_end = advance_to_closing_square_bracket(at_end + 1, where_end);
 
 							result.where_conditional += "m_container."
-								+ val.derived_from_slot->actual_table->name + ".m_"
+								+ val.derived_from_slot->actual_table->name + "_get_"
 								+ val.from_property->name
-								+ ".vptr(" + std::string(at_end + 1, bracket_end) + ")["
-								+ val.derived_from_slot->internally_named_as + ".index()]";
+								+ "(" + val.derived_from_slot->internally_named_as + ", " 
+								+ std::string(at_end + 1, bracket_end) + ")";
 							at_end = bracket_end + 1;
 						} else {
 							err.add(std::string("query on line ") + std::to_string(def.line)
@@ -1601,9 +1600,9 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 
 					} else {
 						result.where_conditional += "m_container."
-							+ val.derived_from_slot->actual_table->name + ".m_"
+							+ val.derived_from_slot->actual_table->name + "_get_"
 							+ (val.from_link ? val.from_link->property_name : (val.from_property ? val.from_property->name : std::string("")))
-							+ ".vptr()[" + val.derived_from_slot->internally_named_as + ".index()]";
+							+ "(" + val.derived_from_slot->internally_named_as + ")";
 						found = true;
 					}
 				}

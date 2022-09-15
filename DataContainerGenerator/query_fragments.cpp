@@ -446,18 +446,13 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 			} else {
 				o + "if(!bool(v))" + block{
 					o + "internal_reset_v@index@();";
-					for(int32_t k = i + 1; k < pdef.table_slots.size(); ++k) {
-						if(pdef.table_slots[k].joined_to < &table) {
-							o + substitute{ "k_index", std::to_string(k) };
-							o + "internal_reset_v@k_index@();";
-						}
-					}
 					o + "return true;";
 				};
 			}
 			if(!table.is_parameter_type) {
 				o + "@fname@ = v;";
 			}
+			o + "return ";
 			for(int32_t j = i + 1; j < pdef.table_slots.size(); ++j) {
 				if(pdef.table_slots[j].joined_to <= &table) {
 					auto& ts = pdef.table_slots[j];
@@ -469,115 +464,68 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 					o + substitute{ "next_index", std::to_string(j) };
 					o + substitute{ "next_name", pdef.table_slots[j].internally_named_as };
 
+					o + "[&](){";
+
 					if(ts.actual_table->is_relationship) {
 						if(ts.joind_by_link->index == index_type::at_most_one) {
-							o + "if(! internal_set_v@next_index@(m_container.@par_obj@_get_@cobj@_as_@lname@(@par_name@)) )" + block{
-								for(int32_t k = i + 1; k < j; ++k) {
-									if(pdef.table_slots[k].joined_to <= &table) {
-										o + substitute{ "k_index", std::to_string(k) };
-										o + "internal_reset_v@k_index@();";
-									}
-								}
-								o + "@fname@ = @obj@_id();";
-								o + "return false;";
-							};
+							o + "return internal_set_v@next_index@(m_container.@par_obj@_get_@cobj@_as_@lname@(@par_name@));";
 
 						} else if(ts.joind_by_link->index == index_type::many) {
 							if(ts.joind_by_link->ltype == list_type::list) {
 								o + "auto head = m_container.@cobj@.m_head_back_@lname@.vptr()[@par_name@.index()];";
-								o + "if(! internal_set_v@next_index@(head) )" + block{
-									for(int32_t k = i + 1; k < j; ++k) {
-										if(pdef.table_slots[k].joined_to <= &table) {
-											o + substitute{ "k_index", std::to_string(k) };
-											o + "internal_reset_v@k_index@();";
-										}
-									}
-									o + "@fname@ = @obj@_id();";
-									o + "return false;";
+								o + "if(!bool(head)) return internal_set_v@next_index@(@obj@_id());";
+								o + "for( ; bool(head); head = m_container.@obj@.m_link_@lname@.vptr()[@fname@.index()].right)" + block{
+									o + "if(internal_set_v@next_index@(head))" + block{
+										o + "return true;";
+									};
 								};
+								o + "return false;";
 							} else {
 								o + "auto range = m_container.@par_obj@_range_of_@cobj@_as_@lname@(@par_name@);";
 								o + "m_index_into_@next_name@ = 0;";
 								o + "m_size_of_@next_name@ = int32_t(range.second - range.first);";
 								o + "if(m_size_of_@next_name@ == 0)" + block{
-									o + "if(! internal_set_v@next_index@( @cobj@_id() ) )" + block{
-										for(int32_t k = i + 1; k < j; ++k) {
-											if(pdef.table_slots[k].joined_to <= &table) {
-												o + substitute{ "k_index", std::to_string(k) };
-												o + "internal_reset_v@k_index@();";
-											}
-										}
-										o + "@fname@ = @obj@_id();";
-										o + "return false;";
-									};
+									o + "return internal_set_v@next_index@( @cobj@_id() );";
 								} +append{ "else" } +block{
-									o + "if(! internal_set_v@next_index@( *range.first ) )" + block{
-										for(int32_t k = i + 1; k < j; ++k) {
-											if(pdef.table_slots[k].joined_to <= &table) {
-												o + substitute{ "k_index", std::to_string(k) };
-												o + "internal_reset_v@k_index@();";
-											}
-										}
-										o + "@fname@ = @obj@_id();";
-										o + "return false;";
+									o + "for( ; m_index_into_@next_name@ < m_size_of_@next_name@ ; ++ m_index_into_@next_name@)" + block{
+										o + "if(internal_set_v@next_index@( *(range.first + m_index_into_@next_name@) ))" + block{
+											o + "return true;";
+										};
 									};
+									o + "return false;";
 								};
 							}
 						} else { // type none
+							o + "bool found_one = false;";
 							o + "for(uint32_t i = 0; i < m_container.@cobj@_size(); ++i)" + block{
 								o + "if(m_container.@cobj@_get_@lname@(@cobj@_id(@cobj@_id::value_base_t(i))) == @par_name@)" + block{
-									o + "if(! internal_set_v@next_index@( @cobj@_id(@cobj@_id::value_base_t(i)) ) )" + block{
-										for(int32_t k = i + 1; k < j; ++k) {
-											if(pdef.table_slots[k].joined_to <= &table) {
-												o + substitute{ "k_index", std::to_string(k) };
-												o + "internal_reset_v@k_index@();";
-											}
-										}
-										o + "@fname@ = @obj@_id();";
-										o + "return false;";
+									o + "found_one = true;";
+									o + "if(internal_set_v@next_index@( @cobj@_id(@cobj@_id::value_base_t(i)) ) )" + block{
+										o + "return true;";
 									};
 								};
 							};
-							o + "if(! internal_set_v@next_index@( @cobj@_id() ) )" + block{
-								for(int32_t k = i + 1; k < j; ++k) {
-									if(pdef.table_slots[k].joined_to <= &table) {
-										o + substitute{ "k_index", std::to_string(k) };
-										o + "internal_reset_v@k_index@();";
-									}
-								}
-								o + "@fname@ = @obj@_id();";
-								o + "return false;";
-							};
+							o + "if(!found_one) return internal_set_v@next_index@( @cobj@_id() );";
 						}
 					} else {
 						if(ts.joind_by_link->multiplicity == 1) {
-							o + "if(! internal_set_v@next_index@( m_container.@par_obj@_get_@lname@(@par_name@) ) )" + block{
-								for(int32_t k = i + 1; k < j; ++k) {
-									if(pdef.table_slots[k].joined_to <= &table) {
-										o + substitute{ "k_index", std::to_string(k) };
-										o + "internal_reset_v@k_index@();";
-									}
-								}
-								o + "@fname@ = @obj@_id();";
-								o + "return false;";
-							};
+							o + "return internal_set_v@next_index@( m_container.@par_obj@_get_@lname@(@par_name@) );";
 						} else {
+							o + substitute{ "mul", std::to_string(ts.joind_by_link->multiplicity) };
 							o + "m_index_into_@next_name@ = 0;";
-							o + "if(! internal_set_v@next_index@( m_container.@par_obj@_get_@lname@(@par_name@, 0) )" + block{
-								for(int32_t k = i + 1; k < j; ++k) {
-									if(pdef.table_slots[k].joined_to <= &table) {
-										o + substitute{ "k_index", std::to_string(k) };
-										o + "internal_reset_v@k_index@();";
-									}
-								}
-								o + "@fname@ = @obj@_id();";
-								o + "return false;";
+							o + "for( ; m_index_into_@next_name@ < @mul@; ++m_index_into_@next_name@)" + block{
+								o + "if(internal_set_v@next_index@( m_container.@par_obj@_get_@lname@(@par_name@, m_index_into_@next_name@) ) )" + block{
+									o + "return true;";
+								};
 							};
+							o + "return false;";
 						}
 					}
+
+					o + "}() && ";
 				}
 			}
-			o + "return true;";
+			o + "true;";
 			
 		};
 

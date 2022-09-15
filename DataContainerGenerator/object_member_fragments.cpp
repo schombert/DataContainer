@@ -1938,7 +1938,7 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 
 void primary_key_getter_setter_text(basic_builder & o, bool as_multiple) {
 	o + "DCON_RELEASE_INLINE @rel@_id @prop_type@_get_@rel@@as_suffix@(@prop_type@_id id) const noexcept" + block{
-		o + "return @rel@_id(@rel@_id::value_base_t(id.index()));";
+		o + "return (id.value <= @rel@.size_used) ? @rel@_id(@rel@_id::value_base_t(id.index())) : @rel@_id();";
 	};
 
 	o + "#ifndef DCON_NO_VE";
@@ -2682,7 +2682,14 @@ basic_builder& make_object_member_declarations(basic_builder& o, file_def const&
 				"_id(" + obj.primary_key.points_to->name + "_id::value_base_t(id.index()))) && (";
 			for(auto& iob : obj.indexed_objects) {
 				if(obj.primary_key != iob) {
-					temp += "bool(@obj@.m_" + iob.property_name + ".vptr()[id.index()]) || ";
+					if(iob.multiplicity == 1) {
+						temp += "bool(@obj@.m_" + iob.property_name + ".vptr()[id.index()]) || ";
+					} else {
+						for(int32_t i = 0; i < iob.multiplicity; ++i) {
+							o + substitute{ "mul", std::to_string(i) };
+							temp += "bool(@obj@.m_" + iob.property_name + ".vptr()[id.index()][@mul@]) || ";
+						}
+					}
 				}
 			}
 			temp += "false);";

@@ -2785,7 +2785,7 @@ namespace dcon {
 		}
 		#endif
 		DCON_RELEASE_INLINE relate_same_id thingyA_get_relate_same_as_left(thingyA_id id) const noexcept {
-			return relate_same_id(relate_same_id::value_base_t(id.index()));
+			return (id.value <= relate_same.size_used) ? relate_same_id(relate_same_id::value_base_t(id.index())) : relate_same_id();
 		}
 		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::contiguous_tags<relate_same_id> thingyA_get_relate_same_as_left(ve::contiguous_tags<thingyA_id> id) const noexcept {
@@ -2804,7 +2804,7 @@ namespace dcon {
 			}
 		}
 		DCON_RELEASE_INLINE relate_in_array_id thingyA_get_relate_in_array_as_left(thingyA_id id) const noexcept {
-			return relate_in_array_id(relate_in_array_id::value_base_t(id.index()));
+			return (id.value <= relate_in_array.size_used) ? relate_in_array_id(relate_in_array_id::value_base_t(id.index())) : relate_in_array_id();
 		}
 		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::contiguous_tags<relate_in_array_id> thingyA_get_relate_in_array_as_left(ve::contiguous_tags<thingyA_id> id) const noexcept {
@@ -2823,7 +2823,7 @@ namespace dcon {
 			}
 		}
 		DCON_RELEASE_INLINE relate_in_array_id thingyA_get_relate_in_array(thingyA_id id) const noexcept {
-			return relate_in_array_id(relate_in_array_id::value_base_t(id.index()));
+			return (id.value <= relate_in_array.size_used) ? relate_in_array_id(relate_in_array_id::value_base_t(id.index())) : relate_in_array_id();
 		}
 		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::contiguous_tags<relate_in_array_id> thingyA_get_relate_in_array(ve::contiguous_tags<thingyA_id> id) const noexcept {
@@ -2859,7 +2859,7 @@ namespace dcon {
 			relate_in_array_set_right(relate_in_array_id(relate_in_array_id::value_base_t(ref_id.index())), val);
 		}
 		DCON_RELEASE_INLINE relate_in_list_id thingyA_get_relate_in_list_as_left(thingyA_id id) const noexcept {
-			return relate_in_list_id(relate_in_list_id::value_base_t(id.index()));
+			return (id.value <= relate_in_list.size_used) ? relate_in_list_id(relate_in_list_id::value_base_t(id.index())) : relate_in_list_id();
 		}
 		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::contiguous_tags<relate_in_list_id> thingyA_get_relate_in_list_as_left(ve::contiguous_tags<thingyA_id> id) const noexcept {
@@ -2878,7 +2878,7 @@ namespace dcon {
 			}
 		}
 		DCON_RELEASE_INLINE relate_in_list_id thingyA_get_relate_in_list(thingyA_id id) const noexcept {
-			return relate_in_list_id(relate_in_list_id::value_base_t(id.index()));
+			return (id.value <= relate_in_list.size_used) ? relate_in_list_id(relate_in_list_id::value_base_t(id.index())) : relate_in_list_id();
 		}
 		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::contiguous_tags<relate_in_list_id> thingyA_get_relate_in_list(ve::contiguous_tags<thingyA_id> id) const noexcept {
