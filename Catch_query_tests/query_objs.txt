@@ -23,6 +23,11 @@ object{
 		name{age}
 		type{int32_t}
 	}
+
+	property{
+		name{wealth}
+		type{float}
+	}
 }
 
 relationship{
@@ -112,5 +117,31 @@ query{
 	select{gch.id as grandchild, ch.id as child from @from_person join on bio_parent parentage, join on child person as ch,
 			join on bio_parent parentage, join on child person as gch
 		where @gch.age < @age_filter }
+}
+
+query{
+	name{group_grandchildren}
+	parameters{
+		age_filter{int32_t}
+	}
+	select{base.id as grandparent, count(gch.id as count_gc), max(gch.age as max_age), gch.wealth
+		from person as base join on bio_parent parentage, join on child person as ch,
+			join on bio_parent parentage, join on child person as gch
+		where @gch.age < @age_filter group base}
+}
+
+query{
+	name{sum_car_value}
+	parameters{
+		from_person{person_id}
+	}
+	select{sum(car.resale_value as rv_sum) from @from_person join car_ownership join car group from_person}
+}
+
+query{
+	name{pairs_of_cars}
+	select{person.id, car_a.id, car_b.id
+		from person join car_ownership join car as car_a
+			person.join car_ownership join car as car_b}
 }
 

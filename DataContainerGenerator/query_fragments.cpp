@@ -126,20 +126,15 @@ basic_builder& make_query_iterator_declarations(basic_builder& o, prepared_query
 		o + "public:";
 
 		o + "query_@name@_iterator(data_container& c, query_@name@_instance& p) : m_container(c), m_parameters(p)" + block{
-			if(pdef.table_slots.size() > 0) {
-				o + substitute{ "fname", pdef.table_slots[0].internally_named_as };
-				o + substitute{ "obj", pdef.table_slots[0].actual_table->name };
-				if(pdef.table_slots[0].is_parameter_type) {
-					o + "if(!internal_set_v0(@fname@))" + block{
-						o + "internal_increment_to_result();";
-					};
-				} else {
-					o + "if(m_container.@obj@_size() > 0)" + block{
-						o + "if(!internal_set_v0(@obj@_id(@obj@_id::value_base_t(0))) )" + block{
-							o + "internal_increment_to_result();";
-						};
-					};
-				}
+			o + substitute{ "fname", pdef.table_slots[0].internally_named_as };
+			o + substitute{ "obj", pdef.table_slots[0].actual_table->name };
+
+			if(pdef.table_slots[0].is_parameter_type) {
+				o + "internal_init(@fname@);";
+			} else {
+				o + "if(m_container.@obj@_size() > 0)" + block{
+					o + "internal_init(@obj@_id(@obj@_id::value_base_t(0)));";
+				};
 			}
 		};
 		o.declaration_mode = true;
@@ -188,21 +183,16 @@ basic_builder& make_query_iterator_declarations(basic_builder& o, prepared_query
 		o + "public:";
 
 		o + "query_@name@_const_iterator(data_container const& c, query_@name@_const_instance& p) : m_container(c), m_parameters(p)" + block{
-			if(pdef.table_slots.size() > 0) {
-				o + substitute{ "fname", pdef.table_slots[0].internally_named_as };
-				o + substitute{ "obj", pdef.table_slots[0].actual_table->name };
-				if(pdef.table_slots[0].is_parameter_type) {
-					o + "if(!internal_set_v0(@fname@))" + block{
-						o + "internal_increment_to_result();";
-					};
-				} else {
-					o + "if(m_container.@obj@_size() > 0)" + block{
-						o + "if(!internal_set_v0(@obj@_id(@obj@_id::value_base_t(0))) )" + block{
-							o + "internal_increment_to_result();";
-						};
-					};
-				}
-			}
+			o + substitute{ "fname", pdef.table_slots[0].internally_named_as };
+			o + substitute{ "obj", pdef.table_slots[0].actual_table->name };
+
+			if(pdef.table_slots[0].is_parameter_type) {
+				o + "internal_init(@fname@);";
+			} else {
+				o + "if(m_container.@obj@_size() > 0)" + block{
+					o + "internal_init(@obj@_id(@obj@_id::value_base_t(0)));";
+				};
+			}			
 		};
 		o.declaration_mode = true;
 		make_query_iterator_body(o, pdef, "", true);
@@ -222,12 +212,12 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 	
 	if(is_const) {
 		o + "auto @namesp@operator++() -> query_@name@_const_iterator&" + block{
-			o + "internal_increment_to_result();";
+			o + "internal_increment_to_result(true);";
 			o + "return *this;";
 		};
 	} else {
 		o + "auto @namesp@operator++() -> query_@name@_iterator&" + block{
-			o + "internal_increment_to_result();";
+			o + "internal_increment_to_result(true);";
 			o + "return *this;";
 		};
 	}
@@ -293,14 +283,14 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 				o + substitute{ "int_type", agg.derived_from_slot->actual_table->name };
 				o + substitute{ "agg", agg.aggregate_name };
 
-				o + "m_@pname@ = m_container.@int_type@.m_@link_name@.vptr()[@int_name@.index()];";
+				o + "m_@pname@ = m_container.@int_type@_get_@link_name@(@int_name@);";
 			} else if(agg.from_property) {
 				o + substitute{ "prop_name", agg.from_property->name };
 				o + substitute{ "int_name", agg.derived_from_slot->internally_named_as };
 				o + substitute{ "int_type", agg.derived_from_slot->actual_table->name };
 				o + substitute{ "agg", agg.aggregate_name };
 
-				o + "m_@pname@ = m_container.@int_type@.m_@prop_name@.vptr()[@int_name@.index()];";
+				o + "m_@pname@ = m_container.@int_type@_get_@prop_name@(@int_name@);";
 			}
 		}
 		for(auto& mm : pdef.exposed_min_max_terms) {
@@ -326,37 +316,63 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 			if(agg.aggregate_name == "count") {
 				o + "++m_@pname@;";
 			} else if(agg.aggregate_name == "std::min" || agg.aggregate_name == "min") {
-				o + "if(bool(@int_name@) && m_container.@int_type@.m_@prop_name@.vptr()[@int_name@.index()] < m_@pname@)" + block{
+				o + "if(bool(@int_name@) && m_container.@int_type@_get_@prop_name@(@int_name@.index) < m_@pname@)" + block{
 					for(auto& mm : pdef.exposed_min_max_terms) {
 						o + substitute{ "mm_name", mm.exposed_name };
 						o + substitute{ "mm_int", mm.derived_from_slot->internally_named_as };
 						o + "m_@mm_name@ = @mm_int@;";
 					}
-					o + "m_@pname@ = m_container.@int_type@.m_@prop_name@.vptr()[@int_name@.index()];";
+					o + "m_@pname@ = m_container.@int_type@_get_@prop_name@(@int_name@);";
 				};
 			} else if(agg.aggregate_name == "std::max" || agg.aggregate_name == "max") {
-				o + "if(bool(@int_name@) && m_container.@int_type@.m_@prop_name@.vptr()[@int_name@.index()] > m_@pname@)" + block{
+				o + "if(bool(@int_name@) && m_@pname@ < m_container.@int_type@_get_@prop_name@(@int_name@) )" + block{
 					for(auto& mm : pdef.exposed_min_max_terms) {
 						o + substitute{ "mm_name", mm.exposed_name };
 						o + substitute{ "mm_int", mm.derived_from_slot->internally_named_as };
 						o + "m_@mm_name@ = @mm_int@;";
 					}
-					o + "m_@pname@ = m_container.@int_type@.m_@prop_name@.vptr()[@int_name@.index()];";
+					o + "m_@pname@ = m_container.@int_type@_get_@prop_name@(@int_name@);";
 				};
 			} else {
 				o + substitute{ "agg", agg.aggregate_name };
-				o + "m_@pname@ = @agg@(m_@pname@, m_container.@int_type@.m_@prop_name@.vptr()[@int_name@.index()]);";
+				o + "m_@pname@ = @agg@(m_@pname@, m_container.@int_type@_get_@prop_name@(@int_name@));";
 			}
 		}
 	};
-	o + "void @namesp@internal_increment_to_result()" + block{
+	o + substitute{ "first_slot_type",  pdef.table_slots[0].actual_table->name };
+	o + "void @namesp@internal_init(@first_slot_type@_id first_value)" + block{
+		o + substitute{ "last_index", std::to_string(pdef.table_slots.size() - 1)};
+		o + substitute{ "first_id",  pdef.table_slots[0].internally_named_as };
+		o + substitute{ "where",  pdef.where_conditional };
+
+		o + "if(internal_set_v0(first_value))" + block{
+			if(pdef.where_conditional.length() > 0) {
+				o + "if(@where@)" + block{
+					if(pdef.has_group) {
+						o + "internal_set_aggregates();";
+						o + "internal_increment_to_result(false);";
+					}
+					o + "return;";
+				};
+			} else {
+				if(pdef.has_group) {
+					o + "internal_set_aggregates();";
+					o + "internal_increment_to_result(false);";
+				}
+				o + "return;";
+			}
+		};
+		o + "internal_increment_to_result(true);";
+	};
+
+	o + (pdef.has_group ? "void @namesp@internal_increment_to_result(bool as_first)" : "void @namesp@internal_increment_to_result(bool)") + block{
 		o + substitute{ "last_index", std::to_string(pdef.table_slots.size() - 1)};
 		o + substitute{ "first_id",  pdef.table_slots[0].internally_named_as };
 		o + substitute{ "where",  pdef.where_conditional };
 		if(pdef.table_slots.size() > 0) {
 			if(pdef.has_group) {
-				o + "internal_reset_aggregates();";
-				o + "bool first_time = true;";
+				o + "if(as_first) internal_reset_aggregates();";
+				o + "bool first_time = as_first;";
 				o + "while(bool(@first_id@))" + block{
 					o + "bool hit_group = false;";
 					

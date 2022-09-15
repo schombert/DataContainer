@@ -2,6 +2,11 @@
 
 #include "catch.hpp"
 #include "common_types.hpp"
+
+float sum(float a, float b) {
+	return a + b;
+}
+
 #include "query_objs.hpp"
 
 TEST_CASE("simplest query", "[query_tests]") {
@@ -443,4 +448,274 @@ TEST_CASE("find gp", "[query_tests]") {
 		REQUIRE(tc2);
 		REQUIRE(!tc3);
 	}
+}
+
+
+TEST_CASE("summarize gc", "[query_tests]") {
+	auto ptr = std::make_unique<dcon::data_container>();
+
+	auto gp1 = ptr->create_person();
+	auto gp2 = ptr->create_person();
+	auto gp3 = ptr->create_person();
+	auto gp4 = ptr->create_person();
+	auto gp5 = ptr->create_person();
+	auto gp6 = ptr->create_person();
+	auto gp7 = ptr->create_person();
+	auto gp8 = ptr->create_person();
+	auto gp9 = ptr->create_person();
+	auto gp10 = ptr->create_person();
+
+	auto p1 = ptr->create_person();
+	auto p2 = ptr->create_person();
+	auto p3 = ptr->create_person();
+	auto p4 = ptr->create_person();
+	auto p5 = ptr->create_person();
+	auto p6 = ptr->create_person();
+	auto p7 = ptr->create_person();
+
+	auto c1 = ptr->create_person();
+	auto c2 = ptr->create_person();
+	auto c3 = ptr->create_person();
+	auto c4 = ptr->create_person();
+	auto c5 = ptr->create_person();
+	auto c6 = ptr->create_person();
+	auto c7 = ptr->create_person();
+	auto c8 = ptr->create_person();
+
+	ptr->person_set_age(c1, 18);
+	ptr->person_set_age(c2, 20);
+	ptr->person_set_age(c3, 24);
+	ptr->person_set_age(c4, 28);
+	ptr->person_set_age(c5, 32);
+	ptr->person_set_age(c6, 44);
+	ptr->person_set_age(c7, 48);
+	ptr->person_set_age(c8, 54);
+
+	ptr->person_set_wealth(c1, 1.8f);
+	ptr->person_set_wealth(c2, 20.0f);
+	ptr->person_set_wealth(c3, 24.0f);
+	ptr->person_set_wealth(c4, 2.8f);
+	ptr->person_set_wealth(c5, 0.32f);
+	ptr->person_set_wealth(c6, 4.4f);
+	ptr->person_set_wealth(c7, 48.0f);
+	ptr->person_set_wealth(c8, 5.4f);
+
+
+	ptr->try_create_parentage(c1, p1, p2);
+	ptr->try_create_parentage(c2, p1, p2);
+
+	ptr->try_create_parentage(c3, p3, p4);
+	ptr->try_create_parentage(c4, p3, p4);
+
+	ptr->try_create_parentage(c5, p5, p4);
+
+	ptr->try_create_parentage(c6, p6, p7);
+	ptr->try_create_parentage(c7, p1, gp1);
+	ptr->try_create_parentage(c8, p5, gp2);
+
+	ptr->try_create_parentage(p1, gp1, gp2);
+	ptr->try_create_parentage(p2, gp3, gp4);
+	ptr->try_create_parentage(p3, gp5, gp6);
+	ptr->try_create_parentage(p4, gp1, gp3);
+	ptr->try_create_parentage(p5, gp7, gp8);
+	ptr->try_create_parentage(p6, gp3, gp9);
+	ptr->try_create_parentage(p7, gp10, gp5);
+
+	int32_t count = 0;
+	for(auto& q : ptr->query_group_grandchildren(100)) {
+		REQUIRE(q.get_grandparent().id.index() == count);
+		switch(count) {
+			case 0:
+				REQUIRE(q.get_count_gc() == 6);
+				REQUIRE(q.get_max_age() == 48);
+				REQUIRE(q.get_gch_wealth() == 48.0f);
+				break;
+			case 1:
+				REQUIRE(q.get_count_gc() == 3);
+				REQUIRE(q.get_max_age() == 48);
+				REQUIRE(q.get_gch_wealth() == 48.0f);
+				break;
+			case 2:
+				REQUIRE(q.get_count_gc() == 6);
+				REQUIRE(q.get_max_age() == 44);
+				REQUIRE(q.get_gch_wealth() == 4.4f);
+				break;
+			case 3:
+				REQUIRE(q.get_count_gc() == 2);
+				REQUIRE(q.get_max_age() == 20);
+				REQUIRE(q.get_gch_wealth() == 20.0f);
+				break;
+			case 4:
+				REQUIRE(q.get_count_gc() == 3);
+				REQUIRE(q.get_max_age() == 44);
+				REQUIRE(q.get_gch_wealth() == 4.4f);
+				break;
+			case 5:
+				REQUIRE(q.get_count_gc() == 2);
+				REQUIRE(q.get_max_age() == 28);
+				REQUIRE(q.get_gch_wealth() == 2.8f);
+				break;
+			case 6:
+				REQUIRE(q.get_count_gc() == 2);
+				REQUIRE(q.get_max_age() == 54);
+				REQUIRE(q.get_gch_wealth() == 5.4f);
+				break;
+			case 7:
+				REQUIRE(q.get_count_gc() == 2);
+				REQUIRE(q.get_max_age() == 54);
+				REQUIRE(q.get_gch_wealth() == 5.4f);
+				break;
+			case 8:
+				REQUIRE(q.get_count_gc() == 1);
+				REQUIRE(q.get_max_age() == 44);
+				REQUIRE(q.get_gch_wealth() == 4.4f);
+				break;
+			case 9:break;
+				REQUIRE(q.get_count_gc() == 1);
+				REQUIRE(q.get_max_age() == 44);
+				REQUIRE(q.get_gch_wealth() == 4.4f);
+				break;
+		}
+		count++;
+	}
+
+	REQUIRE(count == 10);
+
+	count = 0;
+	for(auto& q : ptr->query_group_grandchildren(40)) {
+		REQUIRE(q.get_grandparent().id.index() == count);
+		switch(count) {
+			case 0:
+				REQUIRE(q.get_count_gc() == 5);
+				REQUIRE(q.get_max_age() == 32);
+				REQUIRE(q.get_gch_wealth() == 0.32f);
+				break;
+			case 1:
+				REQUIRE(q.get_count_gc() == 2);
+				REQUIRE(q.get_max_age() == 20);
+				REQUIRE(q.get_gch_wealth() == 20.0f);
+				break;
+			case 2:
+				REQUIRE(q.get_count_gc() == 5);
+				REQUIRE(q.get_max_age() == 32);
+				REQUIRE(q.get_gch_wealth() == 0.32f);
+				break;
+			case 3:
+				REQUIRE(q.get_count_gc() == 2);
+				REQUIRE(q.get_max_age() == 20);
+				REQUIRE(q.get_gch_wealth() == 20.0f);
+				break;
+			case 4:
+				REQUIRE(q.get_count_gc() == 2);
+				REQUIRE(q.get_max_age() == 28);
+				REQUIRE(q.get_gch_wealth() == 2.8f);
+				break;
+			case 5:
+				REQUIRE(q.get_count_gc() == 2);
+				REQUIRE(q.get_max_age() == 28);
+				REQUIRE(q.get_gch_wealth() == 2.8f);
+				break;
+			case 6:
+				REQUIRE(q.get_count_gc() == 1);
+				REQUIRE(q.get_max_age() == 32);
+				REQUIRE(q.get_gch_wealth() == 0.32f);
+				break;
+			case 7:
+				REQUIRE(q.get_count_gc() == 1);
+				REQUIRE(q.get_max_age() == 32);
+				REQUIRE(q.get_gch_wealth() == 0.32f);
+				break;
+		}
+		count++;
+	}
+
+	REQUIRE(count == 8);
+}
+
+TEST_CASE("sum of car_values", "[query_tests]") {
+	auto ptr = std::make_unique<dcon::data_container>();
+
+	auto cara = ptr->create_car();
+	auto carb = ptr->create_car();
+	auto carc = ptr->create_car();
+	auto card = ptr->create_car();
+	auto care = ptr->create_car();
+
+	auto pa = ptr->create_person();
+	auto pb = ptr->create_person();
+	auto pc = ptr->create_person();
+
+	auto r1 = ptr->try_create_car_ownership(pa, carb);
+	auto r2 = ptr->try_create_car_ownership(pb, cara);
+	auto r3 = ptr->try_create_car_ownership(pb, card);
+	auto r4 = ptr->try_create_car_ownership(pc, care);
+
+	ptr->car_set_resale_value(cara, 2.0f);
+	ptr->car_set_resale_value(card, 3.0f);
+
+	int32_t count = 0;
+	for(auto& q : ptr->query_sum_car_value(pb)) {
+		++count;
+		REQUIRE(q.get_rv_sum() == 5.0f);
+	}
+	REQUIRE(count == 1);
+
+	count = 0;
+	for(auto& q : ptr->query_sum_car_value(pa)) {
+		++count;
+		REQUIRE(q.get_rv_sum() == 0.0f);
+	}
+	REQUIRE(count == 1);
+}
+
+TEST_CASE("pairs of cars", "[query_tests]") {
+	auto ptr = std::make_unique<dcon::data_container>();
+
+	auto cara = ptr->create_car();
+	auto carb = ptr->create_car();
+	auto carc = ptr->create_car();
+	auto card = ptr->create_car();
+	auto care = ptr->create_car();
+
+	auto pa = ptr->create_person();
+	auto pb = ptr->create_person();
+	auto pc = ptr->create_person();
+
+	auto r1 = ptr->try_create_car_ownership(pa, carb);
+	auto r2 = ptr->try_create_car_ownership(pb, cara);
+	auto r3 = ptr->try_create_car_ownership(pb, card);
+	auto r4 = ptr->try_create_car_ownership(pc, care);
+
+	ptr->car_set_resale_value(cara, 2.0f);
+	ptr->car_set_resale_value(card, 3.0f);
+
+	int32_t count = 0;
+	bool ca = false;
+	bool cb = false;
+	bool cc = false;
+	bool cd = false;
+	for(auto& q : ptr->query_pairs_of_cars()) {
+		++count;
+		if(q.get_person_id() == pa) {
+			REQUIRE(q.get_car_a_id() == carb);
+			REQUIRE(q.get_car_b_id() == carb);
+		} else if(q.get_person_id() == pc) {
+			REQUIRE(q.get_car_a_id() == care);
+			REQUIRE(q.get_car_b_id() == care);
+		} else if(q.get_person_id() == pb) {
+			if(q.get_car_a_id() == cara && q.get_car_b_id() == card)
+				ca = true;
+			if(q.get_car_a_id() == cara && q.get_car_b_id() == cara)
+				cb = true;
+			if(q.get_car_a_id() == card && q.get_car_b_id() == card)
+				cc = true;
+			if(q.get_car_a_id() == card && q.get_car_b_id() == cara)
+				cd = true;
+		}
+	}
+	REQUIRE(ca);
+	REQUIRE(cb);
+	REQUIRE(cc);
+	REQUIRE(cd);
+	REQUIRE(count == 6);
 }

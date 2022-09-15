@@ -39,6 +39,7 @@ namespace dcon {
 		bool car_resale_value : 1;
 		bool person : 1;
 		bool person_age : 1;
+		bool person_wealth : 1;
 		bool car_ownership : 1;
 		bool car_ownership_owner : 1;
 		bool car_ownership_owned_car : 1;
@@ -52,6 +53,7 @@ namespace dcon {
 			car_resale_value = false;
 			person = false;
 			person_age = false;
+			person_wealth = false;
 			car_ownership = false;
 			car_ownership_owner = false;
 			car_ownership_owned_car = false;
@@ -382,6 +384,73 @@ namespace dcon {
 			}
 		};
 		
+		class query_group_grandchildren_iterator;
+		class query_group_grandchildren_const_iterator;
+		class query_group_grandchildren_instance {
+			public:
+			data_container& container;
+			int32_t age_filter;
+			query_group_grandchildren_instance(data_container& c , int32_t p0) : container(c) , age_filter(p0) {}
+			query_group_grandchildren_iterator begin();
+			dcon::invalid_iterator_type end() const {
+				return dcon::invalid_iterator_type{};
+			}
+		};
+		class query_group_grandchildren_const_instance {
+			public:
+			data_container const& container;
+			int32_t age_filter;
+			query_group_grandchildren_const_instance(data_container const& c , int32_t p0) : container(c) , age_filter(p0) {}
+			query_group_grandchildren_const_iterator begin();
+			dcon::invalid_iterator_type end() const {
+				return dcon::invalid_iterator_type{};
+			}
+		};
+		
+		class query_sum_car_value_iterator;
+		class query_sum_car_value_const_iterator;
+		class query_sum_car_value_instance {
+			public:
+			data_container& container;
+			person_id from_person;
+			query_sum_car_value_instance(data_container& c , person_id p0) : container(c) , from_person(p0) {}
+			query_sum_car_value_iterator begin();
+			dcon::invalid_iterator_type end() const {
+				return dcon::invalid_iterator_type{};
+			}
+		};
+		class query_sum_car_value_const_instance {
+			public:
+			data_container const& container;
+			person_id from_person;
+			query_sum_car_value_const_instance(data_container const& c , person_id p0) : container(c) , from_person(p0) {}
+			query_sum_car_value_const_iterator begin();
+			dcon::invalid_iterator_type end() const {
+				return dcon::invalid_iterator_type{};
+			}
+		};
+		
+		class query_pairs_of_cars_iterator;
+		class query_pairs_of_cars_const_iterator;
+		class query_pairs_of_cars_instance {
+			public:
+			data_container& container;
+			query_pairs_of_cars_instance(data_container& c ) : container(c)  {}
+			query_pairs_of_cars_iterator begin();
+			dcon::invalid_iterator_type end() const {
+				return dcon::invalid_iterator_type{};
+			}
+		};
+		class query_pairs_of_cars_const_instance {
+			public:
+			data_container const& container;
+			query_pairs_of_cars_const_instance(data_container const& c ) : container(c)  {}
+			query_pairs_of_cars_const_iterator begin();
+			dcon::invalid_iterator_type end() const {
+				return dcon::invalid_iterator_type{};
+			}
+		};
+		
 		class alignas(64) car_class {
 			private:
 			//
@@ -428,6 +497,18 @@ namespace dcon {
 				dtype_age() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(int32_t) <= 64 ? (uint32_t(100) + (uint32_t(64) / uint32_t(sizeof(int32_t))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(int32_t)) - uint32_t(1)) : uint32_t(100))); }
 			}
 			m_age;
+			
+			//
+			// storage space for wealth of type float
+			//
+			struct alignas(64) dtype_wealth {
+				uint8_t padding[(63 + sizeof(float)) & ~uint64_t(63)];
+				float values[(sizeof(float) <= 64 ? (uint32_t(100) + (uint32_t(64) / uint32_t(sizeof(float))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(float)) - uint32_t(1)) : uint32_t(100))];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_wealth() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(float) <= 64 ? (uint32_t(100) + (uint32_t(64) / uint32_t(sizeof(float))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(float)) - uint32_t(1)) : uint32_t(100))); }
+			}
+			m_wealth;
 			
 			uint32_t size_used = 0;
 
@@ -674,6 +755,8 @@ namespace dcon {
 		explicit operator bool() const noexcept { return bool(id); }
 		DCON_RELEASE_INLINE int32_t& get_age() const noexcept;
 		DCON_RELEASE_INLINE void set_age(int32_t v) const noexcept;
+		DCON_RELEASE_INLINE float& get_wealth() const noexcept;
+		DCON_RELEASE_INLINE void set_wealth(float v) const noexcept;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_car_ownership_as_owner(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> range_of_car_ownership_as_owner() const;
@@ -748,6 +831,7 @@ namespace dcon {
 		}
 		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
 		DCON_RELEASE_INLINE int32_t get_age() const noexcept;
+		DCON_RELEASE_INLINE float get_wealth() const noexcept;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_car_ownership_as_owner(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> range_of_car_ownership_as_owner() const;
@@ -1195,6 +1279,40 @@ namespace dcon {
 			ve::store(id, person.m_age.vptr(), values);
 		}
 		#endif
+		//
+		// accessors for person: wealth
+		//
+		DCON_RELEASE_INLINE float const& person_get_wealth(person_id id) const noexcept {
+			return person.m_wealth.vptr()[id.index()];
+		}
+		DCON_RELEASE_INLINE float& person_get_wealth(person_id id) noexcept {
+			return person.m_wealth.vptr()[id.index()];
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE ve::value_to_vector_type<float> person_get_wealth(ve::contiguous_tags<person_id> id) const noexcept {
+			return ve::load(id, person.m_wealth.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<float> person_get_wealth(ve::partial_contiguous_tags<person_id> id) const noexcept {
+			return ve::load(id, person.m_wealth.vptr());
+		}
+		DCON_RELEASE_INLINE ve::value_to_vector_type<float> person_get_wealth(ve::tagged_vector<person_id> id) const noexcept {
+			return ve::load(id, person.m_wealth.vptr());
+		}
+		#endif
+		DCON_RELEASE_INLINE void person_set_wealth(person_id id, float value) noexcept {
+			person.m_wealth.vptr()[id.index()] = value;
+		}
+		#ifndef DCON_NO_VE
+		DCON_RELEASE_INLINE void person_set_wealth(ve::contiguous_tags<person_id> id, ve::value_to_vector_type<float> values) noexcept {
+			ve::store(id, person.m_wealth.vptr(), values);
+		}
+		DCON_RELEASE_INLINE void person_set_wealth(ve::partial_contiguous_tags<person_id> id, ve::value_to_vector_type<float> values) noexcept {
+			ve::store(id, person.m_wealth.vptr(), values);
+		}
+		DCON_RELEASE_INLINE void person_set_wealth(ve::tagged_vector<person_id> id, ve::value_to_vector_type<float> values) noexcept {
+			ve::store(id, person.m_wealth.vptr(), values);
+		}
+		#endif
 		template<typename T>
 		DCON_RELEASE_INLINE void person_for_each_car_ownership_as_owner(person_id id, T&& func) const {
 			if(bool(id)) {
@@ -1593,6 +1711,7 @@ namespace dcon {
 			parentage.size_used = person.size_used - 1;
 			person_remove_all_parentage_as_bio_parent(id_removed);
 			person.m_age.vptr()[id_removed.index()] = int32_t{};
+			person.m_wealth.vptr()[id_removed.index()] = float{};
 			--person.size_used;
 		}
 		
@@ -1608,6 +1727,7 @@ namespace dcon {
 			const uint32_t old_size = person.size_used;
 			if(new_size < old_size) {
 				std::fill_n(person.m_age.vptr() + new_size, old_size - new_size, int32_t{});
+				std::fill_n(person.m_wealth.vptr() + new_size, old_size - new_size, float{});
 				car_ownership_resize(0);
 				parentage_resize(std::min(new_size, parentage.size_used));
 				parentage_resize(0);
@@ -1857,6 +1977,18 @@ namespace dcon {
 		friend internal::query_grandchildren_iterator;
 		internal::query_grandchildren_instance query_grandchildren(person_id from_person, int32_t age_filter) { return internal::query_grandchildren_instance(*this, from_person, age_filter); }
 		internal::query_grandchildren_const_instance query_grandchildren(person_id from_person, int32_t age_filter) const { return internal::query_grandchildren_const_instance(*this, from_person, age_filter); }
+		friend internal::query_group_grandchildren_const_iterator;
+		friend internal::query_group_grandchildren_iterator;
+		internal::query_group_grandchildren_instance query_group_grandchildren(int32_t age_filter) { return internal::query_group_grandchildren_instance(*this, age_filter); }
+		internal::query_group_grandchildren_const_instance query_group_grandchildren(int32_t age_filter) const { return internal::query_group_grandchildren_const_instance(*this, age_filter); }
+		friend internal::query_sum_car_value_const_iterator;
+		friend internal::query_sum_car_value_iterator;
+		internal::query_sum_car_value_instance query_sum_car_value(person_id from_person) { return internal::query_sum_car_value_instance(*this, from_person); }
+		internal::query_sum_car_value_const_instance query_sum_car_value(person_id from_person) const { return internal::query_sum_car_value_const_instance(*this, from_person); }
+		friend internal::query_pairs_of_cars_const_iterator;
+		friend internal::query_pairs_of_cars_iterator;
+		internal::query_pairs_of_cars_instance query_pairs_of_cars() { return internal::query_pairs_of_cars_instance(*this); }
+		internal::query_pairs_of_cars_const_instance query_pairs_of_cars() const { return internal::query_pairs_of_cars_const_instance(*this); }
 
 
 		void reset() {
@@ -1940,6 +2072,7 @@ namespace dcon {
 			result.car_resale_value = true;
 			result.person = true;
 			result.person_age = true;
+			result.person_wealth = true;
 			result.car_ownership = true;
 			result.car_ownership_owner = true;
 			result.car_ownership_owned_car = true;
@@ -1979,6 +2112,11 @@ namespace dcon {
 				dcon::record_header iheader(0, "int32_t", "person", "age");
 				total_size += iheader.serialize_size();
 				total_size += sizeof(int32_t) * person.size_used;
+			}
+			if(serialize_selection.person_wealth) {
+				dcon::record_header iheader(0, "float", "person", "wealth");
+				total_size += iheader.serialize_size();
+				total_size += sizeof(float) * person.size_used;
 			}
 			if(serialize_selection.car_ownership) {
 				dcon::record_header header(0, "uint32_t", "car_ownership", "$size");
@@ -2045,6 +2183,12 @@ namespace dcon {
 				header.serialize(output_buffer);
 				std::memcpy(reinterpret_cast<int32_t*>(output_buffer), person.m_age.vptr(), sizeof(int32_t) * person.size_used);
 				output_buffer += sizeof(int32_t) * person.size_used;
+			}
+			if(serialize_selection.person_wealth) {
+				dcon::record_header header(sizeof(float) * person.size_used, "float", "person", "wealth");
+				header.serialize(output_buffer);
+				std::memcpy(reinterpret_cast<float*>(output_buffer), person.m_wealth.vptr(), sizeof(float) * person.size_used);
+				output_buffer += sizeof(float) * person.size_used;
 			}
 			if(serialize_selection.car_ownership) {
 				dcon::record_header header(sizeof(uint32_t), "uint32_t", "car_ownership", "$size");
@@ -2279,6 +2423,66 @@ namespace dcon {
 									person.m_age.vptr()[i] = int32_t(*(reinterpret_cast<double const*>(input_buffer) + i));
 								}
 								serialize_selection.person_age = true;
+							}
+						}
+						else if(header.is_property("wealth")) {
+							if(header.is_type("float")) {
+								std::memcpy(person.m_wealth.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(person.size_used) * sizeof(float), header.record_size));
+								serialize_selection.person_wealth = true;
+							}
+							else if(header.is_type("int8_t")) {
+								for(uint32_t i = 0; i < std::min(person.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
+									person.m_wealth.vptr()[i] = float(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.person_wealth = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(person.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									person.m_wealth.vptr()[i] = float(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.person_wealth = true;
+							}
+							else if(header.is_type("int16_t")) {
+								for(uint32_t i = 0; i < std::min(person.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
+									person.m_wealth.vptr()[i] = float(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+								}
+								serialize_selection.person_wealth = true;
+							}
+							else if(header.is_type("uint16_t")) {
+								for(uint32_t i = 0; i < std::min(person.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+									person.m_wealth.vptr()[i] = float(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+								}
+								serialize_selection.person_wealth = true;
+							}
+							else if(header.is_type("int32_t")) {
+								for(uint32_t i = 0; i < std::min(person.size_used, uint32_t(header.record_size / sizeof(int32_t))); ++i) {
+									person.m_wealth.vptr()[i] = float(*(reinterpret_cast<int32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.person_wealth = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(person.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									person.m_wealth.vptr()[i] = float(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.person_wealth = true;
+							}
+							else if(header.is_type("int64_t")) {
+								for(uint32_t i = 0; i < std::min(person.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
+									person.m_wealth.vptr()[i] = float(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+								}
+								serialize_selection.person_wealth = true;
+							}
+							else if(header.is_type("uint64_t")) {
+								for(uint32_t i = 0; i < std::min(person.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
+									person.m_wealth.vptr()[i] = float(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+								}
+								serialize_selection.person_wealth = true;
+							}
+							else if(header.is_type("double")) {
+								for(uint32_t i = 0; i < std::min(person.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
+									person.m_wealth.vptr()[i] = float(*(reinterpret_cast<double const*>(input_buffer) + i));
+								}
+								serialize_selection.person_wealth = true;
 							}
 						}
 					} else
@@ -2627,6 +2831,66 @@ namespace dcon {
 								serialize_selection.person_age = true;
 							}
 						}
+						else if(header.is_property("wealth") && mask.person_wealth) {
+							if(header.is_type("float")) {
+								std::memcpy(person.m_wealth.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(person.size_used) * sizeof(float), header.record_size));
+								serialize_selection.person_wealth = true;
+							}
+							else if(header.is_type("int8_t")) {
+								for(uint32_t i = 0; i < std::min(person.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
+									person.m_wealth.vptr()[i] = float(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.person_wealth = true;
+							}
+							else if(header.is_type("uint8_t")) {
+								for(uint32_t i = 0; i < std::min(person.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+									person.m_wealth.vptr()[i] = float(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								}
+								serialize_selection.person_wealth = true;
+							}
+							else if(header.is_type("int16_t")) {
+								for(uint32_t i = 0; i < std::min(person.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
+									person.m_wealth.vptr()[i] = float(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+								}
+								serialize_selection.person_wealth = true;
+							}
+							else if(header.is_type("uint16_t")) {
+								for(uint32_t i = 0; i < std::min(person.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+									person.m_wealth.vptr()[i] = float(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+								}
+								serialize_selection.person_wealth = true;
+							}
+							else if(header.is_type("int32_t")) {
+								for(uint32_t i = 0; i < std::min(person.size_used, uint32_t(header.record_size / sizeof(int32_t))); ++i) {
+									person.m_wealth.vptr()[i] = float(*(reinterpret_cast<int32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.person_wealth = true;
+							}
+							else if(header.is_type("uint32_t")) {
+								for(uint32_t i = 0; i < std::min(person.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+									person.m_wealth.vptr()[i] = float(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								}
+								serialize_selection.person_wealth = true;
+							}
+							else if(header.is_type("int64_t")) {
+								for(uint32_t i = 0; i < std::min(person.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
+									person.m_wealth.vptr()[i] = float(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+								}
+								serialize_selection.person_wealth = true;
+							}
+							else if(header.is_type("uint64_t")) {
+								for(uint32_t i = 0; i < std::min(person.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
+									person.m_wealth.vptr()[i] = float(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+								}
+								serialize_selection.person_wealth = true;
+							}
+							else if(header.is_type("double")) {
+								for(uint32_t i = 0; i < std::min(person.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
+									person.m_wealth.vptr()[i] = float(*(reinterpret_cast<double const*>(input_buffer) + i));
+								}
+								serialize_selection.person_wealth = true;
+							}
+						}
 					} else
 					if(header.is_object("car_ownership") && mask.car_ownership) {
 						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
@@ -2845,6 +3109,12 @@ namespace dcon {
 	DCON_RELEASE_INLINE void person_fat_id::set_age(int32_t v) const noexcept {
 		container.person_set_age(id, v);
 	}
+	DCON_RELEASE_INLINE float& person_fat_id::get_wealth() const noexcept {
+		return container.person_get_wealth(id);
+	}
+	DCON_RELEASE_INLINE void person_fat_id::set_wealth(float v) const noexcept {
+		container.person_set_wealth(id, v);
+	}
 	template<typename T>
 	DCON_RELEASE_INLINE void person_fat_id::for_each_car_ownership_as_owner(T&& func) const {
 		container.person_for_each_car_ownership_as_owner(id, [&, t = this](car_ownership_id i){func(fatten(t->container, i));});
@@ -2901,6 +3171,9 @@ namespace dcon {
 	
 	DCON_RELEASE_INLINE int32_t person_const_fat_id::get_age() const noexcept {
 		return container.person_get_age(id);
+	}
+	DCON_RELEASE_INLINE float person_const_fat_id::get_wealth() const noexcept {
+		return container.person_get_wealth(id);
 	}
 	template<typename T>
 	DCON_RELEASE_INLINE void person_const_fat_id::for_each_car_ownership_as_owner(T&& func) const {
@@ -3043,9 +3316,7 @@ namespace dcon {
 			public:
 			query_q_all_owner_ages_iterator(data_container& c, query_q_all_owner_ages_instance& p) : m_container(c), m_parameters(p) {
 				if(m_container.car_size() > 0) {
-					if(!internal_set_v0(car_id(car_id::value_base_t(0))) ) {
-						internal_increment_to_result();
-					}
+					internal_init(car_id(car_id::value_base_t(0)));
 				}
 			}
 			auto operator++() -> query_q_all_owner_ages_iterator&;
@@ -3056,7 +3327,8 @@ namespace dcon {
 			void internal_reset_aggregates();
 			void internal_set_aggregates();
 			void internal_update_aggregates();
-			void internal_increment_to_result();
+			void internal_init(car_id first_value);
+			void internal_increment_to_result(bool);
 			void internal_reset_v0();
 			bool internal_set_v0(car_id v);
 			bool internal_increment_v0(bool, bool&);
@@ -3085,9 +3357,7 @@ namespace dcon {
 			public:
 			query_q_all_owner_ages_const_iterator(data_container const& c, query_q_all_owner_ages_const_instance& p) : m_container(c), m_parameters(p) {
 				if(m_container.car_size() > 0) {
-					if(!internal_set_v0(car_id(car_id::value_base_t(0))) ) {
-						internal_increment_to_result();
-					}
+					internal_init(car_id(car_id::value_base_t(0)));
 				}
 			}
 			auto operator++() -> query_q_all_owner_ages_const_iterator&;
@@ -3098,7 +3368,8 @@ namespace dcon {
 			void internal_reset_aggregates();
 			void internal_set_aggregates();
 			void internal_update_aggregates();
-			void internal_increment_to_result();
+			void internal_init(car_id first_value);
+			void internal_increment_to_result(bool);
 			void internal_reset_v0();
 			bool internal_set_v0(car_id v);
 			bool internal_increment_v0(bool, bool&);
@@ -3137,9 +3408,7 @@ namespace dcon {
 			public:
 			query_rev_car_from_owner_iterator(data_container& c, query_rev_car_from_owner_instance& p) : m_container(c), m_parameters(p) {
 				if(m_container.person_size() > 0) {
-					if(!internal_set_v0(person_id(person_id::value_base_t(0))) ) {
-						internal_increment_to_result();
-					}
+					internal_init(person_id(person_id::value_base_t(0)));
 				}
 			}
 			auto operator++() -> query_rev_car_from_owner_iterator&;
@@ -3150,7 +3419,8 @@ namespace dcon {
 			void internal_reset_aggregates();
 			void internal_set_aggregates();
 			void internal_update_aggregates();
-			void internal_increment_to_result();
+			void internal_init(person_id first_value);
+			void internal_increment_to_result(bool);
 			void internal_reset_v0();
 			bool internal_set_v0(person_id v);
 			bool internal_increment_v0(bool, bool&);
@@ -3181,9 +3451,7 @@ namespace dcon {
 			public:
 			query_rev_car_from_owner_const_iterator(data_container const& c, query_rev_car_from_owner_const_instance& p) : m_container(c), m_parameters(p) {
 				if(m_container.person_size() > 0) {
-					if(!internal_set_v0(person_id(person_id::value_base_t(0))) ) {
-						internal_increment_to_result();
-					}
+					internal_init(person_id(person_id::value_base_t(0)));
 				}
 			}
 			auto operator++() -> query_rev_car_from_owner_const_iterator&;
@@ -3194,7 +3462,8 @@ namespace dcon {
 			void internal_reset_aggregates();
 			void internal_set_aggregates();
 			void internal_update_aggregates();
-			void internal_increment_to_result();
+			void internal_init(person_id first_value);
+			void internal_increment_to_result(bool);
 			void internal_reset_v0();
 			bool internal_set_v0(person_id v);
 			bool internal_increment_v0(bool, bool&);
@@ -3231,9 +3500,7 @@ namespace dcon {
 			car_id m_tableindex2;
 			public:
 			query_param_car_from_owner_iterator(data_container& c, query_param_car_from_owner_instance& p) : m_container(c), m_parameters(p) {
-				if(!internal_set_v0(m_parameters.from_person)) {
-					internal_increment_to_result();
-				}
+				internal_init(m_parameters.from_person);
 			}
 			auto operator++() -> query_param_car_from_owner_iterator&;
 			bool operator==(dcon::invalid_iterator_type);
@@ -3243,7 +3510,8 @@ namespace dcon {
 			void internal_reset_aggregates();
 			void internal_set_aggregates();
 			void internal_update_aggregates();
-			void internal_increment_to_result();
+			void internal_init(person_id first_value);
+			void internal_increment_to_result(bool);
 			void internal_reset_v0();
 			bool internal_set_v0(person_id v);
 			bool internal_increment_v0(bool, bool&);
@@ -3271,9 +3539,7 @@ namespace dcon {
 			car_id m_tableindex2;
 			public:
 			query_param_car_from_owner_const_iterator(data_container const& c, query_param_car_from_owner_const_instance& p) : m_container(c), m_parameters(p) {
-				if(!internal_set_v0(m_parameters.from_person)) {
-					internal_increment_to_result();
-				}
+				internal_init(m_parameters.from_person);
 			}
 			auto operator++() -> query_param_car_from_owner_const_iterator&;
 			bool operator==(dcon::invalid_iterator_type);
@@ -3283,7 +3549,8 @@ namespace dcon {
 			void internal_reset_aggregates();
 			void internal_set_aggregates();
 			void internal_update_aggregates();
-			void internal_increment_to_result();
+			void internal_init(person_id first_value);
+			void internal_increment_to_result(bool);
 			void internal_reset_v0();
 			bool internal_set_v0(person_id v);
 			bool internal_increment_v0(bool, bool&);
@@ -3319,9 +3586,7 @@ namespace dcon {
 			public:
 			query_q_all_owner_ages_plus_iterator(data_container& c, query_q_all_owner_ages_plus_instance& p) : m_container(c), m_parameters(p) {
 				if(m_container.car_size() > 0) {
-					if(!internal_set_v0(car_id(car_id::value_base_t(0))) ) {
-						internal_increment_to_result();
-					}
+					internal_init(car_id(car_id::value_base_t(0)));
 				}
 			}
 			auto operator++() -> query_q_all_owner_ages_plus_iterator&;
@@ -3332,7 +3597,8 @@ namespace dcon {
 			void internal_reset_aggregates();
 			void internal_set_aggregates();
 			void internal_update_aggregates();
-			void internal_increment_to_result();
+			void internal_init(car_id first_value);
+			void internal_increment_to_result(bool);
 			void internal_reset_v0();
 			bool internal_set_v0(car_id v);
 			bool internal_increment_v0(bool, bool&);
@@ -3361,9 +3627,7 @@ namespace dcon {
 			public:
 			query_q_all_owner_ages_plus_const_iterator(data_container const& c, query_q_all_owner_ages_plus_const_instance& p) : m_container(c), m_parameters(p) {
 				if(m_container.car_size() > 0) {
-					if(!internal_set_v0(car_id(car_id::value_base_t(0))) ) {
-						internal_increment_to_result();
-					}
+					internal_init(car_id(car_id::value_base_t(0)));
 				}
 			}
 			auto operator++() -> query_q_all_owner_ages_plus_const_iterator&;
@@ -3374,7 +3638,8 @@ namespace dcon {
 			void internal_reset_aggregates();
 			void internal_set_aggregates();
 			void internal_update_aggregates();
-			void internal_increment_to_result();
+			void internal_init(car_id first_value);
+			void internal_increment_to_result(bool);
 			void internal_reset_v0();
 			bool internal_set_v0(car_id v);
 			bool internal_increment_v0(bool, bool&);
@@ -3413,9 +3678,7 @@ namespace dcon {
 			public:
 			query_rev_car_from_owner_plus_iterator(data_container& c, query_rev_car_from_owner_plus_instance& p) : m_container(c), m_parameters(p) {
 				if(m_container.person_size() > 0) {
-					if(!internal_set_v0(person_id(person_id::value_base_t(0))) ) {
-						internal_increment_to_result();
-					}
+					internal_init(person_id(person_id::value_base_t(0)));
 				}
 			}
 			auto operator++() -> query_rev_car_from_owner_plus_iterator&;
@@ -3426,7 +3689,8 @@ namespace dcon {
 			void internal_reset_aggregates();
 			void internal_set_aggregates();
 			void internal_update_aggregates();
-			void internal_increment_to_result();
+			void internal_init(person_id first_value);
+			void internal_increment_to_result(bool);
 			void internal_reset_v0();
 			bool internal_set_v0(person_id v);
 			bool internal_increment_v0(bool, bool&);
@@ -3457,9 +3721,7 @@ namespace dcon {
 			public:
 			query_rev_car_from_owner_plus_const_iterator(data_container const& c, query_rev_car_from_owner_plus_const_instance& p) : m_container(c), m_parameters(p) {
 				if(m_container.person_size() > 0) {
-					if(!internal_set_v0(person_id(person_id::value_base_t(0))) ) {
-						internal_increment_to_result();
-					}
+					internal_init(person_id(person_id::value_base_t(0)));
 				}
 			}
 			auto operator++() -> query_rev_car_from_owner_plus_const_iterator&;
@@ -3470,7 +3732,8 @@ namespace dcon {
 			void internal_reset_aggregates();
 			void internal_set_aggregates();
 			void internal_update_aggregates();
-			void internal_increment_to_result();
+			void internal_init(person_id first_value);
+			void internal_increment_to_result(bool);
 			void internal_reset_v0();
 			bool internal_set_v0(person_id v);
 			bool internal_increment_v0(bool, bool&);
@@ -3509,9 +3772,7 @@ namespace dcon {
 			int32_t m_index_into_m_tableindex4 = 0;
 			public:
 			query_grandparents_iterator(data_container& c, query_grandparents_instance& p) : m_container(c), m_parameters(p) {
-				if(!internal_set_v0(m_parameters.from_person)) {
-					internal_increment_to_result();
-				}
+				internal_init(m_parameters.from_person);
 			}
 			auto operator++() -> query_grandparents_iterator&;
 			bool operator==(dcon::invalid_iterator_type);
@@ -3521,7 +3782,8 @@ namespace dcon {
 			void internal_reset_aggregates();
 			void internal_set_aggregates();
 			void internal_update_aggregates();
-			void internal_increment_to_result();
+			void internal_init(person_id first_value);
+			void internal_increment_to_result(bool);
 			void internal_reset_v0();
 			bool internal_set_v0(person_id v);
 			bool internal_increment_v0(bool, bool&);
@@ -3557,9 +3819,7 @@ namespace dcon {
 			int32_t m_index_into_m_tableindex4 = 0;
 			public:
 			query_grandparents_const_iterator(data_container const& c, query_grandparents_const_instance& p) : m_container(c), m_parameters(p) {
-				if(!internal_set_v0(m_parameters.from_person)) {
-					internal_increment_to_result();
-				}
+				internal_init(m_parameters.from_person);
 			}
 			auto operator++() -> query_grandparents_const_iterator&;
 			bool operator==(dcon::invalid_iterator_type);
@@ -3569,7 +3829,8 @@ namespace dcon {
 			void internal_reset_aggregates();
 			void internal_set_aggregates();
 			void internal_update_aggregates();
-			void internal_increment_to_result();
+			void internal_init(person_id first_value);
+			void internal_increment_to_result(bool);
 			void internal_reset_v0();
 			bool internal_set_v0(person_id v);
 			bool internal_increment_v0(bool, bool&);
@@ -3616,9 +3877,7 @@ namespace dcon {
 			person_id m_tableindex4;
 			public:
 			query_grandchildren_iterator(data_container& c, query_grandchildren_instance& p) : m_container(c), m_parameters(p) {
-				if(!internal_set_v0(m_parameters.from_person)) {
-					internal_increment_to_result();
-				}
+				internal_init(m_parameters.from_person);
 			}
 			auto operator++() -> query_grandchildren_iterator&;
 			bool operator==(dcon::invalid_iterator_type);
@@ -3628,7 +3887,8 @@ namespace dcon {
 			void internal_reset_aggregates();
 			void internal_set_aggregates();
 			void internal_update_aggregates();
-			void internal_increment_to_result();
+			void internal_init(person_id first_value);
+			void internal_increment_to_result(bool);
 			void internal_reset_v0();
 			bool internal_set_v0(person_id v);
 			bool internal_increment_v0(bool, bool&);
@@ -3666,9 +3926,7 @@ namespace dcon {
 			person_id m_tableindex4;
 			public:
 			query_grandchildren_const_iterator(data_container const& c, query_grandchildren_const_instance& p) : m_container(c), m_parameters(p) {
-				if(!internal_set_v0(m_parameters.from_person)) {
-					internal_increment_to_result();
-				}
+				internal_init(m_parameters.from_person);
 			}
 			auto operator++() -> query_grandchildren_const_iterator&;
 			bool operator==(dcon::invalid_iterator_type);
@@ -3678,7 +3936,8 @@ namespace dcon {
 			void internal_reset_aggregates();
 			void internal_set_aggregates();
 			void internal_update_aggregates();
-			void internal_increment_to_result();
+			void internal_init(person_id first_value);
+			void internal_increment_to_result(bool);
 			void internal_reset_v0();
 			bool internal_set_v0(person_id v);
 			bool internal_increment_v0(bool, bool&);
@@ -3709,11 +3968,339 @@ namespace dcon {
 		query_grandchildren_const_iterator query_grandchildren_const_instance::begin() {
 			return query_grandchildren_const_iterator(container, *this);
 		}
+		class query_group_grandchildren_instance;
+		class query_group_grandchildren_const_instance;
+		class query_group_grandchildren_iterator {
+			private:
+			data_container& m_container;
+			query_group_grandchildren_instance& m_parameters;
+			int32_t m_count_gc;
+			int32_t m_max_age;
+			person_id m_gch_wealth;
+			person_id m_tableindex0;
+			parentage_id m_tableindex1;
+			int32_t m_index_into_m_tableindex1 = 0;
+			int32_t m_size_of_m_tableindex1 = 0;
+			person_id m_tableindex2;
+			parentage_id m_tableindex3;
+			int32_t m_index_into_m_tableindex3 = 0;
+			int32_t m_size_of_m_tableindex3 = 0;
+			person_id m_tableindex4;
+			public:
+			query_group_grandchildren_iterator(data_container& c, query_group_grandchildren_instance& p) : m_container(c), m_parameters(p) {
+				if(m_container.person_size() > 0) {
+					internal_init(person_id(person_id::value_base_t(0)));
+				}
+			}
+			auto operator++() -> query_group_grandchildren_iterator&;
+			bool operator==(dcon::invalid_iterator_type);
+			bool operator!=(dcon::invalid_iterator_type);
+			auto operator*() -> query_group_grandchildren_iterator const&;
+			private:
+			void internal_reset_aggregates();
+			void internal_set_aggregates();
+			void internal_update_aggregates();
+			void internal_init(person_id first_value);
+			void internal_increment_to_result(bool as_first);
+			void internal_reset_v0();
+			bool internal_set_v0(person_id v);
+			bool internal_increment_v0(bool force, bool& hit_group);
+			void internal_reset_v1();
+			bool internal_set_v1(parentage_id v);
+			bool internal_increment_v1(bool force, bool& hit_group);
+			void internal_reset_v2();
+			bool internal_set_v2(person_id v);
+			bool internal_increment_v2(bool force, bool& hit_group);
+			void internal_reset_v3();
+			bool internal_set_v3(parentage_id v);
+			bool internal_increment_v3(bool force, bool& hit_group);
+			void internal_reset_v4();
+			bool internal_set_v4(person_id v);
+			bool internal_increment_v4(bool force, bool& hit_group);
+			public:
+			person_fat_id get_grandparent() const noexcept;
+			auto get_gch_wealth() const -> decltype(m_container.person_get_wealth(person_id()));
+			void set_gch_wealth(float v) const;
+			int32_t get_count_gc() const noexcept;
+			int32_t get_max_age() const noexcept;
+			bool has_base() const noexcept;
+			bool has_parentage() const noexcept;
+			bool has_ch() const noexcept;
+			bool has_gch() const noexcept;
+			
+		};
+		class query_group_grandchildren_const_iterator {
+			private:
+			data_container const& m_container;
+			query_group_grandchildren_const_instance& m_parameters;
+			int32_t m_count_gc;
+			int32_t m_max_age;
+			person_id m_gch_wealth;
+			person_id m_tableindex0;
+			parentage_id m_tableindex1;
+			int32_t m_index_into_m_tableindex1 = 0;
+			int32_t m_size_of_m_tableindex1 = 0;
+			person_id m_tableindex2;
+			parentage_id m_tableindex3;
+			int32_t m_index_into_m_tableindex3 = 0;
+			int32_t m_size_of_m_tableindex3 = 0;
+			person_id m_tableindex4;
+			public:
+			query_group_grandchildren_const_iterator(data_container const& c, query_group_grandchildren_const_instance& p) : m_container(c), m_parameters(p) {
+				if(m_container.person_size() > 0) {
+					internal_init(person_id(person_id::value_base_t(0)));
+				}
+			}
+			auto operator++() -> query_group_grandchildren_const_iterator&;
+			bool operator==(dcon::invalid_iterator_type);
+			bool operator!=(dcon::invalid_iterator_type);
+			auto operator*() -> query_group_grandchildren_const_iterator const&;
+			private:
+			void internal_reset_aggregates();
+			void internal_set_aggregates();
+			void internal_update_aggregates();
+			void internal_init(person_id first_value);
+			void internal_increment_to_result(bool as_first);
+			void internal_reset_v0();
+			bool internal_set_v0(person_id v);
+			bool internal_increment_v0(bool force, bool& hit_group);
+			void internal_reset_v1();
+			bool internal_set_v1(parentage_id v);
+			bool internal_increment_v1(bool force, bool& hit_group);
+			void internal_reset_v2();
+			bool internal_set_v2(person_id v);
+			bool internal_increment_v2(bool force, bool& hit_group);
+			void internal_reset_v3();
+			bool internal_set_v3(parentage_id v);
+			bool internal_increment_v3(bool force, bool& hit_group);
+			void internal_reset_v4();
+			bool internal_set_v4(person_id v);
+			bool internal_increment_v4(bool force, bool& hit_group);
+			public:
+			person_const_fat_id get_grandparent() const noexcept;
+			auto get_gch_wealth() const -> decltype(m_container.person_get_wealth(person_id()));
+			int32_t get_count_gc() const noexcept;
+			int32_t get_max_age() const noexcept;
+			bool has_base() const noexcept;
+			bool has_parentage() const noexcept;
+			bool has_ch() const noexcept;
+			bool has_gch() const noexcept;
+			
+		};
+		
+		query_group_grandchildren_iterator query_group_grandchildren_instance::begin() {
+			return query_group_grandchildren_iterator(container, *this);
+		}
+		query_group_grandchildren_const_iterator query_group_grandchildren_const_instance::begin() {
+			return query_group_grandchildren_const_iterator(container, *this);
+		}
+		class query_sum_car_value_instance;
+		class query_sum_car_value_const_instance;
+		class query_sum_car_value_iterator {
+			private:
+			data_container& m_container;
+			query_sum_car_value_instance& m_parameters;
+			float m_rv_sum;
+			car_ownership_id m_tableindex1;
+			int32_t m_index_into_m_tableindex1 = 0;
+			int32_t m_size_of_m_tableindex1 = 0;
+			car_id m_tableindex2;
+			public:
+			query_sum_car_value_iterator(data_container& c, query_sum_car_value_instance& p) : m_container(c), m_parameters(p) {
+				internal_init(m_parameters.from_person);
+			}
+			auto operator++() -> query_sum_car_value_iterator&;
+			bool operator==(dcon::invalid_iterator_type);
+			bool operator!=(dcon::invalid_iterator_type);
+			auto operator*() -> query_sum_car_value_iterator const&;
+			private:
+			void internal_reset_aggregates();
+			void internal_set_aggregates();
+			void internal_update_aggregates();
+			void internal_init(person_id first_value);
+			void internal_increment_to_result(bool as_first);
+			void internal_reset_v0();
+			bool internal_set_v0(person_id v);
+			bool internal_increment_v0(bool force, bool& hit_group);
+			void internal_reset_v1();
+			bool internal_set_v1(car_ownership_id v);
+			bool internal_increment_v1(bool force, bool& hit_group);
+			void internal_reset_v2();
+			bool internal_set_v2(car_id v);
+			bool internal_increment_v2(bool force, bool& hit_group);
+			public:
+			float get_rv_sum() const noexcept;
+			bool has_car_ownership() const noexcept;
+			bool has_car() const noexcept;
+			
+		};
+		class query_sum_car_value_const_iterator {
+			private:
+			data_container const& m_container;
+			query_sum_car_value_const_instance& m_parameters;
+			float m_rv_sum;
+			car_ownership_id m_tableindex1;
+			int32_t m_index_into_m_tableindex1 = 0;
+			int32_t m_size_of_m_tableindex1 = 0;
+			car_id m_tableindex2;
+			public:
+			query_sum_car_value_const_iterator(data_container const& c, query_sum_car_value_const_instance& p) : m_container(c), m_parameters(p) {
+				internal_init(m_parameters.from_person);
+			}
+			auto operator++() -> query_sum_car_value_const_iterator&;
+			bool operator==(dcon::invalid_iterator_type);
+			bool operator!=(dcon::invalid_iterator_type);
+			auto operator*() -> query_sum_car_value_const_iterator const&;
+			private:
+			void internal_reset_aggregates();
+			void internal_set_aggregates();
+			void internal_update_aggregates();
+			void internal_init(person_id first_value);
+			void internal_increment_to_result(bool as_first);
+			void internal_reset_v0();
+			bool internal_set_v0(person_id v);
+			bool internal_increment_v0(bool force, bool& hit_group);
+			void internal_reset_v1();
+			bool internal_set_v1(car_ownership_id v);
+			bool internal_increment_v1(bool force, bool& hit_group);
+			void internal_reset_v2();
+			bool internal_set_v2(car_id v);
+			bool internal_increment_v2(bool force, bool& hit_group);
+			public:
+			float get_rv_sum() const noexcept;
+			bool has_car_ownership() const noexcept;
+			bool has_car() const noexcept;
+			
+		};
+		
+		query_sum_car_value_iterator query_sum_car_value_instance::begin() {
+			return query_sum_car_value_iterator(container, *this);
+		}
+		query_sum_car_value_const_iterator query_sum_car_value_const_instance::begin() {
+			return query_sum_car_value_const_iterator(container, *this);
+		}
+		class query_pairs_of_cars_instance;
+		class query_pairs_of_cars_const_instance;
+		class query_pairs_of_cars_iterator {
+			private:
+			data_container& m_container;
+			query_pairs_of_cars_instance& m_parameters;
+			person_id m_tableindex0;
+			car_ownership_id m_tableindex1;
+			int32_t m_index_into_m_tableindex1 = 0;
+			int32_t m_size_of_m_tableindex1 = 0;
+			car_id m_tableindex2;
+			car_ownership_id m_tableindex3;
+			int32_t m_index_into_m_tableindex3 = 0;
+			int32_t m_size_of_m_tableindex3 = 0;
+			car_id m_tableindex4;
+			public:
+			query_pairs_of_cars_iterator(data_container& c, query_pairs_of_cars_instance& p) : m_container(c), m_parameters(p) {
+				if(m_container.person_size() > 0) {
+					internal_init(person_id(person_id::value_base_t(0)));
+				}
+			}
+			auto operator++() -> query_pairs_of_cars_iterator&;
+			bool operator==(dcon::invalid_iterator_type);
+			bool operator!=(dcon::invalid_iterator_type);
+			auto operator*() -> query_pairs_of_cars_iterator const&;
+			private:
+			void internal_reset_aggregates();
+			void internal_set_aggregates();
+			void internal_update_aggregates();
+			void internal_init(person_id first_value);
+			void internal_increment_to_result(bool);
+			void internal_reset_v0();
+			bool internal_set_v0(person_id v);
+			bool internal_increment_v0(bool, bool&);
+			void internal_reset_v1();
+			bool internal_set_v1(car_ownership_id v);
+			bool internal_increment_v1(bool force, bool& hit_group);
+			void internal_reset_v2();
+			bool internal_set_v2(car_id v);
+			bool internal_increment_v2(bool force, bool& hit_group);
+			void internal_reset_v3();
+			bool internal_set_v3(car_ownership_id v);
+			bool internal_increment_v3(bool force, bool& hit_group);
+			void internal_reset_v4();
+			bool internal_set_v4(car_id v);
+			bool internal_increment_v4(bool force, bool& hit_group);
+			public:
+			person_fat_id get_person_id() const noexcept;
+			car_fat_id get_car_a_id() const noexcept;
+			car_fat_id get_car_b_id() const noexcept;
+			bool has_person() const noexcept;
+			bool has_car_ownership() const noexcept;
+			bool has_car_a() const noexcept;
+			bool has_car_b() const noexcept;
+			
+		};
+		class query_pairs_of_cars_const_iterator {
+			private:
+			data_container const& m_container;
+			query_pairs_of_cars_const_instance& m_parameters;
+			person_id m_tableindex0;
+			car_ownership_id m_tableindex1;
+			int32_t m_index_into_m_tableindex1 = 0;
+			int32_t m_size_of_m_tableindex1 = 0;
+			car_id m_tableindex2;
+			car_ownership_id m_tableindex3;
+			int32_t m_index_into_m_tableindex3 = 0;
+			int32_t m_size_of_m_tableindex3 = 0;
+			car_id m_tableindex4;
+			public:
+			query_pairs_of_cars_const_iterator(data_container const& c, query_pairs_of_cars_const_instance& p) : m_container(c), m_parameters(p) {
+				if(m_container.person_size() > 0) {
+					internal_init(person_id(person_id::value_base_t(0)));
+				}
+			}
+			auto operator++() -> query_pairs_of_cars_const_iterator&;
+			bool operator==(dcon::invalid_iterator_type);
+			bool operator!=(dcon::invalid_iterator_type);
+			auto operator*() -> query_pairs_of_cars_const_iterator const&;
+			private:
+			void internal_reset_aggregates();
+			void internal_set_aggregates();
+			void internal_update_aggregates();
+			void internal_init(person_id first_value);
+			void internal_increment_to_result(bool);
+			void internal_reset_v0();
+			bool internal_set_v0(person_id v);
+			bool internal_increment_v0(bool, bool&);
+			void internal_reset_v1();
+			bool internal_set_v1(car_ownership_id v);
+			bool internal_increment_v1(bool force, bool& hit_group);
+			void internal_reset_v2();
+			bool internal_set_v2(car_id v);
+			bool internal_increment_v2(bool force, bool& hit_group);
+			void internal_reset_v3();
+			bool internal_set_v3(car_ownership_id v);
+			bool internal_increment_v3(bool force, bool& hit_group);
+			void internal_reset_v4();
+			bool internal_set_v4(car_id v);
+			bool internal_increment_v4(bool force, bool& hit_group);
+			public:
+			person_const_fat_id get_person_id() const noexcept;
+			car_const_fat_id get_car_a_id() const noexcept;
+			car_const_fat_id get_car_b_id() const noexcept;
+			bool has_person() const noexcept;
+			bool has_car_ownership() const noexcept;
+			bool has_car_a() const noexcept;
+			bool has_car_b() const noexcept;
+			
+		};
+		
+		query_pairs_of_cars_iterator query_pairs_of_cars_instance::begin() {
+			return query_pairs_of_cars_iterator(container, *this);
+		}
+		query_pairs_of_cars_const_iterator query_pairs_of_cars_const_instance::begin() {
+			return query_pairs_of_cars_const_iterator(container, *this);
+		}
 	};
 
 
 	auto internal::query_q_all_owner_ages_const_iterator::operator++() -> query_q_all_owner_ages_const_iterator& {
-		internal_increment_to_result();
+		internal_increment_to_result(true);
 		return *this;
 	}
 	bool internal::query_q_all_owner_ages_const_iterator::operator==(dcon::invalid_iterator_type) {
@@ -3731,7 +4318,13 @@ namespace dcon {
 	}
 	void internal::query_q_all_owner_ages_const_iterator::internal_update_aggregates() {
 	}
-	void internal::query_q_all_owner_ages_const_iterator::internal_increment_to_result() {
+	void internal::query_q_all_owner_ages_const_iterator::internal_init(car_id first_value) {
+		if(internal_set_v0(first_value)) {
+			return;
+		}
+		internal_increment_to_result(true);
+	}
+	void internal::query_q_all_owner_ages_const_iterator::internal_increment_to_result(bool) {
 		bool hit_group = false;
 		while(bool(m_tableindex0)) {
 			while(bool(m_tableindex0) && !internal_increment_v2(false, hit_group)) {
@@ -3819,7 +4412,7 @@ namespace dcon {
 	}
 	
 	auto internal::query_q_all_owner_ages_iterator::operator++() -> query_q_all_owner_ages_iterator& {
-		internal_increment_to_result();
+		internal_increment_to_result(true);
 		return *this;
 	}
 	bool internal::query_q_all_owner_ages_iterator::operator==(dcon::invalid_iterator_type) {
@@ -3837,7 +4430,13 @@ namespace dcon {
 	}
 	void internal::query_q_all_owner_ages_iterator::internal_update_aggregates() {
 	}
-	void internal::query_q_all_owner_ages_iterator::internal_increment_to_result() {
+	void internal::query_q_all_owner_ages_iterator::internal_init(car_id first_value) {
+		if(internal_set_v0(first_value)) {
+			return;
+		}
+		internal_increment_to_result(true);
+	}
+	void internal::query_q_all_owner_ages_iterator::internal_increment_to_result(bool) {
 		bool hit_group = false;
 		while(bool(m_tableindex0)) {
 			while(bool(m_tableindex0) && !internal_increment_v2(false, hit_group)) {
@@ -3928,7 +4527,7 @@ namespace dcon {
 	}
 	
 	auto internal::query_rev_car_from_owner_const_iterator::operator++() -> query_rev_car_from_owner_const_iterator& {
-		internal_increment_to_result();
+		internal_increment_to_result(true);
 		return *this;
 	}
 	bool internal::query_rev_car_from_owner_const_iterator::operator==(dcon::invalid_iterator_type) {
@@ -3946,7 +4545,13 @@ namespace dcon {
 	}
 	void internal::query_rev_car_from_owner_const_iterator::internal_update_aggregates() {
 	}
-	void internal::query_rev_car_from_owner_const_iterator::internal_increment_to_result() {
+	void internal::query_rev_car_from_owner_const_iterator::internal_init(person_id first_value) {
+		if(internal_set_v0(first_value)) {
+			return;
+		}
+		internal_increment_to_result(true);
+	}
+	void internal::query_rev_car_from_owner_const_iterator::internal_increment_to_result(bool) {
 		bool hit_group = false;
 		while(bool(m_tableindex0)) {
 			while(bool(m_tableindex0) && !internal_increment_v2(false, hit_group)) {
@@ -4055,7 +4660,7 @@ namespace dcon {
 	}
 	
 	auto internal::query_rev_car_from_owner_iterator::operator++() -> query_rev_car_from_owner_iterator& {
-		internal_increment_to_result();
+		internal_increment_to_result(true);
 		return *this;
 	}
 	bool internal::query_rev_car_from_owner_iterator::operator==(dcon::invalid_iterator_type) {
@@ -4073,7 +4678,13 @@ namespace dcon {
 	}
 	void internal::query_rev_car_from_owner_iterator::internal_update_aggregates() {
 	}
-	void internal::query_rev_car_from_owner_iterator::internal_increment_to_result() {
+	void internal::query_rev_car_from_owner_iterator::internal_init(person_id first_value) {
+		if(internal_set_v0(first_value)) {
+			return;
+		}
+		internal_increment_to_result(true);
+	}
+	void internal::query_rev_car_from_owner_iterator::internal_increment_to_result(bool) {
 		bool hit_group = false;
 		while(bool(m_tableindex0)) {
 			while(bool(m_tableindex0) && !internal_increment_v2(false, hit_group)) {
@@ -4185,7 +4796,7 @@ namespace dcon {
 	}
 	
 	auto internal::query_param_car_from_owner_const_iterator::operator++() -> query_param_car_from_owner_const_iterator& {
-		internal_increment_to_result();
+		internal_increment_to_result(true);
 		return *this;
 	}
 	bool internal::query_param_car_from_owner_const_iterator::operator==(dcon::invalid_iterator_type) {
@@ -4203,7 +4814,13 @@ namespace dcon {
 	}
 	void internal::query_param_car_from_owner_const_iterator::internal_update_aggregates() {
 	}
-	void internal::query_param_car_from_owner_const_iterator::internal_increment_to_result() {
+	void internal::query_param_car_from_owner_const_iterator::internal_init(person_id first_value) {
+		if(internal_set_v0(first_value)) {
+			return;
+		}
+		internal_increment_to_result(true);
+	}
+	void internal::query_param_car_from_owner_const_iterator::internal_increment_to_result(bool) {
 		bool hit_group = false;
 		while(bool(m_parameters.from_person)) {
 			while(bool(m_parameters.from_person) && !internal_increment_v2(false, hit_group)) {
@@ -4303,7 +4920,7 @@ namespace dcon {
 	}
 	
 	auto internal::query_param_car_from_owner_iterator::operator++() -> query_param_car_from_owner_iterator& {
-		internal_increment_to_result();
+		internal_increment_to_result(true);
 		return *this;
 	}
 	bool internal::query_param_car_from_owner_iterator::operator==(dcon::invalid_iterator_type) {
@@ -4321,7 +4938,13 @@ namespace dcon {
 	}
 	void internal::query_param_car_from_owner_iterator::internal_update_aggregates() {
 	}
-	void internal::query_param_car_from_owner_iterator::internal_increment_to_result() {
+	void internal::query_param_car_from_owner_iterator::internal_init(person_id first_value) {
+		if(internal_set_v0(first_value)) {
+			return;
+		}
+		internal_increment_to_result(true);
+	}
+	void internal::query_param_car_from_owner_iterator::internal_increment_to_result(bool) {
 		bool hit_group = false;
 		while(bool(m_parameters.from_person)) {
 			while(bool(m_parameters.from_person) && !internal_increment_v2(false, hit_group)) {
@@ -4424,7 +5047,7 @@ namespace dcon {
 	}
 	
 	auto internal::query_q_all_owner_ages_plus_const_iterator::operator++() -> query_q_all_owner_ages_plus_const_iterator& {
-		internal_increment_to_result();
+		internal_increment_to_result(true);
 		return *this;
 	}
 	bool internal::query_q_all_owner_ages_plus_const_iterator::operator==(dcon::invalid_iterator_type) {
@@ -4442,7 +5065,13 @@ namespace dcon {
 	}
 	void internal::query_q_all_owner_ages_plus_const_iterator::internal_update_aggregates() {
 	}
-	void internal::query_q_all_owner_ages_plus_const_iterator::internal_increment_to_result() {
+	void internal::query_q_all_owner_ages_plus_const_iterator::internal_init(car_id first_value) {
+		if(internal_set_v0(first_value)) {
+			return;
+		}
+		internal_increment_to_result(true);
+	}
+	void internal::query_q_all_owner_ages_plus_const_iterator::internal_increment_to_result(bool) {
 		bool hit_group = false;
 		while(bool(m_tableindex0)) {
 			while(bool(m_tableindex0) && !internal_increment_v2(false, hit_group)) {
@@ -4530,7 +5159,7 @@ namespace dcon {
 	}
 	
 	auto internal::query_q_all_owner_ages_plus_iterator::operator++() -> query_q_all_owner_ages_plus_iterator& {
-		internal_increment_to_result();
+		internal_increment_to_result(true);
 		return *this;
 	}
 	bool internal::query_q_all_owner_ages_plus_iterator::operator==(dcon::invalid_iterator_type) {
@@ -4548,7 +5177,13 @@ namespace dcon {
 	}
 	void internal::query_q_all_owner_ages_plus_iterator::internal_update_aggregates() {
 	}
-	void internal::query_q_all_owner_ages_plus_iterator::internal_increment_to_result() {
+	void internal::query_q_all_owner_ages_plus_iterator::internal_init(car_id first_value) {
+		if(internal_set_v0(first_value)) {
+			return;
+		}
+		internal_increment_to_result(true);
+	}
+	void internal::query_q_all_owner_ages_plus_iterator::internal_increment_to_result(bool) {
 		bool hit_group = false;
 		while(bool(m_tableindex0)) {
 			while(bool(m_tableindex0) && !internal_increment_v2(false, hit_group)) {
@@ -4639,7 +5274,7 @@ namespace dcon {
 	}
 	
 	auto internal::query_rev_car_from_owner_plus_const_iterator::operator++() -> query_rev_car_from_owner_plus_const_iterator& {
-		internal_increment_to_result();
+		internal_increment_to_result(true);
 		return *this;
 	}
 	bool internal::query_rev_car_from_owner_plus_const_iterator::operator==(dcon::invalid_iterator_type) {
@@ -4657,7 +5292,13 @@ namespace dcon {
 	}
 	void internal::query_rev_car_from_owner_plus_const_iterator::internal_update_aggregates() {
 	}
-	void internal::query_rev_car_from_owner_plus_const_iterator::internal_increment_to_result() {
+	void internal::query_rev_car_from_owner_plus_const_iterator::internal_init(person_id first_value) {
+		if(internal_set_v0(first_value)) {
+			return;
+		}
+		internal_increment_to_result(true);
+	}
+	void internal::query_rev_car_from_owner_plus_const_iterator::internal_increment_to_result(bool) {
 		bool hit_group = false;
 		while(bool(m_tableindex0)) {
 			while(bool(m_tableindex0) && !internal_increment_v2(false, hit_group)) {
@@ -4766,7 +5407,7 @@ namespace dcon {
 	}
 	
 	auto internal::query_rev_car_from_owner_plus_iterator::operator++() -> query_rev_car_from_owner_plus_iterator& {
-		internal_increment_to_result();
+		internal_increment_to_result(true);
 		return *this;
 	}
 	bool internal::query_rev_car_from_owner_plus_iterator::operator==(dcon::invalid_iterator_type) {
@@ -4784,7 +5425,13 @@ namespace dcon {
 	}
 	void internal::query_rev_car_from_owner_plus_iterator::internal_update_aggregates() {
 	}
-	void internal::query_rev_car_from_owner_plus_iterator::internal_increment_to_result() {
+	void internal::query_rev_car_from_owner_plus_iterator::internal_init(person_id first_value) {
+		if(internal_set_v0(first_value)) {
+			return;
+		}
+		internal_increment_to_result(true);
+	}
+	void internal::query_rev_car_from_owner_plus_iterator::internal_increment_to_result(bool) {
 		bool hit_group = false;
 		while(bool(m_tableindex0)) {
 			while(bool(m_tableindex0) && !internal_increment_v2(false, hit_group)) {
@@ -4896,7 +5543,7 @@ namespace dcon {
 	}
 	
 	auto internal::query_grandparents_const_iterator::operator++() -> query_grandparents_const_iterator& {
-		internal_increment_to_result();
+		internal_increment_to_result(true);
 		return *this;
 	}
 	bool internal::query_grandparents_const_iterator::operator==(dcon::invalid_iterator_type) {
@@ -4914,7 +5561,13 @@ namespace dcon {
 	}
 	void internal::query_grandparents_const_iterator::internal_update_aggregates() {
 	}
-	void internal::query_grandparents_const_iterator::internal_increment_to_result() {
+	void internal::query_grandparents_const_iterator::internal_init(person_id first_value) {
+		if(internal_set_v0(first_value)) {
+			return;
+		}
+		internal_increment_to_result(true);
+	}
+	void internal::query_grandparents_const_iterator::internal_increment_to_result(bool) {
 		bool hit_group = false;
 		while(bool(m_parameters.from_person)) {
 			while(bool(m_parameters.from_person) && !internal_increment_v4(false, hit_group)) {
@@ -5066,7 +5719,7 @@ namespace dcon {
 	}
 	
 	auto internal::query_grandparents_iterator::operator++() -> query_grandparents_iterator& {
-		internal_increment_to_result();
+		internal_increment_to_result(true);
 		return *this;
 	}
 	bool internal::query_grandparents_iterator::operator==(dcon::invalid_iterator_type) {
@@ -5084,7 +5737,13 @@ namespace dcon {
 	}
 	void internal::query_grandparents_iterator::internal_update_aggregates() {
 	}
-	void internal::query_grandparents_iterator::internal_increment_to_result() {
+	void internal::query_grandparents_iterator::internal_init(person_id first_value) {
+		if(internal_set_v0(first_value)) {
+			return;
+		}
+		internal_increment_to_result(true);
+	}
+	void internal::query_grandparents_iterator::internal_increment_to_result(bool) {
 		bool hit_group = false;
 		while(bool(m_parameters.from_person)) {
 			while(bool(m_parameters.from_person) && !internal_increment_v4(false, hit_group)) {
@@ -5236,7 +5895,7 @@ namespace dcon {
 	}
 	
 	auto internal::query_grandchildren_const_iterator::operator++() -> query_grandchildren_const_iterator& {
-		internal_increment_to_result();
+		internal_increment_to_result(true);
 		return *this;
 	}
 	bool internal::query_grandchildren_const_iterator::operator==(dcon::invalid_iterator_type) {
@@ -5254,7 +5913,15 @@ namespace dcon {
 	}
 	void internal::query_grandchildren_const_iterator::internal_update_aggregates() {
 	}
-	void internal::query_grandchildren_const_iterator::internal_increment_to_result() {
+	void internal::query_grandchildren_const_iterator::internal_init(person_id first_value) {
+		if(internal_set_v0(first_value)) {
+			if(m_container.person_get_age(m_tableindex4) < m_parameters.age_filter) {
+				return;
+			}
+		}
+		internal_increment_to_result(true);
+	}
+	void internal::query_grandchildren_const_iterator::internal_increment_to_result(bool) {
 		bool hit_group = false;
 		while(bool(m_parameters.from_person)) {
 			while(bool(m_parameters.from_person) && !internal_increment_v4(false, hit_group)) {
@@ -5426,7 +6093,7 @@ namespace dcon {
 	}
 	
 	auto internal::query_grandchildren_iterator::operator++() -> query_grandchildren_iterator& {
-		internal_increment_to_result();
+		internal_increment_to_result(true);
 		return *this;
 	}
 	bool internal::query_grandchildren_iterator::operator==(dcon::invalid_iterator_type) {
@@ -5444,7 +6111,15 @@ namespace dcon {
 	}
 	void internal::query_grandchildren_iterator::internal_update_aggregates() {
 	}
-	void internal::query_grandchildren_iterator::internal_increment_to_result() {
+	void internal::query_grandchildren_iterator::internal_init(person_id first_value) {
+		if(internal_set_v0(first_value)) {
+			if(m_container.person_get_age(m_tableindex4) < m_parameters.age_filter) {
+				return;
+			}
+		}
+		internal_increment_to_result(true);
+	}
+	void internal::query_grandchildren_iterator::internal_increment_to_result(bool) {
 		bool hit_group = false;
 		while(bool(m_parameters.from_person)) {
 			while(bool(m_parameters.from_person) && !internal_increment_v4(false, hit_group)) {
@@ -5612,6 +6287,1241 @@ namespace dcon {
 		return bool(m_tableindex2);
 	}
 	bool internal::query_grandchildren_iterator::has_gch() const noexcept {
+		return bool(m_tableindex4);
+	}
+	
+	auto internal::query_group_grandchildren_const_iterator::operator++() -> query_group_grandchildren_const_iterator& {
+		internal_increment_to_result(true);
+		return *this;
+	}
+	bool internal::query_group_grandchildren_const_iterator::operator==(dcon::invalid_iterator_type) {
+		return !bool(m_tableindex0);
+	}
+	bool internal::query_group_grandchildren_const_iterator::operator!=(dcon::invalid_iterator_type) {
+		return bool(m_tableindex0);
+	}
+	auto internal::query_group_grandchildren_const_iterator::operator*() -> query_group_grandchildren_const_iterator const& {
+		return *this;
+	}
+	void internal::query_group_grandchildren_const_iterator::internal_reset_aggregates() {
+		m_count_gc = int32_t{};
+		m_max_age = int32_t{};
+		m_gch_wealth = person_id{};
+	}
+	void internal::query_group_grandchildren_const_iterator::internal_set_aggregates() {
+		m_count_gc = 1;
+		m_max_age = m_container.person_get_age(m_tableindex4);
+		m_gch_wealth = m_tableindex4;
+	}
+	void internal::query_group_grandchildren_const_iterator::internal_update_aggregates() {
+		++m_count_gc;
+		if(bool(m_tableindex4) && m_max_age < m_container.person_get_age(m_tableindex4) ) {
+			m_gch_wealth = m_tableindex4;
+			m_max_age = m_container.person_get_age(m_tableindex4);
+		}
+	}
+	void internal::query_group_grandchildren_const_iterator::internal_init(person_id first_value) {
+		if(internal_set_v0(first_value)) {
+			if(m_container.person_get_age(m_tableindex4) < m_parameters.age_filter) {
+				internal_set_aggregates();
+				internal_increment_to_result(false);
+				return;
+			}
+		}
+		internal_increment_to_result(true);
+	}
+	void internal::query_group_grandchildren_const_iterator::internal_increment_to_result(bool as_first) {
+		if(as_first) internal_reset_aggregates();
+		bool first_time = as_first;
+		while(bool(m_tableindex0)) {
+			bool hit_group = false;
+			while(bool(m_tableindex0) && !internal_increment_v4(first_time, hit_group)) {
+			}
+			if(!hit_group) {
+				if(bool(m_tableindex0)) {
+					if(m_container.person_get_age(m_tableindex4) < m_parameters.age_filter) {
+						if(first_time) {
+							first_time = false;
+							internal_set_aggregates();
+						} else {
+							internal_update_aggregates();
+						}
+					}
+				}
+			} else {
+				return;
+			}
+		}
+	}
+	void internal::query_group_grandchildren_const_iterator::internal_reset_v0() {
+		m_tableindex0 = person_id();
+		internal_reset_v1();
+	}
+	bool internal::query_group_grandchildren_const_iterator::internal_set_v0(person_id v) {
+		if(!bool(v)) {
+			m_tableindex0 = v;
+			return false;
+		}
+		m_tableindex0 = v;
+		return 
+		[&](){
+		auto range = m_container.person_range_of_parentage_as_bio_parent(m_tableindex0);
+		m_index_into_m_tableindex1 = 0;
+		m_size_of_m_tableindex1 = int32_t(range.second - range.first);
+		if(m_size_of_m_tableindex1 == 0) {
+			return internal_set_v1( parentage_id() );
+		} else {
+			for( ; m_index_into_m_tableindex1 < m_size_of_m_tableindex1 ; ++ m_index_into_m_tableindex1) {
+				if(internal_set_v1( *(range.first + m_index_into_m_tableindex1) )) {
+					return true;
+				}
+			}
+			return false;
+		}
+		}() && 
+		true;
+	}
+	bool internal::query_group_grandchildren_const_iterator::internal_increment_v0(bool force, bool& hit_group) {
+		if(!force) {
+			hit_group = true;
+			return true;
+		}
+		for(uint32_t i = uint32_t(m_tableindex0.index() + 1); i < m_container.person_size(); ++i) {
+			if(internal_set_v0( person_id(person_id::value_base_t(i)) )) return true;
+		}
+		m_tableindex0 = person_id( );
+		return false;
+	}
+	void internal::query_group_grandchildren_const_iterator::internal_reset_v1() {
+		m_index_into_m_tableindex1 = 0;
+		m_size_of_m_tableindex1 = 0;
+		m_tableindex1 = parentage_id();
+		internal_reset_v2();
+	}
+	bool internal::query_group_grandchildren_const_iterator::internal_set_v1(parentage_id v) {
+		if(!bool(v)) {
+			m_tableindex1 = v;
+			return false;
+		}
+		m_tableindex1 = v;
+		return 
+		[&](){
+		return internal_set_v2( m_container.parentage_get_child(m_tableindex1) );
+		}() && 
+		true;
+	}
+	bool internal::query_group_grandchildren_const_iterator::internal_increment_v1(bool force, bool& hit_group) {
+		if(!bool(m_tableindex1)) {
+			return internal_increment_v0(force, hit_group);
+		}
+		if(m_index_into_m_tableindex1 + 1 < m_size_of_m_tableindex1) {
+			++m_index_into_m_tableindex1;
+			auto range = m_container.person_range_of_parentage_as_bio_parent(m_tableindex0);
+			return internal_set_v1( *(range.first + m_index_into_m_tableindex1) );
+		} else {
+			m_tableindex1 = parentage_id();
+			return internal_increment_v0(force, hit_group);
+		}
+	}
+	void internal::query_group_grandchildren_const_iterator::internal_reset_v2() {
+		m_tableindex2 = person_id();
+		internal_reset_v3();
+	}
+	bool internal::query_group_grandchildren_const_iterator::internal_set_v2(person_id v) {
+		if(!bool(v)) {
+			m_tableindex2 = v;
+			return false;
+		}
+		m_tableindex2 = v;
+		return 
+		[&](){
+		auto range = m_container.person_range_of_parentage_as_bio_parent(m_tableindex2);
+		m_index_into_m_tableindex3 = 0;
+		m_size_of_m_tableindex3 = int32_t(range.second - range.first);
+		if(m_size_of_m_tableindex3 == 0) {
+			return internal_set_v3( parentage_id() );
+		} else {
+			for( ; m_index_into_m_tableindex3 < m_size_of_m_tableindex3 ; ++ m_index_into_m_tableindex3) {
+				if(internal_set_v3( *(range.first + m_index_into_m_tableindex3) )) {
+					return true;
+				}
+			}
+			return false;
+		}
+		}() && 
+		true;
+	}
+	bool internal::query_group_grandchildren_const_iterator::internal_increment_v2(bool force, bool& hit_group) {
+		if(!bool(m_tableindex2)) {
+			return internal_increment_v1(force, hit_group);
+		}
+		return internal_increment_v1(force, hit_group);
+	}
+	void internal::query_group_grandchildren_const_iterator::internal_reset_v3() {
+		m_index_into_m_tableindex3 = 0;
+		m_size_of_m_tableindex3 = 0;
+		m_tableindex3 = parentage_id();
+		internal_reset_v4();
+	}
+	bool internal::query_group_grandchildren_const_iterator::internal_set_v3(parentage_id v) {
+		if(!bool(v)) {
+			m_tableindex3 = v;
+			return false;
+		}
+		m_tableindex3 = v;
+		return 
+		[&](){
+		return internal_set_v4( m_container.parentage_get_child(m_tableindex3) );
+		}() && 
+		true;
+	}
+	bool internal::query_group_grandchildren_const_iterator::internal_increment_v3(bool force, bool& hit_group) {
+		if(!bool(m_tableindex3)) {
+			return internal_increment_v2(force, hit_group);
+		}
+		if(m_index_into_m_tableindex3 + 1 < m_size_of_m_tableindex3) {
+			++m_index_into_m_tableindex3;
+			auto range = m_container.person_range_of_parentage_as_bio_parent(m_tableindex2);
+			return internal_set_v3( *(range.first + m_index_into_m_tableindex3) );
+		} else {
+			m_tableindex3 = parentage_id();
+			return internal_increment_v2(force, hit_group);
+		}
+	}
+	void internal::query_group_grandchildren_const_iterator::internal_reset_v4() {
+		m_tableindex4 = person_id();
+	}
+	bool internal::query_group_grandchildren_const_iterator::internal_set_v4(person_id v) {
+		if(!bool(v)) {
+			m_tableindex4 = v;
+			return false;
+		}
+		m_tableindex4 = v;
+		return 
+		true;
+	}
+	bool internal::query_group_grandchildren_const_iterator::internal_increment_v4(bool force, bool& hit_group) {
+		if(!bool(m_tableindex4)) {
+			return internal_increment_v3(force, hit_group);
+		}
+		return internal_increment_v3(force, hit_group);
+	}
+	person_const_fat_id internal::query_group_grandchildren_const_iterator::get_grandparent() const noexcept {
+		return person_const_fat_id(m_container, m_tableindex0 );
+	}
+	auto internal::query_group_grandchildren_const_iterator::get_gch_wealth() const -> decltype(m_container.person_get_wealth(person_id())) {
+		return m_container.person_get_wealth( m_gch_wealth );
+	}
+	int32_t internal::query_group_grandchildren_const_iterator::get_count_gc() const noexcept {
+		return m_count_gc;
+	}
+	int32_t internal::query_group_grandchildren_const_iterator::get_max_age() const noexcept {
+		return m_max_age;
+	}
+	bool internal::query_group_grandchildren_const_iterator::has_base() const noexcept {
+		return bool(m_tableindex0);
+	}
+	bool internal::query_group_grandchildren_const_iterator::has_parentage() const noexcept {
+		return bool(m_tableindex1);
+	}
+	bool internal::query_group_grandchildren_const_iterator::has_ch() const noexcept {
+		return bool(m_tableindex2);
+	}
+	bool internal::query_group_grandchildren_const_iterator::has_gch() const noexcept {
+		return bool(m_tableindex4);
+	}
+	
+	auto internal::query_group_grandchildren_iterator::operator++() -> query_group_grandchildren_iterator& {
+		internal_increment_to_result(true);
+		return *this;
+	}
+	bool internal::query_group_grandchildren_iterator::operator==(dcon::invalid_iterator_type) {
+		return !bool(m_tableindex0);
+	}
+	bool internal::query_group_grandchildren_iterator::operator!=(dcon::invalid_iterator_type) {
+		return bool(m_tableindex0);
+	}
+	auto internal::query_group_grandchildren_iterator::operator*() -> query_group_grandchildren_iterator const& {
+		return *this;
+	}
+	void internal::query_group_grandchildren_iterator::internal_reset_aggregates() {
+		m_count_gc = int32_t{};
+		m_max_age = int32_t{};
+		m_gch_wealth = person_id{};
+	}
+	void internal::query_group_grandchildren_iterator::internal_set_aggregates() {
+		m_count_gc = 1;
+		m_max_age = m_container.person_get_age(m_tableindex4);
+		m_gch_wealth = m_tableindex4;
+	}
+	void internal::query_group_grandchildren_iterator::internal_update_aggregates() {
+		++m_count_gc;
+		if(bool(m_tableindex4) && m_max_age < m_container.person_get_age(m_tableindex4) ) {
+			m_gch_wealth = m_tableindex4;
+			m_max_age = m_container.person_get_age(m_tableindex4);
+		}
+	}
+	void internal::query_group_grandchildren_iterator::internal_init(person_id first_value) {
+		if(internal_set_v0(first_value)) {
+			if(m_container.person_get_age(m_tableindex4) < m_parameters.age_filter) {
+				internal_set_aggregates();
+				internal_increment_to_result(false);
+				return;
+			}
+		}
+		internal_increment_to_result(true);
+	}
+	void internal::query_group_grandchildren_iterator::internal_increment_to_result(bool as_first) {
+		if(as_first) internal_reset_aggregates();
+		bool first_time = as_first;
+		while(bool(m_tableindex0)) {
+			bool hit_group = false;
+			while(bool(m_tableindex0) && !internal_increment_v4(first_time, hit_group)) {
+			}
+			if(!hit_group) {
+				if(bool(m_tableindex0)) {
+					if(m_container.person_get_age(m_tableindex4) < m_parameters.age_filter) {
+						if(first_time) {
+							first_time = false;
+							internal_set_aggregates();
+						} else {
+							internal_update_aggregates();
+						}
+					}
+				}
+			} else {
+				return;
+			}
+		}
+	}
+	void internal::query_group_grandchildren_iterator::internal_reset_v0() {
+		m_tableindex0 = person_id();
+		internal_reset_v1();
+	}
+	bool internal::query_group_grandchildren_iterator::internal_set_v0(person_id v) {
+		if(!bool(v)) {
+			m_tableindex0 = v;
+			return false;
+		}
+		m_tableindex0 = v;
+		return 
+		[&](){
+		auto range = m_container.person_range_of_parentage_as_bio_parent(m_tableindex0);
+		m_index_into_m_tableindex1 = 0;
+		m_size_of_m_tableindex1 = int32_t(range.second - range.first);
+		if(m_size_of_m_tableindex1 == 0) {
+			return internal_set_v1( parentage_id() );
+		} else {
+			for( ; m_index_into_m_tableindex1 < m_size_of_m_tableindex1 ; ++ m_index_into_m_tableindex1) {
+				if(internal_set_v1( *(range.first + m_index_into_m_tableindex1) )) {
+					return true;
+				}
+			}
+			return false;
+		}
+		}() && 
+		true;
+	}
+	bool internal::query_group_grandchildren_iterator::internal_increment_v0(bool force, bool& hit_group) {
+		if(!force) {
+			hit_group = true;
+			return true;
+		}
+		for(uint32_t i = uint32_t(m_tableindex0.index() + 1); i < m_container.person_size(); ++i) {
+			if(internal_set_v0( person_id(person_id::value_base_t(i)) )) return true;
+		}
+		m_tableindex0 = person_id( );
+		return false;
+	}
+	void internal::query_group_grandchildren_iterator::internal_reset_v1() {
+		m_index_into_m_tableindex1 = 0;
+		m_size_of_m_tableindex1 = 0;
+		m_tableindex1 = parentage_id();
+		internal_reset_v2();
+	}
+	bool internal::query_group_grandchildren_iterator::internal_set_v1(parentage_id v) {
+		if(!bool(v)) {
+			m_tableindex1 = v;
+			return false;
+		}
+		m_tableindex1 = v;
+		return 
+		[&](){
+		return internal_set_v2( m_container.parentage_get_child(m_tableindex1) );
+		}() && 
+		true;
+	}
+	bool internal::query_group_grandchildren_iterator::internal_increment_v1(bool force, bool& hit_group) {
+		if(!bool(m_tableindex1)) {
+			return internal_increment_v0(force, hit_group);
+		}
+		if(m_index_into_m_tableindex1 + 1 < m_size_of_m_tableindex1) {
+			++m_index_into_m_tableindex1;
+			auto range = m_container.person_range_of_parentage_as_bio_parent(m_tableindex0);
+			return internal_set_v1( *(range.first + m_index_into_m_tableindex1) );
+		} else {
+			m_tableindex1 = parentage_id();
+			return internal_increment_v0(force, hit_group);
+		}
+	}
+	void internal::query_group_grandchildren_iterator::internal_reset_v2() {
+		m_tableindex2 = person_id();
+		internal_reset_v3();
+	}
+	bool internal::query_group_grandchildren_iterator::internal_set_v2(person_id v) {
+		if(!bool(v)) {
+			m_tableindex2 = v;
+			return false;
+		}
+		m_tableindex2 = v;
+		return 
+		[&](){
+		auto range = m_container.person_range_of_parentage_as_bio_parent(m_tableindex2);
+		m_index_into_m_tableindex3 = 0;
+		m_size_of_m_tableindex3 = int32_t(range.second - range.first);
+		if(m_size_of_m_tableindex3 == 0) {
+			return internal_set_v3( parentage_id() );
+		} else {
+			for( ; m_index_into_m_tableindex3 < m_size_of_m_tableindex3 ; ++ m_index_into_m_tableindex3) {
+				if(internal_set_v3( *(range.first + m_index_into_m_tableindex3) )) {
+					return true;
+				}
+			}
+			return false;
+		}
+		}() && 
+		true;
+	}
+	bool internal::query_group_grandchildren_iterator::internal_increment_v2(bool force, bool& hit_group) {
+		if(!bool(m_tableindex2)) {
+			return internal_increment_v1(force, hit_group);
+		}
+		return internal_increment_v1(force, hit_group);
+	}
+	void internal::query_group_grandchildren_iterator::internal_reset_v3() {
+		m_index_into_m_tableindex3 = 0;
+		m_size_of_m_tableindex3 = 0;
+		m_tableindex3 = parentage_id();
+		internal_reset_v4();
+	}
+	bool internal::query_group_grandchildren_iterator::internal_set_v3(parentage_id v) {
+		if(!bool(v)) {
+			m_tableindex3 = v;
+			return false;
+		}
+		m_tableindex3 = v;
+		return 
+		[&](){
+		return internal_set_v4( m_container.parentage_get_child(m_tableindex3) );
+		}() && 
+		true;
+	}
+	bool internal::query_group_grandchildren_iterator::internal_increment_v3(bool force, bool& hit_group) {
+		if(!bool(m_tableindex3)) {
+			return internal_increment_v2(force, hit_group);
+		}
+		if(m_index_into_m_tableindex3 + 1 < m_size_of_m_tableindex3) {
+			++m_index_into_m_tableindex3;
+			auto range = m_container.person_range_of_parentage_as_bio_parent(m_tableindex2);
+			return internal_set_v3( *(range.first + m_index_into_m_tableindex3) );
+		} else {
+			m_tableindex3 = parentage_id();
+			return internal_increment_v2(force, hit_group);
+		}
+	}
+	void internal::query_group_grandchildren_iterator::internal_reset_v4() {
+		m_tableindex4 = person_id();
+	}
+	bool internal::query_group_grandchildren_iterator::internal_set_v4(person_id v) {
+		if(!bool(v)) {
+			m_tableindex4 = v;
+			return false;
+		}
+		m_tableindex4 = v;
+		return 
+		true;
+	}
+	bool internal::query_group_grandchildren_iterator::internal_increment_v4(bool force, bool& hit_group) {
+		if(!bool(m_tableindex4)) {
+			return internal_increment_v3(force, hit_group);
+		}
+		return internal_increment_v3(force, hit_group);
+	}
+	person_fat_id internal::query_group_grandchildren_iterator::get_grandparent() const noexcept {
+		return person_fat_id(m_container, m_tableindex0 );
+	}
+	auto internal::query_group_grandchildren_iterator::get_gch_wealth() const -> decltype(m_container.person_get_wealth(person_id())) {
+		return m_container.person_get_wealth( m_gch_wealth );
+	}
+	void internal::query_group_grandchildren_iterator::set_gch_wealth(float v) const {
+		m_container.person_set_wealth( m_gch_wealth, v );
+	}
+	int32_t internal::query_group_grandchildren_iterator::get_count_gc() const noexcept {
+		return m_count_gc;
+	}
+	int32_t internal::query_group_grandchildren_iterator::get_max_age() const noexcept {
+		return m_max_age;
+	}
+	bool internal::query_group_grandchildren_iterator::has_base() const noexcept {
+		return bool(m_tableindex0);
+	}
+	bool internal::query_group_grandchildren_iterator::has_parentage() const noexcept {
+		return bool(m_tableindex1);
+	}
+	bool internal::query_group_grandchildren_iterator::has_ch() const noexcept {
+		return bool(m_tableindex2);
+	}
+	bool internal::query_group_grandchildren_iterator::has_gch() const noexcept {
+		return bool(m_tableindex4);
+	}
+	
+	auto internal::query_sum_car_value_const_iterator::operator++() -> query_sum_car_value_const_iterator& {
+		internal_increment_to_result(true);
+		return *this;
+	}
+	bool internal::query_sum_car_value_const_iterator::operator==(dcon::invalid_iterator_type) {
+		return !bool(m_parameters.from_person);
+	}
+	bool internal::query_sum_car_value_const_iterator::operator!=(dcon::invalid_iterator_type) {
+		return bool(m_parameters.from_person);
+	}
+	auto internal::query_sum_car_value_const_iterator::operator*() -> query_sum_car_value_const_iterator const& {
+		return *this;
+	}
+	void internal::query_sum_car_value_const_iterator::internal_reset_aggregates() {
+		m_rv_sum = float{};
+	}
+	void internal::query_sum_car_value_const_iterator::internal_set_aggregates() {
+		m_rv_sum = m_container.car_get_resale_value(m_tableindex2);
+	}
+	void internal::query_sum_car_value_const_iterator::internal_update_aggregates() {
+		m_rv_sum = sum(m_rv_sum, m_container.car_get_resale_value(m_tableindex2));
+	}
+	void internal::query_sum_car_value_const_iterator::internal_init(person_id first_value) {
+		if(internal_set_v0(first_value)) {
+			internal_set_aggregates();
+			internal_increment_to_result(false);
+			return;
+		}
+		internal_increment_to_result(true);
+	}
+	void internal::query_sum_car_value_const_iterator::internal_increment_to_result(bool as_first) {
+		if(as_first) internal_reset_aggregates();
+		bool first_time = as_first;
+		while(bool(m_parameters.from_person)) {
+			bool hit_group = false;
+			while(bool(m_parameters.from_person) && !internal_increment_v2(first_time, hit_group)) {
+			}
+			if(!hit_group) {
+				if(first_time) {
+					first_time = false;
+					internal_set_aggregates();
+				} else {
+					internal_update_aggregates();
+				}
+			} else {
+				return;
+			}
+		}
+	}
+	void internal::query_sum_car_value_const_iterator::internal_reset_v0() {
+		internal_reset_v1();
+	}
+	bool internal::query_sum_car_value_const_iterator::internal_set_v0(person_id v) {
+		if(!bool(v)) {
+			return false;
+		}
+		return 
+		[&](){
+		auto range = m_container.person_range_of_car_ownership_as_owner(m_parameters.from_person);
+		m_index_into_m_tableindex1 = 0;
+		m_size_of_m_tableindex1 = int32_t(range.second - range.first);
+		if(m_size_of_m_tableindex1 == 0) {
+			return internal_set_v1( car_ownership_id() );
+		} else {
+			for( ; m_index_into_m_tableindex1 < m_size_of_m_tableindex1 ; ++ m_index_into_m_tableindex1) {
+				if(internal_set_v1( *(range.first + m_index_into_m_tableindex1) )) {
+					return true;
+				}
+			}
+			return false;
+		}
+		}() && 
+		true;
+	}
+	bool internal::query_sum_car_value_const_iterator::internal_increment_v0(bool force, bool& hit_group) {
+		if(!force) {
+			hit_group = true;
+			return true;
+		}
+		m_parameters.from_person = person_id();
+		return false;
+	}
+	void internal::query_sum_car_value_const_iterator::internal_reset_v1() {
+		m_index_into_m_tableindex1 = 0;
+		m_size_of_m_tableindex1 = 0;
+		m_tableindex1 = car_ownership_id();
+		internal_reset_v2();
+	}
+	bool internal::query_sum_car_value_const_iterator::internal_set_v1(car_ownership_id v) {
+		if(!bool(v)) {
+			m_tableindex1 = v;
+			return false;
+		}
+		m_tableindex1 = v;
+		return 
+		[&](){
+		return internal_set_v2( m_container.car_ownership_get_owned_car(m_tableindex1) );
+		}() && 
+		true;
+	}
+	bool internal::query_sum_car_value_const_iterator::internal_increment_v1(bool force, bool& hit_group) {
+		if(!bool(m_tableindex1)) {
+			return internal_increment_v0(force, hit_group);
+		}
+		if(m_index_into_m_tableindex1 + 1 < m_size_of_m_tableindex1) {
+			++m_index_into_m_tableindex1;
+			auto range = m_container.person_range_of_car_ownership_as_owner(m_parameters.from_person);
+			return internal_set_v1( *(range.first + m_index_into_m_tableindex1) );
+		} else {
+			m_tableindex1 = car_ownership_id();
+			return internal_increment_v0(force, hit_group);
+		}
+	}
+	void internal::query_sum_car_value_const_iterator::internal_reset_v2() {
+		m_tableindex2 = car_id();
+	}
+	bool internal::query_sum_car_value_const_iterator::internal_set_v2(car_id v) {
+		if(!bool(v)) {
+			m_tableindex2 = v;
+			return false;
+		}
+		m_tableindex2 = v;
+		return 
+		true;
+	}
+	bool internal::query_sum_car_value_const_iterator::internal_increment_v2(bool force, bool& hit_group) {
+		if(!bool(m_tableindex2)) {
+			return internal_increment_v1(force, hit_group);
+		}
+		return internal_increment_v1(force, hit_group);
+	}
+	float internal::query_sum_car_value_const_iterator::get_rv_sum() const noexcept {
+		return m_rv_sum;
+	}
+	bool internal::query_sum_car_value_const_iterator::has_car_ownership() const noexcept {
+		return bool(m_tableindex1);
+	}
+	bool internal::query_sum_car_value_const_iterator::has_car() const noexcept {
+		return bool(m_tableindex2);
+	}
+	
+	auto internal::query_sum_car_value_iterator::operator++() -> query_sum_car_value_iterator& {
+		internal_increment_to_result(true);
+		return *this;
+	}
+	bool internal::query_sum_car_value_iterator::operator==(dcon::invalid_iterator_type) {
+		return !bool(m_parameters.from_person);
+	}
+	bool internal::query_sum_car_value_iterator::operator!=(dcon::invalid_iterator_type) {
+		return bool(m_parameters.from_person);
+	}
+	auto internal::query_sum_car_value_iterator::operator*() -> query_sum_car_value_iterator const& {
+		return *this;
+	}
+	void internal::query_sum_car_value_iterator::internal_reset_aggregates() {
+		m_rv_sum = float{};
+	}
+	void internal::query_sum_car_value_iterator::internal_set_aggregates() {
+		m_rv_sum = m_container.car_get_resale_value(m_tableindex2);
+	}
+	void internal::query_sum_car_value_iterator::internal_update_aggregates() {
+		m_rv_sum = sum(m_rv_sum, m_container.car_get_resale_value(m_tableindex2));
+	}
+	void internal::query_sum_car_value_iterator::internal_init(person_id first_value) {
+		if(internal_set_v0(first_value)) {
+			internal_set_aggregates();
+			internal_increment_to_result(false);
+			return;
+		}
+		internal_increment_to_result(true);
+	}
+	void internal::query_sum_car_value_iterator::internal_increment_to_result(bool as_first) {
+		if(as_first) internal_reset_aggregates();
+		bool first_time = as_first;
+		while(bool(m_parameters.from_person)) {
+			bool hit_group = false;
+			while(bool(m_parameters.from_person) && !internal_increment_v2(first_time, hit_group)) {
+			}
+			if(!hit_group) {
+				if(first_time) {
+					first_time = false;
+					internal_set_aggregates();
+				} else {
+					internal_update_aggregates();
+				}
+			} else {
+				return;
+			}
+		}
+	}
+	void internal::query_sum_car_value_iterator::internal_reset_v0() {
+		internal_reset_v1();
+	}
+	bool internal::query_sum_car_value_iterator::internal_set_v0(person_id v) {
+		if(!bool(v)) {
+			return false;
+		}
+		return 
+		[&](){
+		auto range = m_container.person_range_of_car_ownership_as_owner(m_parameters.from_person);
+		m_index_into_m_tableindex1 = 0;
+		m_size_of_m_tableindex1 = int32_t(range.second - range.first);
+		if(m_size_of_m_tableindex1 == 0) {
+			return internal_set_v1( car_ownership_id() );
+		} else {
+			for( ; m_index_into_m_tableindex1 < m_size_of_m_tableindex1 ; ++ m_index_into_m_tableindex1) {
+				if(internal_set_v1( *(range.first + m_index_into_m_tableindex1) )) {
+					return true;
+				}
+			}
+			return false;
+		}
+		}() && 
+		true;
+	}
+	bool internal::query_sum_car_value_iterator::internal_increment_v0(bool force, bool& hit_group) {
+		if(!force) {
+			hit_group = true;
+			return true;
+		}
+		m_parameters.from_person = person_id();
+		return false;
+	}
+	void internal::query_sum_car_value_iterator::internal_reset_v1() {
+		m_index_into_m_tableindex1 = 0;
+		m_size_of_m_tableindex1 = 0;
+		m_tableindex1 = car_ownership_id();
+		internal_reset_v2();
+	}
+	bool internal::query_sum_car_value_iterator::internal_set_v1(car_ownership_id v) {
+		if(!bool(v)) {
+			m_tableindex1 = v;
+			return false;
+		}
+		m_tableindex1 = v;
+		return 
+		[&](){
+		return internal_set_v2( m_container.car_ownership_get_owned_car(m_tableindex1) );
+		}() && 
+		true;
+	}
+	bool internal::query_sum_car_value_iterator::internal_increment_v1(bool force, bool& hit_group) {
+		if(!bool(m_tableindex1)) {
+			return internal_increment_v0(force, hit_group);
+		}
+		if(m_index_into_m_tableindex1 + 1 < m_size_of_m_tableindex1) {
+			++m_index_into_m_tableindex1;
+			auto range = m_container.person_range_of_car_ownership_as_owner(m_parameters.from_person);
+			return internal_set_v1( *(range.first + m_index_into_m_tableindex1) );
+		} else {
+			m_tableindex1 = car_ownership_id();
+			return internal_increment_v0(force, hit_group);
+		}
+	}
+	void internal::query_sum_car_value_iterator::internal_reset_v2() {
+		m_tableindex2 = car_id();
+	}
+	bool internal::query_sum_car_value_iterator::internal_set_v2(car_id v) {
+		if(!bool(v)) {
+			m_tableindex2 = v;
+			return false;
+		}
+		m_tableindex2 = v;
+		return 
+		true;
+	}
+	bool internal::query_sum_car_value_iterator::internal_increment_v2(bool force, bool& hit_group) {
+		if(!bool(m_tableindex2)) {
+			return internal_increment_v1(force, hit_group);
+		}
+		return internal_increment_v1(force, hit_group);
+	}
+	float internal::query_sum_car_value_iterator::get_rv_sum() const noexcept {
+		return m_rv_sum;
+	}
+	bool internal::query_sum_car_value_iterator::has_car_ownership() const noexcept {
+		return bool(m_tableindex1);
+	}
+	bool internal::query_sum_car_value_iterator::has_car() const noexcept {
+		return bool(m_tableindex2);
+	}
+	
+	auto internal::query_pairs_of_cars_const_iterator::operator++() -> query_pairs_of_cars_const_iterator& {
+		internal_increment_to_result(true);
+		return *this;
+	}
+	bool internal::query_pairs_of_cars_const_iterator::operator==(dcon::invalid_iterator_type) {
+		return !bool(m_tableindex0);
+	}
+	bool internal::query_pairs_of_cars_const_iterator::operator!=(dcon::invalid_iterator_type) {
+		return bool(m_tableindex0);
+	}
+	auto internal::query_pairs_of_cars_const_iterator::operator*() -> query_pairs_of_cars_const_iterator const& {
+		return *this;
+	}
+	void internal::query_pairs_of_cars_const_iterator::internal_reset_aggregates() {
+	}
+	void internal::query_pairs_of_cars_const_iterator::internal_set_aggregates() {
+	}
+	void internal::query_pairs_of_cars_const_iterator::internal_update_aggregates() {
+	}
+	void internal::query_pairs_of_cars_const_iterator::internal_init(person_id first_value) {
+		if(internal_set_v0(first_value)) {
+			return;
+		}
+		internal_increment_to_result(true);
+	}
+	void internal::query_pairs_of_cars_const_iterator::internal_increment_to_result(bool) {
+		bool hit_group = false;
+		while(bool(m_tableindex0)) {
+			while(bool(m_tableindex0) && !internal_increment_v4(false, hit_group)) {
+			}
+			return;
+		}
+	}
+	void internal::query_pairs_of_cars_const_iterator::internal_reset_v0() {
+		m_tableindex0 = person_id();
+		internal_reset_v1();
+		internal_reset_v3();
+	}
+	bool internal::query_pairs_of_cars_const_iterator::internal_set_v0(person_id v) {
+		if(!bool(v)) {
+			m_tableindex0 = v;
+			return false;
+		}
+		m_tableindex0 = v;
+		return 
+		[&](){
+		auto range = m_container.person_range_of_car_ownership_as_owner(m_tableindex0);
+		m_index_into_m_tableindex1 = 0;
+		m_size_of_m_tableindex1 = int32_t(range.second - range.first);
+		if(m_size_of_m_tableindex1 == 0) {
+			return internal_set_v1( car_ownership_id() );
+		} else {
+			for( ; m_index_into_m_tableindex1 < m_size_of_m_tableindex1 ; ++ m_index_into_m_tableindex1) {
+				if(internal_set_v1( *(range.first + m_index_into_m_tableindex1) )) {
+					return true;
+				}
+			}
+			return false;
+		}
+		}() && 
+		[&](){
+		auto range = m_container.person_range_of_car_ownership_as_owner(m_tableindex0);
+		m_index_into_m_tableindex3 = 0;
+		m_size_of_m_tableindex3 = int32_t(range.second - range.first);
+		if(m_size_of_m_tableindex3 == 0) {
+			return internal_set_v3( car_ownership_id() );
+		} else {
+			for( ; m_index_into_m_tableindex3 < m_size_of_m_tableindex3 ; ++ m_index_into_m_tableindex3) {
+				if(internal_set_v3( *(range.first + m_index_into_m_tableindex3) )) {
+					return true;
+				}
+			}
+			return false;
+		}
+		}() && 
+		true;
+	}
+	bool internal::query_pairs_of_cars_const_iterator::internal_increment_v0(bool, bool&) {
+		for(uint32_t i = uint32_t(m_tableindex0.index() + 1); i < m_container.person_size(); ++i) {
+			if(internal_set_v0( person_id(person_id::value_base_t(i)) )) return true;
+		}
+		m_tableindex0 = person_id( );
+		return false;
+	}
+	void internal::query_pairs_of_cars_const_iterator::internal_reset_v1() {
+		m_index_into_m_tableindex1 = 0;
+		m_size_of_m_tableindex1 = 0;
+		m_tableindex1 = car_ownership_id();
+		internal_reset_v2();
+	}
+	bool internal::query_pairs_of_cars_const_iterator::internal_set_v1(car_ownership_id v) {
+		if(!bool(v)) {
+			m_tableindex1 = v;
+			return false;
+		}
+		m_tableindex1 = v;
+		return 
+		[&](){
+		return internal_set_v2( m_container.car_ownership_get_owned_car(m_tableindex1) );
+		}() && 
+		[&](){
+		auto range = m_container.person_range_of_car_ownership_as_owner(m_tableindex0);
+		m_index_into_m_tableindex3 = 0;
+		m_size_of_m_tableindex3 = int32_t(range.second - range.first);
+		if(m_size_of_m_tableindex3 == 0) {
+			return internal_set_v3( car_ownership_id() );
+		} else {
+			for( ; m_index_into_m_tableindex3 < m_size_of_m_tableindex3 ; ++ m_index_into_m_tableindex3) {
+				if(internal_set_v3( *(range.first + m_index_into_m_tableindex3) )) {
+					return true;
+				}
+			}
+			return false;
+		}
+		}() && 
+		true;
+	}
+	bool internal::query_pairs_of_cars_const_iterator::internal_increment_v1(bool force, bool& hit_group) {
+		if(!bool(m_tableindex1)) {
+			return internal_increment_v0(force, hit_group);
+		}
+		if(m_index_into_m_tableindex1 + 1 < m_size_of_m_tableindex1) {
+			++m_index_into_m_tableindex1;
+			auto range = m_container.person_range_of_car_ownership_as_owner(m_tableindex0);
+			return internal_set_v1( *(range.first + m_index_into_m_tableindex1) );
+		} else {
+			m_tableindex1 = car_ownership_id();
+			return internal_increment_v0(force, hit_group);
+		}
+	}
+	void internal::query_pairs_of_cars_const_iterator::internal_reset_v2() {
+		m_tableindex2 = car_id();
+	}
+	bool internal::query_pairs_of_cars_const_iterator::internal_set_v2(car_id v) {
+		if(!bool(v)) {
+			m_tableindex2 = v;
+			return false;
+		}
+		m_tableindex2 = v;
+		return 
+		[&](){
+		auto range = m_container.person_range_of_car_ownership_as_owner(m_tableindex0);
+		m_index_into_m_tableindex3 = 0;
+		m_size_of_m_tableindex3 = int32_t(range.second - range.first);
+		if(m_size_of_m_tableindex3 == 0) {
+			return internal_set_v3( car_ownership_id() );
+		} else {
+			for( ; m_index_into_m_tableindex3 < m_size_of_m_tableindex3 ; ++ m_index_into_m_tableindex3) {
+				if(internal_set_v3( *(range.first + m_index_into_m_tableindex3) )) {
+					return true;
+				}
+			}
+			return false;
+		}
+		}() && 
+		true;
+	}
+	bool internal::query_pairs_of_cars_const_iterator::internal_increment_v2(bool force, bool& hit_group) {
+		if(!bool(m_tableindex2)) {
+			return internal_increment_v1(force, hit_group);
+		}
+		return internal_increment_v1(force, hit_group);
+	}
+	void internal::query_pairs_of_cars_const_iterator::internal_reset_v3() {
+		m_index_into_m_tableindex3 = 0;
+		m_size_of_m_tableindex3 = 0;
+		m_tableindex3 = car_ownership_id();
+		internal_reset_v4();
+	}
+	bool internal::query_pairs_of_cars_const_iterator::internal_set_v3(car_ownership_id v) {
+		if(!bool(v)) {
+			m_tableindex3 = v;
+			return false;
+		}
+		m_tableindex3 = v;
+		return 
+		[&](){
+		return internal_set_v4( m_container.car_ownership_get_owned_car(m_tableindex3) );
+		}() && 
+		true;
+	}
+	bool internal::query_pairs_of_cars_const_iterator::internal_increment_v3(bool force, bool& hit_group) {
+		if(!bool(m_tableindex3)) {
+			return internal_increment_v2(force, hit_group);
+		}
+		if(m_index_into_m_tableindex3 + 1 < m_size_of_m_tableindex3) {
+			++m_index_into_m_tableindex3;
+			auto range = m_container.person_range_of_car_ownership_as_owner(m_tableindex0);
+			return internal_set_v3( *(range.first + m_index_into_m_tableindex3) );
+		} else {
+			m_tableindex3 = car_ownership_id();
+			return internal_increment_v2(force, hit_group);
+		}
+	}
+	void internal::query_pairs_of_cars_const_iterator::internal_reset_v4() {
+		m_tableindex4 = car_id();
+	}
+	bool internal::query_pairs_of_cars_const_iterator::internal_set_v4(car_id v) {
+		if(!bool(v)) {
+			m_tableindex4 = v;
+			return false;
+		}
+		m_tableindex4 = v;
+		return 
+		true;
+	}
+	bool internal::query_pairs_of_cars_const_iterator::internal_increment_v4(bool force, bool& hit_group) {
+		if(!bool(m_tableindex4)) {
+			return internal_increment_v3(force, hit_group);
+		}
+		return internal_increment_v3(force, hit_group);
+	}
+	person_const_fat_id internal::query_pairs_of_cars_const_iterator::get_person_id() const noexcept {
+		return person_const_fat_id(m_container, m_tableindex0 );
+	}
+	car_const_fat_id internal::query_pairs_of_cars_const_iterator::get_car_a_id() const noexcept {
+		return car_const_fat_id(m_container, m_tableindex2 );
+	}
+	car_const_fat_id internal::query_pairs_of_cars_const_iterator::get_car_b_id() const noexcept {
+		return car_const_fat_id(m_container, m_tableindex4 );
+	}
+	bool internal::query_pairs_of_cars_const_iterator::has_person() const noexcept {
+		return bool(m_tableindex0);
+	}
+	bool internal::query_pairs_of_cars_const_iterator::has_car_ownership() const noexcept {
+		return bool(m_tableindex1);
+	}
+	bool internal::query_pairs_of_cars_const_iterator::has_car_a() const noexcept {
+		return bool(m_tableindex2);
+	}
+	bool internal::query_pairs_of_cars_const_iterator::has_car_b() const noexcept {
+		return bool(m_tableindex4);
+	}
+	
+	auto internal::query_pairs_of_cars_iterator::operator++() -> query_pairs_of_cars_iterator& {
+		internal_increment_to_result(true);
+		return *this;
+	}
+	bool internal::query_pairs_of_cars_iterator::operator==(dcon::invalid_iterator_type) {
+		return !bool(m_tableindex0);
+	}
+	bool internal::query_pairs_of_cars_iterator::operator!=(dcon::invalid_iterator_type) {
+		return bool(m_tableindex0);
+	}
+	auto internal::query_pairs_of_cars_iterator::operator*() -> query_pairs_of_cars_iterator const& {
+		return *this;
+	}
+	void internal::query_pairs_of_cars_iterator::internal_reset_aggregates() {
+	}
+	void internal::query_pairs_of_cars_iterator::internal_set_aggregates() {
+	}
+	void internal::query_pairs_of_cars_iterator::internal_update_aggregates() {
+	}
+	void internal::query_pairs_of_cars_iterator::internal_init(person_id first_value) {
+		if(internal_set_v0(first_value)) {
+			return;
+		}
+		internal_increment_to_result(true);
+	}
+	void internal::query_pairs_of_cars_iterator::internal_increment_to_result(bool) {
+		bool hit_group = false;
+		while(bool(m_tableindex0)) {
+			while(bool(m_tableindex0) && !internal_increment_v4(false, hit_group)) {
+			}
+			return;
+		}
+	}
+	void internal::query_pairs_of_cars_iterator::internal_reset_v0() {
+		m_tableindex0 = person_id();
+		internal_reset_v1();
+		internal_reset_v3();
+	}
+	bool internal::query_pairs_of_cars_iterator::internal_set_v0(person_id v) {
+		if(!bool(v)) {
+			m_tableindex0 = v;
+			return false;
+		}
+		m_tableindex0 = v;
+		return 
+		[&](){
+		auto range = m_container.person_range_of_car_ownership_as_owner(m_tableindex0);
+		m_index_into_m_tableindex1 = 0;
+		m_size_of_m_tableindex1 = int32_t(range.second - range.first);
+		if(m_size_of_m_tableindex1 == 0) {
+			return internal_set_v1( car_ownership_id() );
+		} else {
+			for( ; m_index_into_m_tableindex1 < m_size_of_m_tableindex1 ; ++ m_index_into_m_tableindex1) {
+				if(internal_set_v1( *(range.first + m_index_into_m_tableindex1) )) {
+					return true;
+				}
+			}
+			return false;
+		}
+		}() && 
+		[&](){
+		auto range = m_container.person_range_of_car_ownership_as_owner(m_tableindex0);
+		m_index_into_m_tableindex3 = 0;
+		m_size_of_m_tableindex3 = int32_t(range.second - range.first);
+		if(m_size_of_m_tableindex3 == 0) {
+			return internal_set_v3( car_ownership_id() );
+		} else {
+			for( ; m_index_into_m_tableindex3 < m_size_of_m_tableindex3 ; ++ m_index_into_m_tableindex3) {
+				if(internal_set_v3( *(range.first + m_index_into_m_tableindex3) )) {
+					return true;
+				}
+			}
+			return false;
+		}
+		}() && 
+		true;
+	}
+	bool internal::query_pairs_of_cars_iterator::internal_increment_v0(bool, bool&) {
+		for(uint32_t i = uint32_t(m_tableindex0.index() + 1); i < m_container.person_size(); ++i) {
+			if(internal_set_v0( person_id(person_id::value_base_t(i)) )) return true;
+		}
+		m_tableindex0 = person_id( );
+		return false;
+	}
+	void internal::query_pairs_of_cars_iterator::internal_reset_v1() {
+		m_index_into_m_tableindex1 = 0;
+		m_size_of_m_tableindex1 = 0;
+		m_tableindex1 = car_ownership_id();
+		internal_reset_v2();
+	}
+	bool internal::query_pairs_of_cars_iterator::internal_set_v1(car_ownership_id v) {
+		if(!bool(v)) {
+			m_tableindex1 = v;
+			return false;
+		}
+		m_tableindex1 = v;
+		return 
+		[&](){
+		return internal_set_v2( m_container.car_ownership_get_owned_car(m_tableindex1) );
+		}() && 
+		[&](){
+		auto range = m_container.person_range_of_car_ownership_as_owner(m_tableindex0);
+		m_index_into_m_tableindex3 = 0;
+		m_size_of_m_tableindex3 = int32_t(range.second - range.first);
+		if(m_size_of_m_tableindex3 == 0) {
+			return internal_set_v3( car_ownership_id() );
+		} else {
+			for( ; m_index_into_m_tableindex3 < m_size_of_m_tableindex3 ; ++ m_index_into_m_tableindex3) {
+				if(internal_set_v3( *(range.first + m_index_into_m_tableindex3) )) {
+					return true;
+				}
+			}
+			return false;
+		}
+		}() && 
+		true;
+	}
+	bool internal::query_pairs_of_cars_iterator::internal_increment_v1(bool force, bool& hit_group) {
+		if(!bool(m_tableindex1)) {
+			return internal_increment_v0(force, hit_group);
+		}
+		if(m_index_into_m_tableindex1 + 1 < m_size_of_m_tableindex1) {
+			++m_index_into_m_tableindex1;
+			auto range = m_container.person_range_of_car_ownership_as_owner(m_tableindex0);
+			return internal_set_v1( *(range.first + m_index_into_m_tableindex1) );
+		} else {
+			m_tableindex1 = car_ownership_id();
+			return internal_increment_v0(force, hit_group);
+		}
+	}
+	void internal::query_pairs_of_cars_iterator::internal_reset_v2() {
+		m_tableindex2 = car_id();
+	}
+	bool internal::query_pairs_of_cars_iterator::internal_set_v2(car_id v) {
+		if(!bool(v)) {
+			m_tableindex2 = v;
+			return false;
+		}
+		m_tableindex2 = v;
+		return 
+		[&](){
+		auto range = m_container.person_range_of_car_ownership_as_owner(m_tableindex0);
+		m_index_into_m_tableindex3 = 0;
+		m_size_of_m_tableindex3 = int32_t(range.second - range.first);
+		if(m_size_of_m_tableindex3 == 0) {
+			return internal_set_v3( car_ownership_id() );
+		} else {
+			for( ; m_index_into_m_tableindex3 < m_size_of_m_tableindex3 ; ++ m_index_into_m_tableindex3) {
+				if(internal_set_v3( *(range.first + m_index_into_m_tableindex3) )) {
+					return true;
+				}
+			}
+			return false;
+		}
+		}() && 
+		true;
+	}
+	bool internal::query_pairs_of_cars_iterator::internal_increment_v2(bool force, bool& hit_group) {
+		if(!bool(m_tableindex2)) {
+			return internal_increment_v1(force, hit_group);
+		}
+		return internal_increment_v1(force, hit_group);
+	}
+	void internal::query_pairs_of_cars_iterator::internal_reset_v3() {
+		m_index_into_m_tableindex3 = 0;
+		m_size_of_m_tableindex3 = 0;
+		m_tableindex3 = car_ownership_id();
+		internal_reset_v4();
+	}
+	bool internal::query_pairs_of_cars_iterator::internal_set_v3(car_ownership_id v) {
+		if(!bool(v)) {
+			m_tableindex3 = v;
+			return false;
+		}
+		m_tableindex3 = v;
+		return 
+		[&](){
+		return internal_set_v4( m_container.car_ownership_get_owned_car(m_tableindex3) );
+		}() && 
+		true;
+	}
+	bool internal::query_pairs_of_cars_iterator::internal_increment_v3(bool force, bool& hit_group) {
+		if(!bool(m_tableindex3)) {
+			return internal_increment_v2(force, hit_group);
+		}
+		if(m_index_into_m_tableindex3 + 1 < m_size_of_m_tableindex3) {
+			++m_index_into_m_tableindex3;
+			auto range = m_container.person_range_of_car_ownership_as_owner(m_tableindex0);
+			return internal_set_v3( *(range.first + m_index_into_m_tableindex3) );
+		} else {
+			m_tableindex3 = car_ownership_id();
+			return internal_increment_v2(force, hit_group);
+		}
+	}
+	void internal::query_pairs_of_cars_iterator::internal_reset_v4() {
+		m_tableindex4 = car_id();
+	}
+	bool internal::query_pairs_of_cars_iterator::internal_set_v4(car_id v) {
+		if(!bool(v)) {
+			m_tableindex4 = v;
+			return false;
+		}
+		m_tableindex4 = v;
+		return 
+		true;
+	}
+	bool internal::query_pairs_of_cars_iterator::internal_increment_v4(bool force, bool& hit_group) {
+		if(!bool(m_tableindex4)) {
+			return internal_increment_v3(force, hit_group);
+		}
+		return internal_increment_v3(force, hit_group);
+	}
+	person_fat_id internal::query_pairs_of_cars_iterator::get_person_id() const noexcept {
+		return person_fat_id(m_container, m_tableindex0 );
+	}
+	car_fat_id internal::query_pairs_of_cars_iterator::get_car_a_id() const noexcept {
+		return car_fat_id(m_container, m_tableindex2 );
+	}
+	car_fat_id internal::query_pairs_of_cars_iterator::get_car_b_id() const noexcept {
+		return car_fat_id(m_container, m_tableindex4 );
+	}
+	bool internal::query_pairs_of_cars_iterator::has_person() const noexcept {
+		return bool(m_tableindex0);
+	}
+	bool internal::query_pairs_of_cars_iterator::has_car_ownership() const noexcept {
+		return bool(m_tableindex1);
+	}
+	bool internal::query_pairs_of_cars_iterator::has_car_a() const noexcept {
+		return bool(m_tableindex2);
+	}
+	bool internal::query_pairs_of_cars_iterator::has_car_b() const noexcept {
 		return bool(m_tableindex4);
 	}
 	

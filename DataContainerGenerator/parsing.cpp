@@ -181,6 +181,7 @@ std::vector<selection_item> parse_all_selection_items(char const* &start, char c
 std::vector<from_item> parse_all_from_items(char const* &start, char const * end, char const * global_start, error_record & err) {
 	std::vector<from_item> result;
 
+	auto start_copy = start;
 	while(start < end) {
 		if(check_for_identifier("where", start, end) || check_for_identifier("group", start, end)) {
 			return result;
@@ -188,6 +189,11 @@ std::vector<from_item> parse_all_from_items(char const* &start, char const * end
 		start = advance_to_non_whitespace_non_comma(start, end);
 		if(start != end)
 			result.push_back(parse_from_item(start, end, global_start, err));
+	}
+
+	if(result.size() == 0) {
+		err.add(std::string("a query must draw upon at least one data source, see line ")
+			+ std::to_string(calculate_line_from_position(global_start, start_copy)));
 	}
 
 	return result;
