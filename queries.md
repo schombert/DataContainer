@@ -31,7 +31,7 @@ Admittedly, the example given above is not very useful, practically speaking. Yo
 │  age   │               └─────┬─────┘ 
 └────┬───┘     unique          │
      └─────────────────────────┘
-	           child
+               child
 ```
 
 Here parentage relationships link each person with two (biological) parents. Even though there is only one object and one relationship in this diagram, there are many logical objects that we could construct from it. For example, We could start from a person, move through the parentage relationship to find a parent, and then move through the parentage relationship again to find a grandparent. Thus there is a logical object consisting of tuples of person-parent-grandparent implicit in this structure. And a query can allow you to iterate over those tuples effortlessly, without either the nested loops or the conditional logic for detecting people without parents or parents without grandparents that would be required if you were expressing that iteration manually.
@@ -86,7 +86,7 @@ But what happens if a particular kind of object and relationship are connected b
 
 ### Reference names
 
-In more complicated queries, the same kind of object or relationship may need to occur more than once. For example, to capture the logical structure of being a grandparent, the query would need to go through the parentage relationship twice and include the person object three times (such as `... from person, join on child parentage, join on parent person, join on child parentage, join on parent person`). Visually this look like the following:
+In more complicated queries, the same kind of object or relationship may need to occur more than once. For example, to capture the logical structure of being a grandparent, the query would need to go through the parentage relationship twice and include the person object three times (such as `... from person, join on child parentage, join on parent person, join on child parentage, join on parent person`). Visually this looks like the following:
 
 ```
 ┌────────┐ child ┌───────────┐ parent ┌────────┐ child ┌───────────┐ parent ┌────────┐
@@ -94,7 +94,7 @@ In more complicated queries, the same kind of object or relationship may need to
 └────────┘       └───────────┘        └────────┘       └───────────┘        └────────┘
 ```
 
-The problem becomes how to get the information you want out, because simply referring to `person.id` in the selected values is ambiguous between the selected person, parent, and grandparent. To remedy this, anything introduced in the from clause may be given a reference name, just as selected values can be. This is done by adding an `as 𝘳𝘦𝘧𝘦𝘳𝘦𝘯𝘤𝘦 𝘯𝘢𝘮𝘦` suffix to the name of the object or relationship. This 𝘳𝘦𝘧𝘦𝘳𝘦𝘯𝘤𝘦 𝘯𝘢𝘮𝘦 can then be used to refer that the instance of the object or relationship that fills that specific slot in the logical object constructed by the query. In the example of grandparents, this could be done as follows: `base.id, grandparent.id from person as base, join on child parentage, join on parent person, join on child parentage, join on parent person as grandparent`. At this point adding additional whitespace also becomes helpful, such as:
+The problem becomes how to get the information you want out, because simply referring to `person.id` in the selected values is ambiguous between the selected person, parent, and grandparent. To remedy this, anything introduced in the from clause may be given a reference name, just as selected values can be. This is done by adding an `as 𝘳𝘦𝘧𝘦𝘳𝘦𝘯𝘤𝘦 𝘯𝘢𝘮𝘦` suffix to the name of the object or relationship. This 𝘳𝘦𝘧𝘦𝘳𝘦𝘯𝘤𝘦 𝘯𝘢𝘮𝘦 can then be used to refer that the instance of the object or relationship that fills that specific slot in the logical object constructed by the query. In the case of a query that iterates over grandparents, this could be done as follows: `base.id, grandparent.id from person as base, join on child parentage, join on parent person, join on child parentage, join on parent person as grandparent`. At this point adding additional whitespace also becomes helpful, such as:
 
 ```
 base.id, grandparent.id
@@ -158,7 +158,7 @@ Each term must be in the form of either `@𝘱𝘢𝘳𝘢𝘮𝘦𝘵𝘦𝘳 �
 
 For example, the following where clause could be added to the example above to filter out duplicate possibilities with the order reversed or the same person being presented as a sibling to themselves: `where @sibling_a.id .index() < @sibling_b.id .index()`.
 
-In principle, the where clause is totally unnecessary; you could add a conditional within your iteration over the query that would filter out the same results. However, to do you would have to expose as a value every property that evaluating the filter would require. The advantage of a where clause is that you can refer to anything you want inside it without needing to expose any additional values, which makes the query interface cleaner. Where clauses also allow you to filter the values that go into computing an aggregate (see below).
+In principle, the where clause is totally unnecessary; you could add a conditional within your iteration over the query that would filter out the same results. However, to do so you would have to expose as a value every property that evaluating the filter would require. The advantage of a where clause, then, is that you can refer to anything you want inside it without needing to expose any additional values, which makes the query interface cleaner. Where clauses also allow you to filter the values that go into computing an aggregate (see below).
 
 ### `array` type properties
 
@@ -239,4 +239,4 @@ It is also important to understand that, while a query may be relatively simple 
 
 [^1]: The `@` is because the syntax allows the parameters to be declared after the select statement, and so some way is needed to identify what is the name of a parameter without drawing upon a list of those parameters.
 
-[^2]: As an extra trick, you can access anything from the data container itself via `m_container` which is a reference to the data container itself that will be visible at the point where the where clause is executed.
+[^2]: As an extra trick, you can access anything from the data container itself via `m_container` which is a reference to the data container that will be visible at the point where the where clause is executed.

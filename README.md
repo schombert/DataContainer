@@ -48,4 +48,4 @@ Feel free to leave comments and suggestions as you see fit. If you are actively 
 
 [^1]: This is the primary reason that this version the idea exists (as an improvement to a previous version that generated containers for each logical object individually); managing the code required to keep the relationships working correctly, and to make sure that they serialized and deserialized correctly, was tedious and error prone in a way that made me unwilling to make changes at all.
 
-[^2]: For example, a robust serialization library is typically build out of techniques that emulate compile-time reflection on C++ classes and structs. This tends to be hard to integrate with the techniques you might use to generate SIMD-friendly memory layouts.
+[^2]: For example, a robust serialization library is typically built using techniques that emulate compile-time reflection on C++ classes and structs. This tends to be hard to integrate with the techniques you might use to generate SIMD-friendly memory layouts.

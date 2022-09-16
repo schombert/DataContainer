@@ -477,87 +477,30 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 				break;
 			case property_type::special_vector:
 				if(add_prefix) {
+					o + "DCON_RELEASE_INLINE dcon::dcon_vv_const_fat_id<@type@> @obj@_get_@prop@(@obj@_id id) const noexcept" + block{
+						o + "return dcon::dcon_vv_const_fat_id<@type@>(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()]);";
+					};
+					if(prop.protection != protection_type::read_only && !prop.hook_set) {
+						o + "DCON_RELEASE_INLINE dcon::dcon_vv_fat_id<@type@> @obj@_get_@prop@(@obj@_id id) noexcept" + block{
+							o + "return dcon::dcon_vv_fat_id<@type@>(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()]);";
+						};
+					}
+
 					if(prop.protection == protection_type::hidden) {
-						o + "friend std::pair<@type@*, @type@*> @obj@_fat_id::get_@prop@_range() const noexcept;";
-						if(upresult.has_value())
-							o + "friend @type@ @obj@_fat_id::get_@prop@_at(uint32_t) const noexcept;";
-						else 
-							o + "friend @type@& @obj@_fat_id::get_@prop@_at(uint32_t) const noexcept;";
-						o + "friend uint32_t @obj@_fat_id::get_@prop@_capacity() const noexcept;";
-						o + "friend uint32_t @obj@_fat_id::get_@prop@_size() const noexcept;";
-						o + "friend bool @obj@_fat_id::_@prop@_contains(@type@) const noexcept;";
-						o + "friend std::pair<@type@ const*, @type@ const*> @obj@_const_fat_id::get_@prop@_range() const noexcept;";
-						if(upresult.has_value())
-							o + "friend @type@ @obj@_const_fat_id::get_@prop@_at(uint32_t) const noexcept;";
-						else
-							o + "friend @type@ const& @obj@_const_fat_id::get_@prop@_at(uint32_t) const noexcept;";
-						o + "friend uint32_t @obj@_const_fat_id::get_@prop@_capacity()const noexcept;";
-						o + "friend uint32_t @obj@_const_fat_id::get_@prop@_size() const noexcept;";
-						o + "friend bool @obj@_const_fat_id::_@prop@_contains(@type@) const noexcept;";
+						o + "friend dcon::dcon_vv_fat_id<@type@> @obj@_fat_id::get_@prop@() const noexcept;";
+						o + "friend dcon::dcon_vv_const_fat_id<@type@> @obj@_const_fat_id::get_@prop@() const noexcept;";
 					}
 
-					if(prop.protection != protection_type::read_only) {
-						o + "std::pair<@type@*, @type@*> @obj@_get_@prop@_range(@obj@_id id) noexcept" + block{
-							o + "return dcon::get_range(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()]);";
-						};
-					}
-
-					o + "std::pair<@type@ const*, @type@ const*> @obj@_get_@prop@_range(@obj@_id id) const noexcept" + block{
-							o + "return dcon::get_range(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()]);";
-					};
-
-					if(prop.protection != protection_type::read_only) {
-						o + "@type@& @obj@_get_@prop@_at(@obj@_id id, uint32_t inner_index) noexcept" + block{
-							o + "return dcon::get(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()], inner_index);";
-						};
-					}
-
-					o + "@type@ const& @obj@_get_@prop@_at(@obj@_id id, uint32_t inner_index) const noexcept" + block{
-						o + "return dcon::get(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()], inner_index);";
-					};
-
-					o + "uint32_t @obj@_get_@prop@_capacity(@obj@_id id) const noexcept" + block{
-						o + "return dcon::get_capacity(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()]);";
-					};
-
-					o + "uint32_t @obj@_get_@prop@_size(@obj@_id id) const noexcept" + block{
-						o + "return dcon::get_size(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()]);";
-					};
-
-					o + "bool @obj@_@prop@_contains(@obj@_id id, @type@ obj) const noexcept" + block{
-						o + "return dcon::contains_item(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()], obj);";
-					};
 				} else {
-					if(const_mode || prop.protection == protection_type::read_only) {
-						o + "DCON_RELEASE_INLINE std::pair<@type@ const*, @type@ const*> @namesp@get_@prop@_range() const noexcept" + block{
-							o + "return container.@obj@_get_@prop@_range(id);";
+					if(const_mode || prop.protection == protection_type::read_only || prop.hook_set) {
+						o + "DCON_RELEASE_INLINE dcon::dcon_vv_const_fat_id<@type@> @namesp@get_@prop@() const noexcept" + block{
+							o + "return container.@obj@_get_@prop@(id);";
 						};
 					} else {
-						o + "DCON_RELEASE_INLINE std::pair<@type@*, @type@*> @namesp@get_@prop@_range() const noexcept" + block{
-							o + "return container.@obj@_get_@prop@_range(id);";
+						o + "DCON_RELEASE_INLINE dcon::dcon_vv_fat_id<@type@> @namesp@get_@prop@() const noexcept" + block{
+							o + "return container.@obj@_get_@prop@(id);";
 						};
 					}
-					if(upresult.has_value())
-						o + "DCON_RELEASE_INLINE @type@ @namesp@get_@prop@_at(uint32_t inner_index) const noexcept" + block {
-							o + "return @type@(container, container.@obj@_get_@prop@_at(id, inner_index));";
-						};
-					else if(const_mode || prop.protection == protection_type::read_only)
-						o + "DCON_RELEASE_INLINE @type@ const& @namesp@get_@prop@_at(uint32_t inner_index) const noexcept" + block{
-							o + "return container.@obj@_get_@prop@_at(id, inner_index);";
-						};
-					else
-						o + "DCON_RELEASE_INLINE @type@& @namesp@get_@prop@_at(uint32_t inner_index) const noexcept" + block{
-							o + "return container.@obj@_get_@prop@_at(id, inner_index);";
-						};
-					o + "DCON_RELEASE_INLINE uint32_t @namesp@get_@prop@_capacity() const noexcept" + block {
-						o + "return container.@obj@_get_@prop@_capacity(id);";
-					};
-					o + "DCON_RELEASE_INLINE uint32_t @namesp@get_@prop@_size() const noexcept" + block {
-						o + "return container.@obj@_get_@prop@_size(id);";
-					};
-					o + "DCON_RELEASE_INLINE bool @namesp@@prop@_contains(@type@ v) const noexcept" + block{
-						o + "return container.@obj@_@prop@_contains(id, v);";
-					};
 				}
 				break;
 			default:
@@ -921,57 +864,7 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 					}
 					break;
 				case property_type::special_vector:
-					if(add_prefix) {
-						o + "void @obj@_@prop@_push_back(@obj@_id id, @type@ obj) noexcept" + block{
-							o + "dcon::push_back(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()], obj);";
-						};
-
-						o + "void @obj@_@prop@_pop_back(@obj@_id id) noexcept" + block{
-							o + "dcon::pop_back(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()]);";
-						};
-
-						o + "void @obj@_@prop@_add_unique(@obj@_id id, @type@ obj) noexcept" + block{
-							o + "dcon::add_unique_item(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()], obj);";
-						};
-
-						o + "void @obj@_@prop@_remove_unique(@obj@_id id, @type@ obj) noexcept" + block{
-							o + "dcon::remove_unique_item(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()], obj);";
-						};
-						o + "void @obj@_@prop@_clear(@obj@_id id) noexcept" + block{
-							o + "@obj@.@prop@_storage.release(@obj@.m_@prop@.vptr()[id.index()]);";
-						};
-						o + "void @obj@_@prop@_remove_at(@obj@_id id, uint32_t inner_index) noexcept" + block{
-							o + "dcon::remove_at(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()], inner_index);";
-						};
-
-						if(prop.protection == protection_type::read_only || prop.protection == protection_type::hidden) {
-							o + "friend void @obj@_fat_id::@prop@_push_back(@type@) const noexcept;";
-							o + "friend void @obj@_fat_id::@prop@_pop_back() const noexcept;";
-							o + "friend void @obj@_fat_id::@prop@_add_unique(@type@) const noexcept;";
-							o + "friend void @obj@_fat_id::@prop@_remove_unique(@type@) const noexcept;";
-							o + "friend void @obj@_fat_id::@prop@_clear() const noexcept;";
-							o + "friend void @obj@_fat_id::@prop@_remove_at(uint32_t) const noexcept;";
-						}
-					} else {
-						o + "DCON_RELEASE_INLINE void @namesp@@prop@_push_back(@type@ obj) const noexcept" + block {
-							o + "container.@obj@_@prop@_push_back(id, obj);";
-						};
-						o + "DCON_RELEASE_INLINE void @namesp@@prop@_pop_back() const noexcept" + block{
-							o + "container.@obj@_@prop@_pop_back(id);";
-						};
-						o + "DCON_RELEASE_INLINE void @namesp@@prop@_add_unique(@type@ obj) const noexcept" + block{
-							o + "container.@obj@_@prop@_add_unique(id, obj);"; 
-						};
-						o + "DCON_RELEASE_INLINE void @namesp@@prop@_remove_unique(@type@ obj) const noexcept" + block{
-							o + "container.@obj@_@prop@_remove_unique(id, obj);"; 
-						};
-						o + "DCON_RELEASE_INLINE void @namesp@@prop@_clear() const noexcept" + block {
-							o + "container.@obj@_@prop@_clear(id);";
-						};
-						o + "DCON_RELEASE_INLINE void @namesp@@prop@_remove_at(uint32_t inner_index) const noexcept" + block {
-							o + "container.@obj@_@prop@_remove_at(id, inner_index);";
-						};
-					}
+					
 					break;
 				default:
 					std::abort(); // should never get here

@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <assert.h>
 #include <cstring>
 #include "common_types.hpp"
 #ifndef DCON_NO_VE
@@ -111,7 +112,7 @@ namespace dcon {
 
 
 			public:
-			friend class data_container;
+			friend data_container;
 		};
 
 	}
@@ -119,7 +120,7 @@ namespace dcon {
 	class colored_thing_const_fat_id;
 	class colored_thing_fat_id;
 	class colored_thing_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		colored_thing_id id;
@@ -166,7 +167,7 @@ namespace dcon {
 	}
 	
 	class colored_thing_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		colored_thing_id id;
@@ -305,6 +306,7 @@ namespace dcon {
 			}
 		}
 		
+
 
 
 		void reset() {
@@ -453,6 +455,11 @@ namespace dcon {
 		return container.colored_thing_is_valid(id);
 	}
 	
+
+	namespace internal {
+	};
+
+
 }
 
 #undef DCON_RELEASE_INLINE

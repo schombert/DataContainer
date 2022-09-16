@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <assert.h>
 #include <cstring>
 #include "common_types.hpp"
 #ifndef DCON_NO_VE
@@ -289,7 +290,7 @@ namespace car_owner_basic {
 	class car_ownership_const_fat_id;
 	class car_ownership_fat_id;
 	class car_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		car_id id;
@@ -340,7 +341,7 @@ namespace car_owner_basic {
 	}
 	
 	class car_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		car_id id;
@@ -407,7 +408,7 @@ namespace car_owner_basic {
 	}
 	
 	class person_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		person_id id;
@@ -462,7 +463,7 @@ namespace car_owner_basic {
 	}
 	
 	class person_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		person_id id;
@@ -536,7 +537,7 @@ namespace car_owner_basic {
 	}
 	
 	class car_ownership_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		car_ownership_id id;
@@ -583,7 +584,7 @@ namespace car_owner_basic {
 	}
 	
 	class car_ownership_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		car_ownership_id id;
@@ -724,7 +725,7 @@ namespace car_owner_basic {
 		}
 		#endif
 		DCON_RELEASE_INLINE car_ownership_id car_get_car_ownership_as_owned_car(car_id id) const noexcept {
-			return car_ownership_id(car_ownership_id::value_base_t(id.index()));
+			return (id.value <= car_ownership.size_used) ? car_ownership_id(car_ownership_id::value_base_t(id.index())) : car_ownership_id();
 		}
 		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::contiguous_tags<car_ownership_id> car_get_car_ownership_as_owned_car(ve::contiguous_tags<car_id> id) const noexcept {
@@ -743,7 +744,7 @@ namespace car_owner_basic {
 			}
 		}
 		DCON_RELEASE_INLINE car_ownership_id car_get_car_ownership(car_id id) const noexcept {
-			return car_ownership_id(car_ownership_id::value_base_t(id.index()));
+			return (id.value <= car_ownership.size_used) ? car_ownership_id(car_ownership_id::value_base_t(id.index())) : car_ownership_id();
 		}
 		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::contiguous_tags<car_ownership_id> car_get_car_ownership(ve::contiguous_tags<car_id> id) const noexcept {
@@ -2197,6 +2198,10 @@ namespace car_owner_basic {
 		return container.car_ownership_is_valid(id);
 	}
 	
+
+	namespace internal {
+	};
+
 
 }
 

@@ -100,7 +100,7 @@ TEST_CASE("simple serialzie", "[serialization_tests]") {
 
 		ptr->thingy_get_obj_value(target).push_back(3.0f);
 		ptr->thingy_get_obj_value(target).push_back(4.0f);
-		ptr->thingy_pooled_v_add_unique(target, int16_t(-5));
+		ptr->thingy_get_pooled_v(target).add_unique(int16_t(-5));
 		ptr->thingy_resize_big_array(2);
 		ptr->thingy_resize_big_array_bf(4);
 
@@ -109,8 +109,8 @@ TEST_CASE("simple serialzie", "[serialization_tests]") {
 		ptr->thingy_set_big_array_bf(target, 3, true);
 		target.get_i_value() = int16_t(35);
 		target.get_f_value() = 7.5f;
-		target.pooled_v_push_back(3);
-		target.pooled_v_push_back(5);
+		target.get_pooled_v().push_back(3);
+		target.get_pooled_v().push_back(5);
 		target.set_bf_value(true);
 		target.get_custom_struct().v1 = 7;
 		target.get_custom_struct().v2 = 9.0;
@@ -151,9 +151,9 @@ TEST_CASE("simple serialzie", "[serialization_tests]") {
 		REQUIRE(target.get_bf_value());
 		REQUIRE(target.get_i_value() == 35);
 		REQUIRE(target.get_f_value() == 7.5f);
-		REQUIRE(target.get_pooled_v_size() == 0);
+		REQUIRE(target.get_pooled_v().size() == 0);
 		REQUIRE(target.get_obj_value().size() == 0);
-		REQUIRE(target.get_pooled_v_size() == 0);
+		REQUIRE(target.get_pooled_v().size() == 0);
 		REQUIRE(target.get_big_array_size() == 0);
 		REQUIRE(target.get_big_array_bf_size() == 0);
 
@@ -182,7 +182,7 @@ TEST_CASE("serialzie complex props", "[serialization_tests]") {
 
 		ptr->thingy_get_obj_value(target).push_back(3.0f);
 		ptr->thingy_get_obj_value(target).push_back(4.0f);
-		ptr->thingy_pooled_v_add_unique(target, int16_t(-5));
+		ptr->thingy_get_pooled_v(target).add_unique(int16_t(-5));
 		ptr->thingy_resize_big_array(2);
 		ptr->thingy_resize_big_array_bf(4);
 
@@ -191,8 +191,8 @@ TEST_CASE("serialzie complex props", "[serialization_tests]") {
 		ptr->thingy_set_big_array_bf(target, 3, true);
 		target.get_i_value() = int16_t(35);
 		target.get_f_value() = 7.5f;
-		target.pooled_v_push_back(3);
-		target.pooled_v_push_back(5);
+		target.get_pooled_v().push_back(3);
+		target.get_pooled_v().push_back(5);
 		target.set_bf_value(true);
 		target.get_custom_struct().v1 = 7;
 		target.get_custom_struct().v2 = 9.0;
@@ -236,12 +236,12 @@ TEST_CASE("serialzie complex props", "[serialization_tests]") {
 		REQUIRE(target.get_custom_struct().v2 == 9.0);
 		REQUIRE(target.get_big_array_size() == 2);
 		REQUIRE(target.get_big_array_bf_size() == 4);
-		REQUIRE(target.get_pooled_v_size() == 3);
-		REQUIRE(target.get_pooled_v_at(1) == 3);
-		REQUIRE(target.get_pooled_v_at(2) == 5);
+		REQUIRE(target.get_pooled_v().size() == 3);
+		REQUIRE(target.get_pooled_v().at(1) == 3);
+		REQUIRE(target.get_pooled_v().at(2) == 5);
 		REQUIRE(ptr->thingy_get_obj_value(target).size() == 2);
 		REQUIRE(ptr->thingy_get_obj_value(target)[1] == 4.0f);
-		REQUIRE(ptr->thingy_pooled_v_contains(target, int16_t(-5)) == true);
+		REQUIRE(ptr->thingy_get_pooled_v(target).contains(int16_t(-5)) == true);
 		REQUIRE(ptr->thingy_get_big_array(target, 0) == 1.5f);
 		REQUIRE(ptr->thingy_get_big_array(target, 1) == 3.5f);
 		REQUIRE(ptr->thingy_get_big_array_bf(target, 3) == true);

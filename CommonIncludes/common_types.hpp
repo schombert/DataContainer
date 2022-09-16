@@ -333,18 +333,15 @@ namespace dcon {
 			return concurrent_key_pair_helper(free_list_value).parts.index;
 		}
 
-		template<typename object_type, uint32_t minimum_size, size_t memory_size>
-		stable_mk_2_tag return_new_memory(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, uint32_t requested_capacity);
 	}
 
-	template<typename object_type, uint32_t minimum_size, size_t memory_size>
-	class stable_variable_vector_storage_mk_2 {
+	template<typename object_type>
+	class stable_variable_vector_base {
 	public:
 		using contents_type = object_type;
 
-		uint64_t backing_storage[memory_size];
+		
 		std::atomic<uint32_t> first_free = uint32_t(0);
-
 		std::atomic<uint64_t> free_lists[17] = {
 			detail::concurrent_key_pair_helper(std::numeric_limits<stable_mk_2_tag>::max(), 0).value, detail::concurrent_key_pair_helper(std::numeric_limits<stable_mk_2_tag>::max(), 0).value, detail::concurrent_key_pair_helper(std::numeric_limits<stable_mk_2_tag>::max(), 0).value, detail::concurrent_key_pair_helper(std::numeric_limits<stable_mk_2_tag>::max(), 0).value,
 			detail::concurrent_key_pair_helper(std::numeric_limits<stable_mk_2_tag>::max(), 0).value, detail::concurrent_key_pair_helper(std::numeric_limits<stable_mk_2_tag>::max(), 0).value, detail::concurrent_key_pair_helper(std::numeric_limits<stable_mk_2_tag>::max(), 0).value, detail::concurrent_key_pair_helper(std::numeric_limits<stable_mk_2_tag>::max(), 0).value,
@@ -352,53 +349,60 @@ namespace dcon {
 			detail::concurrent_key_pair_helper(std::numeric_limits<stable_mk_2_tag>::max(), 0).value, detail::concurrent_key_pair_helper(std::numeric_limits<stable_mk_2_tag>::max(), 0).value, detail::concurrent_key_pair_helper(std::numeric_limits<stable_mk_2_tag>::max(), 0).value, detail::concurrent_key_pair_helper(std::numeric_limits<stable_mk_2_tag>::max(), 0).value,
 			detail::concurrent_key_pair_helper(std::numeric_limits<stable_mk_2_tag>::max(), 0).value };
 
+		const uint64_t memory_size;
+		const uint64_t minimum_size;
 
-		void reset() {
-			first_free = uint32_t(0);
-			for(uint32_t i = 0; i < std::extent_v<decltype(free_lists)>; ++i)
-				free_lists[i].store(detail::concurrent_key_pair_helper(std::numeric_limits<stable_mk_2_tag>::max(), 0).value, std::memory_order_release);
+		stable_variable_vector_base(uint64_t mz, uint64_t minsz) : memory_size(mz), minimum_size(minsz) {}
+
+		//uint32_t minimum_size, size_t memory_size
+		//uint64_t backing_storage[memory_size];
+
+		inline void reset();
+		inline void increase_capacity(stable_mk_2_tag& i, uint32_t new_capacity);
+		inline void shrink_capacity(stable_mk_2_tag& i);
+		inline void release(stable_mk_2_tag& i);
+		inline stable_mk_2_tag return_new_memory(uint32_t requested_capacity);
+		inline stable_mk_2_tag make_new(uint32_t capacity);
+	};
+
+	template<typename object_type, uint32_t minimum_size, size_t memory_size>
+	class stable_variable_vector_storage_mk_2 : public stable_variable_vector_base<object_type> {
+	public:
+		uint64_t backing_storage[memory_size];
+		stable_variable_vector_storage_mk_2() : stable_variable_vector_base<object_type>(memory_size, minimum_size) {}
+	};
+
+	template<typename object_type>
+	inline stable_mk_2_tag stable_variable_vector_base<object_type>::make_new(uint32_t capacity) {
+		auto const log2_cap = detail::rt_log2_round_up(capacity > uint32_t(minimum_size) ? capacity : uint32_t(minimum_size));
+		const uint32_t free_list_pos = log2_cap;
+
+		uint64_t* const backing_storage = static_cast<stable_variable_vector_storage_mk_2<object_type, 1, 1>*>(this)->backing_storage;
+		if(auto res = detail::try_pop_free_list(free_lists[free_list_pos], backing_storage); res != std::numeric_limits<stable_mk_2_tag>::max()) {
+			return res;
+		} else if(auto resb = detail::try_pop_free_list(free_lists[free_list_pos + 1], backing_storage); resb != std::numeric_limits<stable_mk_2_tag>::max()) {
+			return resb;
+		} else {
+			return return_new_memory(log2_cap);
 		}
-		stable_mk_2_tag make_new(uint32_t capacity) {
-			const uint32_t free_list_pos = detail::rt_log2_round_up(capacity > minimum_size ? capacity : minimum_size);
+	}
 
-			if(auto res = detail::try_pop_free_list(free_lists[free_list_pos], backing_storage); res != std::numeric_limits<stable_mk_2_tag>::max()) {
-				return res;
-			} else if(auto resb = detail::try_pop_free_list(free_lists[free_list_pos + 1], backing_storage); resb != std::numeric_limits<stable_mk_2_tag>::max()) {
-				return resb;
-			} else {
-				return detail::return_new_memory(*this, capacity);
-			}
-		}
-		void increase_capacity(stable_mk_2_tag& i, uint32_t new_capacity) {
-			if(i == std::numeric_limits<stable_mk_2_tag>::max()) {
-				i = make_new(new_capacity);
-			} else {
-				detail::mk_2_header* header = (detail::mk_2_header*)(backing_storage + i);
-				if(new_capacity > header->capacity) {
-					const auto new_item = make_new(new_capacity);
+	template<typename object_type>
+	inline void stable_variable_vector_base<object_type>::reset() {
+		first_free = uint32_t(0);
+		for(uint32_t i = 0; i < std::extent_v<decltype(free_lists)>; ++i)
+			free_lists[i].store(detail::concurrent_key_pair_helper(std::numeric_limits<stable_mk_2_tag>::max(), 0).value, std::memory_order_release);
+	}
 
-					detail::mk_2_header* new_header = (detail::mk_2_header*)(backing_storage + new_item);
-					new_header->size = header->size;
-					std::copy(detail::to_data<object_type>(header), detail::to_data<object_type>(header) + header->size, detail::to_data<object_type>(new_header));
-
-					release(i);
-					i = new_item;
-				}
-			}
-		}
-		void shrink_capacity(stable_mk_2_tag& i) {
+	template<typename object_type>
+	inline void stable_variable_vector_base<object_type>::increase_capacity(stable_mk_2_tag& i, uint32_t new_capacity) {
+		if(i == std::numeric_limits<stable_mk_2_tag>::max()) {
+			i = make_new(new_capacity);
+		} else {
+			uint64_t* const backing_storage = static_cast<stable_variable_vector_storage_mk_2<object_type, 1, 1>*>(this)->backing_storage;
 			detail::mk_2_header* header = (detail::mk_2_header*)(backing_storage + i);
-
-			if(header->size == uint16_t(0)) {
-				release(i);
-				return;
-			}
-
-			const uint32_t target_free_list_pos = detail::rt_log2_round_up(header->size > minimum_size ? header->size : minimum_size);
-			const uint32_t free_list_pos = detail::rt_log2(header->capacity);
-
-			if(target_free_list_pos + 1 < free_list_pos) {
-				const auto new_item = make_new(header->size);
+			if(new_capacity > header->capacity) {
+				const auto new_item = make_new(new_capacity);
 
 				detail::mk_2_header* new_header = (detail::mk_2_header*)(backing_storage + new_item);
 				new_header->size = header->size;
@@ -408,130 +412,162 @@ namespace dcon {
 				i = new_item;
 			}
 		}
-		void release(stable_mk_2_tag& i) {
-			if(i == std::numeric_limits<stable_mk_2_tag>::max())
-				return;
+	}
+	template<typename object_type>
+	inline void stable_variable_vector_base<object_type>::shrink_capacity(stable_mk_2_tag& i) {
+		uint64_t* const backing_storage = static_cast<stable_variable_vector_storage_mk_2<object_type, 1, 1>*>(this)->backing_storage;
 
-			detail::mk_2_header* header = (detail::mk_2_header*)(backing_storage + i);
+		detail::mk_2_header* header = (detail::mk_2_header*)(backing_storage + i);
 
-			const uint32_t free_list_pos = detail::rt_log2(header->capacity);
-
-			uint64_t free_list_value = free_lists[free_list_pos].load(std::memory_order_acquire);
-			do {
-				header->next_free = detail::concurrent_key_pair_helper(free_list_value).parts.index;
-				header->size = uint16_t(0);
-			} while(!free_lists[free_list_pos].compare_exchange_strong(
-				free_list_value,
-				detail::concurrent_key_pair_helper(i, detail::concurrent_key_pair_helper(free_list_value).parts.counter + 1).value, std::memory_order_acq_rel));
-
-
-			i = std::numeric_limits<stable_mk_2_tag>::max();
+		if(header->size == uint16_t(0)) {
+			release(i);
+			return;
 		}
-	};
 
-	namespace detail {
-		template<typename object_type, uint32_t minimum_size, size_t memory_size>
-		stable_mk_2_tag return_new_memory(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, uint32_t requested_capacity) {
-			const uint32_t real_capacity = uint32_t(1) << rt_log2_round_up(requested_capacity > minimum_size ? requested_capacity : minimum_size);
+		const uint32_t target_free_list_pos = detail::rt_log2_round_up(header->size > minimum_size ? header->size : minimum_size);
+		const uint32_t free_list_pos = detail::rt_log2(header->capacity);
 
-			mk_2_header* new_header;
-			stable_mk_2_tag new_mem;
+		if(target_free_list_pos + 1 < free_list_pos) {
+			const auto new_item = make_new(header->size);
 
+			detail::mk_2_header* new_header = (detail::mk_2_header*)(backing_storage + new_item);
+			new_header->size = header->size;
+			std::copy(detail::to_data<object_type>(header), detail::to_data<object_type>(header) + header->size, detail::to_data<object_type>(new_header));
 
-			const uint32_t qword_size = uint32_t(1) + (real_capacity * sizeof(object_type) + uint32_t(7)) / uint32_t(8);
-			auto old_position = storage.first_free.fetch_add(qword_size, std::memory_order_acq_rel);
-
-			new_mem = old_position;
-			new_header = (mk_2_header*)(storage.backing_storage + old_position);
-
-
-			if(storage.first_free >= memory_size) {
-#ifndef DCON_USE_EXCEPTIONS
-				std::abort();
-#else
-				throw out_of_space{};
-#endif
-			}
-
-
-			new_header->capacity = uint16_t(real_capacity);
-			new_header->size = uint16_t(0);
-			new_header->next_free = std::numeric_limits<stable_mk_2_tag>::max();
-
-			object_type* objects = detail::to_data<object_type>(new_header);
-			for(int32_t i = int32_t(real_capacity) - 1; i >= 0; --i)
-				new (objects + i) object_type();
-
-			return new_mem;
+			release(i);
+			i = new_item;
 		}
 	}
+	template<typename object_type>
+	inline void stable_variable_vector_base<object_type>::release(stable_mk_2_tag& i) {
+		if(i == std::numeric_limits<stable_mk_2_tag>::max())
+			return;
 
-	//general interface, safe from any thread
-	template<typename object_type, uint32_t minimum_size, size_t memory_size>
-	std::pair<object_type*, object_type*> get_range(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size> const& storage, stable_mk_2_tag i) {
+		uint64_t* const backing_storage = static_cast<stable_variable_vector_storage_mk_2<object_type, 1, 1>*>(this)->backing_storage;
+		detail::mk_2_header* header = (detail::mk_2_header*)(backing_storage + i);
+
+		const uint32_t free_list_pos = detail::rt_log2(header->capacity);
+
+		uint64_t free_list_value = free_lists[free_list_pos].load(std::memory_order_acquire);
+		do {
+			header->next_free = detail::concurrent_key_pair_helper(free_list_value).parts.index;
+			header->size = uint16_t(0);
+		} while(!free_lists[free_list_pos].compare_exchange_strong(
+			free_list_value,
+			detail::concurrent_key_pair_helper(i, detail::concurrent_key_pair_helper(free_list_value).parts.counter + 1).value, std::memory_order_acq_rel));
+
+
+		i = std::numeric_limits<stable_mk_2_tag>::max();
+	}
+
+	template<typename object_type>
+	inline stable_mk_2_tag stable_variable_vector_base<object_type>::return_new_memory(uint32_t requested_capacity) {
+		const uint32_t real_capacity = uint32_t(1) << requested_capacity;
+
+		detail::mk_2_header* new_header;
+		stable_mk_2_tag new_mem;
+
+
+		const uint32_t qword_size = uint32_t(1) + (real_capacity * sizeof(object_type) + uint32_t(7)) / uint32_t(8);
+		auto old_position = first_free.fetch_add(qword_size, std::memory_order_acq_rel);
+
+		new_mem = old_position;
+
+		uint64_t* const backing_storage = static_cast<stable_variable_vector_storage_mk_2<object_type, 1, 1>*>(this)->backing_storage;
+		new_header = (detail::mk_2_header*)(backing_storage + old_position);
+
+
+		if(first_free >= memory_size) {
+#ifndef DCON_USE_EXCEPTIONS
+			std::abort();
+#else
+			throw out_of_space{};
+#endif
+		}
+
+		new_header->capacity = uint16_t(real_capacity);
+		new_header->size = uint16_t(0);
+		new_header->next_free = std::numeric_limits<stable_mk_2_tag>::max();
+
+		object_type* objects = detail::to_data<object_type>(new_header);
+		for(int32_t i = int32_t(real_capacity) - 1; i >= 0; --i)
+			new (objects + i) object_type();
+
+		return new_mem;
+	}
+
+	template<typename object_type>
+	std::pair<object_type*, object_type*> get_range(stable_variable_vector_base<object_type> const& storage, stable_mk_2_tag i) {
 		if(i != std::numeric_limits<stable_mk_2_tag>::max()) {
-			detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
+			uint64_t const* const backing_storage = static_cast<stable_variable_vector_storage_mk_2<object_type, 1, 1> const&>(storage).backing_storage;
+			detail::mk_2_header* header = (detail::mk_2_header*)(backing_storage + i);
 			return std::pair<object_type*, object_type*>(detail::to_data<object_type>(header), detail::to_data<object_type>(header) + header->size);
 		} else {
 			return std::pair<object_type*, object_type*>(nullptr, nullptr);
 		}
 	}
 
-	template<typename object_type, uint32_t minimum_size, size_t memory_size>
-	object_type& get(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size> const& storage, stable_mk_2_tag i, uint32_t inner_index) {
-		detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
+	template<typename object_type>
+	object_type& get(stable_variable_vector_base<object_type> const& storage, stable_mk_2_tag i, uint32_t inner_index) {
+		uint64_t const* const backing_storage = static_cast<stable_variable_vector_storage_mk_2<object_type, 1, 1> const&>(storage).backing_storage;
+		detail::mk_2_header* header = (detail::mk_2_header*)(backing_storage + i);
 		return *(detail::to_data<object_type>(header) + inner_index);
 	}
 
-	template<typename object_type, uint32_t minimum_size, size_t memory_size>
-	uint32_t get_capacity(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size> const& storage, stable_mk_2_tag i) {
+	template<typename object_type>
+	uint32_t get_capacity(stable_variable_vector_base<object_type> const& storage, stable_mk_2_tag i) {
 		if(i != std::numeric_limits<stable_mk_2_tag>::max()) {
-			detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
+			uint64_t const* const backing_storage = static_cast<stable_variable_vector_storage_mk_2<object_type, 1, 1> const&>(storage).backing_storage;
+			detail::mk_2_header const* header = (detail::mk_2_header const*)(backing_storage + i);
 			return header->capacity;
 		} else {
 			return uint32_t(0);
 		}
 	}
 
-	template<typename object_type, uint32_t minimum_size, size_t memory_size>
-	uint32_t get_size(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size> const& storage, stable_mk_2_tag i) {
+	template<typename object_type>
+	uint32_t get_size(stable_variable_vector_base<object_type> const& storage, stable_mk_2_tag i) {
 		if(i != std::numeric_limits<stable_mk_2_tag>::max()) {
-			detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
+			uint64_t const* const backing_storage = static_cast<stable_variable_vector_storage_mk_2<object_type, 1, 1> const&>(storage).backing_storage;
+			detail::mk_2_header const* header = (detail::mk_2_header const*)(backing_storage + i);
 			return header->size;
 		} else {
 			return uint32_t(0);
 		}
 	}
 
-	template<typename object_type, uint32_t minimum_size, size_t memory_size>
-	void push_back(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag& i, object_type obj) {
+	template<typename object_type>
+	void push_back(stable_variable_vector_base<object_type>& storage, stable_mk_2_tag& i, object_type obj) {
+		uint64_t* const backing_storage = static_cast<stable_variable_vector_storage_mk_2<object_type, 1, 1>&>(storage).backing_storage;
 		if(i == std::numeric_limits<stable_mk_2_tag>::max()) {
 			storage.increase_capacity(i, 1);
-			detail::mk_2_header*header = (detail::mk_2_header*)(storage.backing_storage + i);
+			detail::mk_2_header*header = (detail::mk_2_header*)(backing_storage + i);
 
 			*detail::to_data<object_type>(header) = obj;
 			header->size = uint16_t(1);
 		} else {
-			detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
+			detail::mk_2_header* header = (detail::mk_2_header*)(backing_storage + i);
 			if(header->size >= header->capacity) {
 				storage.increase_capacity(i, header->size + 1);
-				header = (detail::mk_2_header*)(storage.backing_storage + i);
+				header = (detail::mk_2_header*)(backing_storage + i);
 			}
 			*(detail::to_data<object_type>(header) + header->size) = obj;
 			++header->size;
 		}
 	}
 
-	template<typename object_type, uint32_t minimum_size, size_t memory_size>
-	void pop_back(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag i) {
-		detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
+	template<typename object_type>
+	void pop_back(stable_variable_vector_base<object_type>& storage, stable_mk_2_tag i) {
+		uint64_t* const backing_storage = static_cast<stable_variable_vector_storage_mk_2<object_type, 1, 1>&>(storage).backing_storage;
+		detail::mk_2_header* header = (detail::mk_2_header*)(backing_storage + i);
 		if(header->size != 0)
 			--header->size;
 	}
 
-	template<typename object_type, uint32_t minimum_size, size_t memory_size>
-	void remove_at(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag i, uint32_t inner_index) {
-		detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
+	template<typename object_type>
+	void remove_at(stable_variable_vector_base<object_type>& storage, stable_mk_2_tag i, uint32_t inner_index) {
+		uint64_t* const backing_storage = static_cast<stable_variable_vector_storage_mk_2<object_type, 1, 1>&>(storage).backing_storage;
+		detail::mk_2_header* header = (detail::mk_2_header*)(backing_storage + i);
 
 		*(detail::to_data<object_type>(header) + inner_index) = *(detail::to_data<object_type>(header) + header->size - 1);
 
@@ -539,28 +575,28 @@ namespace dcon {
 			--header->size;
 	}
 
-	template<typename object_type, uint32_t minimum_size, size_t memory_size>
-	bool contains_item(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size> const& storage, stable_mk_2_tag i, object_type obj) {
+	template<typename object_type>
+	bool contains_item(stable_variable_vector_base<object_type> const& storage, stable_mk_2_tag i, object_type obj) {
 		const auto range = get_range(storage, i);
 		return std::find(range.first, range.second, obj) != range.second;
 	}
 
-	template<typename object_type, uint32_t minimum_size, size_t memory_size>
-	void add_unique_item(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag& i, object_type obj) {
+	template<typename object_type>
+	void add_unique_item(stable_variable_vector_base<object_type>& storage, stable_mk_2_tag& i, object_type obj) {
 		if(!contains_item(storage, i, obj))
 			push_back(storage, i, obj);
 	}
 
-	template<typename object_type, uint32_t minimum_size, size_t memory_size>
-	void remove_unique_item(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag i, object_type obj) {
+	template<typename object_type>
+	void remove_unique_item(stable_variable_vector_base<object_type>& storage, stable_mk_2_tag i, object_type obj) {
 		const auto range = get_range(storage, i);
 		if(auto pos = std::find(range.first, range.second, obj); pos != range.second) {
 			*pos = *(range.second - 1);
 			pop_back(storage, i);
 		}
 	}
-	template<typename object_type, uint32_t minimum_size, size_t memory_size>
-	void remove_all_items(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag& i, object_type obj) {
+	template<typename object_type>
+	void remove_all_items(stable_variable_vector_base<object_type>& storage, stable_mk_2_tag& i, object_type obj) {
 		const auto range = get_range(storage, i);
 
 		auto old_size = get_size(storage, i);
@@ -573,45 +609,148 @@ namespace dcon {
 		resize(storage, i, old_size);
 	}
 
-	template<typename object_type, uint32_t minimum_size, size_t memory_size>
-	void replace_unique_item(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag i, object_type obj, object_type new_val) {
+	template<typename object_type>
+	void replace_unique_item(stable_variable_vector_base<object_type>& storage, stable_mk_2_tag i, object_type obj, object_type new_val) {
 		const auto range = get_range(storage, i);
 		if(auto pos = std::find(range.first, range.second, obj); pos != range.second) {
 			*pos = new_val;
 		}
 	}
-	template<typename object_type, uint32_t minimum_size, size_t memory_size>
-	void replace_all_items(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag i, object_type obj, object_type new_val) {
+	template<typename object_type>
+	void replace_all_items(stable_variable_vector_base<object_type>& storage, stable_mk_2_tag i, object_type obj, object_type new_val) {
 		const auto range = get_range(storage, i);
 		for(auto pos = std::find(range.first, range.second, obj); pos != range.second;  pos = std::find(pos + 1, range.second, obj)) {
 			*pos = new_val;
 		}
 	}
 
-	template<typename object_type, uint32_t minimum_size, size_t memory_size>
-	void load_range(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag& i, object_type const* first, object_type const* last) {
+	template<typename object_type>
+	void load_range(stable_variable_vector_base<object_type>& storage, stable_mk_2_tag& i, object_type const* first, object_type const* last) {
 		storage.increase_capacity(i, static_cast<uint32_t>(last - first));
 		if(i != std::numeric_limits<stable_mk_2_tag>::max()) {
-			detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
+			uint64_t* const backing_storage = static_cast<stable_variable_vector_storage_mk_2<object_type, 1, 1>&>(storage).backing_storage;
+			detail::mk_2_header* header = (detail::mk_2_header*)(backing_storage + i);
 			header->size = static_cast<uint16_t>(last - first);
 			memcpy(detail::to_data<object_type>(header), first, (last - first) * sizeof(object_type));
 		}
 	}
 
-	template<typename object_type, uint32_t minimum_size, size_t memory_size>
-	void resize(stable_variable_vector_storage_mk_2<object_type, minimum_size, memory_size>& storage, stable_mk_2_tag& i, uint32_t new_size) {
+	template<typename object_type>
+	void resize(stable_variable_vector_base<object_type>& storage, stable_mk_2_tag& i, uint32_t new_size) {
 		auto old_size = get_size(storage, i);
+		uint64_t* const backing_storage = static_cast<stable_variable_vector_storage_mk_2<object_type, 1, 1>&>(storage).backing_storage;
 		if(new_size < old_size) {
-			detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
+			detail::mk_2_header* header = (detail::mk_2_header*)(backing_storage + i);
 			header->size = uint16_t(new_size);
 		} else if(new_size > old_size) {
 			storage.increase_capacity(i, new_size);
-			detail::mk_2_header* header = (detail::mk_2_header*)(storage.backing_storage + i);
+			detail::mk_2_header* header = (detail::mk_2_header*)(backing_storage + i);
 			std::fill(detail::to_data<object_type>(header) + header->size, detail::to_data<object_type>(header) + new_size, object_type());
 			header->size = uint16_t(new_size);
 		}
 
 	}
+
+	template<typename object_type>
+	class dcon_vv_fat_id {
+	private:
+		stable_variable_vector_base<object_type>& storage;
+		stable_mk_2_tag& underlying_tag;
+	public:
+		dcon_vv_fat_id(stable_variable_vector_base<object_type>& s, stable_mk_2_tag& t) noexcept : storage(s), underlying_tag(t) {}
+
+		std::pair<object_type*, object_type*> range() const {
+			return get_range(storage, underlying_tag);
+		}
+		object_type& at(uint32_t inner_index) const {
+			return get(storage, underlying_tag, inner_index);
+		}
+		uint32_t capacity() const {
+			return get_capacity(storage, underlying_tag);
+		}
+		uint32_t size()  const {
+			return get_size(storage, underlying_tag);
+		}
+		object_type* begin() const {
+			return get_range(storage, underlying_tag).first;
+		}
+		object_type* end() const {
+			return get_range(storage, underlying_tag).second;
+		}
+		void push_back(object_type obj) {
+			dcon::push_back(storage, underlying_tag, obj);
+		}
+		void pop_back() {
+			dcon::pop_back(storage, underlying_tag);
+		}
+		void remove_at(uint32_t inner_index) {
+			dcon::remove_at(storage, underlying_tag, inner_index);
+		}
+		bool contains(object_type obj) const {
+			return contains_item(storage, underlying_tag, obj);
+		}
+		void add_unique(object_type obj) {
+			add_unique_item(storage, underlying_tag, obj);
+		}
+		void remove_unique(object_type obj) {
+			remove_unique_item(storage, underlying_tag, obj);
+		}
+		void remove_all(object_type obj) {
+			remove_all_items(storage, underlying_tag, obj);
+		}
+		void replace_unique(object_type obj, object_type new_val) {
+			replace_unique_item(storage, underlying_tag, obj, new_val);
+		}
+		void replace_all(object_type obj, object_type new_val) {
+			replace_all_items(storage, underlying_tag, obj, new_val);
+		}
+		void load_range(object_type const* first, object_type const* last) {
+			dcon::load_range(storage, underlying_tag, first, last);
+		}
+		void resize(uint32_t new_size) {
+			dcon::resize(storage, underlying_tag, new_size);
+		}
+		void clear() {
+			dcon::resize(storage, underlying_tag, 0);
+		}
+		object_type& operator[](uint32_t inner_index) const {
+			return at(inner_index);
+		}
+	};
+
+	template<typename object_type>
+	class dcon_vv_const_fat_id {
+	private:
+		stable_variable_vector_base<object_type> const& storage;
+		stable_mk_2_tag const underlying_tag;
+	public:
+		dcon_vv_const_fat_id(stable_variable_vector_base<object_type> const& s, stable_mk_2_tag t) noexcept : storage(s), underlying_tag(t) {}
+
+		std::pair<object_type const*, object_type const*> range() const {
+			return get_range(storage, underlying_tag);
+		}
+		object_type const& at(uint32_t inner_index) const {
+			return get(storage, underlying_tag, inner_index);
+		}
+		uint32_t capacity() const {
+			return get_capacity(storage, underlying_tag);
+		}
+		uint32_t size()  const {
+			return get_size(storage, underlying_tag);
+		}
+		bool contains(object_type obj) const {
+			return contains_item(storage, underlying_tag, obj);
+		}
+		object_type const* begin() const {
+			return get_range(storage, underlying_tag).first;
+		}
+		object_type const* end() const {
+			return get_range(storage, underlying_tag).second;
+		}
+		object_type const& operator[](uint32_t inner_index) const {
+			return at(inner_index);
+		}
+	};
 
 	template <typename T>
 	struct cache_aligned_allocator {

@@ -741,6 +741,9 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 					}
 					break;
 				case property_type::special_vector:
+					o + "auto @namesp@get_@exname@() const -> decltype(m_container.@obj@_get_@propname@(@obj@_id()))" + block{
+						o + "return m_container.@obj@_get_@propname@( @internal_tag@ );";
+					};
 					break;
 			}
 		} else {
@@ -845,6 +848,9 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 					}
 					break;
 				case property_type::special_vector:
+					o + "auto @namesp@get_@exname@() const -> decltype(m_container.@obj@_get_@propname@(@obj@_id()))" + block{
+						o + "return m_container.@obj@_get_@propname@( @internal_tag@ );";
+					};
 					break;
 			}
 		} else {

@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <assert.h>
 #include <cstring>
 #include "common_types.hpp"
 #ifndef DCON_NO_VE
@@ -241,7 +242,7 @@ namespace ns {
 
 
 			public:
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) thingy2_class {
@@ -262,7 +263,7 @@ namespace ns {
 
 
 			public:
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) dummy_rel_class {
@@ -302,7 +303,7 @@ namespace ns {
 			
 
 			public:
-			friend class data_container;
+			friend data_container;
 		};
 
 	}
@@ -314,7 +315,7 @@ namespace ns {
 	class dummy_rel_const_fat_id;
 	class dummy_rel_fat_id;
 	class thingy_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		thingy_id id;
@@ -372,7 +373,7 @@ namespace ns {
 	}
 	
 	class thingy_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		thingy_id id;
@@ -446,7 +447,7 @@ namespace ns {
 	}
 	
 	class thingy2_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		thingy2_id id;
@@ -493,7 +494,7 @@ namespace ns {
 	}
 	
 	class thingy2_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		thingy2_id id;
@@ -558,7 +559,7 @@ namespace ns {
 	}
 	
 	class dummy_rel_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		dummy_rel_id id;
@@ -603,7 +604,7 @@ namespace ns {
 	}
 	
 	class dummy_rel_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		dummy_rel_id id;
@@ -866,7 +867,7 @@ namespace ns {
 		}
 		#endif
 		DCON_RELEASE_INLINE dummy_rel_id thingy2_get_dummy_rel_as_right(thingy2_id id) const noexcept {
-			return dummy_rel_id(dummy_rel_id::value_base_t(id.index()));
+			return (id.value <= dummy_rel.size_used) ? dummy_rel_id(dummy_rel_id::value_base_t(id.index())) : dummy_rel_id();
 		}
 		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::contiguous_tags<dummy_rel_id> thingy2_get_dummy_rel_as_right(ve::contiguous_tags<thingy2_id> id) const noexcept {
@@ -885,7 +886,7 @@ namespace ns {
 			}
 		}
 		DCON_RELEASE_INLINE dummy_rel_id thingy2_get_dummy_rel(thingy2_id id) const noexcept {
-			return dummy_rel_id(dummy_rel_id::value_base_t(id.index()));
+			return (id.value <= dummy_rel.size_used) ? dummy_rel_id(dummy_rel_id::value_base_t(id.index())) : dummy_rel_id();
 		}
 		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::contiguous_tags<dummy_rel_id> thingy2_get_dummy_rel(ve::contiguous_tags<thingy2_id> id) const noexcept {
@@ -1273,6 +1274,7 @@ namespace ns {
 			}
 		}
 		
+
 
 		void deserialize(std::byte const*& input_buffer, std::vector<float>& obj, std::byte const* end) const;
 		c_struct_b convert_type(std::vector<float> const& source, c_struct_b* overload_selector) const;
@@ -2221,6 +2223,11 @@ namespace ns {
 		return container.dummy_rel_is_valid(id);
 	}
 	
+
+	namespace internal {
+	};
+
+
 }
 
 #undef DCON_RELEASE_INLINE

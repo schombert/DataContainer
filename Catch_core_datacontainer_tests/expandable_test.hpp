@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <assert.h>
 #include <cstring>
 #include "common_types.hpp"
 #ifndef DCON_NO_VE
@@ -199,7 +200,7 @@ namespace ex1 {
 
 
 			public:
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) bottom_class {
@@ -219,7 +220,7 @@ namespace ex1 {
 
 
 			public:
-			friend class data_container;
+			friend data_container;
 		};
 
 		class alignas(64) lr_relation_class {
@@ -295,7 +296,7 @@ namespace ex1 {
 
 
 			public:
-			friend class data_container;
+			friend data_container;
 		};
 
 	}
@@ -307,7 +308,7 @@ namespace ex1 {
 	class lr_relation_const_fat_id;
 	class lr_relation_fat_id;
 	class top_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		top_id id;
@@ -362,7 +363,7 @@ namespace ex1 {
 	}
 	
 	class top_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		top_id id;
@@ -436,7 +437,7 @@ namespace ex1 {
 	}
 	
 	class bottom_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		bottom_id id;
@@ -491,7 +492,7 @@ namespace ex1 {
 	}
 	
 	class bottom_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		bottom_id id;
@@ -565,7 +566,7 @@ namespace ex1 {
 	}
 	
 	class lr_relation_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container& container;
 		lr_relation_id id;
@@ -612,7 +613,7 @@ namespace ex1 {
 	}
 	
 	class lr_relation_const_fat_id {
-		friend class data_container;
+		friend data_container;
 		public:
 		data_container const& container;
 		lr_relation_id id;
@@ -1249,6 +1250,7 @@ namespace ex1 {
 			}
 		}
 		
+
 
 
 		void reset() {
@@ -2233,6 +2235,11 @@ namespace ex1 {
 		return container.lr_relation_is_valid(id);
 	}
 	
+
+	namespace internal {
+	};
+
+
 }
 
 #undef DCON_RELEASE_INLINE
