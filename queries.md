@@ -143,9 +143,9 @@ Visually this would look like the following
 │  base  │                            │sibling_a│
 └────┬───┘           parent           └─────────┘ ┌───────────┐ child ┌─────────┐
      └────────────────────────────────────────────┤ parentage ├───────┤ person  │
-	                                              └───────────┘       │   as    │
-												                      │sibling_b│
-																	  └─────────┘
+                                                  └───────────┘       │   as    │
+                                                                      │sibling_b│
+                                                                      └─────────┘
 ```
 
 Note that the standard rules for incrementing through the possibilities still apply; options are tried from right to left. Thus, after the options for `sibling_b` are tried, eventually a new option will be tried for `sibling_a`, and when that happens everything to the right of it (thus `sibling_b`) will be reset. The ultimate result is that you will see every possible pair of siblings in every order (see below for how to filter the redundant possibilities out, if you wish). Note also that we could not construct this query as a simpler linear one, because to start from a parameter the common parent, `base`, had to come first.
