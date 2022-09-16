@@ -1537,6 +1537,10 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 		if(at_value.type.length() > 0) {
 			for(auto& slot : result.table_slots) {
 				if(slot.reference_name == at_value.type) {
+					if(at_value.name == "id") {
+						result.where_conditional += slot.internally_named_as;
+						found = true;
+					}
 					for(auto& prop : slot.actual_table->properties) {
 						if(prop.name == at_value.name && !found) {
 							if(prop.type == property_type::array_bitfield || prop.type == property_type::array_other

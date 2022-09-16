@@ -151,6 +151,29 @@ relationship{
 }
 ```
 
+### `query`
+
+The `query` key expects a single parameter that will in turn be processed as a sequence of sub-keys with their own parameters. The valid sub-keys are as follows:
+
+- `name{...}` with a single parameter. This defines the name of the query.
+- `parameters{...}` with a single parameter. This parameter will in turn be processes as a sequence of sub-keys. Each of these sub-keys must be a key with a single parameter; the key value of the sub-key will become the name of a parameter, while the parameter value of the sub-key will become its type.
+- `select{...}` with a single parameter. This parameter will be parsed as a query definition. See [Queries](queries.md).
+
+For example:
+
+```
+query{
+	name{grandparents}
+	parameters{
+		from_person{person_id}
+	}
+	select{ gp.id as grandparent, par.id as parent
+		from @from_person, join on child parentage, join on bio_parent person as par,
+			join on child parentage, join on bio_parent person as gp
+		}
+}
+```
+
 ## Complex sub-keys
 
 ### `property`

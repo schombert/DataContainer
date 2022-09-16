@@ -1,5 +1,7 @@
 # DataContainer
 
+"More than an ECS, less than a database"
+
 ## What is it?
 
 The DataContainer project contains a code generation tool (DataContainerGenerator) that turns text specifications describing objects and their relationships into a C++ header files defining a `data_container` class that manages the described objects and relationships.
@@ -26,6 +28,7 @@ The following documentation explains all you need to know about how to generate 
 - [Overview](overview.md)
 - [Objects and properties](objects_and_properties.md)
 - [Relationships](relationships.md)
+- [Queries](queries.md)
 - [Serialization and deserialization](serialization.md)
 - [Multithreading](multithreading.md)
 - [The ve SIMD library](ve_documentation.md)
