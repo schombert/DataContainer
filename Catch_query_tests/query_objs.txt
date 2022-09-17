@@ -145,3 +145,15 @@ query{
 			person.join car_ownership join car as car_b}
 }
 
+query{
+	name{siblings}
+	parameters{
+		person_param{person_id}
+	}
+	select{base.id, sibling_a.id, sibling_b.id
+		from @person_param as base,
+			join on bio_parent parentage, join on child person as sibling_a,
+				base.join on bio_parent parentage, join on child person as sibling_b
+		where @sibling_a.id .index() < @sibling_b.id .index() }
+}
+

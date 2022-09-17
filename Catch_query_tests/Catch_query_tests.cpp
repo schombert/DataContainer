@@ -719,3 +719,92 @@ TEST_CASE("pairs of cars", "[query_tests]") {
 	REQUIRE(cd);
 	REQUIRE(count == 6);
 }
+
+TEST_CASE("siblings test", "[query_tests]") {
+	auto ptr = std::make_unique<dcon::data_container>();
+
+	auto gp1 = ptr->create_person();
+	auto gp2 = ptr->create_person();
+	auto gp3 = ptr->create_person();
+	auto gp4 = ptr->create_person();
+	auto gp5 = ptr->create_person();
+	auto gp6 = ptr->create_person();
+	auto gp7 = ptr->create_person();
+	auto gp8 = ptr->create_person();
+	auto gp9 = ptr->create_person();
+	auto gp10 = ptr->create_person();
+
+	auto p1 = ptr->create_person();
+	auto p2 = ptr->create_person();
+	auto p3 = ptr->create_person();
+	auto p4 = ptr->create_person();
+	auto p5 = ptr->create_person();
+	auto p6 = ptr->create_person();
+	auto p7 = ptr->create_person();
+
+	auto c1 = ptr->create_person();
+	auto c2 = ptr->create_person();
+	auto c3 = ptr->create_person();
+	auto c4 = ptr->create_person();
+	auto c5 = ptr->create_person();
+	auto c6 = ptr->create_person();
+	auto c7 = ptr->create_person();
+	auto c8 = ptr->create_person();
+
+	ptr->person_set_age(c1, 18);
+	ptr->person_set_age(c2, 20);
+	ptr->person_set_age(c3, 24);
+	ptr->person_set_age(c4, 28);
+	ptr->person_set_age(c5, 32);
+	ptr->person_set_age(c6, 44);
+	ptr->person_set_age(c7, 48);
+	ptr->person_set_age(c8, 54);
+
+	ptr->person_set_wealth(c1, 1.8f);
+	ptr->person_set_wealth(c2, 20.0f);
+	ptr->person_set_wealth(c3, 24.0f);
+	ptr->person_set_wealth(c4, 2.8f);
+	ptr->person_set_wealth(c5, 0.32f);
+	ptr->person_set_wealth(c6, 4.4f);
+	ptr->person_set_wealth(c7, 48.0f);
+	ptr->person_set_wealth(c8, 5.4f);
+
+
+	ptr->try_create_parentage(c1, p1, p2);
+	ptr->try_create_parentage(c2, p1, p2);
+
+	ptr->try_create_parentage(c3, p3, p4);
+	ptr->try_create_parentage(c4, p3, p4);
+
+	ptr->try_create_parentage(c5, p5, p4);
+
+	ptr->try_create_parentage(c6, p6, p7);
+	ptr->try_create_parentage(c7, p1, gp1);
+	ptr->try_create_parentage(c8, p5, gp2);
+
+	ptr->try_create_parentage(p1, gp1, gp2);
+	ptr->try_create_parentage(p2, gp3, gp4);
+	ptr->try_create_parentage(p3, gp5, gp6);
+	ptr->try_create_parentage(p4, gp1, gp3);
+	ptr->try_create_parentage(p5, gp7, gp8);
+	ptr->try_create_parentage(p6, gp3, gp9);
+	ptr->try_create_parentage(p7, gp10, gp5);
+
+	bool cb1 = false;
+	bool cb2 = false;
+	bool cb3 = false;
+	int32_t count = 0;
+	for(auto& q : ptr->query_siblings(p1)) {
+		++count;
+		if(q.get_sibling_a_id() == c1 && q.get_sibling_b_id() == c2)
+			cb1 = true;
+		if(q.get_sibling_a_id() == c1 && q.get_sibling_b_id() == c7)
+			cb2 = true;
+		if(q.get_sibling_a_id() == c2 && q.get_sibling_b_id() == c7)
+			cb3 = true;
+	}
+	REQUIRE(count == 3);
+	REQUIRE(cb1);
+	REQUIRE(cb2);
+	REQUIRE(cb3);
+}

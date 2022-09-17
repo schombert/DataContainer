@@ -15,14 +15,13 @@
 
 
 
-[[noreturn]] void error_to_file(std::string const& file_name, std::string const& message) {
+ void error_to_file(std::string const& file_name) {
 	std::fstream fileout;
 	fileout.open(file_name, std::ios::out);
 	if(fileout.is_open()) {
-		fileout << message;
+		fileout << "";
 		fileout.close();
 	}
-	std::abort();
 }
 
 relationship_object_def const* better_primary_key(relationship_object_def const* oldr, relationship_object_def const* newr) {
@@ -78,6 +77,7 @@ relationship_object_def const* better_primary_key(relationship_object_def const*
 int main(int argc, char *argv[]) {
 	if(argc > 1) {
 		std::fstream input_file;
+		std::string input_file_name(argv[1]);
 		input_file.open(argv[1], std::ios::in);
 
 		const std::string output_file_name = [otemp = std::string(argv[1])]() mutable {
@@ -90,13 +90,17 @@ int main(int argc, char *argv[]) {
 			return otemp + ".cpp";
 		}();
 
+		error_record err(input_file_name);
 
 		if(!input_file.is_open()) {
-			error_to_file(output_file_name, std::string("Could not open input file: ") + argv[1]);
+			err.add(row_col_pair{ 0,0 }, 1000, "Could not open input file");
+			error_to_file(output_file_name);
+			std::cout << err.accumulated;
+			return -1;
 		}
 
 		
-		error_record err;
+		
 		
 		std::string file_contents((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
 		
@@ -104,8 +108,11 @@ int main(int argc, char *argv[]) {
 
 		input_file.close();
 
-		if(err.accumulated.length() > 0)
-			error_to_file(output_file_name, err.accumulated);
+		if(err.accumulated.length() > 0) {
+			error_to_file(output_file_name);
+			std::cout << err.accumulated;
+			return -1;
+		}
 
 		// patchup relationship pointers & other information
 
@@ -115,7 +122,10 @@ int main(int argc, char *argv[]) {
 					if(auto linked_object = find_by_name(parsed_file, l.type_name); linked_object) {
 						l.related_to = linked_object;
 					} else {
-						error_to_file(output_file_name, std::string("Could not find object named: ") + l.type_name + " in relationship: " + r.name);
+						err.add(row_col_pair{ 0,0 }, 1001, std::string("Could not find object named: ") + l.type_name + " in relationship: " + r.name);
+						error_to_file(output_file_name);
+						std::cout << err.accumulated;
+						return -1;
 					}
 					if(l.index == index_type::at_most_one && !l.is_optional && l.multiplicity == 1) {
 						r.primary_key.points_to = better_primary_key(r.primary_key.points_to, l.related_to);
@@ -124,8 +134,11 @@ int main(int argc, char *argv[]) {
 					}
 
 					if(l.multiplicity > 1 && l.index == index_type::many && l.ltype == list_type::list) {
-						error_to_file(output_file_name, std::string("Unsupported combination of list type storage with multiplicity > 1 in link ")
+						err.add(row_col_pair{ 0,0 }, 1002, std::string("Unsupported combination of list type storage with multiplicity > 1 in link ")
 							+ l.property_name + " in relationship: " + r.name);
+						error_to_file(output_file_name);
+						std::cout << err.accumulated;
+						return -1;
 					}
 
 					if(l.multiplicity > 1 && l.index == index_type::at_most_one) {
@@ -136,7 +149,10 @@ int main(int argc, char *argv[]) {
 				
 
 				if(r.indexed_objects.size() == 0) {
-					error_to_file(output_file_name, std::string("Relationship: ") + r.name + " is between too few objects");
+					err.add(row_col_pair{ 0,0 }, 1003, std::string("Relationship: ") + r.name + " is between too few objects");
+					error_to_file(output_file_name);
+					std::cout << err.accumulated;
+					return -1;
 				}
 
 				
@@ -151,7 +167,10 @@ int main(int argc, char *argv[]) {
 						}
 					}
 					if(!pk_forced) {
-						error_to_file(output_file_name, std::string("Was unable to use ") + r.force_pk + std::string(" as a primary key for relationship: ") + r.name);
+						err.add(row_col_pair{ 0,0 }, 1004, std::string("Was unable to use ") + r.force_pk + std::string(" as a primary key for relationship: ") + r.name);
+						error_to_file(output_file_name);
+						std::cout << err.accumulated;
+						return -1;
 					}
 				}
 
@@ -171,9 +190,13 @@ int main(int argc, char *argv[]) {
 						}
 					}
 				} else {
-					if(r.store_type != storage_type::erasable && r.store_type != storage_type::compactable)
-						error_to_file(output_file_name, std::string("Relationship ") + r.name + 
+					if(r.store_type != storage_type::erasable && r.store_type != storage_type::compactable) {
+						err.add(row_col_pair{ 0,0 }, 1005, std::string("Relationship ") + r.name +
 							" has no primary key, and thus must have either a compactable or erasable storage type to provide a delete function.");
+						error_to_file(output_file_name);
+						std::cout << err.accumulated;
+						return -1;
+					}
 				}
 
 			} // end if is a relationship
@@ -232,8 +255,11 @@ int main(int argc, char *argv[]) {
 					}
 
 					if(k.object_type.length() == 0) {
-						error_to_file(output_file_name, std::string("Indexed link ") + k.property_name + " in composite key " + cc.name +
+						err.add(row_col_pair{ 0,0 }, 1006, std::string("Indexed link ") + k.property_name + " in composite key " + cc.name +
 							" in relationship " + ob.name + " does not refer to a link in the relationship.");
+						error_to_file(output_file_name);
+						std::cout << err.accumulated;
+						return -1;
 					}
 
 					k.bit_position = bits_so_far;
@@ -265,8 +291,11 @@ int main(int argc, char *argv[]) {
 		for(auto& q : parsed_file.unprepared_queries) {
 			parsed_file.prepared_queries.push_back(make_prepared_definition(parsed_file, q, err));
 		}
-		if(err.accumulated.length() > 0)
-			error_to_file(output_file_name, err.accumulated);
+		if(err.accumulated.length() > 0) {
+			error_to_file(output_file_name);
+			std::cout << err.accumulated;
+			return -1;
+		}
 
 		// compose contents of generated file
 		std::string output;
@@ -467,8 +496,11 @@ int main(int argc, char *argv[]) {
 							output += "\t\t\tdcon::stable_variable_vector_storage_mk_2<" + ob.name + "_id, 8, " + std::to_string(ob.size * 2) + " > "
 								+ i.property_name + "_storage;\n";
 						} else {
-							error_to_file(output_file_name, std::string("Unable to estimate an upper bound on storage space for ") +
+							err.add(row_col_pair{ 0,0 }, 1007, std::string("Unable to estimate an upper bound on storage space for ") +
 								ob.name + " " + i.property_name + " arrays because the target is expandable");
+							error_to_file(output_file_name);
+							std::cout << err.accumulated;
+							return -1;
 						}
 
 					}

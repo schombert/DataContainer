@@ -125,10 +125,10 @@ Note that, for performance reasons, there are some complications when the link b
 
 By default, every item in a from clause is joined to the preceding item. However, that doesn't have to be the case. You can also write a join as `𝘳𝘦𝘧𝘦𝘳𝘦𝘯𝘤𝘦 𝘯𝘢𝘮𝘦.join`. In this case the item following the join will be joined to the item named by 𝘳𝘦𝘧𝘦𝘳𝘦𝘯𝘤𝘦 𝘯𝘢𝘮𝘦, assuming that it has been defined at some point prior in the from statement.
 
-For example, you could iterate over pair of siblings of a person with a query such as 
+For example, you could iterate over pairs of children of a person with a query such as 
 
 ```
-base.id, sibling_a.id, sibling_b.id
+sibling_a.id, sibling_b.id
 	from @person_param as base,
 		join on parent parentage, join on child person as sibling_a,
 			base.join on parent parentage, join on child person as sibling_b

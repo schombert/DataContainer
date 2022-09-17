@@ -1,4 +1,5 @@
 #include "parsing.hpp"
+#include <assert.h>
 
 char const * advance_to_closing_bracket(char const * pos, char const * end) {
 	int32_t depth_count = 0;
@@ -192,8 +193,7 @@ std::vector<from_item> parse_all_from_items(char const* &start, char const * end
 	}
 
 	if(result.size() == 0) {
-		err.add(std::string("a query must draw upon at least one data source, see line ")
-			+ std::to_string(calculate_line_from_position(global_start, start_copy)));
+		err.add(calculate_line_from_position(global_start, start_copy), 1, std::string("a query must draw upon at least one data source"));
 	}
 
 	return result;
@@ -244,11 +244,7 @@ from_item parse_from_item(char const* &start, char const * end, char const * glo
 		result.type = from_type::parameter;
 		++start;
 
-		char const* id_start = advance_to_non_whitespace(start, end);
-		char const* id_end = advance_to_identifier_end(id_start, end);
-
-		result.left_of_join = std::string(id_start, id_end);
-		start = id_end;
+		result.table_identifier = parse_qual_name(start, end, global_start, err);
 		return result;
 	}
 
@@ -371,17 +367,22 @@ selection_item parse_selection_item(char const* &start, char const * end, char c
 	return result;
 }
 
-int32_t calculate_line_from_position(char const * start, char const * pos) {
-	int32_t line_count = 1;
+row_col_pair calculate_line_from_position(char const * start, char const * pos) {
+	row_col_pair result;
+	result.row = 1;
+	result.column = 1;
 
 	char const* t = start;
 	while(t < pos) {
-		if(*t == '\n')
-			++line_count;
+		if(*t == '\n') {
+			result.column = 0;
+			++result.row;
+		}
+		++result.column;
 		++t;
 	}
 
-	return line_count;
+	return result;
 }
 
 parsed_item extract_item(char const * input, char const * end, char const * global_start, error_record & err) {
@@ -399,7 +400,7 @@ parsed_item extract_item(char const * input, char const * end, char const * glob
 		position = advance_to_non_whitespace(position + 1, end);
 		char const* value_close = advance_to_closing_bracket(position, end);
 		if(value_close == end) {
-			err.add(std::string("Open bracket on line ") + std::to_string(calculate_line_from_position(global_start, position)) + " was not properly closed.");
+			err.add(calculate_line_from_position(global_start, position), 2, "Open bracket was not properly closed.");
 		}
 		result.values.push_back(char_range{ position, reverse_to_non_whitespace(position, value_close) });
 		position = advance_to_non_whitespace(value_close + 1, end);
@@ -420,62 +421,62 @@ load_save_def parse_load_save_def(char const* start, char const* end, char const
 			std::string kstr = extracted.key.to_string();
 			if(kstr == "name") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"name\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 3, 
+						std::string("wrong number of parameters for \"name\""));
 				} else {
 					result.name = extracted.values[0].to_string();
 				}
 			} else if(kstr == "only_objects") {
 				if(extracted.values.size() == 0) {
-					err_out.add(std::string("wrong number of parameters for \"only_objects\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 4,
+						std::string("wrong number of parameters for \"only_objects\""));
 				} else if(result.objects_filter == filter_type::default_exclude) {
 					result.objects_filter = filter_type::include;
 					for(uint32_t i = 0; i < extracted.values.size(); ++ i)
 						result.obj_tags.push_back(extracted.values[0].to_string());
 				} else {
-					err_out.add(std::string("illegal setting of the object filter a second time on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 5,
+						std::string("illegal setting of the object filter a second time"));
 				}
 			} else if(kstr == "exclude_objects") {
 				if(extracted.values.size() == 0) {
-					err_out.add(std::string("wrong number of parameters for \"exclude_objects\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 6,
+						std::string("wrong number of parameters for \"exclude_objects\""));
 				} else if(result.objects_filter == filter_type::default_exclude) {
 					result.objects_filter = filter_type::exclude;
 					for(uint32_t i = 0; i < extracted.values.size(); ++i)
 						result.obj_tags.push_back(extracted.values[0].to_string());
 				} else {
-					err_out.add(std::string("illegal setting of the object filter a second time on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 5,
+						std::string("illegal setting of the object filter a second time"));
 				}
 			} else if(kstr == "only_properties") {
 				if(extracted.values.size() == 0) {
-					err_out.add(std::string("wrong number of parameters for \"only_properties\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 7, 
+						std::string("wrong number of parameters for \"only_properties\""));
 				} else if(result.properties_filter == filter_type::default_exclude) {
 					result.properties_filter = filter_type::include;
 					for(uint32_t i = 0; i < extracted.values.size(); ++i)
 						result.property_tags.push_back(extracted.values[0].to_string());
 				} else {
-					err_out.add(std::string("illegal setting of the properties filter a second time on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 8, 
+						std::string("illegal setting of the properties filter a second time"));
 				}
 			} else if(kstr == "exclude_properties") {
 				if(extracted.values.size() == 0) {
-					err_out.add(std::string("wrong number of parameters for \"exclude_properties\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 9,
+						std::string("wrong number of parameters for \"exclude_properties\""));
 				} else if(result.properties_filter == filter_type::default_exclude) {
 					result.properties_filter = filter_type::exclude;
 					for(uint32_t i = 0; i < extracted.values.size(); ++i)
 						result.property_tags.push_back(extracted.values[0].to_string());
 				} else {
-					err_out.add(std::string("illegal setting of the properties filter a second time on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 8,
+						"illegal setting of the properties filter a second time on line ");
 				}
 			} else {
-				err_out.add(std::string("unexpected token \"") + kstr + "\" while parsing loading/saving routine defintion on line "
-					+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				err_out.add(calculate_line_from_position(global_start, extracted.key.start), 10,
+					std::string("unexpected token \"") + kstr + "\" while parsing loading/saving routine defintion");
 			}
 		}
 	}
@@ -494,23 +495,23 @@ related_object parse_link_def(char const * start, char const * end, char const *
 			std::string kstr = extracted.key.to_string();
 			if(kstr == "name") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"name\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 11,
+						std::string("wrong number of parameters for \"name\""));
 				} else {
 					result.property_name = extracted.values[0].to_string();
 				}
 			} else if(kstr == "type") {
 				if(extracted.values.size() == 0 || extracted.values.size() > 2) {
-					err_out.add(std::string("wrong number of parameters for \"type\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 12,
+						std::string("wrong number of parameters for \"type\""));
 				} else if(extracted.values[0].to_string() == "unique") {
 					result.index = index_type::at_most_one;
 					if(extracted.values.size() > 1) {
 						if(extracted.values[1].to_string() == "optional") {
 							result.is_optional = true;
 						} else {
-							err_out.add(std::string("unknown parameter \"") + extracted.values[1].to_string() + "\" passed to type on line "
-								+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+							err_out.add(calculate_line_from_position(global_start, extracted.key.start), 13,
+								std::string("unknown parameter \"") + extracted.values[1].to_string() + "\" passed to type");
 						}
 					}
 				} else if(extracted.values[0].to_string() == "many") {
@@ -519,8 +520,8 @@ related_object parse_link_def(char const * start, char const * end, char const *
 						if(extracted.values[1].to_string() == "optional") {
 							result.is_optional = true;
 						} else {
-							err_out.add(std::string("unknown parameter \"") + extracted.values[1].to_string() + "\" passed to type on line "
-								+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+							err_out.add(calculate_line_from_position(global_start, extracted.key.start), 13,
+								std::string("unknown parameter \"") + extracted.values[1].to_string() + "\" passed to type");
 						}
 					}
 				} else if(extracted.values[0].to_string() == "unindexed") {
@@ -529,25 +530,25 @@ related_object parse_link_def(char const * start, char const * end, char const *
 						if(extracted.values[1].to_string() == "optional") {
 							result.is_optional = true;
 						} else {
-							err_out.add(std::string("unknown parameter \"") + extracted.values[1].to_string() + "\" passed to type on line "
-								+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+							err_out.add(calculate_line_from_position(global_start, extracted.key.start), 13,
+								std::string("unknown parameter \"") + extracted.values[1].to_string() + "\" passed to type");
 						}
 					}
 				} else {
-					err_out.add(std::string("unknown parameter \"") + extracted.values[0].to_string() + "\" passed to type on line "
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 14,
+						std::string("unknown parameter \"") + extracted.values[0].to_string() + "\" passed to type");
 				}
 			} else if(kstr == "object") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"object\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 15, 
+						std::string("wrong number of parameters for \"object\""));
 				} else {
 					result.type_name = extracted.values[0].to_string();
 				}
 			} else if(kstr == "index_storage") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"index_storage\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 16,
+						std::string("wrong number of parameters for \"index_storage\""));
 				} else if(extracted.values[0].to_string() == "std_vector") {
 					result.ltype = list_type::std_vector;
 				} else if(extracted.values[0].to_string() == "list") {
@@ -555,47 +556,47 @@ related_object parse_link_def(char const * start, char const * end, char const *
 				} else if(extracted.values[0].to_string() == "array") {
 					result.ltype = list_type::array;
 				} else {
-					err_out.add(std::string("unknown parameter \"") + extracted.values[0].to_string() + "\" passed to index_storage on line "
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 17,
+						std::string("unknown parameter \"") + extracted.values[0].to_string() + "\" passed to index_storage");
 				}
 			} else if(kstr == "multiple") {
 				if(extracted.values.size() != 1 && extracted.values.size() != 2) {
-					err_out.add(std::string("wrong number of parameters for \"multiple\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 18, 
+						std::string("wrong number of parameters for \"multiple\""));
 				} else {
 					result.multiplicity = std::stoi(extracted.values[0].to_string());
 					if(extracted.values.size() == 2) {
 						if(extracted.values[1].to_string() == "distinct") {
 							result.is_distinct = true;
 						} else {
-							err_out.add(std::string("unknown parameter \"") + extracted.values[1].to_string() + "\" passed to multiple on line "
-								+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+							err_out.add(calculate_line_from_position(global_start, extracted.key.start), 18,
+								std::string("unknown parameter \"") + extracted.values[1].to_string() + "\" passed to multiple");
 						}
 					}
 				}
 			} else if(kstr == "private") {
 				if(extracted.values.size() != 0) {
-					err_out.add(std::string("wrong number of parameters for \"private\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 19,
+						std::string("wrong number of parameters for \"private\""));
 				} else if(result.protection != protection_type::none) {
-					err_out.add(std::string("redefintion of access restriction on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 20,
+						std::string("redefintion of access restriction"));
 				} else {
 					result.protection = protection_type::hidden;
 				}
 			} else if(kstr == "protected") {
 				if(extracted.values.size() != 0) {
-					err_out.add(std::string("wrong number of parameters for \"protected\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 21,
+						std::string("wrong number of parameters for \"protected\""));
 				} else if(result.protection != protection_type::none) {
-					err_out.add(std::string("redefintion of access restriction on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 20,
+						std::string("redefintion of access restriction"));
 				} else {
 					result.protection = protection_type::read_only;
 				}
 			} else {
-				err_out.add(std::string("unexpected token \"") + kstr + "\" while parsing link defintion on line "
-					+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				err_out.add(calculate_line_from_position(global_start, extracted.key.start), 22,
+					std::string("unexpected token \"") + kstr + "\" while parsing link defintion");
 			}
 		}
 	}
@@ -614,21 +615,21 @@ composite_index_def parse_composite_key(char const * start, char const * end, ch
 			std::string kstr = extracted.key.to_string();
 			if(kstr == "name") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"name\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 23,
+						std::string("wrong number of parameters for \"name\""));
 				} else {
 					result.name = extracted.values[0].to_string();
 				}
 			} else if(kstr == "index") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"index\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 24,
+						std::string("wrong number of parameters for \"index\""));
 				} else {
 					result.component_indexes.push_back(key_component{ extracted.values[0].to_string(), std::string(), 0, 0 });
 				}
 			} else {
-				err_out.add(std::string("unexpected token \"") + kstr + "\" while parsing composite key on line "
-					+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				err_out.add(calculate_line_from_position(global_start, extracted.key.start), 25, 
+					std::string("unexpected token \"") + kstr + "\" while parsing composite key");
 			}
 		}
 	}
@@ -647,15 +648,15 @@ property_def parse_property_def(char const * start, char const * end, char const
 			std::string kstr = extracted.key.to_string();
 			if(kstr == "name") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"name\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 26,
+						std::string("wrong number of parameters for \"name\""));
 				} else {
 					result.name = extracted.values[0].to_string();
 				}
 			} else if(kstr == "type") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"type\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 27,
+						std::string("wrong number of parameters for \"type\""));
 				} else {
 					auto inner_extracted = extract_item(extracted.values[0].start, extracted.values[0].end, global_start, err_out);
 					std::string ikstr = inner_extracted.key.to_string();
@@ -664,16 +665,16 @@ property_def parse_property_def(char const * start, char const * end, char const
 						result.type = property_type::bitfield;
 					} else if(ikstr == "object") {
 						if(inner_extracted.values.size() != 1) {
-							err_out.add(std::string("wrong number of parameters for \"object\" on line ")
-								+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+							err_out.add(calculate_line_from_position(global_start, extracted.key.start), 28,
+								std::string("wrong number of parameters for \"object\""));
 						} else {
 							result.type = property_type::object;
 							result.data_type = inner_extracted.values[0].to_string();
 						}
 					} else if(ikstr == "derived") {
 						if(inner_extracted.values.size() != 1) {
-							err_out.add(std::string("wrong number of parameters for \"derived\" on line ")
-								+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+							err_out.add(calculate_line_from_position(global_start, extracted.key.start), 29,
+								std::string("wrong number of parameters for \"derived\""));
 						} else {
 							result.is_derived = true;
 							if(inner_extracted.values[0].to_string() == "bitfield")
@@ -684,8 +685,8 @@ property_def parse_property_def(char const * start, char const * end, char const
 						}
 					} else if(ikstr == "vector_pool") {
 						if(inner_extracted.values.size() != 2) {
-							err_out.add(std::string("wrong number of parameters for \"vector_pool\" on line ")
-								+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+							err_out.add(calculate_line_from_position(global_start, extracted.key.start), 30,
+								std::string("wrong number of parameters for \"vector_pool\""));
 						} else {
 							result.type = property_type::special_vector;
 							result.special_pool_size = std::stoi(inner_extracted.values[0].to_string());
@@ -693,8 +694,8 @@ property_def parse_property_def(char const * start, char const * end, char const
 						}
 					} else if(ikstr == "array") {
 						if(inner_extracted.values.size() > 2) {
-							err_out.add(std::string("wrong number of parameters for \"array\" on line ")
-								+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+							err_out.add(calculate_line_from_position(global_start, extracted.key.start), 31,
+								std::string("wrong number of parameters for \"array\""));
 						} else if(inner_extracted.values.size() == 2) {
 							result.array_index_type = inner_extracted.values[0].to_string();
 							if(inner_extracted.values[1].to_string() == "bitfield") {
@@ -714,8 +715,8 @@ property_def parse_property_def(char const * start, char const * end, char const
 						}
 					} else {
 						if(inner_extracted.values.size() != 0) {
-							err_out.add(std::string("unexpected key \"" + ikstr + "\" on line ")
-								+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+							err_out.add(calculate_line_from_position(global_start, extracted.key.start), 32,
+								std::string("unexpected key \"") + ikstr + "\"");
 						} else {
 							result.type = property_type::other;
 							result.data_type = inner_extracted.key.to_string();
@@ -724,46 +725,46 @@ property_def parse_property_def(char const * start, char const * end, char const
 				}
 			} else if(kstr == "hook") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"hook\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 33,
+						std::string("wrong number of parameters for \"hook\""));
 				} else if(extracted.values[0].to_string() == "get") {
 					result.hook_get = true;
 				} else if(extracted.values[0].to_string() == "set") {
 					result.hook_set = true;
 				} else {
-					err_out.add(std::string("unknown parameter \"") + extracted.values[0].to_string() + "\" passed to hook on line "
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 34,
+						std::string("unknown parameter \"") + extracted.values[0].to_string() + "\" passed to hook");
 				}
 			} else if(kstr == "tag") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"tag\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 35,
+						std::string("wrong number of parameters for \"tag\""));
 				} else {
 					result.property_tags.push_back(extracted.values[0].to_string());
 				}
 			} else if(kstr == "private") {
 				if(extracted.values.size() != 0) {
-					err_out.add(std::string("wrong number of parameters for \"private\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 36,
+						std::string("wrong number of parameters for \"private\""));
 				} else if(result.protection != protection_type::none) {
-					err_out.add(std::string("redefintion of access restriction on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 37,
+						std::string("redefintion of access restriction"));
 				} else {
 					result.protection = protection_type::hidden;
 				}
 			} else if(kstr == "protected") {
 				if(extracted.values.size() != 0) {
-					err_out.add(std::string("wrong number of parameters for \"protected\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 38,
+						std::string("wrong number of parameters for \"protected\""));
 				} else if(result.protection != protection_type::none) {
-					err_out.add(std::string("redefintion of access restriction on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 39,
+						std::string("redefintion of access restriction"));
 				} else {
 					result.protection = protection_type::read_only;
 				}
 			} else {
-				err_out.add(std::string("unexpected token \"") + kstr + "\" while parsing property defintion on line "
-					+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				err_out.add(calculate_line_from_position(global_start, extracted.key.start), 40,
+					std::string("unexpected token \"") + kstr + "\" while parsing property defintion");
 			}
 		}
 	}
@@ -784,22 +785,22 @@ relationship_object_def parse_relationship(char const * start, char const * end,
 			std::string kstr = extracted.key.to_string();
 			if(kstr == "name") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"name\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 41,
+						std::string("wrong number of parameters for \"name\""));
 				} else {
 					result.name = extracted.values[0].to_string();
 				}
 			} else if(kstr == "primary_key") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"primary_key\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 42,
+						std::string("wrong number of parameters for \"primary_key\""));
 				} else {
 					result.force_pk = extracted.values[0].to_string();
 				}
 			} else if(kstr == "storage_type") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"storage_type\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 43,
+						std::string("wrong number of parameters for \"storage_type\""));
 				} else {
 					if(extracted.values[0].to_string() == "contiguous") {
 						result.store_type = storage_type::contiguous;
@@ -808,14 +809,14 @@ relationship_object_def parse_relationship(char const * start, char const * end,
 					} else if(extracted.values[0].to_string() == "compactable") {
 						result.store_type = storage_type::compactable;
 					} else {
-						err_out.add(std::string("unknown parameter \"") + kstr + "\" passed to storage_type on line "
-							+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+						err_out.add(calculate_line_from_position(global_start, extracted.key.start), 44,
+							std::string("unknown parameter \"") + kstr + "\" passed to storage_type");
 					}
 				}
 			} else if(kstr == "size") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"size\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 45,
+						std::string("wrong number of parameters for \"size\""));
 				} else {
 					if(extracted.values[0].to_string() == "expandable") {
 						result.is_expandable = true;
@@ -827,39 +828,39 @@ relationship_object_def parse_relationship(char const * start, char const * end,
 				}
 			} else if(kstr == "tag") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"tag\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 46,
+						std::string("wrong number of parameters for \"tag\""));
 				} else {
 					result.obj_tags.push_back(extracted.values[0].to_string());
 				}
 			} else if(kstr == "property") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"property\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 47,
+						std::string("wrong number of parameters for \"property\""));
 				} else {
 					result.properties.push_back(
 						parse_property_def(extracted.values[0].start, extracted.values[0].end, global_start, err_out));
 				}
 			} else if(kstr == "link") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"link\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 48,
+						std::string("wrong number of parameters for \"link\""));
 				} else {
 					result.indexed_objects.push_back(
 						parse_link_def(extracted.values[0].start, extracted.values[0].end, global_start, err_out));
 				}
 			} else if(kstr == "composite_key") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"composite_key\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 49,
+						std::string("wrong number of parameters for \"composite_key\""));
 				} else {
 					result.composite_indexes.push_back(
 						parse_composite_key(extracted.values[0].start, extracted.values[0].end, global_start, err_out));
 				}
 			} else if(kstr == "function") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"function\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 50,
+						std::string("wrong number of parameters for \"function\""));
 				} else {
 					member_function_spec ns;
 					ns.signature = remove_ats(extracted.values[0].start, extracted.values[0].end);
@@ -879,8 +880,8 @@ relationship_object_def parse_relationship(char const * start, char const * end,
 				}
 			} else if(kstr == "const_function") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"const_function\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 51,
+						std::string("wrong number of parameters for \"const_function\""));
 				} else {
 					member_function_spec ns;
 					ns.signature = remove_ats(extracted.values[0].start, extracted.values[0].end);
@@ -900,8 +901,8 @@ relationship_object_def parse_relationship(char const * start, char const * end,
 				}
 			} else if(kstr == "hook") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"hook\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 52,
+						std::string("wrong number of parameters for \"hook\""));
 				} else if(extracted.values[0].to_string() == "create") {
 					result.hook_create = true;
 				} else if(extracted.values[0].to_string() == "delete") {
@@ -909,12 +910,12 @@ relationship_object_def parse_relationship(char const * start, char const * end,
 				} else if(extracted.values[0].to_string() == "move") {
 					result.hook_move = true;
 				} else {
-					err_out.add(std::string("unknown parameter \"") + extracted.values[0].to_string() + "\" passed to hook on line "
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 53,
+						std::string("unknown parameter \"") + extracted.values[0].to_string() + "\" passed to hook");
 				}
 			} else {
-				err_out.add(std::string("unexpected token \"") + kstr + "\" while parsing relationship defintion on line "
-					+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				err_out.add(calculate_line_from_position(global_start, extracted.key.start), 54,
+					std::string("unexpected token \"") + kstr + "\" while parsing relationship defintion");
 			}
 		}
 	}
@@ -935,15 +936,15 @@ relationship_object_def parse_object(char const * start, char const * end, char 
 			std::string kstr = extracted.key.to_string();
 			if(kstr == "name") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"name\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 55,
+						std::string("wrong number of parameters for \"name\""));
 				} else {
 					result.name = extracted.values[0].to_string();
 				}
 			} else if(kstr == "storage_type") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"storage_type\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 56,
+						std::string("wrong number of parameters for \"storage_type\""));
 				} else {
 					if(extracted.values[0].to_string() == "contiguous") {
 						result.store_type = storage_type::contiguous;
@@ -952,14 +953,14 @@ relationship_object_def parse_object(char const * start, char const * end, char 
 					} else if(extracted.values[0].to_string() == "compactable") {
 						result.store_type = storage_type::compactable;
 					} else {
-						err_out.add(std::string("unknown parameter \"") + kstr + "\" passed to storage_type on line "
-							+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+						err_out.add(calculate_line_from_position(global_start, extracted.key.start), 57,
+							std::string("unknown parameter \"") + kstr + "\" passed to storage_type");
 					}
 				}
 			} else if(kstr == "size") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"size\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 58,
+						std::string("wrong number of parameters for \"size\""));
 				} else {
 					if(extracted.values[0].to_string() == "expandable") {
 						result.is_expandable = true;
@@ -971,15 +972,15 @@ relationship_object_def parse_object(char const * start, char const * end, char 
 				}
 			} else if(kstr == "tag") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"tag\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 59,
+						std::string("wrong number of parameters for \"tag\""));
 				} else {
 					result.obj_tags.push_back(extracted.values[0].to_string());
 				}
 			} else if(kstr == "hook") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"hook\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 60,
+						std::string("wrong number of parameters for \"hook\""));
 				} else if(extracted.values[0].to_string() == "create") {
 					result.hook_create = true;
 				} else if(extracted.values[0].to_string() == "delete") {
@@ -987,21 +988,21 @@ relationship_object_def parse_object(char const * start, char const * end, char 
 				} else if(extracted.values[0].to_string() == "move") {
 					result.hook_move = true;
 				} else {
-					err_out.add(std::string("unknown parameter \"") + extracted.values[0].to_string() + "\" passed to hook on line "
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 61,
+						std::string("unknown parameter \"") + extracted.values[0].to_string() + "\" passed to hook");
 				}
 			} else if(kstr == "property") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"property\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 62,
+						std::string("wrong number of parameters for \"property\""));
 				} else {
 					result.properties.push_back(
 						parse_property_def(extracted.values[0].start, extracted.values[0].end, global_start, err_out));
 				}
 			} else if(kstr == "function") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"function\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 63,
+						std::string("wrong number of parameters for \"function\""));
 				} else {
 					member_function_spec ns;
 					ns.signature = remove_ats(extracted.values[0].start, extracted.values[0].end);
@@ -1021,8 +1022,8 @@ relationship_object_def parse_object(char const * start, char const * end, char 
 				}
 			} else if(kstr == "const_function") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"const_function\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 64,
+						std::string("wrong number of parameters for \"const_function\""));
 				} else {
 					member_function_spec ns;
 					ns.signature = remove_ats(extracted.values[0].start, extracted.values[0].end);
@@ -1041,8 +1042,8 @@ relationship_object_def parse_object(char const * start, char const * end, char 
 					result.member_functions.push_back(ns);
 				}
 			} else {
-				err_out.add(std::string("unexpected token \"") + kstr + "\" while parsing relationship defintion on line "
-					+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				err_out.add(calculate_line_from_position(global_start, extracted.key.start), 65,
+					std::string("unexpected token \"") + kstr + "\" while parsing relationship defintion");
 			}
 		}
 	}
@@ -1061,14 +1062,14 @@ std::vector<std::string> parse_legacy_types(char const * start, char const * end
 			std::string kstr = extracted.key.to_string();
 			if(kstr == "name") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"name\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 66,
+						std::string("wrong number of parameters for \"name\""));
 				} else {
 					result.push_back(extracted.values[0].to_string());
 				}
 			} else {
-				err_out.add(std::string("unexpected token \"") + kstr + "\" while parsing legacy types list on line "
-					+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				err_out.add(calculate_line_from_position(global_start, extracted.key.start), 67,
+					std::string("unexpected token \"") + kstr + "\" while parsing legacy types list");
 			}
 		}
 	}
@@ -1086,27 +1087,27 @@ conversion_def parse_conversion_def(char const * start, char const * end, char c
 			std::string kstr = extracted.key.to_string();
 			if(kstr == "from") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"from\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 68,
+						std::string("wrong number of parameters for \"from\""));
 				} else if(result.from.length() == 0) {
 					result.from = extracted.values[0].to_string();
 				} else {
-					err_out.add(std::string("multiple defintion of \"from\" while parsing conversion defintion on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 69,
+						std::string("multiple defintion of \"from\" while parsing conversion defintion"));
 				}
 			} else if(kstr == "to") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"to\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 70,
+						std::string("wrong number of parameters for \"to\""));
 				} else if(result.to.length() == 0) {
 					result.to = extracted.values[0].to_string();
 				} else {
-					err_out.add(std::string("multiple defintion of \"to\" while parsing conversion defintion on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 71,
+						std::string("multiple defintion of \"to\" while parsing conversion defintion"));
 				}
 			} else {
-				err_out.add(std::string("unexpected token \"") + kstr + "\" while parsing conversion defintion on line "
-					+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				err_out.add(calculate_line_from_position(global_start, extracted.key.start), 72,
+					std::string("unexpected token \"") + kstr + "\" while parsing conversion defintion");
 			}
 		}
 	}
@@ -1125,12 +1126,11 @@ std::vector<type_name_pair> parse_query_parameters_list(char const* &start, char
 			std::string kstr = extracted.key.to_string();
 			
 			if(extracted.values.size() == 0) {
-					err.add(std::string("missing type declaration on line ")
-					+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
-
+				err.add(calculate_line_from_position(global_start, extracted.key.start), 73,
+					std::string("missing type declaration"));
 			} else if(extracted.values.size() > 1) {
-				err.add(std::string("too many type declarations on line ")
-					+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				err.add(calculate_line_from_position(global_start, extracted.key.start), 74,
+					std::string("too many type declarations"));
 			} else {
 				result.push_back(type_name_pair{ kstr, extracted.values[0].to_string() });
 			}
@@ -1151,32 +1151,32 @@ query_definition parse_query_definition(char const* &start, char const * end, ch
 			std::string kstr = extracted.key.to_string();
 			if(kstr == "name") {
 				if(extracted.values.size() != 1) {
-					err.add(std::string("wrong number of parameters for \"name\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err.add(calculate_line_from_position(global_start, extracted.key.start), 75,
+						std::string("wrong number of parameters for \"name\""));
 				} else if(result.name.length() == 0) {
 					result.name = extracted.values[0].to_string();
 				} else {
-					err.add(std::string("multiple defintion of \"name\" while parsing query defintion on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err.add(calculate_line_from_position(global_start, extracted.key.start), 76,
+						std::string("multiple defintion of \"name\" while parsing query defintion"));
 				}
 			} else if(kstr == "select") {
 				if(extracted.values.size() != 1) {
-					err.add(std::string("wrong number of parameters for \"select\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err.add(calculate_line_from_position(global_start, extracted.key.start), 77,
+						std::string("wrong number of parameters for \"select\""));
 				} else {
 					result.line = calculate_line_from_position(global_start, extracted.values[0].start);
 					result.select = parse_select_statement(extracted.values[0].start, extracted.values[0].end, global_start, err);
 				}
 			} else if(kstr == "parameters") {
 				if(extracted.values.size() != 1) {
-					err.add(std::string("wrong number of parameters for \"parameters\" on line ")
-						+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+					err.add(calculate_line_from_position(global_start, extracted.key.start), 78,
+						std::string("wrong number of parameters for \"parameters\""));
 				} else {
 					result.parameters = parse_query_parameters_list(extracted.values[0].start, extracted.values[0].end, global_start, err);
 				}
 			} else {
-				err.add(std::string("unexpected token \"") + kstr + "\" while parsing query defintion on line "
-					+ std::to_string(calculate_line_from_position(global_start, extracted.key.start)));
+				err.add(calculate_line_from_position(global_start, extracted.key.start), 79,
+					std::string("unexpected token \"") + kstr + "\" while parsing query defintion");
 			}
 		}
 	}
@@ -1195,30 +1195,30 @@ file_def parse_file(char const * start, char const * end, error_record & err_out
 			std::string kstr(extracted.key.start, extracted.key.end);
 			if(kstr == "namespace") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"namespace\" on line ")
-						+ std::to_string(calculate_line_from_position(start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(start, extracted.key.start), 80,
+						std::string("wrong number of parameters for \"namespace\""));
 				} else {
 					parsed_file.namspace = extracted.values[0].to_string();
 				}
 			} else if(kstr == "include") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"include\" on line ")
-						+ std::to_string(calculate_line_from_position(start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(start, extracted.key.start), 81,
+						std::string("wrong number of parameters for \"include\""));
 				} else {
 					parsed_file.includes.push_back(extracted.values[0].to_string());
 				}
 			} else if(kstr == "convert") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"convert\" on line ")
-						+ std::to_string(calculate_line_from_position(start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(start, extracted.key.start), 82,
+						std::string("wrong number of parameters for \"convert\""));
 				} else {
 					parsed_file.conversion_list.push_back(
 						parse_conversion_def(extracted.values[0].start, extracted.values[0].end, start, err_out));
 				}
 			} else if(kstr == "legacy_types") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"legacy_types\" on line ")
-						+ std::to_string(calculate_line_from_position(start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(start, extracted.key.start), 83,
+						std::string("wrong number of parameters for \"legacy_types\""));
 				} else {
 					auto nlist = parse_legacy_types(extracted.values[0].start, extracted.values[0].end, start, err_out);
 					for(auto& s : nlist) {
@@ -1227,53 +1227,53 @@ file_def parse_file(char const * start, char const * end, error_record & err_out
 				}
 			} else if(kstr == "global") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"global\" on line ")
-						+ std::to_string(calculate_line_from_position(start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(start, extracted.key.start), 84,
+						std::string("wrong number of parameters for \"global\""));
 				} else {
 					parsed_file.globals.push_back(extracted.values[0].to_string());
 				}
 			} else if(kstr == "make_index") {
 				if(extracted.values.size() != 2) {
-					err_out.add(std::string("wrong number of parameters for \"make_index\" on line ")
-						+ std::to_string(calculate_line_from_position(start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(start, extracted.key.start), 85,
+						std::string("wrong number of parameters for \"make_index\""));
 				} else {
 					parsed_file.extra_ids.push_back(made_id{ extracted.values[0].to_string() , extracted.values[1].to_string() });
 				}
 			} else if(kstr == "load_save") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"load_save\" on line ")
-						+ std::to_string(calculate_line_from_position(start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(start, extracted.key.start), 86,
+						std::string("wrong number of parameters for \"load_save\""));
 				} else {
 					parsed_file.load_save_routines.push_back(
 						parse_load_save_def(extracted.values[0].start, extracted.values[0].end, start, err_out));
 				}
 			} else if(kstr == "object") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"object\" on line ")
-						+ std::to_string(calculate_line_from_position(start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(start, extracted.key.start), 87,
+						std::string("wrong number of parameters for \"object\""));
 				} else {
 					parsed_file.relationship_objects.push_back(
 						parse_object(extracted.values[0].start, extracted.values[0].end, start, err_out));
 				}
 			} else if(kstr == "relationship") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"relationship\" on line ")
-						+ std::to_string(calculate_line_from_position(start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(start, extracted.key.start), 88,
+						std::string("wrong number of parameters for \"relationship\""));
 				} else {
 					parsed_file.relationship_objects.push_back(
 						parse_relationship(extracted.values[0].start, extracted.values[0].end, start, err_out));
 				}
 			} else if(kstr == "query") {
 				if(extracted.values.size() != 1) {
-					err_out.add(std::string("wrong number of parameters for \"query\" on line ")
-						+ std::to_string(calculate_line_from_position(start, extracted.key.start)));
+					err_out.add(calculate_line_from_position(start, extracted.key.start), 89,
+						std::string("wrong number of parameters for \"query\""));
 				} else {
 					parsed_file.unprepared_queries.push_back(
 						parse_query_definition(extracted.values[0].start, extracted.values[0].end, start, err_out));
 				}
 			} else {
-				err_out.add(std::string("unexpetected top level key: ") + kstr + " on line "
-					+ std::to_string(calculate_line_from_position(start, extracted.key.start)));
+				err_out.add(calculate_line_from_position(start, extracted.key.start), 90,
+					std::string("unexpetected top level key: ") + kstr);
 			}
 		}
 	}
@@ -1327,37 +1327,40 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 
 		if(result.table_slots[i].is_parameter_type) {
 			if(i != 0) {
-				err.add(std::string("query on line ") + std::to_string(def.line)
-					+ ": Only the first target in a from clause can be a parameter; use \"where\" to filter other targets");
+				err.add(def.line, 91, "Only the first target in a from clause can be a parameter; use \"where\" to filter other targets");
+				return result;
 			}
-			result.table_slots[i].internally_named_as = std::string("m_parameters.") + def.select.from[i].left_of_join;
-			result.table_slots[i].reference_name = def.select.from[i].left_of_join;
+			result.table_slots[i].internally_named_as = std::string("m_parameters.") + def.select.from[i].table_identifier.member_name;
+			result.table_slots[i].reference_name = def.select.from[i].table_identifier.as_name;
 			std::string param_id;
 			for(auto &p : def.parameters) {
-				if(p.name == def.select.from[i].left_of_join)
+				if(p.name == def.select.from[i].table_identifier.member_name)
 					param_id = p.type;
 			}
 			param_id.pop_back(); param_id.pop_back(); param_id.pop_back();
 			result.table_slots[i].actual_table = find_by_name(parsed_file, param_id);
 			if(!result.table_slots[i].actual_table) {
-				err.add(std::string("Could not find an object or relationship named ")
+				err.add(def.line, 92, std::string("Could not find an object or relationship named ")
 					+ param_id + " as required by usage of parameter "
-					+ def.select.from[i].left_of_join + " in a from clause");
+					+ def.select.from[i].table_identifier.member_name + " in a from clause");
+				return result;
 			}
 			auto parameter = std::find_if(def.parameters.begin(), def.parameters.end(),
-				[&](type_name_pair const& p) { return def.select.from[i].left_of_join == p.name; });
+				[&](type_name_pair const& p) { return def.select.from[i].table_identifier.member_name == p.name; });
 			if(parameter != def.parameters.end()) {
 				std::string derived_type = parameter->type.substr(0, parameter->type.length() - 3);
 				result.table_slots[i].actual_table = find_by_name(parsed_file, derived_type);
 				if(!result.table_slots[i].actual_table) {
-					err.add(std::string("Could not find an object or relationship named ")
+					err.add(def.line, 93, std::string("Could not find an object or relationship named ")
 						+ derived_type + " as required by usage of parameter "
-						+ def.select.from[i].left_of_join  +" in a from clause");
+						+ def.select.from[i].table_identifier.member_name +" in a from clause");
+					return result;
 				}
 			} else {
-				err.add(std::string("query on line ") + std::to_string(def.line) +
-					std::string(": Could not find query parameter refernced as ")
-					+ def.select.from[i].left_of_join + " in from clause of a query in its the parameter list");
+				err.add(def.line, 94,
+					std::string("Could not find query parameter refernced as ")
+					+ def.select.from[i].table_identifier.member_name + " in from clause of a query in its the parameter list");
+				return result;
 			}
 		} else {
 			//first find base name
@@ -1369,9 +1372,10 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 			result.table_slots[i].internally_named_as = std::string("m_tableindex") + std::to_string(i);
 			result.table_slots[i].actual_table = find_by_name(parsed_file, def.select.from[i].table_identifier.member_name);
 			if(!result.table_slots[i].actual_table) {
-				err.add(std::string("query on line ") + std::to_string(def.line)
-					+ std::string(": Could not find an object or relationship named ")
+				err.add(def.line, 95,
+					std::string("Could not find an object or relationship named ")
 					+ def.select.from[i].table_identifier.member_name + " referenced in a from clause");
+				return result;
 			}
 			
 			if(def.select.from[i].left_of_join == "") {
@@ -1385,30 +1389,34 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 					}
 				}
 				if(!result.table_slots[i].joined_to) {
-					err.add(std::string("query on line ") + std::to_string(def.line)
-						+ std::string(": Could not find item in from cause referenced by ")
+					err.add(def.line, 96,
+						std::string("Could not find item in from cause referenced by ")
 						+ def.select.from[i].left_of_join + " as the target of a join");
+					return result;
 				}
 			}
+
 
 			if(result.table_slots[i].joined_to) {
 				if(def.select.from[i].join_on == "") {
 					result.table_slots[i].joind_by_link = find_common_link(*(result.table_slots[i].joined_to->actual_table),
 						*(result.table_slots[i].actual_table));
 					if(!result.table_slots[i].joind_by_link) {
-						err.add(std::string("query on line ") + std::to_string(def.line)
-							+ std::string(": Could not automatically pick a link between ")
+						err.add(def.line, 97,
+							std::string("Could not automatically pick a link between ")
 							+ result.table_slots[i].joined_to->actual_table->name
 							+ " and " + result.table_slots[i].actual_table->name + " to join on");
+						return result;
 					}
 				} else {
 					result.table_slots[i].joind_by_link = find_link_by_name(def.select.from[i].join_on, *(result.table_slots[i].joined_to->actual_table),
 						*(result.table_slots[i].actual_table));
 					if(!result.table_slots[i].joind_by_link) {
-						err.add(std::string("query on line ") + std::to_string(def.line)
-							+ std::string(": Could not find a link named ")
+						err.add(def.line, 98,
+							std::string("Could not find a link named ")
 							+ def.select.from[i].join_on + " between " + result.table_slots[i].joined_to->actual_table->name
 							+ " and " + result.table_slots[i].actual_table->name);
+						return result;
 					}
 				}
 			}
@@ -1461,15 +1469,17 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 		
 		if(!found) {
 			if(val.property.type_name != "") {
-				err.add(std::string("query on line ") + std::to_string(def.line)
-					+ ": From target named "
+				err.add(def.line, 99,
+					std::string("From target named ")
 					+ val.property.type_name
 					+ " could not be found for " + val.property.as_name);
+				return result;
 			} else {
-				err.add(std::string("query on line ") + std::to_string(def.line)
-					+ std::string(": From target with property named ")
+				err.add(def.line, 100,
+					std::string("From target with property named ")
 					+ val.property.member_name
 					+ " could not be found for " + val.property.as_name);
+				return result;
 			}
 		} else {
 			property_def const* referred_property = nullptr;
@@ -1486,10 +1496,11 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 				}
 			}
 			if(!referred_property && !referred_link && val.property.member_name != "id") {
-				err.add(std::string("query on line ") + std::to_string(def.line)
-					+ std::string(": No property named ")
+				err.add(def.line, 101,
+					std::string("No property named ")
 					+ val.property.member_name
 					+ " could be found in target " + val.property.type_name);
+				return result;
 			} else {
 				if(!val.is_aggregate) {
 					if(any_is_min_max && after_group_slot) {
@@ -1526,6 +1537,9 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 	while(where_start < where_end) {
 		char const* next_at = advance_to_at(where_start, where_end);
 		result.where_conditional += std::string(where_start, next_at);
+		if(next_at == where_end)
+			break;
+
 		char const* at_end = advance_to_identifier_end(next_at + 1, where_end);
 		if(at_end < where_end && *at_end == '.') {
 			at_end = advance_to_identifier_end(at_end + 1, where_end);
@@ -1555,9 +1569,10 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 										+ std::string(at_end + 1, bracket_end) + ")";
 									at_end = bracket_end + 1;
 								} else {
-									err.add(std::string("query on line ") + std::to_string(def.line)
-										+ std::string(": variable of array type missing an indexing expression: ")
+									err.add(def.line, 102, 
+										std::string("variable of array type missing an indexing expression: ")
 										+ std::string(next_at, at_end));
+									return result;
 								}
 
 							} else {
@@ -1603,9 +1618,10 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 								+ std::string(at_end + 1, bracket_end) + ")";
 							at_end = bracket_end + 1;
 						} else {
-							err.add(std::string("query on line ") + std::to_string(def.line)
-								+ std::string(": variable of array type missing an indexing expression: ")
+							err.add(def.line, 103,
+								std::string("variable of array type missing an indexing expression: ")
 								+ at_value.name);
+							return result;
 						}
 
 					} else {
@@ -1620,9 +1636,10 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 		}
 
 		if(!found) {
-			err.add(std::string("query on line ") + std::to_string(def.line)
-				+ std::string(": No replacement found for ")
+			err.add(def.line, 104, 
+				std::string("No replacement found for ")
 				+ std::string(next_at, at_end));
+			return result;
 		}
 
 		where_start = at_end;

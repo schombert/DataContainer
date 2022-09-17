@@ -21,13 +21,35 @@ struct parsed_item {
 	char const* terminal;
 };
 
+struct row_col_pair {
+	int32_t row;
+	int32_t column;
+};
+
 struct error_record {
 	std::string accumulated;
+	std::string file_name;
 
-	void add(std::string const& s) {
-		if(accumulated.length() > 0)
-			accumulated += "\n";
+	error_record(std::string const& fn) : file_name(fn) {}
+
+	void add(row_col_pair const& rc, int32_t code, std::string const& s) {
+		//<origin>[(position)]: [category] <kind> <code>: <description>
+
+		accumulated += file_name;
+		if(rc.row > 0) {
+			if(rc.column > 0) {
+				accumulated += "(" + std::to_string(rc.row) + "," + std::to_string(rc.column) + ")";
+			} else {
+				accumulated += "(" + std::to_string(rc.row) + ")";
+			}
+		} else {
+
+		}
+		accumulated += ": error ";
+		accumulated += std::to_string(code);
+		accumulated += ": ";
 		accumulated += s;
+		accumulated += "\n";
 	}
 };
 
@@ -36,7 +58,8 @@ char const* advance_to_non_whitespace(char const* pos, char const* end);
 char const* advance_to_whitespace(char const* pos, char const* end);
 char const* advance_to_whitespace_or_brace(char const* pos, char const* end);
 char const* reverse_to_non_whitespace(char const* start, char const* pos);
-int32_t calculate_line_from_position(char const* start, char const* pos);
+
+row_col_pair calculate_line_from_position(char const* start, char const* pos);
 parsed_item extract_item(char const* input, char const* end, char const* global_start, error_record& err);
 
 
@@ -268,7 +291,7 @@ struct query_definition {
 	select_statement_definition select;
 	std::vector<type_name_pair> parameters;
 	std::string name;
-	int32_t line = 0;
+	row_col_pair line = row_col_pair{ 0,0 };
 };
 
 query_definition parse_query_definition(char const* &start, char const * end, char const * global_start, error_record & err);

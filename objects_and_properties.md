@@ -119,6 +119,7 @@ All operations on the array of values stored for this property are accessed thro
 
 - `range()` returns a `std::pair` containing two pointers, the first to the beginning of the stored array, and the second to the element one past its end (or possibly two null pointers if there is no storage assigned to the array yet)
 - `at(uint32_t n)` returns the value stored at the n<sup>th</sup> index of the array (this is a zero-based index)
+- `operator[](uint32_t n)` as above
 - `capacity()` returns the maximum size the array can be grown to before it will have to be internally reallocated within the memory pool
 - `size()` returns the current size of the array
 - `contains(type_name)` returns `true` if the value passed compares as equal to one of the values in the array, and `false` otherwise
@@ -130,6 +131,8 @@ All operations on the array of values stored for this property are accessed thro
 - `remove_at(uint32_t n)` remove the item at the n<sup>th</sup> index from the array (as a zero-based index), by replacing it with what is currently the last value in the array, and then shrinks the size of the array by one. Calling this function with an invalid index into the array will make bad things happen, so don't do it.
 
 The proxy object also provides the standard `begin()` and `end()` functions so that it can be used in a range-based for loop. Finally, the functions that modify the contents of the array of values will not be available if the property is access through a constant reference or pointer to the data container.
+
+NOTE: the proxy objects should not be stored in general. They certainly should not be stored over any operation that would create or delete an object instance. You should also never access the same underlying `vector_pool` property through two different proxy objects; don't reuse an old proxy object after you have obtained a new one for that same property via `get`.
 	
 #### `array`
 

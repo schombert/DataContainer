@@ -451,6 +451,29 @@ namespace dcon {
 			}
 		};
 		
+		class query_siblings_iterator;
+		class query_siblings_const_iterator;
+		class query_siblings_instance {
+			public:
+			data_container& container;
+			person_id person_param;
+			query_siblings_instance(data_container& c , person_id p0) : container(c) , person_param(p0) {}
+			query_siblings_iterator begin();
+			dcon::invalid_iterator_type end() const {
+				return dcon::invalid_iterator_type{};
+			}
+		};
+		class query_siblings_const_instance {
+			public:
+			data_container const& container;
+			person_id person_param;
+			query_siblings_const_instance(data_container const& c , person_id p0) : container(c) , person_param(p0) {}
+			query_siblings_const_iterator begin();
+			dcon::invalid_iterator_type end() const {
+				return dcon::invalid_iterator_type{};
+			}
+		};
+		
 		class alignas(64) car_class {
 			private:
 			//
@@ -1989,6 +2012,10 @@ namespace dcon {
 		friend internal::query_pairs_of_cars_iterator;
 		internal::query_pairs_of_cars_instance query_pairs_of_cars() { return internal::query_pairs_of_cars_instance(*this); }
 		internal::query_pairs_of_cars_const_instance query_pairs_of_cars() const { return internal::query_pairs_of_cars_const_instance(*this); }
+		friend internal::query_siblings_const_iterator;
+		friend internal::query_siblings_iterator;
+		internal::query_siblings_instance query_siblings(person_id person_param) { return internal::query_siblings_instance(*this, person_param); }
+		internal::query_siblings_const_instance query_siblings(person_id person_param) const { return internal::query_siblings_const_instance(*this, person_param); }
 
 
 		void reset() {
@@ -4295,6 +4322,115 @@ namespace dcon {
 		}
 		query_pairs_of_cars_const_iterator query_pairs_of_cars_const_instance::begin() {
 			return query_pairs_of_cars_const_iterator(container, *this);
+		}
+		class query_siblings_instance;
+		class query_siblings_const_instance;
+		class query_siblings_iterator {
+			private:
+			data_container& m_container;
+			query_siblings_instance& m_parameters;
+			parentage_id m_tableindex1;
+			int32_t m_index_into_m_tableindex1 = 0;
+			int32_t m_size_of_m_tableindex1 = 0;
+			person_id m_tableindex2;
+			parentage_id m_tableindex3;
+			int32_t m_index_into_m_tableindex3 = 0;
+			int32_t m_size_of_m_tableindex3 = 0;
+			person_id m_tableindex4;
+			public:
+			query_siblings_iterator(data_container& c, query_siblings_instance& p) : m_container(c), m_parameters(p) {
+				internal_init(m_parameters.person_param);
+			}
+			auto operator++() -> query_siblings_iterator&;
+			bool operator==(dcon::invalid_iterator_type);
+			bool operator!=(dcon::invalid_iterator_type);
+			auto operator*() -> query_siblings_iterator const&;
+			private:
+			void internal_reset_aggregates();
+			void internal_set_aggregates();
+			void internal_update_aggregates();
+			void internal_init(person_id first_value);
+			void internal_increment_to_result(bool);
+			void internal_reset_v0();
+			bool internal_set_v0(person_id v);
+			bool internal_increment_v0(bool, bool&);
+			void internal_reset_v1();
+			bool internal_set_v1(parentage_id v);
+			bool internal_increment_v1(bool force, bool& hit_group);
+			void internal_reset_v2();
+			bool internal_set_v2(person_id v);
+			bool internal_increment_v2(bool force, bool& hit_group);
+			void internal_reset_v3();
+			bool internal_set_v3(parentage_id v);
+			bool internal_increment_v3(bool force, bool& hit_group);
+			void internal_reset_v4();
+			bool internal_set_v4(person_id v);
+			bool internal_increment_v4(bool force, bool& hit_group);
+			public:
+			person_fat_id get_base_id() const noexcept;
+			person_fat_id get_sibling_a_id() const noexcept;
+			person_fat_id get_sibling_b_id() const noexcept;
+			bool has_parentage() const noexcept;
+			bool has_sibling_a() const noexcept;
+			bool has_sibling_b() const noexcept;
+			
+		};
+		class query_siblings_const_iterator {
+			private:
+			data_container const& m_container;
+			query_siblings_const_instance& m_parameters;
+			parentage_id m_tableindex1;
+			int32_t m_index_into_m_tableindex1 = 0;
+			int32_t m_size_of_m_tableindex1 = 0;
+			person_id m_tableindex2;
+			parentage_id m_tableindex3;
+			int32_t m_index_into_m_tableindex3 = 0;
+			int32_t m_size_of_m_tableindex3 = 0;
+			person_id m_tableindex4;
+			public:
+			query_siblings_const_iterator(data_container const& c, query_siblings_const_instance& p) : m_container(c), m_parameters(p) {
+				internal_init(m_parameters.person_param);
+			}
+			auto operator++() -> query_siblings_const_iterator&;
+			bool operator==(dcon::invalid_iterator_type);
+			bool operator!=(dcon::invalid_iterator_type);
+			auto operator*() -> query_siblings_const_iterator const&;
+			private:
+			void internal_reset_aggregates();
+			void internal_set_aggregates();
+			void internal_update_aggregates();
+			void internal_init(person_id first_value);
+			void internal_increment_to_result(bool);
+			void internal_reset_v0();
+			bool internal_set_v0(person_id v);
+			bool internal_increment_v0(bool, bool&);
+			void internal_reset_v1();
+			bool internal_set_v1(parentage_id v);
+			bool internal_increment_v1(bool force, bool& hit_group);
+			void internal_reset_v2();
+			bool internal_set_v2(person_id v);
+			bool internal_increment_v2(bool force, bool& hit_group);
+			void internal_reset_v3();
+			bool internal_set_v3(parentage_id v);
+			bool internal_increment_v3(bool force, bool& hit_group);
+			void internal_reset_v4();
+			bool internal_set_v4(person_id v);
+			bool internal_increment_v4(bool force, bool& hit_group);
+			public:
+			person_const_fat_id get_base_id() const noexcept;
+			person_const_fat_id get_sibling_a_id() const noexcept;
+			person_const_fat_id get_sibling_b_id() const noexcept;
+			bool has_parentage() const noexcept;
+			bool has_sibling_a() const noexcept;
+			bool has_sibling_b() const noexcept;
+			
+		};
+		
+		query_siblings_iterator query_siblings_instance::begin() {
+			return query_siblings_iterator(container, *this);
+		}
+		query_siblings_const_iterator query_siblings_const_instance::begin() {
+			return query_siblings_const_iterator(container, *this);
 		}
 	};
 
@@ -7522,6 +7658,468 @@ namespace dcon {
 		return bool(m_tableindex2);
 	}
 	bool internal::query_pairs_of_cars_iterator::has_car_b() const noexcept {
+		return bool(m_tableindex4);
+	}
+	
+	auto internal::query_siblings_const_iterator::operator++() -> query_siblings_const_iterator& {
+		internal_increment_to_result(true);
+		return *this;
+	}
+	bool internal::query_siblings_const_iterator::operator==(dcon::invalid_iterator_type) {
+		return !bool(m_parameters.person_param);
+	}
+	bool internal::query_siblings_const_iterator::operator!=(dcon::invalid_iterator_type) {
+		return bool(m_parameters.person_param);
+	}
+	auto internal::query_siblings_const_iterator::operator*() -> query_siblings_const_iterator const& {
+		return *this;
+	}
+	void internal::query_siblings_const_iterator::internal_reset_aggregates() {
+	}
+	void internal::query_siblings_const_iterator::internal_set_aggregates() {
+	}
+	void internal::query_siblings_const_iterator::internal_update_aggregates() {
+	}
+	void internal::query_siblings_const_iterator::internal_init(person_id first_value) {
+		if(internal_set_v0(first_value)) {
+			if(m_tableindex2 .index() < m_tableindex4 .index()) {
+				return;
+			}
+		}
+		internal_increment_to_result(true);
+	}
+	void internal::query_siblings_const_iterator::internal_increment_to_result(bool) {
+		bool hit_group = false;
+		while(bool(m_parameters.person_param)) {
+			while(bool(m_parameters.person_param) && !internal_increment_v4(false, hit_group)) {
+			}
+			if(bool(m_parameters.person_param)) {
+				if(m_tableindex2 .index() < m_tableindex4 .index()) {
+					return;
+				}
+			}
+		}
+	}
+	void internal::query_siblings_const_iterator::internal_reset_v0() {
+		internal_reset_v1();
+		internal_reset_v3();
+	}
+	bool internal::query_siblings_const_iterator::internal_set_v0(person_id v) {
+		if(!bool(v)) {
+			return false;
+		}
+		return 
+		[&](){
+		auto range = m_container.person_range_of_parentage_as_bio_parent(m_parameters.person_param);
+		m_index_into_m_tableindex1 = 0;
+		m_size_of_m_tableindex1 = int32_t(range.second - range.first);
+		if(m_size_of_m_tableindex1 == 0) {
+			return internal_set_v1( parentage_id() );
+		} else {
+			for( ; m_index_into_m_tableindex1 < m_size_of_m_tableindex1 ; ++ m_index_into_m_tableindex1) {
+				if(internal_set_v1( *(range.first + m_index_into_m_tableindex1) )) {
+					return true;
+				}
+			}
+			return false;
+		}
+		}() && 
+		[&](){
+		auto range = m_container.person_range_of_parentage_as_bio_parent(m_parameters.person_param);
+		m_index_into_m_tableindex3 = 0;
+		m_size_of_m_tableindex3 = int32_t(range.second - range.first);
+		if(m_size_of_m_tableindex3 == 0) {
+			return internal_set_v3( parentage_id() );
+		} else {
+			for( ; m_index_into_m_tableindex3 < m_size_of_m_tableindex3 ; ++ m_index_into_m_tableindex3) {
+				if(internal_set_v3( *(range.first + m_index_into_m_tableindex3) )) {
+					return true;
+				}
+			}
+			return false;
+		}
+		}() && 
+		true;
+	}
+	bool internal::query_siblings_const_iterator::internal_increment_v0(bool, bool&) {
+		m_parameters.person_param = person_id();
+		return false;
+	}
+	void internal::query_siblings_const_iterator::internal_reset_v1() {
+		m_index_into_m_tableindex1 = 0;
+		m_size_of_m_tableindex1 = 0;
+		m_tableindex1 = parentage_id();
+		internal_reset_v2();
+	}
+	bool internal::query_siblings_const_iterator::internal_set_v1(parentage_id v) {
+		if(!bool(v)) {
+			m_tableindex1 = v;
+			return false;
+		}
+		m_tableindex1 = v;
+		return 
+		[&](){
+		return internal_set_v2( m_container.parentage_get_child(m_tableindex1) );
+		}() && 
+		[&](){
+		auto range = m_container.person_range_of_parentage_as_bio_parent(m_parameters.person_param);
+		m_index_into_m_tableindex3 = 0;
+		m_size_of_m_tableindex3 = int32_t(range.second - range.first);
+		if(m_size_of_m_tableindex3 == 0) {
+			return internal_set_v3( parentage_id() );
+		} else {
+			for( ; m_index_into_m_tableindex3 < m_size_of_m_tableindex3 ; ++ m_index_into_m_tableindex3) {
+				if(internal_set_v3( *(range.first + m_index_into_m_tableindex3) )) {
+					return true;
+				}
+			}
+			return false;
+		}
+		}() && 
+		true;
+	}
+	bool internal::query_siblings_const_iterator::internal_increment_v1(bool force, bool& hit_group) {
+		if(!bool(m_tableindex1)) {
+			return internal_increment_v0(force, hit_group);
+		}
+		if(m_index_into_m_tableindex1 + 1 < m_size_of_m_tableindex1) {
+			++m_index_into_m_tableindex1;
+			auto range = m_container.person_range_of_parentage_as_bio_parent(m_parameters.person_param);
+			return internal_set_v1( *(range.first + m_index_into_m_tableindex1) );
+		} else {
+			m_tableindex1 = parentage_id();
+			return internal_increment_v0(force, hit_group);
+		}
+	}
+	void internal::query_siblings_const_iterator::internal_reset_v2() {
+		m_tableindex2 = person_id();
+	}
+	bool internal::query_siblings_const_iterator::internal_set_v2(person_id v) {
+		if(!bool(v)) {
+			m_tableindex2 = v;
+			return false;
+		}
+		m_tableindex2 = v;
+		return 
+		[&](){
+		auto range = m_container.person_range_of_parentage_as_bio_parent(m_parameters.person_param);
+		m_index_into_m_tableindex3 = 0;
+		m_size_of_m_tableindex3 = int32_t(range.second - range.first);
+		if(m_size_of_m_tableindex3 == 0) {
+			return internal_set_v3( parentage_id() );
+		} else {
+			for( ; m_index_into_m_tableindex3 < m_size_of_m_tableindex3 ; ++ m_index_into_m_tableindex3) {
+				if(internal_set_v3( *(range.first + m_index_into_m_tableindex3) )) {
+					return true;
+				}
+			}
+			return false;
+		}
+		}() && 
+		true;
+	}
+	bool internal::query_siblings_const_iterator::internal_increment_v2(bool force, bool& hit_group) {
+		if(!bool(m_tableindex2)) {
+			return internal_increment_v1(force, hit_group);
+		}
+		return internal_increment_v1(force, hit_group);
+	}
+	void internal::query_siblings_const_iterator::internal_reset_v3() {
+		m_index_into_m_tableindex3 = 0;
+		m_size_of_m_tableindex3 = 0;
+		m_tableindex3 = parentage_id();
+		internal_reset_v4();
+	}
+	bool internal::query_siblings_const_iterator::internal_set_v3(parentage_id v) {
+		if(!bool(v)) {
+			m_tableindex3 = v;
+			return false;
+		}
+		m_tableindex3 = v;
+		return 
+		[&](){
+		return internal_set_v4( m_container.parentage_get_child(m_tableindex3) );
+		}() && 
+		true;
+	}
+	bool internal::query_siblings_const_iterator::internal_increment_v3(bool force, bool& hit_group) {
+		if(!bool(m_tableindex3)) {
+			return internal_increment_v2(force, hit_group);
+		}
+		if(m_index_into_m_tableindex3 + 1 < m_size_of_m_tableindex3) {
+			++m_index_into_m_tableindex3;
+			auto range = m_container.person_range_of_parentage_as_bio_parent(m_parameters.person_param);
+			return internal_set_v3( *(range.first + m_index_into_m_tableindex3) );
+		} else {
+			m_tableindex3 = parentage_id();
+			return internal_increment_v2(force, hit_group);
+		}
+	}
+	void internal::query_siblings_const_iterator::internal_reset_v4() {
+		m_tableindex4 = person_id();
+	}
+	bool internal::query_siblings_const_iterator::internal_set_v4(person_id v) {
+		if(!bool(v)) {
+			m_tableindex4 = v;
+			return false;
+		}
+		m_tableindex4 = v;
+		return 
+		true;
+	}
+	bool internal::query_siblings_const_iterator::internal_increment_v4(bool force, bool& hit_group) {
+		if(!bool(m_tableindex4)) {
+			return internal_increment_v3(force, hit_group);
+		}
+		return internal_increment_v3(force, hit_group);
+	}
+	person_const_fat_id internal::query_siblings_const_iterator::get_base_id() const noexcept {
+		return person_const_fat_id(m_container, m_parameters.person_param );
+	}
+	person_const_fat_id internal::query_siblings_const_iterator::get_sibling_a_id() const noexcept {
+		return person_const_fat_id(m_container, m_tableindex2 );
+	}
+	person_const_fat_id internal::query_siblings_const_iterator::get_sibling_b_id() const noexcept {
+		return person_const_fat_id(m_container, m_tableindex4 );
+	}
+	bool internal::query_siblings_const_iterator::has_parentage() const noexcept {
+		return bool(m_tableindex1);
+	}
+	bool internal::query_siblings_const_iterator::has_sibling_a() const noexcept {
+		return bool(m_tableindex2);
+	}
+	bool internal::query_siblings_const_iterator::has_sibling_b() const noexcept {
+		return bool(m_tableindex4);
+	}
+	
+	auto internal::query_siblings_iterator::operator++() -> query_siblings_iterator& {
+		internal_increment_to_result(true);
+		return *this;
+	}
+	bool internal::query_siblings_iterator::operator==(dcon::invalid_iterator_type) {
+		return !bool(m_parameters.person_param);
+	}
+	bool internal::query_siblings_iterator::operator!=(dcon::invalid_iterator_type) {
+		return bool(m_parameters.person_param);
+	}
+	auto internal::query_siblings_iterator::operator*() -> query_siblings_iterator const& {
+		return *this;
+	}
+	void internal::query_siblings_iterator::internal_reset_aggregates() {
+	}
+	void internal::query_siblings_iterator::internal_set_aggregates() {
+	}
+	void internal::query_siblings_iterator::internal_update_aggregates() {
+	}
+	void internal::query_siblings_iterator::internal_init(person_id first_value) {
+		if(internal_set_v0(first_value)) {
+			if(m_tableindex2 .index() < m_tableindex4 .index()) {
+				return;
+			}
+		}
+		internal_increment_to_result(true);
+	}
+	void internal::query_siblings_iterator::internal_increment_to_result(bool) {
+		bool hit_group = false;
+		while(bool(m_parameters.person_param)) {
+			while(bool(m_parameters.person_param) && !internal_increment_v4(false, hit_group)) {
+			}
+			if(bool(m_parameters.person_param)) {
+				if(m_tableindex2 .index() < m_tableindex4 .index()) {
+					return;
+				}
+			}
+		}
+	}
+	void internal::query_siblings_iterator::internal_reset_v0() {
+		internal_reset_v1();
+		internal_reset_v3();
+	}
+	bool internal::query_siblings_iterator::internal_set_v0(person_id v) {
+		if(!bool(v)) {
+			return false;
+		}
+		return 
+		[&](){
+		auto range = m_container.person_range_of_parentage_as_bio_parent(m_parameters.person_param);
+		m_index_into_m_tableindex1 = 0;
+		m_size_of_m_tableindex1 = int32_t(range.second - range.first);
+		if(m_size_of_m_tableindex1 == 0) {
+			return internal_set_v1( parentage_id() );
+		} else {
+			for( ; m_index_into_m_tableindex1 < m_size_of_m_tableindex1 ; ++ m_index_into_m_tableindex1) {
+				if(internal_set_v1( *(range.first + m_index_into_m_tableindex1) )) {
+					return true;
+				}
+			}
+			return false;
+		}
+		}() && 
+		[&](){
+		auto range = m_container.person_range_of_parentage_as_bio_parent(m_parameters.person_param);
+		m_index_into_m_tableindex3 = 0;
+		m_size_of_m_tableindex3 = int32_t(range.second - range.first);
+		if(m_size_of_m_tableindex3 == 0) {
+			return internal_set_v3( parentage_id() );
+		} else {
+			for( ; m_index_into_m_tableindex3 < m_size_of_m_tableindex3 ; ++ m_index_into_m_tableindex3) {
+				if(internal_set_v3( *(range.first + m_index_into_m_tableindex3) )) {
+					return true;
+				}
+			}
+			return false;
+		}
+		}() && 
+		true;
+	}
+	bool internal::query_siblings_iterator::internal_increment_v0(bool, bool&) {
+		m_parameters.person_param = person_id();
+		return false;
+	}
+	void internal::query_siblings_iterator::internal_reset_v1() {
+		m_index_into_m_tableindex1 = 0;
+		m_size_of_m_tableindex1 = 0;
+		m_tableindex1 = parentage_id();
+		internal_reset_v2();
+	}
+	bool internal::query_siblings_iterator::internal_set_v1(parentage_id v) {
+		if(!bool(v)) {
+			m_tableindex1 = v;
+			return false;
+		}
+		m_tableindex1 = v;
+		return 
+		[&](){
+		return internal_set_v2( m_container.parentage_get_child(m_tableindex1) );
+		}() && 
+		[&](){
+		auto range = m_container.person_range_of_parentage_as_bio_parent(m_parameters.person_param);
+		m_index_into_m_tableindex3 = 0;
+		m_size_of_m_tableindex3 = int32_t(range.second - range.first);
+		if(m_size_of_m_tableindex3 == 0) {
+			return internal_set_v3( parentage_id() );
+		} else {
+			for( ; m_index_into_m_tableindex3 < m_size_of_m_tableindex3 ; ++ m_index_into_m_tableindex3) {
+				if(internal_set_v3( *(range.first + m_index_into_m_tableindex3) )) {
+					return true;
+				}
+			}
+			return false;
+		}
+		}() && 
+		true;
+	}
+	bool internal::query_siblings_iterator::internal_increment_v1(bool force, bool& hit_group) {
+		if(!bool(m_tableindex1)) {
+			return internal_increment_v0(force, hit_group);
+		}
+		if(m_index_into_m_tableindex1 + 1 < m_size_of_m_tableindex1) {
+			++m_index_into_m_tableindex1;
+			auto range = m_container.person_range_of_parentage_as_bio_parent(m_parameters.person_param);
+			return internal_set_v1( *(range.first + m_index_into_m_tableindex1) );
+		} else {
+			m_tableindex1 = parentage_id();
+			return internal_increment_v0(force, hit_group);
+		}
+	}
+	void internal::query_siblings_iterator::internal_reset_v2() {
+		m_tableindex2 = person_id();
+	}
+	bool internal::query_siblings_iterator::internal_set_v2(person_id v) {
+		if(!bool(v)) {
+			m_tableindex2 = v;
+			return false;
+		}
+		m_tableindex2 = v;
+		return 
+		[&](){
+		auto range = m_container.person_range_of_parentage_as_bio_parent(m_parameters.person_param);
+		m_index_into_m_tableindex3 = 0;
+		m_size_of_m_tableindex3 = int32_t(range.second - range.first);
+		if(m_size_of_m_tableindex3 == 0) {
+			return internal_set_v3( parentage_id() );
+		} else {
+			for( ; m_index_into_m_tableindex3 < m_size_of_m_tableindex3 ; ++ m_index_into_m_tableindex3) {
+				if(internal_set_v3( *(range.first + m_index_into_m_tableindex3) )) {
+					return true;
+				}
+			}
+			return false;
+		}
+		}() && 
+		true;
+	}
+	bool internal::query_siblings_iterator::internal_increment_v2(bool force, bool& hit_group) {
+		if(!bool(m_tableindex2)) {
+			return internal_increment_v1(force, hit_group);
+		}
+		return internal_increment_v1(force, hit_group);
+	}
+	void internal::query_siblings_iterator::internal_reset_v3() {
+		m_index_into_m_tableindex3 = 0;
+		m_size_of_m_tableindex3 = 0;
+		m_tableindex3 = parentage_id();
+		internal_reset_v4();
+	}
+	bool internal::query_siblings_iterator::internal_set_v3(parentage_id v) {
+		if(!bool(v)) {
+			m_tableindex3 = v;
+			return false;
+		}
+		m_tableindex3 = v;
+		return 
+		[&](){
+		return internal_set_v4( m_container.parentage_get_child(m_tableindex3) );
+		}() && 
+		true;
+	}
+	bool internal::query_siblings_iterator::internal_increment_v3(bool force, bool& hit_group) {
+		if(!bool(m_tableindex3)) {
+			return internal_increment_v2(force, hit_group);
+		}
+		if(m_index_into_m_tableindex3 + 1 < m_size_of_m_tableindex3) {
+			++m_index_into_m_tableindex3;
+			auto range = m_container.person_range_of_parentage_as_bio_parent(m_parameters.person_param);
+			return internal_set_v3( *(range.first + m_index_into_m_tableindex3) );
+		} else {
+			m_tableindex3 = parentage_id();
+			return internal_increment_v2(force, hit_group);
+		}
+	}
+	void internal::query_siblings_iterator::internal_reset_v4() {
+		m_tableindex4 = person_id();
+	}
+	bool internal::query_siblings_iterator::internal_set_v4(person_id v) {
+		if(!bool(v)) {
+			m_tableindex4 = v;
+			return false;
+		}
+		m_tableindex4 = v;
+		return 
+		true;
+	}
+	bool internal::query_siblings_iterator::internal_increment_v4(bool force, bool& hit_group) {
+		if(!bool(m_tableindex4)) {
+			return internal_increment_v3(force, hit_group);
+		}
+		return internal_increment_v3(force, hit_group);
+	}
+	person_fat_id internal::query_siblings_iterator::get_base_id() const noexcept {
+		return person_fat_id(m_container, m_parameters.person_param );
+	}
+	person_fat_id internal::query_siblings_iterator::get_sibling_a_id() const noexcept {
+		return person_fat_id(m_container, m_tableindex2 );
+	}
+	person_fat_id internal::query_siblings_iterator::get_sibling_b_id() const noexcept {
+		return person_fat_id(m_container, m_tableindex4 );
+	}
+	bool internal::query_siblings_iterator::has_parentage() const noexcept {
+		return bool(m_tableindex1);
+	}
+	bool internal::query_siblings_iterator::has_sibling_a() const noexcept {
+		return bool(m_tableindex2);
+	}
+	bool internal::query_siblings_iterator::has_sibling_b() const noexcept {
 		return bool(m_tableindex4);
 	}
 	
