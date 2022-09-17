@@ -6,7 +6,7 @@
 
 TEST_CASE("correctly fromatted cases", "[parsing_tests]") {
 	{
-		error_record err;
+		error_record err("dummy_file");
 		char text[] = "key_a key_b";
 		auto result = extract_item(text, text + strlen(text), text, err);
 
@@ -22,7 +22,7 @@ TEST_CASE("correctly fromatted cases", "[parsing_tests]") {
 	}
 
 	{
-		error_record err;
+		error_record err("dummy_file");
 		char text[] = "key_a{TEXT IN KEY}";
 		auto result = extract_item(text, text + strlen(text), text, err);
 
@@ -33,7 +33,7 @@ TEST_CASE("correctly fromatted cases", "[parsing_tests]") {
 	}
 
 	{
-		error_record err;
+		error_record err("dummy_file");
 		char text[] = "key_a  {  TEXT IN KEY   }";
 		auto result = extract_item(text, text + strlen(text), text, err);
 
@@ -44,7 +44,7 @@ TEST_CASE("correctly fromatted cases", "[parsing_tests]") {
 	}
 
 	{
-		error_record err;
+		error_record err("dummy_file");
 		char text[] = "key_a{TEXT {} IN{ adasdd } KEY}";
 		auto result = extract_item(text, text + strlen(text), text, err);
 
@@ -55,7 +55,7 @@ TEST_CASE("correctly fromatted cases", "[parsing_tests]") {
 	}
 
 	{
-		error_record err;
+		error_record err("dummy_file");
 		char text[] = "key_a{}\t{param {\n} 2}{...}  key_b";
 		auto result = extract_item(text, text + strlen(text), text, err);
 
@@ -70,7 +70,7 @@ TEST_CASE("correctly fromatted cases", "[parsing_tests]") {
 
 TEST_CASE("incorrectly fromatted cases", "[parsing_tests]") {
 	{
-		error_record err;
+		error_record err("dummy_file");
 		char text[] = "key_a{TEXT IN KEY";
 		auto result = extract_item(text, text + strlen(text), text, err);
 
@@ -83,7 +83,7 @@ TEST_CASE("incorrectly fromatted cases", "[parsing_tests]") {
 	}
 
 	{
-		error_record err;
+		error_record err("dummy_file");
 		char text[] = "key_a{TEXT { } IN KEY";
 		auto result = extract_item(text, text + strlen(text), text, err);
 
@@ -96,7 +96,7 @@ TEST_CASE("incorrectly fromatted cases", "[parsing_tests]") {
 	}
 
 	{
-		error_record err;
+		error_record err("dummy_file");
 		char text[] = "key_a{fine}{TEXT { } IN KEY";
 		auto result = extract_item(text, text + strlen(text), text, err);
 
@@ -111,7 +111,7 @@ TEST_CASE("incorrectly fromatted cases", "[parsing_tests]") {
 
 TEST_CASE("query parsing", "[parsing_tests]") {
 	{
-		error_record err;
+		error_record err("dummy_file");
 		char text[] = "A, B, C from T";
 		const char* tp = text;
 		auto s1 = parse_select_statement(tp, text + strlen(text), text, err);
@@ -139,7 +139,7 @@ TEST_CASE("query parsing", "[parsing_tests]") {
 	}
 
 	{
-		error_record err;
+		error_record err("dummy_file");
 		char text[] = "T.A, add(B as C), sum(T.C as xyz) from @param join+ S as table, T.join on www Y";
 		const char* tp = text;
 		auto s1 = parse_select_statement(tp, text + strlen(text), text, err);
@@ -164,7 +164,7 @@ TEST_CASE("query parsing", "[parsing_tests]") {
 		REQUIRE(s1.from.size() == 3);
 
 		REQUIRE(s1.from[0].type == from_type::parameter);
-		REQUIRE(s1.from[0].left_of_join == "param");
+		REQUIRE(s1.from[0].table_identifier.member_name == "param");
 
 		REQUIRE(s1.from[1].type == from_type::join_plus);
 		REQUIRE(s1.from[1].left_of_join == "");
@@ -182,7 +182,7 @@ TEST_CASE("query parsing", "[parsing_tests]") {
 	}
 
 	{
-		error_record err;
+		error_record err("dummy_file");
 		char text[] = "min(X) from Y, R group Y";
 		const char* tp = text;
 		auto s1 = parse_select_statement(tp, text + strlen(text), text, err);
@@ -212,7 +212,7 @@ TEST_CASE("query parsing", "[parsing_tests]") {
 	}
 
 	{
-		error_record err;
+		error_record err("dummy_file");
 		char text[] = "min(X) from Y, R where (@a group @bb) rem group Y";
 		const char* tp = text;
 		auto s1 = parse_select_statement(tp, text + strlen(text), text, err);
