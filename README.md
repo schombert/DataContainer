@@ -37,6 +37,7 @@ The following documentation explains all you need to know about how to generate 
 ## Examples and Tutorials
 
 - [Tutorial: integrating a color struct](tutorial_color.md)
+- [Tutorial: making a data container act like an ECS](tutorial_ecs.md)
 
 ## Other
 

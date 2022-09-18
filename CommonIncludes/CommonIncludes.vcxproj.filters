@@ -80,5 +80,13 @@
     <None Include="..\queries.md">
       <Filter>docs</Filter>
     </None>
+    <None Include="..\tutorial_ecs.md">
+      <Filter>docs</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\iamtheecs.jpg">
+      <Filter>docs</Filter>
+    </Image>
   </ItemGroup>
 </Project>

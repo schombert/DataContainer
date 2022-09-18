@@ -1,0 +1,54 @@
+relationship{
+	name{entity}
+	size{3000}
+	storage_type{erasable}
+
+	hook{delete}
+
+	link{
+		object{position}
+		name{position_component}
+		type{unique}{optional}
+	}
+	link{
+		object{sprite}
+		name{sprite_component}
+		type{unique}{optional}
+	}
+}
+
+object{
+	name{position}
+	size{3000}
+	storage_type{erasable}
+
+	property{
+		name{x}
+		type{float}
+	}
+	property{
+		name{y}
+		type{float}
+	}
+	property{
+		name{rotation}
+		type{float}
+	}
+}
+
+object{
+	name{sprite}
+	size{3000}
+	storage_type{erasable}
+
+	property{
+		name{sprite_id}
+		type{uint16_t}
+	}
+}
+
+query{
+	name{sprites_with_position}
+	select{sprite.id as sprite, position.id as position
+		from sprite, join entity, join position}
+}
