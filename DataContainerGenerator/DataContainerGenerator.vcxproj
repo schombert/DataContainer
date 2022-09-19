@@ -158,6 +158,7 @@
     <ClCompile Include="object_member_fragments.cpp" />
     <ClCompile Include="parsing.cpp" />
     <ClCompile Include="query_fragments.cpp" />
+    <ClCompile Include="serialize_fragments.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="code_fragments.hpp" />
