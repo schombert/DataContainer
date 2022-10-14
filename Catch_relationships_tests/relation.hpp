@@ -11535,9 +11535,9 @@ namespace dcon {
 	
 
 	namespace internal {
-		object_iterator_thingyA::object_iterator_thingyA(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE object_iterator_thingyA::object_iterator_thingyA(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 		}
-		const_object_iterator_thingyA::const_object_iterator_thingyA(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE const_object_iterator_thingyA::const_object_iterator_thingyA(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
 		}
 		DCON_RELEASE_INLINE object_iterator_thingyA& object_iterator_thingyA::operator++() noexcept {
 			++index;
@@ -11556,10 +11556,10 @@ namespace dcon {
 			return *this;
 		}
 		
-		iterator_thingyA_foreach_relate_as_optional_as_left::iterator_thingyA_foreach_relate_as_optional_as_left(data_container& c,  thingyA_id fr) noexcept : container(c) {
+		DCON_RELEASE_INLINE iterator_thingyA_foreach_relate_as_optional_as_left::iterator_thingyA_foreach_relate_as_optional_as_left(data_container& c,  thingyA_id fr) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_optional.left_storage, container.relate_as_optional.m_array_left.vptr()[fr.index()]).first;
 		}
-		iterator_thingyA_foreach_relate_as_optional_as_left::iterator_thingyA_foreach_relate_as_optional_as_left(data_container& c, thingyA_id fr, int) noexcept : container(c) {
+		DCON_RELEASE_INLINE iterator_thingyA_foreach_relate_as_optional_as_left::iterator_thingyA_foreach_relate_as_optional_as_left(data_container& c, thingyA_id fr, int) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_optional.left_storage, container.relate_as_optional.m_array_left.vptr()[fr.index()]).second;
 		}
 		DCON_RELEASE_INLINE iterator_thingyA_foreach_relate_as_optional_as_left& iterator_thingyA_foreach_relate_as_optional_as_left::operator++() noexcept {
@@ -11570,10 +11570,10 @@ namespace dcon {
 			--ptr;
 			return *this;
 		}
-		const_iterator_thingyA_foreach_relate_as_optional_as_left::const_iterator_thingyA_foreach_relate_as_optional_as_left(data_container const& c,  thingyA_id fr) noexcept : container(c) {
+		DCON_RELEASE_INLINE const_iterator_thingyA_foreach_relate_as_optional_as_left::const_iterator_thingyA_foreach_relate_as_optional_as_left(data_container const& c,  thingyA_id fr) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_optional.left_storage, container.relate_as_optional.m_array_left.vptr()[fr.index()]).first;
 		}
-		const_iterator_thingyA_foreach_relate_as_optional_as_left::const_iterator_thingyA_foreach_relate_as_optional_as_left(data_container const& c, thingyA_id fr, int) noexcept : container(c) {
+		DCON_RELEASE_INLINE const_iterator_thingyA_foreach_relate_as_optional_as_left::const_iterator_thingyA_foreach_relate_as_optional_as_left(data_container const& c, thingyA_id fr, int) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_optional.left_storage, container.relate_as_optional.m_array_left.vptr()[fr.index()]).second;
 		}
 		DCON_RELEASE_INLINE const_iterator_thingyA_foreach_relate_as_optional_as_left& const_iterator_thingyA_foreach_relate_as_optional_as_left::operator++() noexcept {
@@ -11585,10 +11585,10 @@ namespace dcon {
 			return *this;
 		}
 		
-		iterator_thingyA_foreach_relate_as_non_optional_as_left::iterator_thingyA_foreach_relate_as_non_optional_as_left(data_container& c,  thingyA_id fr) noexcept : container(c) {
+		DCON_RELEASE_INLINE iterator_thingyA_foreach_relate_as_non_optional_as_left::iterator_thingyA_foreach_relate_as_non_optional_as_left(data_container& c,  thingyA_id fr) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_non_optional.left_storage, container.relate_as_non_optional.m_array_left.vptr()[fr.index()]).first;
 		}
-		iterator_thingyA_foreach_relate_as_non_optional_as_left::iterator_thingyA_foreach_relate_as_non_optional_as_left(data_container& c, thingyA_id fr, int) noexcept : container(c) {
+		DCON_RELEASE_INLINE iterator_thingyA_foreach_relate_as_non_optional_as_left::iterator_thingyA_foreach_relate_as_non_optional_as_left(data_container& c, thingyA_id fr, int) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_non_optional.left_storage, container.relate_as_non_optional.m_array_left.vptr()[fr.index()]).second;
 		}
 		DCON_RELEASE_INLINE iterator_thingyA_foreach_relate_as_non_optional_as_left& iterator_thingyA_foreach_relate_as_non_optional_as_left::operator++() noexcept {
@@ -11599,10 +11599,10 @@ namespace dcon {
 			--ptr;
 			return *this;
 		}
-		const_iterator_thingyA_foreach_relate_as_non_optional_as_left::const_iterator_thingyA_foreach_relate_as_non_optional_as_left(data_container const& c,  thingyA_id fr) noexcept : container(c) {
+		DCON_RELEASE_INLINE const_iterator_thingyA_foreach_relate_as_non_optional_as_left::const_iterator_thingyA_foreach_relate_as_non_optional_as_left(data_container const& c,  thingyA_id fr) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_non_optional.left_storage, container.relate_as_non_optional.m_array_left.vptr()[fr.index()]).first;
 		}
-		const_iterator_thingyA_foreach_relate_as_non_optional_as_left::const_iterator_thingyA_foreach_relate_as_non_optional_as_left(data_container const& c, thingyA_id fr, int) noexcept : container(c) {
+		DCON_RELEASE_INLINE const_iterator_thingyA_foreach_relate_as_non_optional_as_left::const_iterator_thingyA_foreach_relate_as_non_optional_as_left(data_container const& c, thingyA_id fr, int) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_non_optional.left_storage, container.relate_as_non_optional.m_array_left.vptr()[fr.index()]).second;
 		}
 		DCON_RELEASE_INLINE const_iterator_thingyA_foreach_relate_as_non_optional_as_left& const_iterator_thingyA_foreach_relate_as_non_optional_as_left::operator++() noexcept {
@@ -11614,10 +11614,10 @@ namespace dcon {
 			return *this;
 		}
 		
-		iterator_thingyA_foreach_relate_as_multipleA_as_left::iterator_thingyA_foreach_relate_as_multipleA_as_left(data_container& c,  thingyA_id fr) noexcept : container(c) {
+		DCON_RELEASE_INLINE iterator_thingyA_foreach_relate_as_multipleA_as_left::iterator_thingyA_foreach_relate_as_multipleA_as_left(data_container& c,  thingyA_id fr) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_multipleA.left_storage, container.relate_as_multipleA.m_array_left.vptr()[fr.index()]).first;
 		}
-		iterator_thingyA_foreach_relate_as_multipleA_as_left::iterator_thingyA_foreach_relate_as_multipleA_as_left(data_container& c, thingyA_id fr, int) noexcept : container(c) {
+		DCON_RELEASE_INLINE iterator_thingyA_foreach_relate_as_multipleA_as_left::iterator_thingyA_foreach_relate_as_multipleA_as_left(data_container& c, thingyA_id fr, int) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_multipleA.left_storage, container.relate_as_multipleA.m_array_left.vptr()[fr.index()]).second;
 		}
 		DCON_RELEASE_INLINE iterator_thingyA_foreach_relate_as_multipleA_as_left& iterator_thingyA_foreach_relate_as_multipleA_as_left::operator++() noexcept {
@@ -11628,10 +11628,10 @@ namespace dcon {
 			--ptr;
 			return *this;
 		}
-		const_iterator_thingyA_foreach_relate_as_multipleA_as_left::const_iterator_thingyA_foreach_relate_as_multipleA_as_left(data_container const& c,  thingyA_id fr) noexcept : container(c) {
+		DCON_RELEASE_INLINE const_iterator_thingyA_foreach_relate_as_multipleA_as_left::const_iterator_thingyA_foreach_relate_as_multipleA_as_left(data_container const& c,  thingyA_id fr) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_multipleA.left_storage, container.relate_as_multipleA.m_array_left.vptr()[fr.index()]).first;
 		}
-		const_iterator_thingyA_foreach_relate_as_multipleA_as_left::const_iterator_thingyA_foreach_relate_as_multipleA_as_left(data_container const& c, thingyA_id fr, int) noexcept : container(c) {
+		DCON_RELEASE_INLINE const_iterator_thingyA_foreach_relate_as_multipleA_as_left::const_iterator_thingyA_foreach_relate_as_multipleA_as_left(data_container const& c, thingyA_id fr, int) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_multipleA.left_storage, container.relate_as_multipleA.m_array_left.vptr()[fr.index()]).second;
 		}
 		DCON_RELEASE_INLINE const_iterator_thingyA_foreach_relate_as_multipleA_as_left& const_iterator_thingyA_foreach_relate_as_multipleA_as_left::operator++() noexcept {
@@ -11643,10 +11643,10 @@ namespace dcon {
 			return *this;
 		}
 		
-		iterator_thingyA_foreach_relate_as_multipleC_as_left::iterator_thingyA_foreach_relate_as_multipleC_as_left(data_container& c,  thingyA_id fr) noexcept : container(c) {
+		DCON_RELEASE_INLINE iterator_thingyA_foreach_relate_as_multipleC_as_left::iterator_thingyA_foreach_relate_as_multipleC_as_left(data_container& c,  thingyA_id fr) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_multipleC.left_storage, container.relate_as_multipleC.m_array_left.vptr()[fr.index()]).first;
 		}
-		iterator_thingyA_foreach_relate_as_multipleC_as_left::iterator_thingyA_foreach_relate_as_multipleC_as_left(data_container& c, thingyA_id fr, int) noexcept : container(c) {
+		DCON_RELEASE_INLINE iterator_thingyA_foreach_relate_as_multipleC_as_left::iterator_thingyA_foreach_relate_as_multipleC_as_left(data_container& c, thingyA_id fr, int) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_multipleC.left_storage, container.relate_as_multipleC.m_array_left.vptr()[fr.index()]).second;
 		}
 		DCON_RELEASE_INLINE iterator_thingyA_foreach_relate_as_multipleC_as_left& iterator_thingyA_foreach_relate_as_multipleC_as_left::operator++() noexcept {
@@ -11657,10 +11657,10 @@ namespace dcon {
 			--ptr;
 			return *this;
 		}
-		const_iterator_thingyA_foreach_relate_as_multipleC_as_left::const_iterator_thingyA_foreach_relate_as_multipleC_as_left(data_container const& c,  thingyA_id fr) noexcept : container(c) {
+		DCON_RELEASE_INLINE const_iterator_thingyA_foreach_relate_as_multipleC_as_left::const_iterator_thingyA_foreach_relate_as_multipleC_as_left(data_container const& c,  thingyA_id fr) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_multipleC.left_storage, container.relate_as_multipleC.m_array_left.vptr()[fr.index()]).first;
 		}
-		const_iterator_thingyA_foreach_relate_as_multipleC_as_left::const_iterator_thingyA_foreach_relate_as_multipleC_as_left(data_container const& c, thingyA_id fr, int) noexcept : container(c) {
+		DCON_RELEASE_INLINE const_iterator_thingyA_foreach_relate_as_multipleC_as_left::const_iterator_thingyA_foreach_relate_as_multipleC_as_left(data_container const& c, thingyA_id fr, int) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_multipleC.left_storage, container.relate_as_multipleC.m_array_left.vptr()[fr.index()]).second;
 		}
 		DCON_RELEASE_INLINE const_iterator_thingyA_foreach_relate_as_multipleC_as_left& const_iterator_thingyA_foreach_relate_as_multipleC_as_left::operator++() noexcept {
@@ -11672,12 +11672,12 @@ namespace dcon {
 			return *this;
 		}
 		
-		object_iterator_thingyB::object_iterator_thingyB(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE object_iterator_thingyB::object_iterator_thingyB(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.thingyB.m__index.vptr()[index] != thingyB_id(thingyB_id::value_base_t(index)) && index < container.thingyB.size_used) {
 				++index;
 			}
 		}
-		const_object_iterator_thingyB::const_object_iterator_thingyB(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE const_object_iterator_thingyB::const_object_iterator_thingyB(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.thingyB.m__index.vptr()[index] != thingyB_id(thingyB_id::value_base_t(index)) && index < container.thingyB.size_used) {
 				++index;
 			}
@@ -11711,10 +11711,10 @@ namespace dcon {
 			return *this;
 		}
 		
-		iterator_thingyB_foreach_relate_in_array_as_right::iterator_thingyB_foreach_relate_in_array_as_right(data_container& c,  thingyB_id fr) noexcept : container(c) {
+		DCON_RELEASE_INLINE iterator_thingyB_foreach_relate_in_array_as_right::iterator_thingyB_foreach_relate_in_array_as_right(data_container& c,  thingyB_id fr) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_in_array.right_storage, container.relate_in_array.m_array_right.vptr()[fr.index()]).first;
 		}
-		iterator_thingyB_foreach_relate_in_array_as_right::iterator_thingyB_foreach_relate_in_array_as_right(data_container& c, thingyB_id fr, int) noexcept : container(c) {
+		DCON_RELEASE_INLINE iterator_thingyB_foreach_relate_in_array_as_right::iterator_thingyB_foreach_relate_in_array_as_right(data_container& c, thingyB_id fr, int) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_in_array.right_storage, container.relate_in_array.m_array_right.vptr()[fr.index()]).second;
 		}
 		DCON_RELEASE_INLINE iterator_thingyB_foreach_relate_in_array_as_right& iterator_thingyB_foreach_relate_in_array_as_right::operator++() noexcept {
@@ -11725,10 +11725,10 @@ namespace dcon {
 			--ptr;
 			return *this;
 		}
-		const_iterator_thingyB_foreach_relate_in_array_as_right::const_iterator_thingyB_foreach_relate_in_array_as_right(data_container const& c,  thingyB_id fr) noexcept : container(c) {
+		DCON_RELEASE_INLINE const_iterator_thingyB_foreach_relate_in_array_as_right::const_iterator_thingyB_foreach_relate_in_array_as_right(data_container const& c,  thingyB_id fr) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_in_array.right_storage, container.relate_in_array.m_array_right.vptr()[fr.index()]).first;
 		}
-		const_iterator_thingyB_foreach_relate_in_array_as_right::const_iterator_thingyB_foreach_relate_in_array_as_right(data_container const& c, thingyB_id fr, int) noexcept : container(c) {
+		DCON_RELEASE_INLINE const_iterator_thingyB_foreach_relate_in_array_as_right::const_iterator_thingyB_foreach_relate_in_array_as_right(data_container const& c, thingyB_id fr, int) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_in_array.right_storage, container.relate_in_array.m_array_right.vptr()[fr.index()]).second;
 		}
 		DCON_RELEASE_INLINE const_iterator_thingyB_foreach_relate_in_array_as_right& const_iterator_thingyB_foreach_relate_in_array_as_right::operator++() noexcept {
@@ -11740,7 +11740,7 @@ namespace dcon {
 			return *this;
 		}
 		
-		iterator_thingyB_foreach_relate_in_list_as_right::iterator_thingyB_foreach_relate_in_list_as_right(data_container& c,  thingyB_id fr) noexcept : container(c) {
+		DCON_RELEASE_INLINE iterator_thingyB_foreach_relate_in_list_as_right::iterator_thingyB_foreach_relate_in_list_as_right(data_container& c,  thingyB_id fr) noexcept : container(c) {
 			list_pos = container.relate_in_list.m_head_back_right.vptr()[fr.index()];
 		}
 		DCON_RELEASE_INLINE iterator_thingyB_foreach_relate_in_list_as_right& iterator_thingyB_foreach_relate_in_list_as_right::operator++() noexcept {
@@ -11751,7 +11751,7 @@ namespace dcon {
 			list_pos = container.relate_in_list.m_link_right.vptr()[list_pos.index()].left;
 			return *this;
 		}
-		const_iterator_thingyB_foreach_relate_in_list_as_right::const_iterator_thingyB_foreach_relate_in_list_as_right(data_container const& c,  thingyB_id fr) noexcept : container(c) {
+		DCON_RELEASE_INLINE const_iterator_thingyB_foreach_relate_in_list_as_right::const_iterator_thingyB_foreach_relate_in_list_as_right(data_container const& c,  thingyB_id fr) noexcept : container(c) {
 			list_pos = container.relate_in_list.m_head_back_right.vptr()[fr.index()];
 		}
 		DCON_RELEASE_INLINE const_iterator_thingyB_foreach_relate_in_list_as_right& const_iterator_thingyB_foreach_relate_in_list_as_right::operator++() noexcept {
@@ -11763,10 +11763,10 @@ namespace dcon {
 			return *this;
 		}
 		
-		iterator_thingyB_foreach_relate_as_optional_as_right::iterator_thingyB_foreach_relate_as_optional_as_right(data_container& c,  thingyB_id fr) noexcept : container(c) {
+		DCON_RELEASE_INLINE iterator_thingyB_foreach_relate_as_optional_as_right::iterator_thingyB_foreach_relate_as_optional_as_right(data_container& c,  thingyB_id fr) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_optional.right_storage, container.relate_as_optional.m_array_right.vptr()[fr.index()]).first;
 		}
-		iterator_thingyB_foreach_relate_as_optional_as_right::iterator_thingyB_foreach_relate_as_optional_as_right(data_container& c, thingyB_id fr, int) noexcept : container(c) {
+		DCON_RELEASE_INLINE iterator_thingyB_foreach_relate_as_optional_as_right::iterator_thingyB_foreach_relate_as_optional_as_right(data_container& c, thingyB_id fr, int) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_optional.right_storage, container.relate_as_optional.m_array_right.vptr()[fr.index()]).second;
 		}
 		DCON_RELEASE_INLINE iterator_thingyB_foreach_relate_as_optional_as_right& iterator_thingyB_foreach_relate_as_optional_as_right::operator++() noexcept {
@@ -11777,10 +11777,10 @@ namespace dcon {
 			--ptr;
 			return *this;
 		}
-		const_iterator_thingyB_foreach_relate_as_optional_as_right::const_iterator_thingyB_foreach_relate_as_optional_as_right(data_container const& c,  thingyB_id fr) noexcept : container(c) {
+		DCON_RELEASE_INLINE const_iterator_thingyB_foreach_relate_as_optional_as_right::const_iterator_thingyB_foreach_relate_as_optional_as_right(data_container const& c,  thingyB_id fr) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_optional.right_storage, container.relate_as_optional.m_array_right.vptr()[fr.index()]).first;
 		}
-		const_iterator_thingyB_foreach_relate_as_optional_as_right::const_iterator_thingyB_foreach_relate_as_optional_as_right(data_container const& c, thingyB_id fr, int) noexcept : container(c) {
+		DCON_RELEASE_INLINE const_iterator_thingyB_foreach_relate_as_optional_as_right::const_iterator_thingyB_foreach_relate_as_optional_as_right(data_container const& c, thingyB_id fr, int) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_optional.right_storage, container.relate_as_optional.m_array_right.vptr()[fr.index()]).second;
 		}
 		DCON_RELEASE_INLINE const_iterator_thingyB_foreach_relate_as_optional_as_right& const_iterator_thingyB_foreach_relate_as_optional_as_right::operator++() noexcept {
@@ -11792,10 +11792,10 @@ namespace dcon {
 			return *this;
 		}
 		
-		iterator_thingyB_foreach_relate_as_non_optional_as_right::iterator_thingyB_foreach_relate_as_non_optional_as_right(data_container& c,  thingyB_id fr) noexcept : container(c) {
+		DCON_RELEASE_INLINE iterator_thingyB_foreach_relate_as_non_optional_as_right::iterator_thingyB_foreach_relate_as_non_optional_as_right(data_container& c,  thingyB_id fr) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_non_optional.right_storage, container.relate_as_non_optional.m_array_right.vptr()[fr.index()]).first;
 		}
-		iterator_thingyB_foreach_relate_as_non_optional_as_right::iterator_thingyB_foreach_relate_as_non_optional_as_right(data_container& c, thingyB_id fr, int) noexcept : container(c) {
+		DCON_RELEASE_INLINE iterator_thingyB_foreach_relate_as_non_optional_as_right::iterator_thingyB_foreach_relate_as_non_optional_as_right(data_container& c, thingyB_id fr, int) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_non_optional.right_storage, container.relate_as_non_optional.m_array_right.vptr()[fr.index()]).second;
 		}
 		DCON_RELEASE_INLINE iterator_thingyB_foreach_relate_as_non_optional_as_right& iterator_thingyB_foreach_relate_as_non_optional_as_right::operator++() noexcept {
@@ -11806,10 +11806,10 @@ namespace dcon {
 			--ptr;
 			return *this;
 		}
-		const_iterator_thingyB_foreach_relate_as_non_optional_as_right::const_iterator_thingyB_foreach_relate_as_non_optional_as_right(data_container const& c,  thingyB_id fr) noexcept : container(c) {
+		DCON_RELEASE_INLINE const_iterator_thingyB_foreach_relate_as_non_optional_as_right::const_iterator_thingyB_foreach_relate_as_non_optional_as_right(data_container const& c,  thingyB_id fr) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_non_optional.right_storage, container.relate_as_non_optional.m_array_right.vptr()[fr.index()]).first;
 		}
-		const_iterator_thingyB_foreach_relate_as_non_optional_as_right::const_iterator_thingyB_foreach_relate_as_non_optional_as_right(data_container const& c, thingyB_id fr, int) noexcept : container(c) {
+		DCON_RELEASE_INLINE const_iterator_thingyB_foreach_relate_as_non_optional_as_right::const_iterator_thingyB_foreach_relate_as_non_optional_as_right(data_container const& c, thingyB_id fr, int) noexcept : container(c) {
 			ptr = dcon::get_range(container.relate_as_non_optional.right_storage, container.relate_as_non_optional.m_array_right.vptr()[fr.index()]).second;
 		}
 		DCON_RELEASE_INLINE const_iterator_thingyB_foreach_relate_as_non_optional_as_right& const_iterator_thingyB_foreach_relate_as_non_optional_as_right::operator++() noexcept {
@@ -11821,9 +11821,9 @@ namespace dcon {
 			return *this;
 		}
 		
-		object_iterator_relate_same::object_iterator_relate_same(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE object_iterator_relate_same::object_iterator_relate_same(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 		}
-		const_object_iterator_relate_same::const_object_iterator_relate_same(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE const_object_iterator_relate_same::const_object_iterator_relate_same(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
 		}
 		DCON_RELEASE_INLINE object_iterator_relate_same& object_iterator_relate_same::operator++() noexcept {
 			++index;
@@ -11842,9 +11842,9 @@ namespace dcon {
 			return *this;
 		}
 		
-		object_iterator_relate_in_array::object_iterator_relate_in_array(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE object_iterator_relate_in_array::object_iterator_relate_in_array(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 		}
-		const_object_iterator_relate_in_array::const_object_iterator_relate_in_array(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE const_object_iterator_relate_in_array::const_object_iterator_relate_in_array(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
 		}
 		DCON_RELEASE_INLINE object_iterator_relate_in_array& object_iterator_relate_in_array::operator++() noexcept {
 			++index;
@@ -11863,9 +11863,9 @@ namespace dcon {
 			return *this;
 		}
 		
-		object_iterator_relate_in_list::object_iterator_relate_in_list(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE object_iterator_relate_in_list::object_iterator_relate_in_list(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 		}
-		const_object_iterator_relate_in_list::const_object_iterator_relate_in_list(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE const_object_iterator_relate_in_list::const_object_iterator_relate_in_list(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
 		}
 		DCON_RELEASE_INLINE object_iterator_relate_in_list& object_iterator_relate_in_list::operator++() noexcept {
 			++index;
@@ -11884,12 +11884,12 @@ namespace dcon {
 			return *this;
 		}
 		
-		object_iterator_many_many::object_iterator_many_many(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE object_iterator_many_many::object_iterator_many_many(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.many_many.m__index.vptr()[index] != many_many_id(many_many_id::value_base_t(index)) && index < container.many_many.size_used) {
 				++index;
 			}
 		}
-		const_object_iterator_many_many::const_object_iterator_many_many(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE const_object_iterator_many_many::const_object_iterator_many_many(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.many_many.m__index.vptr()[index] != many_many_id(many_many_id::value_base_t(index)) && index < container.many_many.size_used) {
 				++index;
 			}
@@ -11923,12 +11923,12 @@ namespace dcon {
 			return *this;
 		}
 		
-		object_iterator_relate_as_optional::object_iterator_relate_as_optional(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE object_iterator_relate_as_optional::object_iterator_relate_as_optional(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.relate_as_optional.m__index.vptr()[index] != relate_as_optional_id(relate_as_optional_id::value_base_t(index)) && index < container.relate_as_optional.size_used) {
 				++index;
 			}
 		}
-		const_object_iterator_relate_as_optional::const_object_iterator_relate_as_optional(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE const_object_iterator_relate_as_optional::const_object_iterator_relate_as_optional(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.relate_as_optional.m__index.vptr()[index] != relate_as_optional_id(relate_as_optional_id::value_base_t(index)) && index < container.relate_as_optional.size_used) {
 				++index;
 			}
@@ -11962,12 +11962,12 @@ namespace dcon {
 			return *this;
 		}
 		
-		object_iterator_relate_as_non_optional::object_iterator_relate_as_non_optional(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE object_iterator_relate_as_non_optional::object_iterator_relate_as_non_optional(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.relate_as_non_optional.m__index.vptr()[index] != relate_as_non_optional_id(relate_as_non_optional_id::value_base_t(index)) && index < container.relate_as_non_optional.size_used) {
 				++index;
 			}
 		}
-		const_object_iterator_relate_as_non_optional::const_object_iterator_relate_as_non_optional(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE const_object_iterator_relate_as_non_optional::const_object_iterator_relate_as_non_optional(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.relate_as_non_optional.m__index.vptr()[index] != relate_as_non_optional_id(relate_as_non_optional_id::value_base_t(index)) && index < container.relate_as_non_optional.size_used) {
 				++index;
 			}
@@ -12001,12 +12001,12 @@ namespace dcon {
 			return *this;
 		}
 		
-		object_iterator_relate_as_multipleA::object_iterator_relate_as_multipleA(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE object_iterator_relate_as_multipleA::object_iterator_relate_as_multipleA(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.relate_as_multipleA.m__index.vptr()[index] != relate_as_multipleA_id(relate_as_multipleA_id::value_base_t(index)) && index < container.relate_as_multipleA.size_used) {
 				++index;
 			}
 		}
-		const_object_iterator_relate_as_multipleA::const_object_iterator_relate_as_multipleA(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE const_object_iterator_relate_as_multipleA::const_object_iterator_relate_as_multipleA(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.relate_as_multipleA.m__index.vptr()[index] != relate_as_multipleA_id(relate_as_multipleA_id::value_base_t(index)) && index < container.relate_as_multipleA.size_used) {
 				++index;
 			}
@@ -12040,12 +12040,12 @@ namespace dcon {
 			return *this;
 		}
 		
-		object_iterator_relate_as_multipleB::object_iterator_relate_as_multipleB(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE object_iterator_relate_as_multipleB::object_iterator_relate_as_multipleB(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.relate_as_multipleB.m__index.vptr()[index] != relate_as_multipleB_id(relate_as_multipleB_id::value_base_t(index)) && index < container.relate_as_multipleB.size_used) {
 				++index;
 			}
 		}
-		const_object_iterator_relate_as_multipleB::const_object_iterator_relate_as_multipleB(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE const_object_iterator_relate_as_multipleB::const_object_iterator_relate_as_multipleB(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.relate_as_multipleB.m__index.vptr()[index] != relate_as_multipleB_id(relate_as_multipleB_id::value_base_t(index)) && index < container.relate_as_multipleB.size_used) {
 				++index;
 			}
@@ -12079,12 +12079,12 @@ namespace dcon {
 			return *this;
 		}
 		
-		object_iterator_relate_as_multipleC::object_iterator_relate_as_multipleC(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE object_iterator_relate_as_multipleC::object_iterator_relate_as_multipleC(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.relate_as_multipleC.m__index.vptr()[index] != relate_as_multipleC_id(relate_as_multipleC_id::value_base_t(index)) && index < container.relate_as_multipleC.size_used) {
 				++index;
 			}
 		}
-		const_object_iterator_relate_as_multipleC::const_object_iterator_relate_as_multipleC(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE const_object_iterator_relate_as_multipleC::const_object_iterator_relate_as_multipleC(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.relate_as_multipleC.m__index.vptr()[index] != relate_as_multipleC_id(relate_as_multipleC_id::value_base_t(index)) && index < container.relate_as_multipleC.size_used) {
 				++index;
 			}
@@ -12118,12 +12118,12 @@ namespace dcon {
 			return *this;
 		}
 		
-		object_iterator_relate_as_multipleD::object_iterator_relate_as_multipleD(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE object_iterator_relate_as_multipleD::object_iterator_relate_as_multipleD(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.relate_as_multipleD.m__index.vptr()[index] != relate_as_multipleD_id(relate_as_multipleD_id::value_base_t(index)) && index < container.relate_as_multipleD.size_used) {
 				++index;
 			}
 		}
-		const_object_iterator_relate_as_multipleD::const_object_iterator_relate_as_multipleD(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE const_object_iterator_relate_as_multipleD::const_object_iterator_relate_as_multipleD(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.relate_as_multipleD.m__index.vptr()[index] != relate_as_multipleD_id(relate_as_multipleD_id::value_base_t(index)) && index < container.relate_as_multipleD.size_used) {
 				++index;
 			}

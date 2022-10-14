@@ -2000,7 +2000,7 @@ basic_builder& relation_iterator_foreach_as_implementation(basic_builder& o, rel
 
 	o + substitute{ "it_name", std::string("iterator_") + obj.name + "_foreach_" + rel.name + "_as_" + l.property_name };
 
-	o + "@it_name@::@it_name@(data_container& c,  @obj@_id fr) noexcept : container(c)" + block{
+	o + "DCON_RELEASE_INLINE @it_name@::@it_name@(data_container& c,  @obj@_id fr) noexcept : container(c)" + block{
 		if(l.ltype == list_type::list) {
 			o + "list_pos = container.@rel@.m_head_back_@rel_prop@.vptr()[fr.index()];";
 		} else if(l.ltype == list_type::array) {
@@ -2011,7 +2011,7 @@ basic_builder& relation_iterator_foreach_as_implementation(basic_builder& o, rel
 	};
 
 	if(l.ltype != list_type::list) {
-		o + "@it_name@::@it_name@(data_container& c, @obj@_id fr, int) noexcept : container(c)" + block{
+		o + "DCON_RELEASE_INLINE @it_name@::@it_name@(data_container& c, @obj@_id fr, int) noexcept : container(c)" + block{
 			if(l.ltype == list_type::array) {
 				o + "ptr = dcon::get_range(container.@rel@.@rel_prop@_storage, container.@rel@.m_array_@rel_prop@.vptr()[fr.index()]).second;";
 			} else if(l.ltype == list_type::std_vector) {
@@ -2039,7 +2039,7 @@ basic_builder& relation_iterator_foreach_as_implementation(basic_builder& o, rel
 	};
 
 	o + substitute{ "it_name", std::string("const_iterator_") + obj.name + "_foreach_" + rel.name + "_as_" + l.property_name };
-	o + "@it_name@::@it_name@(data_container const& c,  @obj@_id fr) noexcept : container(c)" + block{
+	o + "DCON_RELEASE_INLINE @it_name@::@it_name@(data_container const& c,  @obj@_id fr) noexcept : container(c)" + block{
 		if(l.ltype == list_type::list) {
 			o + "list_pos = container.@rel@.m_head_back_@rel_prop@.vptr()[fr.index()];";
 		} else if(l.ltype == list_type::array) {
@@ -2049,7 +2049,7 @@ basic_builder& relation_iterator_foreach_as_implementation(basic_builder& o, rel
 		}
 	};
 	if(l.ltype != list_type::list) {
-		o + "@it_name@::@it_name@(data_container const& c, @obj@_id fr, int) noexcept : container(c)" + block{
+		o + "DCON_RELEASE_INLINE @it_name@::@it_name@(data_container const& c, @obj@_id fr, int) noexcept : container(c)" + block{
 			if(l.ltype == list_type::array) {
 				o + "ptr = dcon::get_range(container.@rel@.@rel_prop@_storage, container.@rel@.m_array_@rel_prop@.vptr()[fr.index()]).second;";
 			} else if(l.ltype == list_type::std_vector) {
@@ -2208,14 +2208,14 @@ basic_builder& object_iterator_declaration(basic_builder& o, relationship_object
 basic_builder& object_iterator_implementation(basic_builder& o, relationship_object_def const& obj) {
 	o + substitute{ "obj", obj.name };
 
-	o + "object_iterator_@obj@::object_iterator_@obj@(data_container& c, uint32_t i) noexcept : container(c), index(i)" + block{
+	o + "DCON_RELEASE_INLINE object_iterator_@obj@::object_iterator_@obj@(data_container& c, uint32_t i) noexcept : container(c), index(i)" + block{
 		if(obj.store_type == storage_type::erasable) {
 			o + "while(container.@obj@.m__index.vptr()[index] != @obj@_id(@obj@_id::value_base_t(index)) && index < container.@obj@.size_used)" + block{
 				o + "++index;";
 			};
 		}
 	};
-	o + "const_object_iterator_@obj@::const_object_iterator_@obj@(data_container const& c, uint32_t i) noexcept : container(c), index(i)" + block{
+	o + "DCON_RELEASE_INLINE const_object_iterator_@obj@::const_object_iterator_@obj@(data_container const& c, uint32_t i) noexcept : container(c), index(i)" + block{
 		if(obj.store_type == storage_type::erasable) {
 			o + "while(container.@obj@.m__index.vptr()[index] != @obj@_id(@obj@_id::value_base_t(index)) && index < container.@obj@.size_used)" + block{
 				o + "++index;";

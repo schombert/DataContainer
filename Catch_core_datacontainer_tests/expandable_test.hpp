@@ -2878,9 +2878,9 @@ namespace ex1 {
 	
 
 	namespace internal {
-		object_iterator_top::object_iterator_top(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE object_iterator_top::object_iterator_top(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 		}
-		const_object_iterator_top::const_object_iterator_top(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE const_object_iterator_top::const_object_iterator_top(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
 		}
 		DCON_RELEASE_INLINE object_iterator_top& object_iterator_top::operator++() noexcept {
 			++index;
@@ -2899,38 +2899,40 @@ namespace ex1 {
 			return *this;
 		}
 		
-		iterator_top_foreach_lr_relation_as_left::iterator_top_foreach_lr_relation_as_left(data_container& c,  top_id fr) noexcept : container(c) {
+		DCON_RELEASE_INLINE iterator_top_foreach_lr_relation_as_left::iterator_top_foreach_lr_relation_as_left(data_container& c,  top_id fr) noexcept : container(c) {
 			ptr = container.lr_relation.m_array_left.vptr()[fr.index()].data();
 		}
-		iterator_top_foreach_lr_relation_as_left::iterator_top_foreach_lr_relation_as_left(data_container& c, top_id fr, int) noexcept : container(c) {
+		DCON_RELEASE_INLINE iterator_top_foreach_lr_relation_as_left::iterator_top_foreach_lr_relation_as_left(data_container& c, top_id fr, int) noexcept : container(c) {
 			auto& vref = container.lr_relation.m_array_left.vptr()[fr.index()];
 			ptr = vref.data() + vref.size();
 		}
 		DCON_RELEASE_INLINE iterator_top_foreach_lr_relation_as_left& iterator_top_foreach_lr_relation_as_left::operator++() noexcept {
 			++ptr;
+			return *this;
 		}
 		DCON_RELEASE_INLINE iterator_top_foreach_lr_relation_as_left& iterator_top_foreach_lr_relation_as_left::operator--() noexcept {
 			--ptr;
 			return *this;
 		}
-		const_iterator_top_foreach_lr_relation_as_left::const_iterator_top_foreach_lr_relation_as_left(data_container const& c,  top_id fr) noexcept : container(c) {
+		DCON_RELEASE_INLINE const_iterator_top_foreach_lr_relation_as_left::const_iterator_top_foreach_lr_relation_as_left(data_container const& c,  top_id fr) noexcept : container(c) {
 			ptr = container.lr_relation.m_array_left.vptr()[fr.index()].data();
 		}
-		const_iterator_top_foreach_lr_relation_as_left::const_iterator_top_foreach_lr_relation_as_left(data_container const& c, top_id fr, int) noexcept : container(c) {
+		DCON_RELEASE_INLINE const_iterator_top_foreach_lr_relation_as_left::const_iterator_top_foreach_lr_relation_as_left(data_container const& c, top_id fr, int) noexcept : container(c) {
 			auto& vref = container.lr_relation.m_array_left.vptr()[fr.index()];
 			ptr = vref.data() + vref.size();
 		}
 		DCON_RELEASE_INLINE const_iterator_top_foreach_lr_relation_as_left& const_iterator_top_foreach_lr_relation_as_left::operator++() noexcept {
 			++ptr;
+			return *this;
 		}
 		DCON_RELEASE_INLINE const_iterator_top_foreach_lr_relation_as_left& const_iterator_top_foreach_lr_relation_as_left::operator--() noexcept {
 			--ptr;
 			return *this;
 		}
 		
-		object_iterator_bottom::object_iterator_bottom(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE object_iterator_bottom::object_iterator_bottom(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 		}
-		const_object_iterator_bottom::const_object_iterator_bottom(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE const_object_iterator_bottom::const_object_iterator_bottom(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
 		}
 		DCON_RELEASE_INLINE object_iterator_bottom& object_iterator_bottom::operator++() noexcept {
 			++index;
@@ -2949,41 +2951,43 @@ namespace ex1 {
 			return *this;
 		}
 		
-		iterator_bottom_foreach_lr_relation_as_right::iterator_bottom_foreach_lr_relation_as_right(data_container& c,  bottom_id fr) noexcept : container(c) {
+		DCON_RELEASE_INLINE iterator_bottom_foreach_lr_relation_as_right::iterator_bottom_foreach_lr_relation_as_right(data_container& c,  bottom_id fr) noexcept : container(c) {
 			ptr = container.lr_relation.m_array_right.vptr()[fr.index()].data();
 		}
-		iterator_bottom_foreach_lr_relation_as_right::iterator_bottom_foreach_lr_relation_as_right(data_container& c, bottom_id fr, int) noexcept : container(c) {
+		DCON_RELEASE_INLINE iterator_bottom_foreach_lr_relation_as_right::iterator_bottom_foreach_lr_relation_as_right(data_container& c, bottom_id fr, int) noexcept : container(c) {
 			auto& vref = container.lr_relation.m_array_right.vptr()[fr.index()];
 			ptr = vref.data() + vref.size();
 		}
 		DCON_RELEASE_INLINE iterator_bottom_foreach_lr_relation_as_right& iterator_bottom_foreach_lr_relation_as_right::operator++() noexcept {
 			++ptr;
+			return *this;
 		}
 		DCON_RELEASE_INLINE iterator_bottom_foreach_lr_relation_as_right& iterator_bottom_foreach_lr_relation_as_right::operator--() noexcept {
 			--ptr;
 			return *this;
 		}
-		const_iterator_bottom_foreach_lr_relation_as_right::const_iterator_bottom_foreach_lr_relation_as_right(data_container const& c,  bottom_id fr) noexcept : container(c) {
+		DCON_RELEASE_INLINE const_iterator_bottom_foreach_lr_relation_as_right::const_iterator_bottom_foreach_lr_relation_as_right(data_container const& c,  bottom_id fr) noexcept : container(c) {
 			ptr = container.lr_relation.m_array_right.vptr()[fr.index()].data();
 		}
-		const_iterator_bottom_foreach_lr_relation_as_right::const_iterator_bottom_foreach_lr_relation_as_right(data_container const& c, bottom_id fr, int) noexcept : container(c) {
+		DCON_RELEASE_INLINE const_iterator_bottom_foreach_lr_relation_as_right::const_iterator_bottom_foreach_lr_relation_as_right(data_container const& c, bottom_id fr, int) noexcept : container(c) {
 			auto& vref = container.lr_relation.m_array_right.vptr()[fr.index()];
 			ptr = vref.data() + vref.size();
 		}
 		DCON_RELEASE_INLINE const_iterator_bottom_foreach_lr_relation_as_right& const_iterator_bottom_foreach_lr_relation_as_right::operator++() noexcept {
 			++ptr;
+			return *this;
 		}
 		DCON_RELEASE_INLINE const_iterator_bottom_foreach_lr_relation_as_right& const_iterator_bottom_foreach_lr_relation_as_right::operator--() noexcept {
 			--ptr;
 			return *this;
 		}
 		
-		object_iterator_lr_relation::object_iterator_lr_relation(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE object_iterator_lr_relation::object_iterator_lr_relation(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.lr_relation.m__index.vptr()[index] != lr_relation_id(lr_relation_id::value_base_t(index)) && index < container.lr_relation.size_used) {
 				++index;
 			}
 		}
-		const_object_iterator_lr_relation::const_object_iterator_lr_relation(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE const_object_iterator_lr_relation::const_object_iterator_lr_relation(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.lr_relation.m__index.vptr()[index] != lr_relation_id(lr_relation_id::value_base_t(index)) && index < container.lr_relation.size_used) {
 				++index;
 			}

@@ -474,7 +474,12 @@ namespace dcon {
 			}
 		};
 		
+		class const_object_iterator_car;
+		class object_iterator_car;
+
 		class alignas(64) car_class {
+			friend const_object_iterator_car;
+			friend object_iterator_car;
 			private:
 			//
 			// storage space for wheels of type int32_t
@@ -507,7 +512,12 @@ namespace dcon {
 			friend data_container;
 		};
 
+		class const_object_iterator_person;
+		class object_iterator_person;
+
 		class alignas(64) person_class {
+			friend const_object_iterator_person;
+			friend object_iterator_person;
 			private:
 			//
 			// storage space for age of type int32_t
@@ -540,7 +550,18 @@ namespace dcon {
 			friend data_container;
 		};
 
+		class const_object_iterator_car_ownership;
+		class object_iterator_car_ownership;
+		class const_iterator_person_foreach_car_ownership_as_owner;
+		class iterator_person_foreach_car_ownership_as_owner;
+		struct const_iterator_person_foreach_car_ownership_as_owner_generator;
+		struct iterator_person_foreach_car_ownership_as_owner_generator;
+
 		class alignas(64) car_ownership_class {
+			friend const_object_iterator_car_ownership;
+			friend object_iterator_car_ownership;
+			friend const_iterator_person_foreach_car_ownership_as_owner;
+			friend iterator_person_foreach_car_ownership_as_owner;
 			private:
 			//
 			// storage space for ownership_date of type int32_t
@@ -584,7 +605,18 @@ namespace dcon {
 			friend data_container;
 		};
 
+		class const_object_iterator_parentage;
+		class object_iterator_parentage;
+		class const_iterator_person_foreach_parentage_as_bio_parent;
+		class iterator_person_foreach_parentage_as_bio_parent;
+		struct const_iterator_person_foreach_parentage_as_bio_parent_generator;
+		struct iterator_person_foreach_parentage_as_bio_parent_generator;
+
 		class alignas(64) parentage_class {
+			friend const_object_iterator_parentage;
+			friend object_iterator_parentage;
+			friend const_iterator_person_foreach_parentage_as_bio_parent;
+			friend iterator_person_foreach_parentage_as_bio_parent;
 			private:
 			//
 			// storage space for bio_parent of type person_id
@@ -784,10 +816,12 @@ namespace dcon {
 		DCON_RELEASE_INLINE void for_each_car_ownership_as_owner(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> range_of_car_ownership_as_owner() const;
 		DCON_RELEASE_INLINE void remove_all_car_ownership_as_owner() const noexcept;
+		DCON_RELEASE_INLINE internal::iterator_person_foreach_car_ownership_as_owner_generator get_car_ownership_as_owner() const;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_car_ownership(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> range_of_car_ownership() const;
 		DCON_RELEASE_INLINE void remove_all_car_ownership() const noexcept;
+		DCON_RELEASE_INLINE internal::iterator_person_foreach_car_ownership_as_owner_generator get_car_ownership() const;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_owned_car_from_car_ownership(T&& func) const;
 		DCON_RELEASE_INLINE bool has_owned_car_from_car_ownership(car_id target) const;
@@ -800,6 +834,7 @@ namespace dcon {
 		DCON_RELEASE_INLINE void for_each_parentage_as_bio_parent(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<parentage_id const*, parentage_id const*> range_of_parentage_as_bio_parent() const;
 		DCON_RELEASE_INLINE void remove_all_parentage_as_bio_parent() const noexcept;
+		DCON_RELEASE_INLINE internal::iterator_person_foreach_parentage_as_bio_parent_generator get_parentage_as_bio_parent() const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 		
 	};
@@ -858,9 +893,11 @@ namespace dcon {
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_car_ownership_as_owner(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> range_of_car_ownership_as_owner() const;
+		DCON_RELEASE_INLINE internal::const_iterator_person_foreach_car_ownership_as_owner_generator get_car_ownership_as_owner() const;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_car_ownership(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> range_of_car_ownership() const;
+		DCON_RELEASE_INLINE internal::const_iterator_person_foreach_car_ownership_as_owner_generator get_car_ownership() const;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_owned_car_from_car_ownership(T&& func) const;
 		DCON_RELEASE_INLINE bool has_owned_car_from_car_ownership(car_id target) const;
@@ -871,6 +908,7 @@ namespace dcon {
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_parentage_as_bio_parent(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<parentage_id const*, parentage_id const*> range_of_parentage_as_bio_parent() const;
+		DCON_RELEASE_INLINE internal::const_iterator_person_foreach_parentage_as_bio_parent_generator get_parentage_as_bio_parent() const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 		
 	};
@@ -1109,6 +1147,669 @@ namespace dcon {
 		return parentage_const_fat_id(c, id);
 	}
 	
+	namespace internal {
+		class object_iterator_car {
+			private:
+			data_container& container;
+			uint32_t index = 0;
+			public:
+			object_iterator_car(data_container& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE object_iterator_car& operator++() noexcept;
+			DCON_RELEASE_INLINE object_iterator_car& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(object_iterator_car const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_iterator_car const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE car_fat_id operator*() const noexcept {
+				return car_fat_id(container, car_id(car_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE object_iterator_car& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_car& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_car operator+(int32_t n) const noexcept {
+				return object_iterator_car(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE object_iterator_car operator-(int32_t n) const noexcept {
+				return object_iterator_car(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(object_iterator_car const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(object_iterator_car const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(object_iterator_car const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(object_iterator_car const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(object_iterator_car const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE car_fat_id operator[](int32_t n) const noexcept {
+				return car_fat_id(container, car_id(car_id::value_base_t(int32_t(index) + n)));
+			}
+		};
+		class const_object_iterator_car {
+			private:
+			data_container const& container;
+			uint32_t index = 0;
+			public:
+			const_object_iterator_car(data_container const& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_car& operator++() noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_car& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(const_object_iterator_car const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_car const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE car_const_fat_id operator*() const noexcept {
+				return car_const_fat_id(container, car_id(car_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_car& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_car& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_car operator+(int32_t n) const noexcept {
+				return const_object_iterator_car(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_car operator-(int32_t n) const noexcept {
+				return const_object_iterator_car(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(const_object_iterator_car const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(const_object_iterator_car const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(const_object_iterator_car const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(const_object_iterator_car const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(const_object_iterator_car const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE car_const_fat_id operator[](int32_t n) const noexcept {
+				return car_const_fat_id(container, car_id(car_id::value_base_t(int32_t(index) + n)));
+			}
+		};
+		
+		class object_iterator_person {
+			private:
+			data_container& container;
+			uint32_t index = 0;
+			public:
+			object_iterator_person(data_container& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE object_iterator_person& operator++() noexcept;
+			DCON_RELEASE_INLINE object_iterator_person& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(object_iterator_person const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_iterator_person const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE person_fat_id operator*() const noexcept {
+				return person_fat_id(container, person_id(person_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE object_iterator_person& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_person& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_person operator+(int32_t n) const noexcept {
+				return object_iterator_person(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE object_iterator_person operator-(int32_t n) const noexcept {
+				return object_iterator_person(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(object_iterator_person const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(object_iterator_person const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(object_iterator_person const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(object_iterator_person const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(object_iterator_person const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE person_fat_id operator[](int32_t n) const noexcept {
+				return person_fat_id(container, person_id(person_id::value_base_t(int32_t(index) + n)));
+			}
+		};
+		class const_object_iterator_person {
+			private:
+			data_container const& container;
+			uint32_t index = 0;
+			public:
+			const_object_iterator_person(data_container const& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_person& operator++() noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_person& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(const_object_iterator_person const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_person const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE person_const_fat_id operator*() const noexcept {
+				return person_const_fat_id(container, person_id(person_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_person& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_person& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_person operator+(int32_t n) const noexcept {
+				return const_object_iterator_person(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_person operator-(int32_t n) const noexcept {
+				return const_object_iterator_person(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(const_object_iterator_person const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(const_object_iterator_person const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(const_object_iterator_person const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(const_object_iterator_person const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(const_object_iterator_person const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE person_const_fat_id operator[](int32_t n) const noexcept {
+				return person_const_fat_id(container, person_id(person_id::value_base_t(int32_t(index) + n)));
+			}
+		};
+		
+		class iterator_person_foreach_car_ownership_as_owner {
+			private:
+			data_container& container;
+			car_ownership_id const* ptr = nullptr;
+			public:
+			iterator_person_foreach_car_ownership_as_owner(data_container& c, person_id fr) noexcept;
+			iterator_person_foreach_car_ownership_as_owner(data_container& c, car_ownership_id const* r) noexcept : container(c), ptr(r) {}
+			iterator_person_foreach_car_ownership_as_owner(data_container& c, person_id fr, int) noexcept;
+			DCON_RELEASE_INLINE iterator_person_foreach_car_ownership_as_owner& operator++() noexcept;
+			DCON_RELEASE_INLINE iterator_person_foreach_car_ownership_as_owner& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(iterator_person_foreach_car_ownership_as_owner const& o) const noexcept {
+				return ptr == o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator!=(iterator_person_foreach_car_ownership_as_owner const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE car_ownership_fat_id operator*() const noexcept {
+				return car_ownership_fat_id(container, *ptr);
+			}
+			DCON_RELEASE_INLINE iterator_person_foreach_car_ownership_as_owner& operator+=(ptrdiff_t n) noexcept {
+				ptr += n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE iterator_person_foreach_car_ownership_as_owner& operator-=(ptrdiff_t n) noexcept {
+				ptr -= n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE iterator_person_foreach_car_ownership_as_owner operator+(ptrdiff_t n) const noexcept {
+				return iterator_person_foreach_car_ownership_as_owner(container, ptr + n);
+			}
+			DCON_RELEASE_INLINE iterator_person_foreach_car_ownership_as_owner operator-(ptrdiff_t n) const noexcept {
+				return iterator_person_foreach_car_ownership_as_owner(container, ptr - n);
+			}
+			DCON_RELEASE_INLINE ptrdiff_t operator-(iterator_person_foreach_car_ownership_as_owner const& o) const noexcept {
+				return ptr - o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>(iterator_person_foreach_car_ownership_as_owner const& o) const noexcept {
+				return ptr > o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>=(iterator_person_foreach_car_ownership_as_owner const& o) const noexcept {
+				return ptr >= o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<(iterator_person_foreach_car_ownership_as_owner const& o) const noexcept {
+				return ptr < o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<=(iterator_person_foreach_car_ownership_as_owner const& o) const noexcept {
+				return ptr <= o.ptr;
+			}
+			DCON_RELEASE_INLINE car_ownership_fat_id operator[](ptrdiff_t n) const noexcept {
+				return car_ownership_fat_id(container, *(ptr + n));
+			}
+		};
+		class const_iterator_person_foreach_car_ownership_as_owner {
+			private:
+			data_container const& container;
+			car_ownership_id const* ptr = nullptr;
+			public:
+			const_iterator_person_foreach_car_ownership_as_owner(data_container const& c, person_id fr) noexcept;
+			const_iterator_person_foreach_car_ownership_as_owner(data_container const& c, car_ownership_id const* r) noexcept : container(c), ptr(r) {}
+			const_iterator_person_foreach_car_ownership_as_owner(data_container const& c, person_id fr, int) noexcept;
+			DCON_RELEASE_INLINE const_iterator_person_foreach_car_ownership_as_owner& operator++() noexcept;
+			DCON_RELEASE_INLINE const_iterator_person_foreach_car_ownership_as_owner& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(const_iterator_person_foreach_car_ownership_as_owner const& o) const noexcept {
+				return ptr == o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator!=(const_iterator_person_foreach_car_ownership_as_owner const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE car_ownership_const_fat_id operator*() const noexcept {
+				return car_ownership_const_fat_id(container, *ptr);
+			}
+			DCON_RELEASE_INLINE const_iterator_person_foreach_car_ownership_as_owner& operator+=(ptrdiff_t n) noexcept {
+				ptr += n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_iterator_person_foreach_car_ownership_as_owner& operator-=(ptrdiff_t n) noexcept {
+				ptr -= n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_iterator_person_foreach_car_ownership_as_owner operator+(ptrdiff_t n) const noexcept {
+				return const_iterator_person_foreach_car_ownership_as_owner(container, ptr + n);
+			}
+			DCON_RELEASE_INLINE const_iterator_person_foreach_car_ownership_as_owner operator-(ptrdiff_t n) const noexcept {
+				return const_iterator_person_foreach_car_ownership_as_owner(container, ptr - n);
+			}
+			DCON_RELEASE_INLINE ptrdiff_t operator-(const_iterator_person_foreach_car_ownership_as_owner const& o) const noexcept {
+				return ptr - o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>(const_iterator_person_foreach_car_ownership_as_owner const& o) const noexcept {
+				return ptr > o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>=(const_iterator_person_foreach_car_ownership_as_owner const& o) const noexcept {
+				return ptr >= o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<(const_iterator_person_foreach_car_ownership_as_owner const& o) const noexcept {
+				return ptr < o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<=(const_iterator_person_foreach_car_ownership_as_owner const& o) const noexcept {
+				return ptr <= o.ptr;
+			}
+			DCON_RELEASE_INLINE car_ownership_const_fat_id operator[](ptrdiff_t n) const noexcept {
+				return car_ownership_const_fat_id(container, *(ptr + n));
+			}
+		};
+		
+		struct iterator_person_foreach_car_ownership_as_owner_generator {
+			data_container& container;
+			person_id ob;
+			iterator_person_foreach_car_ownership_as_owner_generator(data_container& c, person_id o) : container(c), ob(o) {}
+			DCON_RELEASE_INLINE iterator_person_foreach_car_ownership_as_owner begin() const noexcept {
+				return iterator_person_foreach_car_ownership_as_owner(container, ob);
+			}
+			DCON_RELEASE_INLINE iterator_person_foreach_car_ownership_as_owner end() const noexcept {
+				return iterator_person_foreach_car_ownership_as_owner(container, ob, 0);
+			}
+		};
+		struct const_iterator_person_foreach_car_ownership_as_owner_generator {
+			data_container const& container;
+			person_id ob;
+			const_iterator_person_foreach_car_ownership_as_owner_generator(data_container const& c, person_id o) : container(c), ob(o) {}
+			DCON_RELEASE_INLINE const_iterator_person_foreach_car_ownership_as_owner begin() const noexcept {
+				return const_iterator_person_foreach_car_ownership_as_owner(container, ob);
+			}
+			DCON_RELEASE_INLINE const_iterator_person_foreach_car_ownership_as_owner end() const noexcept {
+				return const_iterator_person_foreach_car_ownership_as_owner(container, ob, 0);
+			}
+		};
+		
+		class iterator_person_foreach_parentage_as_bio_parent {
+			private:
+			data_container& container;
+			parentage_id const* ptr = nullptr;
+			public:
+			iterator_person_foreach_parentage_as_bio_parent(data_container& c, person_id fr) noexcept;
+			iterator_person_foreach_parentage_as_bio_parent(data_container& c, parentage_id const* r) noexcept : container(c), ptr(r) {}
+			iterator_person_foreach_parentage_as_bio_parent(data_container& c, person_id fr, int) noexcept;
+			DCON_RELEASE_INLINE iterator_person_foreach_parentage_as_bio_parent& operator++() noexcept;
+			DCON_RELEASE_INLINE iterator_person_foreach_parentage_as_bio_parent& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(iterator_person_foreach_parentage_as_bio_parent const& o) const noexcept {
+				return ptr == o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator!=(iterator_person_foreach_parentage_as_bio_parent const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE parentage_fat_id operator*() const noexcept {
+				return parentage_fat_id(container, *ptr);
+			}
+			DCON_RELEASE_INLINE iterator_person_foreach_parentage_as_bio_parent& operator+=(ptrdiff_t n) noexcept {
+				ptr += n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE iterator_person_foreach_parentage_as_bio_parent& operator-=(ptrdiff_t n) noexcept {
+				ptr -= n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE iterator_person_foreach_parentage_as_bio_parent operator+(ptrdiff_t n) const noexcept {
+				return iterator_person_foreach_parentage_as_bio_parent(container, ptr + n);
+			}
+			DCON_RELEASE_INLINE iterator_person_foreach_parentage_as_bio_parent operator-(ptrdiff_t n) const noexcept {
+				return iterator_person_foreach_parentage_as_bio_parent(container, ptr - n);
+			}
+			DCON_RELEASE_INLINE ptrdiff_t operator-(iterator_person_foreach_parentage_as_bio_parent const& o) const noexcept {
+				return ptr - o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>(iterator_person_foreach_parentage_as_bio_parent const& o) const noexcept {
+				return ptr > o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>=(iterator_person_foreach_parentage_as_bio_parent const& o) const noexcept {
+				return ptr >= o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<(iterator_person_foreach_parentage_as_bio_parent const& o) const noexcept {
+				return ptr < o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<=(iterator_person_foreach_parentage_as_bio_parent const& o) const noexcept {
+				return ptr <= o.ptr;
+			}
+			DCON_RELEASE_INLINE parentage_fat_id operator[](ptrdiff_t n) const noexcept {
+				return parentage_fat_id(container, *(ptr + n));
+			}
+		};
+		class const_iterator_person_foreach_parentage_as_bio_parent {
+			private:
+			data_container const& container;
+			parentage_id const* ptr = nullptr;
+			public:
+			const_iterator_person_foreach_parentage_as_bio_parent(data_container const& c, person_id fr) noexcept;
+			const_iterator_person_foreach_parentage_as_bio_parent(data_container const& c, parentage_id const* r) noexcept : container(c), ptr(r) {}
+			const_iterator_person_foreach_parentage_as_bio_parent(data_container const& c, person_id fr, int) noexcept;
+			DCON_RELEASE_INLINE const_iterator_person_foreach_parentage_as_bio_parent& operator++() noexcept;
+			DCON_RELEASE_INLINE const_iterator_person_foreach_parentage_as_bio_parent& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(const_iterator_person_foreach_parentage_as_bio_parent const& o) const noexcept {
+				return ptr == o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator!=(const_iterator_person_foreach_parentage_as_bio_parent const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE parentage_const_fat_id operator*() const noexcept {
+				return parentage_const_fat_id(container, *ptr);
+			}
+			DCON_RELEASE_INLINE const_iterator_person_foreach_parentage_as_bio_parent& operator+=(ptrdiff_t n) noexcept {
+				ptr += n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_iterator_person_foreach_parentage_as_bio_parent& operator-=(ptrdiff_t n) noexcept {
+				ptr -= n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_iterator_person_foreach_parentage_as_bio_parent operator+(ptrdiff_t n) const noexcept {
+				return const_iterator_person_foreach_parentage_as_bio_parent(container, ptr + n);
+			}
+			DCON_RELEASE_INLINE const_iterator_person_foreach_parentage_as_bio_parent operator-(ptrdiff_t n) const noexcept {
+				return const_iterator_person_foreach_parentage_as_bio_parent(container, ptr - n);
+			}
+			DCON_RELEASE_INLINE ptrdiff_t operator-(const_iterator_person_foreach_parentage_as_bio_parent const& o) const noexcept {
+				return ptr - o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>(const_iterator_person_foreach_parentage_as_bio_parent const& o) const noexcept {
+				return ptr > o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>=(const_iterator_person_foreach_parentage_as_bio_parent const& o) const noexcept {
+				return ptr >= o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<(const_iterator_person_foreach_parentage_as_bio_parent const& o) const noexcept {
+				return ptr < o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<=(const_iterator_person_foreach_parentage_as_bio_parent const& o) const noexcept {
+				return ptr <= o.ptr;
+			}
+			DCON_RELEASE_INLINE parentage_const_fat_id operator[](ptrdiff_t n) const noexcept {
+				return parentage_const_fat_id(container, *(ptr + n));
+			}
+		};
+		
+		struct iterator_person_foreach_parentage_as_bio_parent_generator {
+			data_container& container;
+			person_id ob;
+			iterator_person_foreach_parentage_as_bio_parent_generator(data_container& c, person_id o) : container(c), ob(o) {}
+			DCON_RELEASE_INLINE iterator_person_foreach_parentage_as_bio_parent begin() const noexcept {
+				return iterator_person_foreach_parentage_as_bio_parent(container, ob);
+			}
+			DCON_RELEASE_INLINE iterator_person_foreach_parentage_as_bio_parent end() const noexcept {
+				return iterator_person_foreach_parentage_as_bio_parent(container, ob, 0);
+			}
+		};
+		struct const_iterator_person_foreach_parentage_as_bio_parent_generator {
+			data_container const& container;
+			person_id ob;
+			const_iterator_person_foreach_parentage_as_bio_parent_generator(data_container const& c, person_id o) : container(c), ob(o) {}
+			DCON_RELEASE_INLINE const_iterator_person_foreach_parentage_as_bio_parent begin() const noexcept {
+				return const_iterator_person_foreach_parentage_as_bio_parent(container, ob);
+			}
+			DCON_RELEASE_INLINE const_iterator_person_foreach_parentage_as_bio_parent end() const noexcept {
+				return const_iterator_person_foreach_parentage_as_bio_parent(container, ob, 0);
+			}
+		};
+		
+		class object_iterator_car_ownership {
+			private:
+			data_container& container;
+			uint32_t index = 0;
+			public:
+			object_iterator_car_ownership(data_container& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE object_iterator_car_ownership& operator++() noexcept;
+			DCON_RELEASE_INLINE object_iterator_car_ownership& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(object_iterator_car_ownership const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_iterator_car_ownership const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE car_ownership_fat_id operator*() const noexcept {
+				return car_ownership_fat_id(container, car_ownership_id(car_ownership_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE object_iterator_car_ownership& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_car_ownership& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_car_ownership operator+(int32_t n) const noexcept {
+				return object_iterator_car_ownership(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE object_iterator_car_ownership operator-(int32_t n) const noexcept {
+				return object_iterator_car_ownership(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(object_iterator_car_ownership const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(object_iterator_car_ownership const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(object_iterator_car_ownership const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(object_iterator_car_ownership const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(object_iterator_car_ownership const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE car_ownership_fat_id operator[](int32_t n) const noexcept {
+				return car_ownership_fat_id(container, car_ownership_id(car_ownership_id::value_base_t(int32_t(index) + n)));
+			}
+		};
+		class const_object_iterator_car_ownership {
+			private:
+			data_container const& container;
+			uint32_t index = 0;
+			public:
+			const_object_iterator_car_ownership(data_container const& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_car_ownership& operator++() noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_car_ownership& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(const_object_iterator_car_ownership const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_car_ownership const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE car_ownership_const_fat_id operator*() const noexcept {
+				return car_ownership_const_fat_id(container, car_ownership_id(car_ownership_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_car_ownership& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_car_ownership& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_car_ownership operator+(int32_t n) const noexcept {
+				return const_object_iterator_car_ownership(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_car_ownership operator-(int32_t n) const noexcept {
+				return const_object_iterator_car_ownership(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(const_object_iterator_car_ownership const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(const_object_iterator_car_ownership const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(const_object_iterator_car_ownership const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(const_object_iterator_car_ownership const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(const_object_iterator_car_ownership const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE car_ownership_const_fat_id operator[](int32_t n) const noexcept {
+				return car_ownership_const_fat_id(container, car_ownership_id(car_ownership_id::value_base_t(int32_t(index) + n)));
+			}
+		};
+		
+		class object_iterator_parentage {
+			private:
+			data_container& container;
+			uint32_t index = 0;
+			public:
+			object_iterator_parentage(data_container& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE object_iterator_parentage& operator++() noexcept;
+			DCON_RELEASE_INLINE object_iterator_parentage& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(object_iterator_parentage const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_iterator_parentage const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE parentage_fat_id operator*() const noexcept {
+				return parentage_fat_id(container, parentage_id(parentage_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE object_iterator_parentage& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_parentage& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_parentage operator+(int32_t n) const noexcept {
+				return object_iterator_parentage(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE object_iterator_parentage operator-(int32_t n) const noexcept {
+				return object_iterator_parentage(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(object_iterator_parentage const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(object_iterator_parentage const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(object_iterator_parentage const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(object_iterator_parentage const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(object_iterator_parentage const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE parentage_fat_id operator[](int32_t n) const noexcept {
+				return parentage_fat_id(container, parentage_id(parentage_id::value_base_t(int32_t(index) + n)));
+			}
+		};
+		class const_object_iterator_parentage {
+			private:
+			data_container const& container;
+			uint32_t index = 0;
+			public:
+			const_object_iterator_parentage(data_container const& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_parentage& operator++() noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_parentage& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(const_object_iterator_parentage const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_parentage const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE parentage_const_fat_id operator*() const noexcept {
+				return parentage_const_fat_id(container, parentage_id(parentage_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_parentage& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_parentage& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_parentage operator+(int32_t n) const noexcept {
+				return const_object_iterator_parentage(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_parentage operator-(int32_t n) const noexcept {
+				return const_object_iterator_parentage(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(const_object_iterator_parentage const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(const_object_iterator_parentage const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(const_object_iterator_parentage const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(const_object_iterator_parentage const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(const_object_iterator_parentage const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE parentage_const_fat_id operator[](int32_t n) const noexcept {
+				return parentage_const_fat_id(container, parentage_id(parentage_id::value_base_t(int32_t(index) + n)));
+			}
+		};
+		
+	}
+
 	class alignas(64) data_container {
 		public:
 		internal::car_class car;
@@ -1336,6 +2037,12 @@ namespace dcon {
 			ve::store(id, person.m_wealth.vptr(), values);
 		}
 		#endif
+		DCON_RELEASE_INLINE internal::const_iterator_person_foreach_car_ownership_as_owner_generator person_get_car_ownership_as_owner(person_id id) const {
+			return internal::const_iterator_person_foreach_car_ownership_as_owner_generator(*this, id);
+		}
+		DCON_RELEASE_INLINE internal::iterator_person_foreach_car_ownership_as_owner_generator person_get_car_ownership_as_owner(person_id id) {
+			return internal::iterator_person_foreach_car_ownership_as_owner_generator(*this, id);
+		}
 		template<typename T>
 		DCON_RELEASE_INLINE void person_for_each_car_ownership_as_owner(person_id id, T&& func) const {
 			if(bool(id)) {
@@ -1355,6 +2062,12 @@ namespace dcon {
 			auto rng = person_range_of_car_ownership_as_owner(id);
 			dcon::local_vector<car_ownership_id> temp(rng.first, rng.second);
 			std::for_each(temp.begin(), temp.end(), [t = this](car_ownership_id i) { t->car_ownership_set_owner(i, person_id()); });
+		}
+		DCON_RELEASE_INLINE internal::const_iterator_person_foreach_car_ownership_as_owner_generator person_get_car_ownership(person_id id) const {
+			return internal::const_iterator_person_foreach_car_ownership_as_owner_generator(*this, id);
+		}
+		DCON_RELEASE_INLINE internal::iterator_person_foreach_car_ownership_as_owner_generator person_get_car_ownership(person_id id) {
+			return internal::iterator_person_foreach_car_ownership_as_owner_generator(*this, id);
 		}
 		template<typename T>
 		DCON_RELEASE_INLINE void person_for_each_car_ownership(person_id id, T&& func) const {
@@ -1420,6 +2133,12 @@ namespace dcon {
 			if(parentage_is_valid(parentage_id(parentage_id::value_base_t(id.index())))) {
 				parentage_set_child(parentage_id(parentage_id::value_base_t(id.index())), person_id());
 			}
+		}
+		DCON_RELEASE_INLINE internal::const_iterator_person_foreach_parentage_as_bio_parent_generator person_get_parentage_as_bio_parent(person_id id) const {
+			return internal::const_iterator_person_foreach_parentage_as_bio_parent_generator(*this, id);
+		}
+		DCON_RELEASE_INLINE internal::iterator_person_foreach_parentage_as_bio_parent_generator person_get_parentage_as_bio_parent(person_id id) {
+			return internal::iterator_person_foreach_parentage_as_bio_parent_generator(*this, id);
 		}
 		template<typename T>
 		DCON_RELEASE_INLINE void person_for_each_parentage_as_bio_parent(person_id id, T&& func) const {
@@ -1946,6 +2665,26 @@ namespace dcon {
 				func(tmp);
 			}
 		}
+		friend internal::const_object_iterator_car;
+		friend internal::object_iterator_car;
+		struct {
+			internal::object_iterator_car begin() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_car));
+				return internal::object_iterator_car(*container, uint32_t(0));
+			}
+			internal::object_iterator_car end() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_car));
+				return internal::object_iterator_car(*container, container->car_size());
+			}
+			internal::const_object_iterator_car begin() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_car));
+				return internal::const_object_iterator_car(*container, uint32_t(0));
+			}
+			internal::const_object_iterator_car end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_car));
+				return internal::const_object_iterator_car(*container, container->car_size());
+			}
+		}  in_car ;
 		
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_person(T&& func) {
@@ -1954,6 +2693,26 @@ namespace dcon {
 				func(tmp);
 			}
 		}
+		friend internal::const_object_iterator_person;
+		friend internal::object_iterator_person;
+		struct {
+			internal::object_iterator_person begin() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_person));
+				return internal::object_iterator_person(*container, uint32_t(0));
+			}
+			internal::object_iterator_person end() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_person));
+				return internal::object_iterator_person(*container, container->person_size());
+			}
+			internal::const_object_iterator_person begin() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_person));
+				return internal::const_object_iterator_person(*container, uint32_t(0));
+			}
+			internal::const_object_iterator_person end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_person));
+				return internal::const_object_iterator_person(*container, container->person_size());
+			}
+		}  in_person ;
 		
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_car_ownership(T&& func) {
@@ -1962,6 +2721,26 @@ namespace dcon {
 				func(tmp);
 			}
 		}
+		friend internal::const_object_iterator_car_ownership;
+		friend internal::object_iterator_car_ownership;
+		struct {
+			internal::object_iterator_car_ownership begin() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_car_ownership));
+				return internal::object_iterator_car_ownership(*container, uint32_t(0));
+			}
+			internal::object_iterator_car_ownership end() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_car_ownership));
+				return internal::object_iterator_car_ownership(*container, container->car_ownership_size());
+			}
+			internal::const_object_iterator_car_ownership begin() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_car_ownership));
+				return internal::const_object_iterator_car_ownership(*container, uint32_t(0));
+			}
+			internal::const_object_iterator_car_ownership end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_car_ownership));
+				return internal::const_object_iterator_car_ownership(*container, container->car_ownership_size());
+			}
+		}  in_car_ownership ;
 		
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_parentage(T&& func) {
@@ -1970,6 +2749,26 @@ namespace dcon {
 				func(tmp);
 			}
 		}
+		friend internal::const_object_iterator_parentage;
+		friend internal::object_iterator_parentage;
+		struct {
+			internal::object_iterator_parentage begin() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_parentage));
+				return internal::object_iterator_parentage(*container, uint32_t(0));
+			}
+			internal::object_iterator_parentage end() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_parentage));
+				return internal::object_iterator_parentage(*container, container->parentage_size());
+			}
+			internal::const_object_iterator_parentage begin() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_parentage));
+				return internal::const_object_iterator_parentage(*container, uint32_t(0));
+			}
+			internal::const_object_iterator_parentage end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_parentage));
+				return internal::const_object_iterator_parentage(*container, container->parentage_size());
+			}
+		}  in_parentage ;
 		
 
 		friend internal::query_q_all_owner_ages_const_iterator;
@@ -3152,6 +3951,9 @@ namespace dcon {
 	DCON_RELEASE_INLINE void person_fat_id::remove_all_car_ownership_as_owner() const noexcept {
 		container.person_remove_all_car_ownership_as_owner(id);
 	}
+	DCON_RELEASE_INLINE internal::iterator_person_foreach_car_ownership_as_owner_generator person_fat_id::get_car_ownership_as_owner() const {
+		return internal::iterator_person_foreach_car_ownership_as_owner_generator(container, id);
+	}
 	template<typename T>
 	DCON_RELEASE_INLINE void person_fat_id::for_each_car_ownership(T&& func) const {
 		container.person_for_each_car_ownership(id, [&, t = this](car_ownership_id i){func(fatten(t->container, i));});
@@ -3161,6 +3963,9 @@ namespace dcon {
 	}
 	DCON_RELEASE_INLINE void person_fat_id::remove_all_car_ownership() const noexcept {
 		container.person_remove_all_car_ownership(id);
+	}
+	DCON_RELEASE_INLINE internal::iterator_person_foreach_car_ownership_as_owner_generator person_fat_id::get_car_ownership() const {
+		return internal::iterator_person_foreach_car_ownership_as_owner_generator(container, id);
 	}
 	template<typename T>
 	DCON_RELEASE_INLINE void person_fat_id::for_each_owned_car_from_car_ownership(T&& func) const {
@@ -3192,6 +3997,9 @@ namespace dcon {
 	DCON_RELEASE_INLINE void person_fat_id::remove_all_parentage_as_bio_parent() const noexcept {
 		container.person_remove_all_parentage_as_bio_parent(id);
 	}
+	DCON_RELEASE_INLINE internal::iterator_person_foreach_parentage_as_bio_parent_generator person_fat_id::get_parentage_as_bio_parent() const {
+		return internal::iterator_person_foreach_parentage_as_bio_parent_generator(container, id);
+	}
 	DCON_RELEASE_INLINE bool person_fat_id::is_valid() const noexcept {
 		return container.person_is_valid(id);
 	}
@@ -3209,12 +4017,18 @@ namespace dcon {
 	DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> person_const_fat_id::range_of_car_ownership_as_owner() const {
 		return container.person_range_of_car_ownership_as_owner(id);
 	}
+	DCON_RELEASE_INLINE internal::const_iterator_person_foreach_car_ownership_as_owner_generator person_const_fat_id::get_car_ownership_as_owner() const {
+		return internal::const_iterator_person_foreach_car_ownership_as_owner_generator(container, id);
+	}
 	template<typename T>
 	DCON_RELEASE_INLINE void person_const_fat_id::for_each_car_ownership(T&& func) const {
 		container.person_for_each_car_ownership(id, [&, t = this](car_ownership_id i){func(fatten(t->container, i));});
 	}
 	DCON_RELEASE_INLINE std::pair<car_ownership_id const*, car_ownership_id const*> person_const_fat_id::range_of_car_ownership() const {
 		return container.person_range_of_car_ownership(id);
+	}
+	DCON_RELEASE_INLINE internal::const_iterator_person_foreach_car_ownership_as_owner_generator person_const_fat_id::get_car_ownership() const {
+		return internal::const_iterator_person_foreach_car_ownership_as_owner_generator(container, id);
 	}
 	template<typename T>
 	DCON_RELEASE_INLINE void person_const_fat_id::for_each_owned_car_from_car_ownership(T&& func) const {
@@ -3239,6 +4053,9 @@ namespace dcon {
 	}
 	DCON_RELEASE_INLINE std::pair<parentage_id const*, parentage_id const*> person_const_fat_id::range_of_parentage_as_bio_parent() const {
 		return container.person_range_of_parentage_as_bio_parent(id);
+	}
+	DCON_RELEASE_INLINE internal::const_iterator_person_foreach_parentage_as_bio_parent_generator person_const_fat_id::get_parentage_as_bio_parent() const {
+		return internal::const_iterator_person_foreach_parentage_as_bio_parent_generator(container, id);
 	}
 	DCON_RELEASE_INLINE bool person_const_fat_id::is_valid() const noexcept {
 		return container.person_is_valid(id);
@@ -4432,6 +5249,150 @@ namespace dcon {
 		query_siblings_const_iterator query_siblings_const_instance::begin() {
 			return query_siblings_const_iterator(container, *this);
 		}
+		DCON_RELEASE_INLINE object_iterator_car::object_iterator_car(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		DCON_RELEASE_INLINE const_object_iterator_car::const_object_iterator_car(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		DCON_RELEASE_INLINE object_iterator_car& object_iterator_car::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_car& const_object_iterator_car::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE object_iterator_car& object_iterator_car::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_car& const_object_iterator_car::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		
+		DCON_RELEASE_INLINE object_iterator_person::object_iterator_person(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		DCON_RELEASE_INLINE const_object_iterator_person::const_object_iterator_person(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		DCON_RELEASE_INLINE object_iterator_person& object_iterator_person::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_person& const_object_iterator_person::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE object_iterator_person& object_iterator_person::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_person& const_object_iterator_person::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		
+		DCON_RELEASE_INLINE iterator_person_foreach_car_ownership_as_owner::iterator_person_foreach_car_ownership_as_owner(data_container& c,  person_id fr) noexcept : container(c) {
+			ptr = container.car_ownership.m_array_owner.vptr()[fr.index()].data();
+		}
+		DCON_RELEASE_INLINE iterator_person_foreach_car_ownership_as_owner::iterator_person_foreach_car_ownership_as_owner(data_container& c, person_id fr, int) noexcept : container(c) {
+			auto& vref = container.car_ownership.m_array_owner.vptr()[fr.index()];
+			ptr = vref.data() + vref.size();
+		}
+		DCON_RELEASE_INLINE iterator_person_foreach_car_ownership_as_owner& iterator_person_foreach_car_ownership_as_owner::operator++() noexcept {
+			++ptr;
+			return *this;
+		}
+		DCON_RELEASE_INLINE iterator_person_foreach_car_ownership_as_owner& iterator_person_foreach_car_ownership_as_owner::operator--() noexcept {
+			--ptr;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_iterator_person_foreach_car_ownership_as_owner::const_iterator_person_foreach_car_ownership_as_owner(data_container const& c,  person_id fr) noexcept : container(c) {
+			ptr = container.car_ownership.m_array_owner.vptr()[fr.index()].data();
+		}
+		DCON_RELEASE_INLINE const_iterator_person_foreach_car_ownership_as_owner::const_iterator_person_foreach_car_ownership_as_owner(data_container const& c, person_id fr, int) noexcept : container(c) {
+			auto& vref = container.car_ownership.m_array_owner.vptr()[fr.index()];
+			ptr = vref.data() + vref.size();
+		}
+		DCON_RELEASE_INLINE const_iterator_person_foreach_car_ownership_as_owner& const_iterator_person_foreach_car_ownership_as_owner::operator++() noexcept {
+			++ptr;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_iterator_person_foreach_car_ownership_as_owner& const_iterator_person_foreach_car_ownership_as_owner::operator--() noexcept {
+			--ptr;
+			return *this;
+		}
+		
+		DCON_RELEASE_INLINE iterator_person_foreach_parentage_as_bio_parent::iterator_person_foreach_parentage_as_bio_parent(data_container& c,  person_id fr) noexcept : container(c) {
+			ptr = dcon::get_range(container.parentage.bio_parent_storage, container.parentage.m_array_bio_parent.vptr()[fr.index()]).first;
+		}
+		DCON_RELEASE_INLINE iterator_person_foreach_parentage_as_bio_parent::iterator_person_foreach_parentage_as_bio_parent(data_container& c, person_id fr, int) noexcept : container(c) {
+			ptr = dcon::get_range(container.parentage.bio_parent_storage, container.parentage.m_array_bio_parent.vptr()[fr.index()]).second;
+		}
+		DCON_RELEASE_INLINE iterator_person_foreach_parentage_as_bio_parent& iterator_person_foreach_parentage_as_bio_parent::operator++() noexcept {
+			++ptr;
+			return *this;
+		}
+		DCON_RELEASE_INLINE iterator_person_foreach_parentage_as_bio_parent& iterator_person_foreach_parentage_as_bio_parent::operator--() noexcept {
+			--ptr;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_iterator_person_foreach_parentage_as_bio_parent::const_iterator_person_foreach_parentage_as_bio_parent(data_container const& c,  person_id fr) noexcept : container(c) {
+			ptr = dcon::get_range(container.parentage.bio_parent_storage, container.parentage.m_array_bio_parent.vptr()[fr.index()]).first;
+		}
+		DCON_RELEASE_INLINE const_iterator_person_foreach_parentage_as_bio_parent::const_iterator_person_foreach_parentage_as_bio_parent(data_container const& c, person_id fr, int) noexcept : container(c) {
+			ptr = dcon::get_range(container.parentage.bio_parent_storage, container.parentage.m_array_bio_parent.vptr()[fr.index()]).second;
+		}
+		DCON_RELEASE_INLINE const_iterator_person_foreach_parentage_as_bio_parent& const_iterator_person_foreach_parentage_as_bio_parent::operator++() noexcept {
+			++ptr;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_iterator_person_foreach_parentage_as_bio_parent& const_iterator_person_foreach_parentage_as_bio_parent::operator--() noexcept {
+			--ptr;
+			return *this;
+		}
+		
+		DCON_RELEASE_INLINE object_iterator_car_ownership::object_iterator_car_ownership(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		DCON_RELEASE_INLINE const_object_iterator_car_ownership::const_object_iterator_car_ownership(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		DCON_RELEASE_INLINE object_iterator_car_ownership& object_iterator_car_ownership::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_car_ownership& const_object_iterator_car_ownership::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE object_iterator_car_ownership& object_iterator_car_ownership::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_car_ownership& const_object_iterator_car_ownership::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		
+		DCON_RELEASE_INLINE object_iterator_parentage::object_iterator_parentage(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		DCON_RELEASE_INLINE const_object_iterator_parentage::const_object_iterator_parentage(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		DCON_RELEASE_INLINE object_iterator_parentage& object_iterator_parentage::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_parentage& const_object_iterator_parentage::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE object_iterator_parentage& object_iterator_parentage::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_parentage& const_object_iterator_parentage::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		
 	};
 
 

@@ -94,7 +94,12 @@ namespace dcon {
 	class data_container;
 
 	namespace internal {
+		class const_object_iterator_colored_thing;
+		class object_iterator_colored_thing;
+
 		class alignas(64) colored_thing_class {
+			friend const_object_iterator_colored_thing;
+			friend object_iterator_colored_thing;
 			private:
 			//
 			// storage space for color of type rgb_color
@@ -231,6 +236,110 @@ namespace dcon {
 		return colored_thing_const_fat_id(c, id);
 	}
 	
+	namespace internal {
+		class object_iterator_colored_thing {
+			private:
+			data_container& container;
+			uint32_t index = 0;
+			public:
+			object_iterator_colored_thing(data_container& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE object_iterator_colored_thing& operator++() noexcept;
+			DCON_RELEASE_INLINE object_iterator_colored_thing& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(object_iterator_colored_thing const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_iterator_colored_thing const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE colored_thing_fat_id operator*() const noexcept {
+				return colored_thing_fat_id(container, colored_thing_id(colored_thing_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE object_iterator_colored_thing& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_colored_thing& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_colored_thing operator+(int32_t n) const noexcept {
+				return object_iterator_colored_thing(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE object_iterator_colored_thing operator-(int32_t n) const noexcept {
+				return object_iterator_colored_thing(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(object_iterator_colored_thing const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(object_iterator_colored_thing const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(object_iterator_colored_thing const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(object_iterator_colored_thing const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(object_iterator_colored_thing const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE colored_thing_fat_id operator[](int32_t n) const noexcept {
+				return colored_thing_fat_id(container, colored_thing_id(colored_thing_id::value_base_t(int32_t(index) + n)));
+			}
+		};
+		class const_object_iterator_colored_thing {
+			private:
+			data_container const& container;
+			uint32_t index = 0;
+			public:
+			const_object_iterator_colored_thing(data_container const& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_colored_thing& operator++() noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_colored_thing& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(const_object_iterator_colored_thing const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_colored_thing const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE colored_thing_const_fat_id operator*() const noexcept {
+				return colored_thing_const_fat_id(container, colored_thing_id(colored_thing_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_colored_thing& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_colored_thing& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_colored_thing operator+(int32_t n) const noexcept {
+				return const_object_iterator_colored_thing(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_colored_thing operator-(int32_t n) const noexcept {
+				return const_object_iterator_colored_thing(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(const_object_iterator_colored_thing const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(const_object_iterator_colored_thing const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(const_object_iterator_colored_thing const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(const_object_iterator_colored_thing const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(const_object_iterator_colored_thing const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE colored_thing_const_fat_id operator[](int32_t n) const noexcept {
+				return colored_thing_const_fat_id(container, colored_thing_id(colored_thing_id::value_base_t(int32_t(index) + n)));
+			}
+		};
+		
+	}
+
 	class alignas(64) data_container {
 		public:
 		internal::colored_thing_class colored_thing;
@@ -305,6 +414,26 @@ namespace dcon {
 				func(tmp);
 			}
 		}
+		friend internal::const_object_iterator_colored_thing;
+		friend internal::object_iterator_colored_thing;
+		struct {
+			internal::object_iterator_colored_thing begin() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_colored_thing));
+				return internal::object_iterator_colored_thing(*container, uint32_t(0));
+			}
+			internal::object_iterator_colored_thing end() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_colored_thing));
+				return internal::object_iterator_colored_thing(*container, container->colored_thing_size());
+			}
+			internal::const_object_iterator_colored_thing begin() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_colored_thing));
+				return internal::const_object_iterator_colored_thing(*container, uint32_t(0));
+			}
+			internal::const_object_iterator_colored_thing end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_colored_thing));
+				return internal::const_object_iterator_colored_thing(*container, container->colored_thing_size());
+			}
+		}  in_colored_thing ;
 		
 
 
@@ -457,6 +586,27 @@ namespace dcon {
 	
 
 	namespace internal {
+		DCON_RELEASE_INLINE object_iterator_colored_thing::object_iterator_colored_thing(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		DCON_RELEASE_INLINE const_object_iterator_colored_thing::const_object_iterator_colored_thing(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		DCON_RELEASE_INLINE object_iterator_colored_thing& object_iterator_colored_thing::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_colored_thing& const_object_iterator_colored_thing::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE object_iterator_colored_thing& object_iterator_colored_thing::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_colored_thing& const_object_iterator_colored_thing::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		
 	};
 
 

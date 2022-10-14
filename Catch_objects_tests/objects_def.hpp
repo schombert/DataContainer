@@ -295,7 +295,12 @@ namespace dcon {
 	class data_container;
 
 	namespace internal {
+		class const_object_iterator_thingy;
+		class object_iterator_thingy;
+
 		class alignas(64) thingy_class {
+			friend const_object_iterator_thingy;
+			friend object_iterator_thingy;
 			private:
 			//
 			// storage space for some_value of type int32_t
@@ -435,7 +440,12 @@ namespace dcon {
 			friend data_container;
 		};
 
+		class const_object_iterator_thingy2;
+		class object_iterator_thingy2;
+
 		class alignas(64) thingy2_class {
+			friend const_object_iterator_thingy2;
+			friend object_iterator_thingy2;
 			private:
 			//
 			// storage space for some_value of type int32_t
@@ -559,7 +569,12 @@ namespace dcon {
 			friend data_container;
 		};
 
+		class const_object_iterator_dummy_rel;
+		class object_iterator_dummy_rel;
+
 		class alignas(64) dummy_rel_class {
+			friend const_object_iterator_dummy_rel;
+			friend object_iterator_dummy_rel;
 			private:
 			//
 			// storage space for right of type thingy2_id
@@ -591,7 +606,12 @@ namespace dcon {
 			friend data_container;
 		};
 
+		class const_object_iterator_oop_thingy;
+		class object_iterator_oop_thingy;
+
 		class alignas(64) oop_thingy_class {
+			friend const_object_iterator_oop_thingy;
+			friend object_iterator_oop_thingy;
 			private:
 			//
 			// storage space for pstruct of type my_struct
@@ -624,7 +644,12 @@ namespace dcon {
 			friend data_container;
 		};
 
+		class const_object_iterator_dummy_rel_B;
+		class object_iterator_dummy_rel_B;
+
 		class alignas(64) dummy_rel_B_class {
+			friend const_object_iterator_dummy_rel_B;
+			friend object_iterator_dummy_rel_B;
 			private:
 			//
 			// storage space for left of type oop_thingy_id
@@ -1279,6 +1304,514 @@ namespace dcon {
 		return dummy_rel_B_const_fat_id(c, id);
 	}
 	
+	namespace internal {
+		class object_iterator_thingy {
+			private:
+			data_container& container;
+			uint32_t index = 0;
+			public:
+			object_iterator_thingy(data_container& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE object_iterator_thingy& operator++() noexcept;
+			DCON_RELEASE_INLINE object_iterator_thingy& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(object_iterator_thingy const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_iterator_thingy const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE thingy_fat_id operator*() const noexcept {
+				return thingy_fat_id(container, thingy_id(thingy_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE object_iterator_thingy& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_thingy& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_thingy operator+(int32_t n) const noexcept {
+				return object_iterator_thingy(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE object_iterator_thingy operator-(int32_t n) const noexcept {
+				return object_iterator_thingy(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(object_iterator_thingy const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(object_iterator_thingy const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(object_iterator_thingy const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(object_iterator_thingy const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(object_iterator_thingy const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE thingy_fat_id operator[](int32_t n) const noexcept {
+				return thingy_fat_id(container, thingy_id(thingy_id::value_base_t(int32_t(index) + n)));
+			}
+		};
+		class const_object_iterator_thingy {
+			private:
+			data_container const& container;
+			uint32_t index = 0;
+			public:
+			const_object_iterator_thingy(data_container const& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_thingy& operator++() noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_thingy& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(const_object_iterator_thingy const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_thingy const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE thingy_const_fat_id operator*() const noexcept {
+				return thingy_const_fat_id(container, thingy_id(thingy_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_thingy& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_thingy& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_thingy operator+(int32_t n) const noexcept {
+				return const_object_iterator_thingy(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_thingy operator-(int32_t n) const noexcept {
+				return const_object_iterator_thingy(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(const_object_iterator_thingy const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(const_object_iterator_thingy const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(const_object_iterator_thingy const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(const_object_iterator_thingy const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(const_object_iterator_thingy const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE thingy_const_fat_id operator[](int32_t n) const noexcept {
+				return thingy_const_fat_id(container, thingy_id(thingy_id::value_base_t(int32_t(index) + n)));
+			}
+		};
+		
+		class object_iterator_thingy2 {
+			private:
+			data_container& container;
+			uint32_t index = 0;
+			public:
+			object_iterator_thingy2(data_container& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE object_iterator_thingy2& operator++() noexcept;
+			DCON_RELEASE_INLINE object_iterator_thingy2& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(object_iterator_thingy2 const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_iterator_thingy2 const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE thingy2_fat_id operator*() const noexcept {
+				return thingy2_fat_id(container, thingy2_id(thingy2_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE object_iterator_thingy2& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_thingy2& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_thingy2 operator+(int32_t n) const noexcept {
+				return object_iterator_thingy2(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE object_iterator_thingy2 operator-(int32_t n) const noexcept {
+				return object_iterator_thingy2(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(object_iterator_thingy2 const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(object_iterator_thingy2 const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(object_iterator_thingy2 const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(object_iterator_thingy2 const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(object_iterator_thingy2 const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE thingy2_fat_id operator[](int32_t n) const noexcept {
+				return thingy2_fat_id(container, thingy2_id(thingy2_id::value_base_t(int32_t(index) + n)));
+			}
+		};
+		class const_object_iterator_thingy2 {
+			private:
+			data_container const& container;
+			uint32_t index = 0;
+			public:
+			const_object_iterator_thingy2(data_container const& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_thingy2& operator++() noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_thingy2& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(const_object_iterator_thingy2 const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_thingy2 const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE thingy2_const_fat_id operator*() const noexcept {
+				return thingy2_const_fat_id(container, thingy2_id(thingy2_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_thingy2& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_thingy2& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_thingy2 operator+(int32_t n) const noexcept {
+				return const_object_iterator_thingy2(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_thingy2 operator-(int32_t n) const noexcept {
+				return const_object_iterator_thingy2(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(const_object_iterator_thingy2 const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(const_object_iterator_thingy2 const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(const_object_iterator_thingy2 const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(const_object_iterator_thingy2 const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(const_object_iterator_thingy2 const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE thingy2_const_fat_id operator[](int32_t n) const noexcept {
+				return thingy2_const_fat_id(container, thingy2_id(thingy2_id::value_base_t(int32_t(index) + n)));
+			}
+		};
+		
+		class object_iterator_dummy_rel {
+			private:
+			data_container& container;
+			uint32_t index = 0;
+			public:
+			object_iterator_dummy_rel(data_container& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE object_iterator_dummy_rel& operator++() noexcept;
+			DCON_RELEASE_INLINE object_iterator_dummy_rel& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(object_iterator_dummy_rel const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_iterator_dummy_rel const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE dummy_rel_fat_id operator*() const noexcept {
+				return dummy_rel_fat_id(container, dummy_rel_id(dummy_rel_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE object_iterator_dummy_rel& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_dummy_rel& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_dummy_rel operator+(int32_t n) const noexcept {
+				return object_iterator_dummy_rel(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE object_iterator_dummy_rel operator-(int32_t n) const noexcept {
+				return object_iterator_dummy_rel(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(object_iterator_dummy_rel const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(object_iterator_dummy_rel const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(object_iterator_dummy_rel const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(object_iterator_dummy_rel const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(object_iterator_dummy_rel const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE dummy_rel_fat_id operator[](int32_t n) const noexcept {
+				return dummy_rel_fat_id(container, dummy_rel_id(dummy_rel_id::value_base_t(int32_t(index) + n)));
+			}
+		};
+		class const_object_iterator_dummy_rel {
+			private:
+			data_container const& container;
+			uint32_t index = 0;
+			public:
+			const_object_iterator_dummy_rel(data_container const& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_dummy_rel& operator++() noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_dummy_rel& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(const_object_iterator_dummy_rel const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_dummy_rel const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE dummy_rel_const_fat_id operator*() const noexcept {
+				return dummy_rel_const_fat_id(container, dummy_rel_id(dummy_rel_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_dummy_rel& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_dummy_rel& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_dummy_rel operator+(int32_t n) const noexcept {
+				return const_object_iterator_dummy_rel(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_dummy_rel operator-(int32_t n) const noexcept {
+				return const_object_iterator_dummy_rel(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(const_object_iterator_dummy_rel const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(const_object_iterator_dummy_rel const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(const_object_iterator_dummy_rel const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(const_object_iterator_dummy_rel const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(const_object_iterator_dummy_rel const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE dummy_rel_const_fat_id operator[](int32_t n) const noexcept {
+				return dummy_rel_const_fat_id(container, dummy_rel_id(dummy_rel_id::value_base_t(int32_t(index) + n)));
+			}
+		};
+		
+		class object_iterator_oop_thingy {
+			private:
+			data_container& container;
+			uint32_t index = 0;
+			public:
+			object_iterator_oop_thingy(data_container& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE object_iterator_oop_thingy& operator++() noexcept;
+			DCON_RELEASE_INLINE object_iterator_oop_thingy& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(object_iterator_oop_thingy const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_iterator_oop_thingy const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE oop_thingy_fat_id operator*() const noexcept {
+				return oop_thingy_fat_id(container, oop_thingy_id(oop_thingy_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE object_iterator_oop_thingy& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_oop_thingy& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_oop_thingy operator+(int32_t n) const noexcept {
+				return object_iterator_oop_thingy(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE object_iterator_oop_thingy operator-(int32_t n) const noexcept {
+				return object_iterator_oop_thingy(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(object_iterator_oop_thingy const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(object_iterator_oop_thingy const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(object_iterator_oop_thingy const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(object_iterator_oop_thingy const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(object_iterator_oop_thingy const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE oop_thingy_fat_id operator[](int32_t n) const noexcept {
+				return oop_thingy_fat_id(container, oop_thingy_id(oop_thingy_id::value_base_t(int32_t(index) + n)));
+			}
+		};
+		class const_object_iterator_oop_thingy {
+			private:
+			data_container const& container;
+			uint32_t index = 0;
+			public:
+			const_object_iterator_oop_thingy(data_container const& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_oop_thingy& operator++() noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_oop_thingy& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(const_object_iterator_oop_thingy const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_oop_thingy const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE oop_thingy_const_fat_id operator*() const noexcept {
+				return oop_thingy_const_fat_id(container, oop_thingy_id(oop_thingy_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_oop_thingy& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_oop_thingy& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_oop_thingy operator+(int32_t n) const noexcept {
+				return const_object_iterator_oop_thingy(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_oop_thingy operator-(int32_t n) const noexcept {
+				return const_object_iterator_oop_thingy(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(const_object_iterator_oop_thingy const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(const_object_iterator_oop_thingy const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(const_object_iterator_oop_thingy const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(const_object_iterator_oop_thingy const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(const_object_iterator_oop_thingy const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE oop_thingy_const_fat_id operator[](int32_t n) const noexcept {
+				return oop_thingy_const_fat_id(container, oop_thingy_id(oop_thingy_id::value_base_t(int32_t(index) + n)));
+			}
+		};
+		
+		class object_iterator_dummy_rel_B {
+			private:
+			data_container& container;
+			uint32_t index = 0;
+			public:
+			object_iterator_dummy_rel_B(data_container& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE object_iterator_dummy_rel_B& operator++() noexcept;
+			DCON_RELEASE_INLINE object_iterator_dummy_rel_B& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(object_iterator_dummy_rel_B const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_iterator_dummy_rel_B const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE dummy_rel_B_fat_id operator*() const noexcept {
+				return dummy_rel_B_fat_id(container, dummy_rel_B_id(dummy_rel_B_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE object_iterator_dummy_rel_B& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_dummy_rel_B& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_dummy_rel_B operator+(int32_t n) const noexcept {
+				return object_iterator_dummy_rel_B(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE object_iterator_dummy_rel_B operator-(int32_t n) const noexcept {
+				return object_iterator_dummy_rel_B(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(object_iterator_dummy_rel_B const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(object_iterator_dummy_rel_B const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(object_iterator_dummy_rel_B const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(object_iterator_dummy_rel_B const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(object_iterator_dummy_rel_B const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE dummy_rel_B_fat_id operator[](int32_t n) const noexcept {
+				return dummy_rel_B_fat_id(container, dummy_rel_B_id(dummy_rel_B_id::value_base_t(int32_t(index) + n)));
+			}
+		};
+		class const_object_iterator_dummy_rel_B {
+			private:
+			data_container const& container;
+			uint32_t index = 0;
+			public:
+			const_object_iterator_dummy_rel_B(data_container const& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_dummy_rel_B& operator++() noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_dummy_rel_B& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(const_object_iterator_dummy_rel_B const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_dummy_rel_B const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE dummy_rel_B_const_fat_id operator*() const noexcept {
+				return dummy_rel_B_const_fat_id(container, dummy_rel_B_id(dummy_rel_B_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_dummy_rel_B& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_dummy_rel_B& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_dummy_rel_B operator+(int32_t n) const noexcept {
+				return const_object_iterator_dummy_rel_B(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_dummy_rel_B operator-(int32_t n) const noexcept {
+				return const_object_iterator_dummy_rel_B(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(const_object_iterator_dummy_rel_B const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(const_object_iterator_dummy_rel_B const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(const_object_iterator_dummy_rel_B const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(const_object_iterator_dummy_rel_B const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(const_object_iterator_dummy_rel_B const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE dummy_rel_B_const_fat_id operator[](int32_t n) const noexcept {
+				return dummy_rel_B_const_fat_id(container, dummy_rel_B_id(dummy_rel_B_id::value_base_t(int32_t(index) + n)));
+			}
+		};
+		
+	}
+
 	class alignas(64) data_container {
 		public:
 		internal::thingy_class thingy;
@@ -2526,6 +3059,26 @@ namespace dcon {
 				func(tmp);
 			}
 		}
+		friend internal::const_object_iterator_thingy;
+		friend internal::object_iterator_thingy;
+		struct {
+			internal::object_iterator_thingy begin() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_thingy));
+				return internal::object_iterator_thingy(*container, uint32_t(0));
+			}
+			internal::object_iterator_thingy end() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_thingy));
+				return internal::object_iterator_thingy(*container, container->thingy_size());
+			}
+			internal::const_object_iterator_thingy begin() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_thingy));
+				return internal::const_object_iterator_thingy(*container, uint32_t(0));
+			}
+			internal::const_object_iterator_thingy end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_thingy));
+				return internal::const_object_iterator_thingy(*container, container->thingy_size());
+			}
+		}  in_thingy ;
 		
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_thingy2(T&& func) {
@@ -2534,6 +3087,26 @@ namespace dcon {
 				func(tmp);
 			}
 		}
+		friend internal::const_object_iterator_thingy2;
+		friend internal::object_iterator_thingy2;
+		struct {
+			internal::object_iterator_thingy2 begin() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_thingy2));
+				return internal::object_iterator_thingy2(*container, uint32_t(0));
+			}
+			internal::object_iterator_thingy2 end() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_thingy2));
+				return internal::object_iterator_thingy2(*container, container->thingy2_size());
+			}
+			internal::const_object_iterator_thingy2 begin() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_thingy2));
+				return internal::const_object_iterator_thingy2(*container, uint32_t(0));
+			}
+			internal::const_object_iterator_thingy2 end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_thingy2));
+				return internal::const_object_iterator_thingy2(*container, container->thingy2_size());
+			}
+		}  in_thingy2 ;
 		
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_dummy_rel(T&& func) {
@@ -2542,6 +3115,26 @@ namespace dcon {
 				func(tmp);
 			}
 		}
+		friend internal::const_object_iterator_dummy_rel;
+		friend internal::object_iterator_dummy_rel;
+		struct {
+			internal::object_iterator_dummy_rel begin() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_dummy_rel));
+				return internal::object_iterator_dummy_rel(*container, uint32_t(0));
+			}
+			internal::object_iterator_dummy_rel end() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_dummy_rel));
+				return internal::object_iterator_dummy_rel(*container, container->dummy_rel_size());
+			}
+			internal::const_object_iterator_dummy_rel begin() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_dummy_rel));
+				return internal::const_object_iterator_dummy_rel(*container, uint32_t(0));
+			}
+			internal::const_object_iterator_dummy_rel end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_dummy_rel));
+				return internal::const_object_iterator_dummy_rel(*container, container->dummy_rel_size());
+			}
+		}  in_dummy_rel ;
 		
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_oop_thingy(T&& func) {
@@ -2550,6 +3143,26 @@ namespace dcon {
 				func(tmp);
 			}
 		}
+		friend internal::const_object_iterator_oop_thingy;
+		friend internal::object_iterator_oop_thingy;
+		struct {
+			internal::object_iterator_oop_thingy begin() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_oop_thingy));
+				return internal::object_iterator_oop_thingy(*container, uint32_t(0));
+			}
+			internal::object_iterator_oop_thingy end() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_oop_thingy));
+				return internal::object_iterator_oop_thingy(*container, container->oop_thingy_size());
+			}
+			internal::const_object_iterator_oop_thingy begin() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_oop_thingy));
+				return internal::const_object_iterator_oop_thingy(*container, uint32_t(0));
+			}
+			internal::const_object_iterator_oop_thingy end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_oop_thingy));
+				return internal::const_object_iterator_oop_thingy(*container, container->oop_thingy_size());
+			}
+		}  in_oop_thingy ;
 		
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_dummy_rel_B(T&& func) {
@@ -2558,6 +3171,26 @@ namespace dcon {
 				func(tmp);
 			}
 		}
+		friend internal::const_object_iterator_dummy_rel_B;
+		friend internal::object_iterator_dummy_rel_B;
+		struct {
+			internal::object_iterator_dummy_rel_B begin() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_dummy_rel_B));
+				return internal::object_iterator_dummy_rel_B(*container, uint32_t(0));
+			}
+			internal::object_iterator_dummy_rel_B end() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_dummy_rel_B));
+				return internal::object_iterator_dummy_rel_B(*container, container->dummy_rel_B_size());
+			}
+			internal::const_object_iterator_dummy_rel_B begin() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_dummy_rel_B));
+				return internal::const_object_iterator_dummy_rel_B(*container, uint32_t(0));
+			}
+			internal::const_object_iterator_dummy_rel_B end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_dummy_rel_B));
+				return internal::const_object_iterator_dummy_rel_B(*container, container->dummy_rel_B_size());
+			}
+		}  in_dummy_rel_B ;
 		
 
 
@@ -5351,6 +5984,111 @@ namespace dcon {
 	
 
 	namespace internal {
+		DCON_RELEASE_INLINE object_iterator_thingy::object_iterator_thingy(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		DCON_RELEASE_INLINE const_object_iterator_thingy::const_object_iterator_thingy(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		DCON_RELEASE_INLINE object_iterator_thingy& object_iterator_thingy::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_thingy& const_object_iterator_thingy::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE object_iterator_thingy& object_iterator_thingy::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_thingy& const_object_iterator_thingy::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		
+		DCON_RELEASE_INLINE object_iterator_thingy2::object_iterator_thingy2(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		DCON_RELEASE_INLINE const_object_iterator_thingy2::const_object_iterator_thingy2(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		DCON_RELEASE_INLINE object_iterator_thingy2& object_iterator_thingy2::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_thingy2& const_object_iterator_thingy2::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE object_iterator_thingy2& object_iterator_thingy2::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_thingy2& const_object_iterator_thingy2::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		
+		DCON_RELEASE_INLINE object_iterator_dummy_rel::object_iterator_dummy_rel(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		DCON_RELEASE_INLINE const_object_iterator_dummy_rel::const_object_iterator_dummy_rel(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		DCON_RELEASE_INLINE object_iterator_dummy_rel& object_iterator_dummy_rel::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_dummy_rel& const_object_iterator_dummy_rel::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE object_iterator_dummy_rel& object_iterator_dummy_rel::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_dummy_rel& const_object_iterator_dummy_rel::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		
+		DCON_RELEASE_INLINE object_iterator_oop_thingy::object_iterator_oop_thingy(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		DCON_RELEASE_INLINE const_object_iterator_oop_thingy::const_object_iterator_oop_thingy(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		DCON_RELEASE_INLINE object_iterator_oop_thingy& object_iterator_oop_thingy::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_oop_thingy& const_object_iterator_oop_thingy::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE object_iterator_oop_thingy& object_iterator_oop_thingy::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_oop_thingy& const_object_iterator_oop_thingy::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		
+		DCON_RELEASE_INLINE object_iterator_dummy_rel_B::object_iterator_dummy_rel_B(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		DCON_RELEASE_INLINE const_object_iterator_dummy_rel_B::const_object_iterator_dummy_rel_B(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		DCON_RELEASE_INLINE object_iterator_dummy_rel_B& object_iterator_dummy_rel_B::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_dummy_rel_B& const_object_iterator_dummy_rel_B::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE object_iterator_dummy_rel_B& object_iterator_dummy_rel_B::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_dummy_rel_B& const_object_iterator_dummy_rel_B::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		
 	};
 
 

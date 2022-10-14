@@ -210,7 +210,12 @@ namespace dcon {
 			}
 		};
 		
+		class const_object_iterator_entity;
+		class object_iterator_entity;
+
 		class alignas(64) entity_class {
+			friend const_object_iterator_entity;
+			friend object_iterator_entity;
 			private:
 			//
 			// storage space for _index of type entity_id
@@ -285,7 +290,12 @@ namespace dcon {
 			friend data_container;
 		};
 
+		class const_object_iterator_position;
+		class object_iterator_position;
+
 		class alignas(64) position_class {
+			friend const_object_iterator_position;
+			friend object_iterator_position;
 			private:
 			//
 			// storage space for _index of type position_id
@@ -348,7 +358,12 @@ namespace dcon {
 			friend data_container;
 		};
 
+		class const_object_iterator_sprite;
+		class object_iterator_sprite;
+
 		class alignas(64) sprite_class {
+			friend const_object_iterator_sprite;
+			friend object_iterator_sprite;
 			private:
 			//
 			// storage space for _index of type sprite_id
@@ -733,6 +748,120 @@ namespace dcon {
 		return sprite_const_fat_id(c, id);
 	}
 	
+	namespace internal {
+		class object_iterator_entity {
+			private:
+			data_container& container;
+			uint32_t index = 0;
+			public:
+			object_iterator_entity(data_container& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE object_iterator_entity& operator++() noexcept;
+			DCON_RELEASE_INLINE object_iterator_entity& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(object_iterator_entity const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_iterator_entity const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE entity_fat_id operator*() const noexcept {
+				return entity_fat_id(container, entity_id(entity_id::value_base_t(index)));
+			}
+		};
+		class const_object_iterator_entity {
+			private:
+			data_container const& container;
+			uint32_t index = 0;
+			public:
+			const_object_iterator_entity(data_container const& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_entity& operator++() noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_entity& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(const_object_iterator_entity const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_entity const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE entity_const_fat_id operator*() const noexcept {
+				return entity_const_fat_id(container, entity_id(entity_id::value_base_t(index)));
+			}
+		};
+		
+		class object_iterator_position {
+			private:
+			data_container& container;
+			uint32_t index = 0;
+			public:
+			object_iterator_position(data_container& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE object_iterator_position& operator++() noexcept;
+			DCON_RELEASE_INLINE object_iterator_position& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(object_iterator_position const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_iterator_position const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE position_fat_id operator*() const noexcept {
+				return position_fat_id(container, position_id(position_id::value_base_t(index)));
+			}
+		};
+		class const_object_iterator_position {
+			private:
+			data_container const& container;
+			uint32_t index = 0;
+			public:
+			const_object_iterator_position(data_container const& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_position& operator++() noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_position& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(const_object_iterator_position const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_position const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE position_const_fat_id operator*() const noexcept {
+				return position_const_fat_id(container, position_id(position_id::value_base_t(index)));
+			}
+		};
+		
+		class object_iterator_sprite {
+			private:
+			data_container& container;
+			uint32_t index = 0;
+			public:
+			object_iterator_sprite(data_container& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE object_iterator_sprite& operator++() noexcept;
+			DCON_RELEASE_INLINE object_iterator_sprite& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(object_iterator_sprite const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_iterator_sprite const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE sprite_fat_id operator*() const noexcept {
+				return sprite_fat_id(container, sprite_id(sprite_id::value_base_t(index)));
+			}
+		};
+		class const_object_iterator_sprite {
+			private:
+			data_container const& container;
+			uint32_t index = 0;
+			public:
+			const_object_iterator_sprite(data_container const& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_sprite& operator++() noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_sprite& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(const_object_iterator_sprite const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_sprite const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE sprite_const_fat_id operator*() const noexcept {
+				return sprite_const_fat_id(container, sprite_id(sprite_id::value_base_t(index)));
+			}
+		};
+		
+	}
+
 	class alignas(64) data_container {
 		public:
 		internal::entity_class entity;
@@ -1386,6 +1515,26 @@ namespace dcon {
 				if(entity.m__index.vptr()[tmp.index()] == tmp) func(tmp);
 			}
 		}
+		friend internal::const_object_iterator_entity;
+		friend internal::object_iterator_entity;
+		struct {
+			internal::object_iterator_entity begin() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_entity));
+				return internal::object_iterator_entity(*container, uint32_t(0));
+			}
+			internal::object_iterator_entity end() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_entity));
+				return internal::object_iterator_entity(*container, container->entity_size());
+			}
+			internal::const_object_iterator_entity begin() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_entity));
+				return internal::const_object_iterator_entity(*container, uint32_t(0));
+			}
+			internal::const_object_iterator_entity end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_entity));
+				return internal::const_object_iterator_entity(*container, container->entity_size());
+			}
+		}  in_entity ;
 		
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_position(T&& func) {
@@ -1394,6 +1543,26 @@ namespace dcon {
 				if(position.m__index.vptr()[tmp.index()] == tmp) func(tmp);
 			}
 		}
+		friend internal::const_object_iterator_position;
+		friend internal::object_iterator_position;
+		struct {
+			internal::object_iterator_position begin() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_position));
+				return internal::object_iterator_position(*container, uint32_t(0));
+			}
+			internal::object_iterator_position end() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_position));
+				return internal::object_iterator_position(*container, container->position_size());
+			}
+			internal::const_object_iterator_position begin() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_position));
+				return internal::const_object_iterator_position(*container, uint32_t(0));
+			}
+			internal::const_object_iterator_position end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_position));
+				return internal::const_object_iterator_position(*container, container->position_size());
+			}
+		}  in_position ;
 		
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_sprite(T&& func) {
@@ -1402,6 +1571,26 @@ namespace dcon {
 				if(sprite.m__index.vptr()[tmp.index()] == tmp) func(tmp);
 			}
 		}
+		friend internal::const_object_iterator_sprite;
+		friend internal::object_iterator_sprite;
+		struct {
+			internal::object_iterator_sprite begin() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_sprite));
+				return internal::object_iterator_sprite(*container, uint32_t(0));
+			}
+			internal::object_iterator_sprite end() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_sprite));
+				return internal::object_iterator_sprite(*container, container->sprite_size());
+			}
+			internal::const_object_iterator_sprite begin() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_sprite));
+				return internal::const_object_iterator_sprite(*container, uint32_t(0));
+			}
+			internal::const_object_iterator_sprite end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_sprite));
+				return internal::const_object_iterator_sprite(*container, container->sprite_size());
+			}
+		}  in_sprite ;
 		
 
 		friend internal::query_sprites_with_position_const_iterator;
@@ -2698,6 +2887,123 @@ namespace dcon {
 		query_sprites_with_position_const_iterator query_sprites_with_position_const_instance::begin() {
 			return query_sprites_with_position_const_iterator(container, *this);
 		}
+		DCON_RELEASE_INLINE object_iterator_entity::object_iterator_entity(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+			while(container.entity.m__index.vptr()[index] != entity_id(entity_id::value_base_t(index)) && index < container.entity.size_used) {
+				++index;
+			}
+		}
+		DCON_RELEASE_INLINE const_object_iterator_entity::const_object_iterator_entity(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+			while(container.entity.m__index.vptr()[index] != entity_id(entity_id::value_base_t(index)) && index < container.entity.size_used) {
+				++index;
+			}
+		}
+		DCON_RELEASE_INLINE object_iterator_entity& object_iterator_entity::operator++() noexcept {
+			++index;
+			while(container.entity.m__index.vptr()[index] != entity_id(entity_id::value_base_t(index)) && index < container.entity.size_used) {
+				++index;
+			}
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_entity& const_object_iterator_entity::operator++() noexcept {
+			++index;
+			while(container.entity.m__index.vptr()[index] != entity_id(entity_id::value_base_t(index)) && index < container.entity.size_used) {
+				++index;
+			}
+			return *this;
+		}
+		DCON_RELEASE_INLINE object_iterator_entity& object_iterator_entity::operator--() noexcept {
+			--index;
+			while(container.entity.m__index.vptr()[index] != entity_id(entity_id::value_base_t(index)) && index < container.entity.size_used) {
+				--index;
+			}
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_entity& const_object_iterator_entity::operator--() noexcept {
+			--index;
+			while(container.entity.m__index.vptr()[index] != entity_id(entity_id::value_base_t(index)) && index < container.entity.size_used) {
+				--index;
+			}
+			return *this;
+		}
+		
+		DCON_RELEASE_INLINE object_iterator_position::object_iterator_position(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+			while(container.position.m__index.vptr()[index] != position_id(position_id::value_base_t(index)) && index < container.position.size_used) {
+				++index;
+			}
+		}
+		DCON_RELEASE_INLINE const_object_iterator_position::const_object_iterator_position(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+			while(container.position.m__index.vptr()[index] != position_id(position_id::value_base_t(index)) && index < container.position.size_used) {
+				++index;
+			}
+		}
+		DCON_RELEASE_INLINE object_iterator_position& object_iterator_position::operator++() noexcept {
+			++index;
+			while(container.position.m__index.vptr()[index] != position_id(position_id::value_base_t(index)) && index < container.position.size_used) {
+				++index;
+			}
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_position& const_object_iterator_position::operator++() noexcept {
+			++index;
+			while(container.position.m__index.vptr()[index] != position_id(position_id::value_base_t(index)) && index < container.position.size_used) {
+				++index;
+			}
+			return *this;
+		}
+		DCON_RELEASE_INLINE object_iterator_position& object_iterator_position::operator--() noexcept {
+			--index;
+			while(container.position.m__index.vptr()[index] != position_id(position_id::value_base_t(index)) && index < container.position.size_used) {
+				--index;
+			}
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_position& const_object_iterator_position::operator--() noexcept {
+			--index;
+			while(container.position.m__index.vptr()[index] != position_id(position_id::value_base_t(index)) && index < container.position.size_used) {
+				--index;
+			}
+			return *this;
+		}
+		
+		DCON_RELEASE_INLINE object_iterator_sprite::object_iterator_sprite(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+			while(container.sprite.m__index.vptr()[index] != sprite_id(sprite_id::value_base_t(index)) && index < container.sprite.size_used) {
+				++index;
+			}
+		}
+		DCON_RELEASE_INLINE const_object_iterator_sprite::const_object_iterator_sprite(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+			while(container.sprite.m__index.vptr()[index] != sprite_id(sprite_id::value_base_t(index)) && index < container.sprite.size_used) {
+				++index;
+			}
+		}
+		DCON_RELEASE_INLINE object_iterator_sprite& object_iterator_sprite::operator++() noexcept {
+			++index;
+			while(container.sprite.m__index.vptr()[index] != sprite_id(sprite_id::value_base_t(index)) && index < container.sprite.size_used) {
+				++index;
+			}
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_sprite& const_object_iterator_sprite::operator++() noexcept {
+			++index;
+			while(container.sprite.m__index.vptr()[index] != sprite_id(sprite_id::value_base_t(index)) && index < container.sprite.size_used) {
+				++index;
+			}
+			return *this;
+		}
+		DCON_RELEASE_INLINE object_iterator_sprite& object_iterator_sprite::operator--() noexcept {
+			--index;
+			while(container.sprite.m__index.vptr()[index] != sprite_id(sprite_id::value_base_t(index)) && index < container.sprite.size_used) {
+				--index;
+			}
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_sprite& const_object_iterator_sprite::operator--() noexcept {
+			--index;
+			while(container.sprite.m__index.vptr()[index] != sprite_id(sprite_id::value_base_t(index)) && index < container.sprite.size_used) {
+				--index;
+			}
+			return *this;
+		}
+		
 	};
 
 

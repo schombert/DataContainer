@@ -2743,9 +2743,9 @@ namespace car_owner_basic {
 	
 
 	namespace internal {
-		object_iterator_car::object_iterator_car(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE object_iterator_car::object_iterator_car(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 		}
-		const_object_iterator_car::const_object_iterator_car(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE const_object_iterator_car::const_object_iterator_car(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
 		}
 		DCON_RELEASE_INLINE object_iterator_car& object_iterator_car::operator++() noexcept {
 			++index;
@@ -2764,9 +2764,9 @@ namespace car_owner_basic {
 			return *this;
 		}
 		
-		object_iterator_person::object_iterator_person(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE object_iterator_person::object_iterator_person(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 		}
-		const_object_iterator_person::const_object_iterator_person(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE const_object_iterator_person::const_object_iterator_person(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
 		}
 		DCON_RELEASE_INLINE object_iterator_person& object_iterator_person::operator++() noexcept {
 			++index;
@@ -2785,10 +2785,10 @@ namespace car_owner_basic {
 			return *this;
 		}
 		
-		iterator_person_foreach_car_ownership_as_owner::iterator_person_foreach_car_ownership_as_owner(data_container& c,  person_id fr) noexcept : container(c) {
+		DCON_RELEASE_INLINE iterator_person_foreach_car_ownership_as_owner::iterator_person_foreach_car_ownership_as_owner(data_container& c,  person_id fr) noexcept : container(c) {
 			ptr = container.car_ownership.m_array_owner.vptr()[fr.index()].data();
 		}
-		iterator_person_foreach_car_ownership_as_owner::iterator_person_foreach_car_ownership_as_owner(data_container& c, person_id fr, int) noexcept : container(c) {
+		DCON_RELEASE_INLINE iterator_person_foreach_car_ownership_as_owner::iterator_person_foreach_car_ownership_as_owner(data_container& c, person_id fr, int) noexcept : container(c) {
 			auto& vref = container.car_ownership.m_array_owner.vptr()[fr.index()];
 			ptr = vref.data() + vref.size();
 		}
@@ -2800,24 +2800,25 @@ namespace car_owner_basic {
 			--ptr;
 			return *this;
 		}
-		const_iterator_person_foreach_car_ownership_as_owner::const_iterator_person_foreach_car_ownership_as_owner(data_container const& c,  person_id fr) noexcept : container(c) {
+		DCON_RELEASE_INLINE const_iterator_person_foreach_car_ownership_as_owner::const_iterator_person_foreach_car_ownership_as_owner(data_container const& c,  person_id fr) noexcept : container(c) {
 			ptr = container.car_ownership.m_array_owner.vptr()[fr.index()].data();
 		}
-		const_iterator_person_foreach_car_ownership_as_owner::const_iterator_person_foreach_car_ownership_as_owner(data_container const& c, person_id fr, int) noexcept : container(c) {
+		DCON_RELEASE_INLINE const_iterator_person_foreach_car_ownership_as_owner::const_iterator_person_foreach_car_ownership_as_owner(data_container const& c, person_id fr, int) noexcept : container(c) {
 			auto& vref = container.car_ownership.m_array_owner.vptr()[fr.index()];
 			ptr = vref.data() + vref.size();
 		}
 		DCON_RELEASE_INLINE const_iterator_person_foreach_car_ownership_as_owner& const_iterator_person_foreach_car_ownership_as_owner::operator++() noexcept {
 			++ptr;
+			return *this;
 		}
 		DCON_RELEASE_INLINE const_iterator_person_foreach_car_ownership_as_owner& const_iterator_person_foreach_car_ownership_as_owner::operator--() noexcept {
 			--ptr;
 			return *this;
 		}
 		
-		object_iterator_car_ownership::object_iterator_car_ownership(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE object_iterator_car_ownership::object_iterator_car_ownership(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 		}
-		const_object_iterator_car_ownership::const_object_iterator_car_ownership(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		DCON_RELEASE_INLINE const_object_iterator_car_ownership::const_object_iterator_car_ownership(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
 		}
 		DCON_RELEASE_INLINE object_iterator_car_ownership& object_iterator_car_ownership::operator++() noexcept {
 			++index;
