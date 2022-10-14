@@ -183,9 +183,13 @@ namespace ex1 {
 	class data_container;
 
 	namespace internal {
-		class const_object_iterator_top;		class object_iterator_top;
+		class const_object_iterator_top;
+		class object_iterator_top;
+
 		class alignas(64) top_class {
-			friend const_object_iterator_top;			friend object_iterator_top;			private:
+			friend const_object_iterator_top;
+			friend object_iterator_top;
+			private:
 			//
 			// storage space for wheels of type int32_t
 			//
@@ -204,9 +208,13 @@ namespace ex1 {
 			friend data_container;
 		};
 
-		class const_object_iterator_bottom;		class object_iterator_bottom;
+		class const_object_iterator_bottom;
+		class object_iterator_bottom;
+
 		class alignas(64) bottom_class {
-			friend const_object_iterator_bottom;			friend object_iterator_bottom;			private:
+			friend const_object_iterator_bottom;
+			friend object_iterator_bottom;
+			private:
 			//
 			// storage space for legs of type int32_t
 			//
@@ -225,9 +233,25 @@ namespace ex1 {
 			friend data_container;
 		};
 
-		class const_object_iterator_lr_relation;		class object_iterator_lr_relation;
+		class const_object_iterator_lr_relation;
+		class object_iterator_lr_relation;
+		class const_iterator_top_foreach_lr_relation_as_left;
+		class iterator_top_foreach_lr_relation_as_left;
+		struct const_iterator_top_foreach_lr_relation_as_left_generator;
+		struct iterator_top_foreach_lr_relation_as_left_generator;
+		class const_iterator_bottom_foreach_lr_relation_as_right;
+		class iterator_bottom_foreach_lr_relation_as_right;
+		struct const_iterator_bottom_foreach_lr_relation_as_right_generator;
+		struct iterator_bottom_foreach_lr_relation_as_right_generator;
+
 		class alignas(64) lr_relation_class {
-			friend const_object_iterator_lr_relation;			friend object_iterator_lr_relation;			private:
+			friend const_object_iterator_lr_relation;
+			friend object_iterator_lr_relation;
+			friend const_iterator_top_foreach_lr_relation_as_left;
+			friend iterator_top_foreach_lr_relation_as_left;
+			friend const_iterator_bottom_foreach_lr_relation_as_right;
+			friend iterator_bottom_foreach_lr_relation_as_right;
+			private:
 			//
 			// storage space for _index of type lr_relation_id
 			//
@@ -348,10 +372,12 @@ namespace ex1 {
 		DCON_RELEASE_INLINE void for_each_lr_relation_as_left(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation_as_left() const;
 		DCON_RELEASE_INLINE void remove_all_lr_relation_as_left() const noexcept;
+		DCON_RELEASE_INLINE internal::iterator_top_foreach_lr_relation_as_left_generator get_lr_relation_as_left() const;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_lr_relation(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation() const;
 		DCON_RELEASE_INLINE void remove_all_lr_relation() const noexcept;
+		DCON_RELEASE_INLINE internal::iterator_top_foreach_lr_relation_as_left_generator get_lr_relation() const;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_right_from_lr_relation(T&& func) const;
 		DCON_RELEASE_INLINE bool has_right_from_lr_relation(bottom_id target) const;
@@ -415,9 +441,11 @@ namespace ex1 {
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_lr_relation_as_left(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation_as_left() const;
+		DCON_RELEASE_INLINE internal::const_iterator_top_foreach_lr_relation_as_left_generator get_lr_relation_as_left() const;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_lr_relation(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation() const;
+		DCON_RELEASE_INLINE internal::const_iterator_top_foreach_lr_relation_as_left_generator get_lr_relation() const;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_right_from_lr_relation(T&& func) const;
 		DCON_RELEASE_INLINE bool has_right_from_lr_relation(bottom_id target) const;
@@ -477,10 +505,12 @@ namespace ex1 {
 		DCON_RELEASE_INLINE void for_each_lr_relation_as_right(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation_as_right() const;
 		DCON_RELEASE_INLINE void remove_all_lr_relation_as_right() const noexcept;
+		DCON_RELEASE_INLINE internal::iterator_bottom_foreach_lr_relation_as_right_generator get_lr_relation_as_right() const;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_lr_relation(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation() const;
 		DCON_RELEASE_INLINE void remove_all_lr_relation() const noexcept;
+		DCON_RELEASE_INLINE internal::iterator_bottom_foreach_lr_relation_as_right_generator get_lr_relation() const;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_left_from_lr_relation(T&& func) const;
 		DCON_RELEASE_INLINE bool has_left_from_lr_relation(top_id target) const;
@@ -544,9 +574,11 @@ namespace ex1 {
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_lr_relation_as_right(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation_as_right() const;
+		DCON_RELEASE_INLINE internal::const_iterator_bottom_foreach_lr_relation_as_right_generator get_lr_relation_as_right() const;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_lr_relation(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation() const;
+		DCON_RELEASE_INLINE internal::const_iterator_bottom_foreach_lr_relation_as_right_generator get_lr_relation() const;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_left_from_lr_relation(T&& func) const;
 		DCON_RELEASE_INLINE bool has_left_from_lr_relation(top_id target) const;
@@ -687,14 +719,47 @@ namespace ex1 {
 			public:
 			object_iterator_top(data_container& c, uint32_t i) noexcept;
 			DCON_RELEASE_INLINE object_iterator_top& operator++() noexcept;
+			DCON_RELEASE_INLINE object_iterator_top& operator--() noexcept;
 			DCON_RELEASE_INLINE bool operator==(object_iterator_top const& o) const noexcept {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(object_iterator_top const& o) const noexcept {
 				return !(*this == o);
 			}
-			DCON_RELEASE_INLINE top_fat_id operator*() noexcept {
+			DCON_RELEASE_INLINE top_fat_id operator*() const noexcept {
 				return top_fat_id(container, top_id(top_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE object_iterator_top& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_top& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_top operator+(int32_t n) const noexcept {
+				return object_iterator_top(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE object_iterator_top operator-(int32_t n) const noexcept {
+				return object_iterator_top(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(object_iterator_top const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(object_iterator_top const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(object_iterator_top const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(object_iterator_top const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(object_iterator_top const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE top_fat_id operator[](int32_t n) const noexcept {
+				return top_fat_id(container, top_id(top_id::value_base_t(int32_t(index) + n)));
 			}
 		};
 		class const_object_iterator_top {
@@ -704,6 +769,7 @@ namespace ex1 {
 			public:
 			const_object_iterator_top(data_container const& c, uint32_t i) noexcept;
 			DCON_RELEASE_INLINE const_object_iterator_top& operator++() noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_top& operator--() noexcept;
 			DCON_RELEASE_INLINE bool operator==(const_object_iterator_top const& o) const noexcept {
 				return &container == &o.container && index == o.index;
 			}
@@ -712,6 +778,166 @@ namespace ex1 {
 			}
 			DCON_RELEASE_INLINE top_const_fat_id operator*() const noexcept {
 				return top_const_fat_id(container, top_id(top_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_top& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_top& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_top operator+(int32_t n) const noexcept {
+				return const_object_iterator_top(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_top operator-(int32_t n) const noexcept {
+				return const_object_iterator_top(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(const_object_iterator_top const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(const_object_iterator_top const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(const_object_iterator_top const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(const_object_iterator_top const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(const_object_iterator_top const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE top_const_fat_id operator[](int32_t n) const noexcept {
+				return top_const_fat_id(container, top_id(top_id::value_base_t(int32_t(index) + n)));
+			}
+		};
+		
+		class iterator_top_foreach_lr_relation_as_left {
+			private:
+			data_container& container;
+			lr_relation_id const* ptr = nullptr;
+			public:
+			iterator_top_foreach_lr_relation_as_left(data_container& c, top_id fr) noexcept;
+			iterator_top_foreach_lr_relation_as_left(data_container& c, lr_relation_id const* r) noexcept : container(c), ptr(r) {}
+			iterator_top_foreach_lr_relation_as_left(data_container& c, top_id fr, int) noexcept;
+			DCON_RELEASE_INLINE iterator_top_foreach_lr_relation_as_left& operator++() noexcept;
+			DCON_RELEASE_INLINE iterator_top_foreach_lr_relation_as_left& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(iterator_top_foreach_lr_relation_as_left const& o) const noexcept {
+				return ptr == o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator!=(iterator_top_foreach_lr_relation_as_left const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE lr_relation_fat_id operator*() const noexcept {
+				return lr_relation_fat_id(container, *ptr);
+			}
+			DCON_RELEASE_INLINE iterator_top_foreach_lr_relation_as_left& operator+=(ptrdiff_t n) noexcept {
+				ptr += n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE iterator_top_foreach_lr_relation_as_left& operator-=(ptrdiff_t n) noexcept {
+				ptr -= n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE iterator_top_foreach_lr_relation_as_left operator+(ptrdiff_t n) const noexcept {
+				return iterator_top_foreach_lr_relation_as_left(container, ptr + n);
+			}
+			DCON_RELEASE_INLINE iterator_top_foreach_lr_relation_as_left operator-(ptrdiff_t n) const noexcept {
+				return iterator_top_foreach_lr_relation_as_left(container, ptr - n);
+			}
+			DCON_RELEASE_INLINE ptrdiff_t operator-(iterator_top_foreach_lr_relation_as_left const& o) const noexcept {
+				return ptr - o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>(iterator_top_foreach_lr_relation_as_left const& o) const noexcept {
+				return ptr > o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>=(iterator_top_foreach_lr_relation_as_left const& o) const noexcept {
+				return ptr >= o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<(iterator_top_foreach_lr_relation_as_left const& o) const noexcept {
+				return ptr < o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<=(iterator_top_foreach_lr_relation_as_left const& o) const noexcept {
+				return ptr <= o.ptr;
+			}
+			DCON_RELEASE_INLINE lr_relation_fat_id operator[](ptrdiff_t n) const noexcept {
+				return lr_relation_fat_id(container, *(ptr + n));
+			}
+		};
+		class const_iterator_top_foreach_lr_relation_as_left {
+			private:
+			data_container const& container;
+			lr_relation_id const* ptr = nullptr;
+			public:
+			const_iterator_top_foreach_lr_relation_as_left(data_container const& c, top_id fr) noexcept;
+			const_iterator_top_foreach_lr_relation_as_left(data_container const& c, lr_relation_id const* r) noexcept : container(c), ptr(r) {}
+			const_iterator_top_foreach_lr_relation_as_left(data_container const& c, top_id fr, int) noexcept;
+			DCON_RELEASE_INLINE const_iterator_top_foreach_lr_relation_as_left& operator++() noexcept;
+			DCON_RELEASE_INLINE const_iterator_top_foreach_lr_relation_as_left& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(const_iterator_top_foreach_lr_relation_as_left const& o) const noexcept {
+				return ptr == o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator!=(const_iterator_top_foreach_lr_relation_as_left const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE lr_relation_const_fat_id operator*() const noexcept {
+				return lr_relation_const_fat_id(container, *ptr);
+			}
+			DCON_RELEASE_INLINE const_iterator_top_foreach_lr_relation_as_left& operator+=(ptrdiff_t n) noexcept {
+				ptr += n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_iterator_top_foreach_lr_relation_as_left& operator-=(ptrdiff_t n) noexcept {
+				ptr -= n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_iterator_top_foreach_lr_relation_as_left operator+(ptrdiff_t n) const noexcept {
+				return const_iterator_top_foreach_lr_relation_as_left(container, ptr + n);
+			}
+			DCON_RELEASE_INLINE const_iterator_top_foreach_lr_relation_as_left operator-(ptrdiff_t n) const noexcept {
+				return const_iterator_top_foreach_lr_relation_as_left(container, ptr - n);
+			}
+			DCON_RELEASE_INLINE ptrdiff_t operator-(const_iterator_top_foreach_lr_relation_as_left const& o) const noexcept {
+				return ptr - o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>(const_iterator_top_foreach_lr_relation_as_left const& o) const noexcept {
+				return ptr > o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>=(const_iterator_top_foreach_lr_relation_as_left const& o) const noexcept {
+				return ptr >= o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<(const_iterator_top_foreach_lr_relation_as_left const& o) const noexcept {
+				return ptr < o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<=(const_iterator_top_foreach_lr_relation_as_left const& o) const noexcept {
+				return ptr <= o.ptr;
+			}
+			DCON_RELEASE_INLINE lr_relation_const_fat_id operator[](ptrdiff_t n) const noexcept {
+				return lr_relation_const_fat_id(container, *(ptr + n));
+			}
+		};
+		
+		struct iterator_top_foreach_lr_relation_as_left_generator {
+			data_container& container;
+			top_id ob;
+			iterator_top_foreach_lr_relation_as_left_generator(data_container& c, top_id o) : container(c), ob(o) {}
+			DCON_RELEASE_INLINE iterator_top_foreach_lr_relation_as_left begin() const noexcept {
+				return iterator_top_foreach_lr_relation_as_left(container, ob);
+			}
+			DCON_RELEASE_INLINE iterator_top_foreach_lr_relation_as_left end() const noexcept {
+				return iterator_top_foreach_lr_relation_as_left(container, ob, 0);
+			}
+		};
+		struct const_iterator_top_foreach_lr_relation_as_left_generator {
+			data_container const& container;
+			top_id ob;
+			const_iterator_top_foreach_lr_relation_as_left_generator(data_container const& c, top_id o) : container(c), ob(o) {}
+			DCON_RELEASE_INLINE const_iterator_top_foreach_lr_relation_as_left begin() const noexcept {
+				return const_iterator_top_foreach_lr_relation_as_left(container, ob);
+			}
+			DCON_RELEASE_INLINE const_iterator_top_foreach_lr_relation_as_left end() const noexcept {
+				return const_iterator_top_foreach_lr_relation_as_left(container, ob, 0);
 			}
 		};
 		
@@ -722,14 +948,47 @@ namespace ex1 {
 			public:
 			object_iterator_bottom(data_container& c, uint32_t i) noexcept;
 			DCON_RELEASE_INLINE object_iterator_bottom& operator++() noexcept;
+			DCON_RELEASE_INLINE object_iterator_bottom& operator--() noexcept;
 			DCON_RELEASE_INLINE bool operator==(object_iterator_bottom const& o) const noexcept {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(object_iterator_bottom const& o) const noexcept {
 				return !(*this == o);
 			}
-			DCON_RELEASE_INLINE bottom_fat_id operator*() noexcept {
+			DCON_RELEASE_INLINE bottom_fat_id operator*() const noexcept {
 				return bottom_fat_id(container, bottom_id(bottom_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE object_iterator_bottom& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_bottom& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE object_iterator_bottom operator+(int32_t n) const noexcept {
+				return object_iterator_bottom(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE object_iterator_bottom operator-(int32_t n) const noexcept {
+				return object_iterator_bottom(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(object_iterator_bottom const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(object_iterator_bottom const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(object_iterator_bottom const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(object_iterator_bottom const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(object_iterator_bottom const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE bottom_fat_id operator[](int32_t n) const noexcept {
+				return bottom_fat_id(container, bottom_id(bottom_id::value_base_t(int32_t(index) + n)));
 			}
 		};
 		class const_object_iterator_bottom {
@@ -739,6 +998,7 @@ namespace ex1 {
 			public:
 			const_object_iterator_bottom(data_container const& c, uint32_t i) noexcept;
 			DCON_RELEASE_INLINE const_object_iterator_bottom& operator++() noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_bottom& operator--() noexcept;
 			DCON_RELEASE_INLINE bool operator==(const_object_iterator_bottom const& o) const noexcept {
 				return &container == &o.container && index == o.index;
 			}
@@ -747,6 +1007,166 @@ namespace ex1 {
 			}
 			DCON_RELEASE_INLINE bottom_const_fat_id operator*() const noexcept {
 				return bottom_const_fat_id(container, bottom_id(bottom_id::value_base_t(index)));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_bottom& operator+=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) + n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_bottom& operator-=(int32_t n) noexcept {
+				index = uint32_t(int32_t(index) - n);
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_object_iterator_bottom operator+(int32_t n) const noexcept {
+				return const_object_iterator_bottom(container, uint32_t(int32_t(index) + n));
+			}
+			DCON_RELEASE_INLINE const_object_iterator_bottom operator-(int32_t n) const noexcept {
+				return const_object_iterator_bottom(container, uint32_t(int32_t(index) - n));
+			}
+			DCON_RELEASE_INLINE int32_t operator-(const_object_iterator_bottom const& o) const noexcept {
+				return int32_t(index) - int32_t(o.index);
+			}
+			DCON_RELEASE_INLINE bool operator>(const_object_iterator_bottom const& o) const noexcept {
+				return index > o.index;
+			}
+			DCON_RELEASE_INLINE bool operator>=(const_object_iterator_bottom const& o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<(const_object_iterator_bottom const& o) const noexcept {
+				return index < o.index;
+			}
+			DCON_RELEASE_INLINE bool operator<=(const_object_iterator_bottom const& o) const noexcept {
+				return index <= o.index;
+			}
+			DCON_RELEASE_INLINE bottom_const_fat_id operator[](int32_t n) const noexcept {
+				return bottom_const_fat_id(container, bottom_id(bottom_id::value_base_t(int32_t(index) + n)));
+			}
+		};
+		
+		class iterator_bottom_foreach_lr_relation_as_right {
+			private:
+			data_container& container;
+			lr_relation_id const* ptr = nullptr;
+			public:
+			iterator_bottom_foreach_lr_relation_as_right(data_container& c, bottom_id fr) noexcept;
+			iterator_bottom_foreach_lr_relation_as_right(data_container& c, lr_relation_id const* r) noexcept : container(c), ptr(r) {}
+			iterator_bottom_foreach_lr_relation_as_right(data_container& c, bottom_id fr, int) noexcept;
+			DCON_RELEASE_INLINE iterator_bottom_foreach_lr_relation_as_right& operator++() noexcept;
+			DCON_RELEASE_INLINE iterator_bottom_foreach_lr_relation_as_right& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(iterator_bottom_foreach_lr_relation_as_right const& o) const noexcept {
+				return ptr == o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator!=(iterator_bottom_foreach_lr_relation_as_right const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE lr_relation_fat_id operator*() const noexcept {
+				return lr_relation_fat_id(container, *ptr);
+			}
+			DCON_RELEASE_INLINE iterator_bottom_foreach_lr_relation_as_right& operator+=(ptrdiff_t n) noexcept {
+				ptr += n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE iterator_bottom_foreach_lr_relation_as_right& operator-=(ptrdiff_t n) noexcept {
+				ptr -= n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE iterator_bottom_foreach_lr_relation_as_right operator+(ptrdiff_t n) const noexcept {
+				return iterator_bottom_foreach_lr_relation_as_right(container, ptr + n);
+			}
+			DCON_RELEASE_INLINE iterator_bottom_foreach_lr_relation_as_right operator-(ptrdiff_t n) const noexcept {
+				return iterator_bottom_foreach_lr_relation_as_right(container, ptr - n);
+			}
+			DCON_RELEASE_INLINE ptrdiff_t operator-(iterator_bottom_foreach_lr_relation_as_right const& o) const noexcept {
+				return ptr - o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>(iterator_bottom_foreach_lr_relation_as_right const& o) const noexcept {
+				return ptr > o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>=(iterator_bottom_foreach_lr_relation_as_right const& o) const noexcept {
+				return ptr >= o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<(iterator_bottom_foreach_lr_relation_as_right const& o) const noexcept {
+				return ptr < o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<=(iterator_bottom_foreach_lr_relation_as_right const& o) const noexcept {
+				return ptr <= o.ptr;
+			}
+			DCON_RELEASE_INLINE lr_relation_fat_id operator[](ptrdiff_t n) const noexcept {
+				return lr_relation_fat_id(container, *(ptr + n));
+			}
+		};
+		class const_iterator_bottom_foreach_lr_relation_as_right {
+			private:
+			data_container const& container;
+			lr_relation_id const* ptr = nullptr;
+			public:
+			const_iterator_bottom_foreach_lr_relation_as_right(data_container const& c, bottom_id fr) noexcept;
+			const_iterator_bottom_foreach_lr_relation_as_right(data_container const& c, lr_relation_id const* r) noexcept : container(c), ptr(r) {}
+			const_iterator_bottom_foreach_lr_relation_as_right(data_container const& c, bottom_id fr, int) noexcept;
+			DCON_RELEASE_INLINE const_iterator_bottom_foreach_lr_relation_as_right& operator++() noexcept;
+			DCON_RELEASE_INLINE const_iterator_bottom_foreach_lr_relation_as_right& operator--() noexcept;
+			DCON_RELEASE_INLINE bool operator==(const_iterator_bottom_foreach_lr_relation_as_right const& o) const noexcept {
+				return ptr == o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator!=(const_iterator_bottom_foreach_lr_relation_as_right const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE lr_relation_const_fat_id operator*() const noexcept {
+				return lr_relation_const_fat_id(container, *ptr);
+			}
+			DCON_RELEASE_INLINE const_iterator_bottom_foreach_lr_relation_as_right& operator+=(ptrdiff_t n) noexcept {
+				ptr += n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_iterator_bottom_foreach_lr_relation_as_right& operator-=(ptrdiff_t n) noexcept {
+				ptr -= n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_iterator_bottom_foreach_lr_relation_as_right operator+(ptrdiff_t n) const noexcept {
+				return const_iterator_bottom_foreach_lr_relation_as_right(container, ptr + n);
+			}
+			DCON_RELEASE_INLINE const_iterator_bottom_foreach_lr_relation_as_right operator-(ptrdiff_t n) const noexcept {
+				return const_iterator_bottom_foreach_lr_relation_as_right(container, ptr - n);
+			}
+			DCON_RELEASE_INLINE ptrdiff_t operator-(const_iterator_bottom_foreach_lr_relation_as_right const& o) const noexcept {
+				return ptr - o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>(const_iterator_bottom_foreach_lr_relation_as_right const& o) const noexcept {
+				return ptr > o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>=(const_iterator_bottom_foreach_lr_relation_as_right const& o) const noexcept {
+				return ptr >= o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<(const_iterator_bottom_foreach_lr_relation_as_right const& o) const noexcept {
+				return ptr < o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<=(const_iterator_bottom_foreach_lr_relation_as_right const& o) const noexcept {
+				return ptr <= o.ptr;
+			}
+			DCON_RELEASE_INLINE lr_relation_const_fat_id operator[](ptrdiff_t n) const noexcept {
+				return lr_relation_const_fat_id(container, *(ptr + n));
+			}
+		};
+		
+		struct iterator_bottom_foreach_lr_relation_as_right_generator {
+			data_container& container;
+			bottom_id ob;
+			iterator_bottom_foreach_lr_relation_as_right_generator(data_container& c, bottom_id o) : container(c), ob(o) {}
+			DCON_RELEASE_INLINE iterator_bottom_foreach_lr_relation_as_right begin() const noexcept {
+				return iterator_bottom_foreach_lr_relation_as_right(container, ob);
+			}
+			DCON_RELEASE_INLINE iterator_bottom_foreach_lr_relation_as_right end() const noexcept {
+				return iterator_bottom_foreach_lr_relation_as_right(container, ob, 0);
+			}
+		};
+		struct const_iterator_bottom_foreach_lr_relation_as_right_generator {
+			data_container const& container;
+			bottom_id ob;
+			const_iterator_bottom_foreach_lr_relation_as_right_generator(data_container const& c, bottom_id o) : container(c), ob(o) {}
+			DCON_RELEASE_INLINE const_iterator_bottom_foreach_lr_relation_as_right begin() const noexcept {
+				return const_iterator_bottom_foreach_lr_relation_as_right(container, ob);
+			}
+			DCON_RELEASE_INLINE const_iterator_bottom_foreach_lr_relation_as_right end() const noexcept {
+				return const_iterator_bottom_foreach_lr_relation_as_right(container, ob, 0);
 			}
 		};
 		
@@ -757,13 +1177,14 @@ namespace ex1 {
 			public:
 			object_iterator_lr_relation(data_container& c, uint32_t i) noexcept;
 			DCON_RELEASE_INLINE object_iterator_lr_relation& operator++() noexcept;
+			DCON_RELEASE_INLINE object_iterator_lr_relation& operator--() noexcept;
 			DCON_RELEASE_INLINE bool operator==(object_iterator_lr_relation const& o) const noexcept {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(object_iterator_lr_relation const& o) const noexcept {
 				return !(*this == o);
 			}
-			DCON_RELEASE_INLINE lr_relation_fat_id operator*() noexcept {
+			DCON_RELEASE_INLINE lr_relation_fat_id operator*() const noexcept {
 				return lr_relation_fat_id(container, lr_relation_id(lr_relation_id::value_base_t(index)));
 			}
 		};
@@ -774,6 +1195,7 @@ namespace ex1 {
 			public:
 			const_object_iterator_lr_relation(data_container const& c, uint32_t i) noexcept;
 			DCON_RELEASE_INLINE const_object_iterator_lr_relation& operator++() noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_lr_relation& operator--() noexcept;
 			DCON_RELEASE_INLINE bool operator==(const_object_iterator_lr_relation const& o) const noexcept {
 				return &container == &o.container && index == o.index;
 			}
@@ -830,6 +1252,12 @@ namespace ex1 {
 			ve::store(id, top.m_wheels.vptr(), values);
 		}
 		#endif
+		DCON_RELEASE_INLINE internal::const_iterator_top_foreach_lr_relation_as_left_generator top_get_lr_relation_as_left(top_id id) const {
+			return internal::const_iterator_top_foreach_lr_relation_as_left_generator(*this, id);
+		}
+		DCON_RELEASE_INLINE internal::iterator_top_foreach_lr_relation_as_left_generator top_get_lr_relation_as_left(top_id id) {
+			return internal::iterator_top_foreach_lr_relation_as_left_generator(*this, id);
+		}
 		template<typename T>
 		DCON_RELEASE_INLINE void top_for_each_lr_relation_as_left(top_id id, T&& func) const {
 			if(bool(id)) {
@@ -849,6 +1277,12 @@ namespace ex1 {
 			auto rng = top_range_of_lr_relation_as_left(id);
 			dcon::local_vector<lr_relation_id> temp(rng.first, rng.second);
 			std::for_each(temp.begin(), temp.end(), [t = this](lr_relation_id i) { t->lr_relation_set_left(i, top_id()); });
+		}
+		DCON_RELEASE_INLINE internal::const_iterator_top_foreach_lr_relation_as_left_generator top_get_lr_relation(top_id id) const {
+			return internal::const_iterator_top_foreach_lr_relation_as_left_generator(*this, id);
+		}
+		DCON_RELEASE_INLINE internal::iterator_top_foreach_lr_relation_as_left_generator top_get_lr_relation(top_id id) {
+			return internal::iterator_top_foreach_lr_relation_as_left_generator(*this, id);
 		}
 		template<typename T>
 		DCON_RELEASE_INLINE void top_for_each_lr_relation(top_id id, T&& func) const {
@@ -939,6 +1373,12 @@ namespace ex1 {
 			ve::store(id, bottom.m_legs.vptr(), values);
 		}
 		#endif
+		DCON_RELEASE_INLINE internal::const_iterator_bottom_foreach_lr_relation_as_right_generator bottom_get_lr_relation_as_right(bottom_id id) const {
+			return internal::const_iterator_bottom_foreach_lr_relation_as_right_generator(*this, id);
+		}
+		DCON_RELEASE_INLINE internal::iterator_bottom_foreach_lr_relation_as_right_generator bottom_get_lr_relation_as_right(bottom_id id) {
+			return internal::iterator_bottom_foreach_lr_relation_as_right_generator(*this, id);
+		}
 		template<typename T>
 		DCON_RELEASE_INLINE void bottom_for_each_lr_relation_as_right(bottom_id id, T&& func) const {
 			if(bool(id)) {
@@ -958,6 +1398,12 @@ namespace ex1 {
 			auto rng = bottom_range_of_lr_relation_as_right(id);
 			dcon::local_vector<lr_relation_id> temp(rng.first, rng.second);
 			std::for_each(temp.begin(), temp.end(), [t = this](lr_relation_id i) { t->lr_relation_set_right(i, bottom_id()); });
+		}
+		DCON_RELEASE_INLINE internal::const_iterator_bottom_foreach_lr_relation_as_right_generator bottom_get_lr_relation(bottom_id id) const {
+			return internal::const_iterator_bottom_foreach_lr_relation_as_right_generator(*this, id);
+		}
+		DCON_RELEASE_INLINE internal::iterator_bottom_foreach_lr_relation_as_right_generator bottom_get_lr_relation(bottom_id id) {
+			return internal::iterator_bottom_foreach_lr_relation_as_right_generator(*this, id);
 		}
 		template<typename T>
 		DCON_RELEASE_INLINE void bottom_for_each_lr_relation(bottom_id id, T&& func) const {
@@ -2223,6 +2669,9 @@ namespace ex1 {
 	DCON_RELEASE_INLINE void top_fat_id::remove_all_lr_relation_as_left() const noexcept {
 		container.top_remove_all_lr_relation_as_left(id);
 	}
+	DCON_RELEASE_INLINE internal::iterator_top_foreach_lr_relation_as_left_generator top_fat_id::get_lr_relation_as_left() const {
+		return internal::iterator_top_foreach_lr_relation_as_left_generator(container, id);
+	}
 	template<typename T>
 	DCON_RELEASE_INLINE void top_fat_id::for_each_lr_relation(T&& func) const {
 		container.top_for_each_lr_relation(id, [&, t = this](lr_relation_id i){func(fatten(t->container, i));});
@@ -2232,6 +2681,9 @@ namespace ex1 {
 	}
 	DCON_RELEASE_INLINE void top_fat_id::remove_all_lr_relation() const noexcept {
 		container.top_remove_all_lr_relation(id);
+	}
+	DCON_RELEASE_INLINE internal::iterator_top_foreach_lr_relation_as_left_generator top_fat_id::get_lr_relation() const {
+		return internal::iterator_top_foreach_lr_relation_as_left_generator(container, id);
 	}
 	template<typename T>
 	DCON_RELEASE_INLINE void top_fat_id::for_each_right_from_lr_relation(T&& func) const {
@@ -2261,12 +2713,18 @@ namespace ex1 {
 	DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> top_const_fat_id::range_of_lr_relation_as_left() const {
 		return container.top_range_of_lr_relation_as_left(id);
 	}
+	DCON_RELEASE_INLINE internal::const_iterator_top_foreach_lr_relation_as_left_generator top_const_fat_id::get_lr_relation_as_left() const {
+		return internal::const_iterator_top_foreach_lr_relation_as_left_generator(container, id);
+	}
 	template<typename T>
 	DCON_RELEASE_INLINE void top_const_fat_id::for_each_lr_relation(T&& func) const {
 		container.top_for_each_lr_relation(id, [&, t = this](lr_relation_id i){func(fatten(t->container, i));});
 	}
 	DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> top_const_fat_id::range_of_lr_relation() const {
 		return container.top_range_of_lr_relation(id);
+	}
+	DCON_RELEASE_INLINE internal::const_iterator_top_foreach_lr_relation_as_left_generator top_const_fat_id::get_lr_relation() const {
+		return internal::const_iterator_top_foreach_lr_relation_as_left_generator(container, id);
 	}
 	template<typename T>
 	DCON_RELEASE_INLINE void top_const_fat_id::for_each_right_from_lr_relation(T&& func) const {
@@ -2302,6 +2760,9 @@ namespace ex1 {
 	DCON_RELEASE_INLINE void bottom_fat_id::remove_all_lr_relation_as_right() const noexcept {
 		container.bottom_remove_all_lr_relation_as_right(id);
 	}
+	DCON_RELEASE_INLINE internal::iterator_bottom_foreach_lr_relation_as_right_generator bottom_fat_id::get_lr_relation_as_right() const {
+		return internal::iterator_bottom_foreach_lr_relation_as_right_generator(container, id);
+	}
 	template<typename T>
 	DCON_RELEASE_INLINE void bottom_fat_id::for_each_lr_relation(T&& func) const {
 		container.bottom_for_each_lr_relation(id, [&, t = this](lr_relation_id i){func(fatten(t->container, i));});
@@ -2311,6 +2772,9 @@ namespace ex1 {
 	}
 	DCON_RELEASE_INLINE void bottom_fat_id::remove_all_lr_relation() const noexcept {
 		container.bottom_remove_all_lr_relation(id);
+	}
+	DCON_RELEASE_INLINE internal::iterator_bottom_foreach_lr_relation_as_right_generator bottom_fat_id::get_lr_relation() const {
+		return internal::iterator_bottom_foreach_lr_relation_as_right_generator(container, id);
 	}
 	template<typename T>
 	DCON_RELEASE_INLINE void bottom_fat_id::for_each_left_from_lr_relation(T&& func) const {
@@ -2340,12 +2804,18 @@ namespace ex1 {
 	DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> bottom_const_fat_id::range_of_lr_relation_as_right() const {
 		return container.bottom_range_of_lr_relation_as_right(id);
 	}
+	DCON_RELEASE_INLINE internal::const_iterator_bottom_foreach_lr_relation_as_right_generator bottom_const_fat_id::get_lr_relation_as_right() const {
+		return internal::const_iterator_bottom_foreach_lr_relation_as_right_generator(container, id);
+	}
 	template<typename T>
 	DCON_RELEASE_INLINE void bottom_const_fat_id::for_each_lr_relation(T&& func) const {
 		container.bottom_for_each_lr_relation(id, [&, t = this](lr_relation_id i){func(fatten(t->container, i));});
 	}
 	DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> bottom_const_fat_id::range_of_lr_relation() const {
 		return container.bottom_range_of_lr_relation(id);
+	}
+	DCON_RELEASE_INLINE internal::const_iterator_bottom_foreach_lr_relation_as_right_generator bottom_const_fat_id::get_lr_relation() const {
+		return internal::const_iterator_bottom_foreach_lr_relation_as_right_generator(container, id);
 	}
 	template<typename T>
 	DCON_RELEASE_INLINE void bottom_const_fat_id::for_each_left_from_lr_relation(T&& func) const {
@@ -2420,6 +2890,43 @@ namespace ex1 {
 			++index;
 			return *this;
 		}
+		DCON_RELEASE_INLINE object_iterator_top& object_iterator_top::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_top& const_object_iterator_top::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		
+		iterator_top_foreach_lr_relation_as_left::iterator_top_foreach_lr_relation_as_left(data_container& c,  top_id fr) noexcept : container(c) {
+			ptr = container.lr_relation.m_array_left.vptr()[fr.index()].data();
+		}
+		iterator_top_foreach_lr_relation_as_left::iterator_top_foreach_lr_relation_as_left(data_container& c, top_id fr, int) noexcept : container(c) {
+			auto& vref = container.lr_relation.m_array_left.vptr()[fr.index()];
+			ptr = vref.data() + vref.size();
+		}
+		DCON_RELEASE_INLINE iterator_top_foreach_lr_relation_as_left& iterator_top_foreach_lr_relation_as_left::operator++() noexcept {
+			++ptr;
+		}
+		DCON_RELEASE_INLINE iterator_top_foreach_lr_relation_as_left& iterator_top_foreach_lr_relation_as_left::operator--() noexcept {
+			--ptr;
+			return *this;
+		}
+		const_iterator_top_foreach_lr_relation_as_left::const_iterator_top_foreach_lr_relation_as_left(data_container const& c,  top_id fr) noexcept : container(c) {
+			ptr = container.lr_relation.m_array_left.vptr()[fr.index()].data();
+		}
+		const_iterator_top_foreach_lr_relation_as_left::const_iterator_top_foreach_lr_relation_as_left(data_container const& c, top_id fr, int) noexcept : container(c) {
+			auto& vref = container.lr_relation.m_array_left.vptr()[fr.index()];
+			ptr = vref.data() + vref.size();
+		}
+		DCON_RELEASE_INLINE const_iterator_top_foreach_lr_relation_as_left& const_iterator_top_foreach_lr_relation_as_left::operator++() noexcept {
+			++ptr;
+		}
+		DCON_RELEASE_INLINE const_iterator_top_foreach_lr_relation_as_left& const_iterator_top_foreach_lr_relation_as_left::operator--() noexcept {
+			--ptr;
+			return *this;
+		}
 		
 		object_iterator_bottom::object_iterator_bottom(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 		}
@@ -2431,6 +2938,43 @@ namespace ex1 {
 		}
 		DCON_RELEASE_INLINE const_object_iterator_bottom& const_object_iterator_bottom::operator++() noexcept {
 			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE object_iterator_bottom& object_iterator_bottom::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_bottom& const_object_iterator_bottom::operator--() noexcept {
+			--index;
+			return *this;
+		}
+		
+		iterator_bottom_foreach_lr_relation_as_right::iterator_bottom_foreach_lr_relation_as_right(data_container& c,  bottom_id fr) noexcept : container(c) {
+			ptr = container.lr_relation.m_array_right.vptr()[fr.index()].data();
+		}
+		iterator_bottom_foreach_lr_relation_as_right::iterator_bottom_foreach_lr_relation_as_right(data_container& c, bottom_id fr, int) noexcept : container(c) {
+			auto& vref = container.lr_relation.m_array_right.vptr()[fr.index()];
+			ptr = vref.data() + vref.size();
+		}
+		DCON_RELEASE_INLINE iterator_bottom_foreach_lr_relation_as_right& iterator_bottom_foreach_lr_relation_as_right::operator++() noexcept {
+			++ptr;
+		}
+		DCON_RELEASE_INLINE iterator_bottom_foreach_lr_relation_as_right& iterator_bottom_foreach_lr_relation_as_right::operator--() noexcept {
+			--ptr;
+			return *this;
+		}
+		const_iterator_bottom_foreach_lr_relation_as_right::const_iterator_bottom_foreach_lr_relation_as_right(data_container const& c,  bottom_id fr) noexcept : container(c) {
+			ptr = container.lr_relation.m_array_right.vptr()[fr.index()].data();
+		}
+		const_iterator_bottom_foreach_lr_relation_as_right::const_iterator_bottom_foreach_lr_relation_as_right(data_container const& c, bottom_id fr, int) noexcept : container(c) {
+			auto& vref = container.lr_relation.m_array_right.vptr()[fr.index()];
+			ptr = vref.data() + vref.size();
+		}
+		DCON_RELEASE_INLINE const_iterator_bottom_foreach_lr_relation_as_right& const_iterator_bottom_foreach_lr_relation_as_right::operator++() noexcept {
+			++ptr;
+		}
+		DCON_RELEASE_INLINE const_iterator_bottom_foreach_lr_relation_as_right& const_iterator_bottom_foreach_lr_relation_as_right::operator--() noexcept {
+			--ptr;
 			return *this;
 		}
 		
@@ -2455,6 +2999,20 @@ namespace ex1 {
 			++index;
 			while(container.lr_relation.m__index.vptr()[index] != lr_relation_id(lr_relation_id::value_base_t(index)) && index < container.lr_relation.size_used) {
 				++index;
+			}
+			return *this;
+		}
+		DCON_RELEASE_INLINE object_iterator_lr_relation& object_iterator_lr_relation::operator--() noexcept {
+			--index;
+			while(container.lr_relation.m__index.vptr()[index] != lr_relation_id(lr_relation_id::value_base_t(index)) && index < container.lr_relation.size_used) {
+				--index;
+			}
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_lr_relation& const_object_iterator_lr_relation::operator--() noexcept {
+			--index;
+			while(container.lr_relation.m__index.vptr()[index] != lr_relation_id(lr_relation_id::value_base_t(index)) && index < container.lr_relation.size_used) {
+				--index;
 			}
 			return *this;
 		}

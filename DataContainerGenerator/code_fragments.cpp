@@ -1783,6 +1783,309 @@ basic_builder& make_relation_force_create(basic_builder& o, relationship_object_
 	return o;
 }
 
+basic_builder& relation_iterator_foreach_as_generator(basic_builder& o, relationship_object_def const& obj, relationship_object_def const& rel, related_object const& l) {
+
+	o + substitute{ "obj", obj.name };
+	o + substitute{ "rel", rel.name };
+	o + substitute{ "rel_prop", l.property_name };
+	o + substitute{ "it_name", std::string("iterator_") + obj.name + "_foreach_" + rel.name + "_as_" + l.property_name };
+
+	o + "struct @it_name@_generator" + class_block{
+		o + "data_container& container;";
+		o + "@obj@_id ob;";
+
+		o + "@it_name@_generator(data_container& c, @obj@_id o) : container(c), ob(o) {}";
+		o + "DCON_RELEASE_INLINE @it_name@ begin() const noexcept" + block{
+			o + "return @it_name@(container, ob);";
+		};
+		o + "DCON_RELEASE_INLINE @it_name@ end() const noexcept" + block{
+			if(l.ltype == list_type::list) {
+				o + "return @it_name@(container);";
+			} else {
+				o + "return @it_name@(container, ob, 0);";
+			}
+		};
+	};
+
+	o + substitute{ "it_name", std::string("const_iterator_") + obj.name + "_foreach_" + rel.name + "_as_" + l.property_name };
+
+	o + "struct @it_name@_generator" + class_block{
+		o + "data_container const& container;";
+		o + "@obj@_id ob;";
+
+		o + "@it_name@_generator(data_container const& c, @obj@_id o) : container(c), ob(o) {}";
+		o + "DCON_RELEASE_INLINE @it_name@ begin() const noexcept" + block{
+			o + "return @it_name@(container, ob);";
+		};
+		o + "DCON_RELEASE_INLINE @it_name@ end() const noexcept" + block{
+			if(l.ltype == list_type::list) {
+				o + "return @it_name@(container);";
+			} else {
+				o + "return @it_name@(container, ob, 0);";
+			}
+		};
+	};
+
+	o + line_break{};
+	return o;
+}
+
+basic_builder& relation_iterator_foreach_as_declaration(basic_builder& o, relationship_object_def const& obj, relationship_object_def const& rel, related_object const& l) {
+	o + substitute{ "obj", obj.name };
+	o + substitute{ "rel", rel.name };
+	o + substitute{ "rel_prop", l.property_name };
+	o + substitute{ "it_name", std::string("iterator_") + obj.name + "_foreach_" + rel.name + "_as_" + l.property_name };
+	o + "class @it_name@" + class_block{
+		o + "private:";
+		o + "data_container& container;";
+		if(l.ltype == list_type::list) {
+			o + "@rel@_id list_pos;";
+		} else {
+			o + "@rel@_id const* ptr = nullptr;";
+		}
+
+		o + "public:";
+		o + "@it_name@(data_container& c, @obj@_id fr) noexcept;";
+		if(l.ltype == list_type::list) {
+			o + "@it_name@(data_container& c, @rel@_id r) noexcept : container(c), list_pos(r) {}";
+			o + "@it_name@(data_container& c) noexcept : container(c) {}";
+		} else {
+			o + "@it_name@(data_container& c, @rel@_id const* r) noexcept : container(c), ptr(r) {}";
+			o + "@it_name@(data_container& c, @obj@_id fr, int) noexcept;";
+		}
+
+		o + "DCON_RELEASE_INLINE @it_name@& operator++() noexcept;";
+		o + "DCON_RELEASE_INLINE @it_name@& operator--() noexcept;";
+
+		o + "DCON_RELEASE_INLINE bool operator==(@it_name@ const& o) const noexcept" + block{
+			if(l.ltype == list_type::list) {
+				o + "return list_pos == o.list_pos;";
+			} else {
+				o + "return ptr == o.ptr;";
+			}
+		};
+		o + "DCON_RELEASE_INLINE bool operator!=(@it_name@ const& o) const noexcept" + block{
+			o + "return !(*this == o);";
+		};
+		o + "DCON_RELEASE_INLINE @rel@_fat_id operator*() const noexcept" + block{
+			if(l.ltype == list_type::list) {
+				o + "return @rel@_fat_id(container, list_pos);";
+			} else {
+				o + "return @rel@_fat_id(container, *ptr);";
+			}
+		};
+
+		if(l.ltype != list_type::list) {
+			o + "DCON_RELEASE_INLINE @it_name@& operator+=(ptrdiff_t n) noexcept" + block{
+				o + "ptr += n;";
+				o + "return *this;";
+			};
+			o + "DCON_RELEASE_INLINE @it_name@& operator-=(ptrdiff_t n) noexcept" + block{
+				o + "ptr -= n;";
+				o + "return *this;";
+			};
+			o + "DCON_RELEASE_INLINE @it_name@ operator+(ptrdiff_t n) const noexcept" + block{
+				o + "return @it_name@(container, ptr + n);";
+			};
+			o + "DCON_RELEASE_INLINE @it_name@ operator-(ptrdiff_t n) const noexcept" + block{
+				o + "return @it_name@(container, ptr - n);";
+			};
+			o + "DCON_RELEASE_INLINE ptrdiff_t operator-(@it_name@ const& o) const noexcept" + block{
+				o + "return ptr - o.ptr;";
+			};
+			o + "DCON_RELEASE_INLINE bool operator>(@it_name@ const& o) const noexcept" + block{
+				o + "return ptr > o.ptr;";
+			};
+			o + "DCON_RELEASE_INLINE bool operator>=(@it_name@ const& o) const noexcept" + block{
+				o + "return ptr >= o.ptr;";
+			};
+			o + "DCON_RELEASE_INLINE bool operator<(@it_name@ const& o) const noexcept" + block{
+				o + "return ptr < o.ptr;";
+			};
+			o + "DCON_RELEASE_INLINE bool operator<=(@it_name@ const& o) const noexcept" + block{
+				o + "return ptr <= o.ptr;";
+			};
+			o + "DCON_RELEASE_INLINE @rel@_fat_id operator[](ptrdiff_t n) const noexcept" + block{
+				o + "return @rel@_fat_id(container, *(ptr + n));";
+			};
+		}
+	};
+
+	o + substitute{ "it_name", std::string("const_iterator_") + obj.name + "_foreach_" + rel.name + "_as_" + l.property_name };
+	o + "class @it_name@" + class_block{
+		o + "private:";
+		o + "data_container const& container;";
+		if(l.ltype == list_type::list) {
+			o + "@rel@_id list_pos;";
+		} else {
+			o + "@rel@_id const* ptr = nullptr;";
+		}
+
+		o + "public:";
+		o + "@it_name@(data_container const& c, @obj@_id fr) noexcept;";
+		if(l.ltype == list_type::list) {
+			o + "@it_name@(data_container const& c, @rel@_id r) noexcept : container(c), list_pos(r) {}";
+			o + "@it_name@(data_container const& c) noexcept : container(c) {}";
+		} else {
+			o + "@it_name@(data_container const& c, @rel@_id const* r) noexcept : container(c), ptr(r) {}";
+			o + "@it_name@(data_container const& c, @obj@_id fr, int) noexcept;";
+		}
+
+		o + "DCON_RELEASE_INLINE @it_name@& operator++() noexcept;";
+		o + "DCON_RELEASE_INLINE @it_name@& operator--() noexcept;";
+
+		o + "DCON_RELEASE_INLINE bool operator==(@it_name@ const& o) const noexcept" + block{
+			if(l.ltype == list_type::list) {
+				o + "return list_pos == o.list_pos;";
+			} else {
+				o + "return ptr == o.ptr;";
+			}
+		};
+		o + "DCON_RELEASE_INLINE bool operator!=(@it_name@ const& o) const noexcept" + block{
+			o + "return !(*this == o);";
+		};
+		o + "DCON_RELEASE_INLINE @rel@_const_fat_id operator*() const noexcept" + block{
+			if(l.ltype == list_type::list) {
+				o + "return @rel@_const_fat_id(container, list_pos);";
+			} else {
+				o + "return @rel@_const_fat_id(container, *ptr);";
+			}
+		};
+
+		if(l.ltype != list_type::list) {
+			o + "DCON_RELEASE_INLINE @it_name@& operator+=(ptrdiff_t n) noexcept" + block{
+				o + "ptr += n;";
+				o + "return *this;";
+			};
+			o + "DCON_RELEASE_INLINE @it_name@& operator-=(ptrdiff_t n) noexcept" + block{
+				o + "ptr -= n;";
+				o + "return *this;";
+			};
+			o + "DCON_RELEASE_INLINE @it_name@ operator+(ptrdiff_t n) const noexcept" + block{
+				o + "return @it_name@(container, ptr + n);";
+			};
+			o + "DCON_RELEASE_INLINE @it_name@ operator-(ptrdiff_t n) const noexcept" + block{
+				o + "return @it_name@(container, ptr - n);";
+			};
+			o + "DCON_RELEASE_INLINE ptrdiff_t operator-(@it_name@ const& o) const noexcept" + block{
+				o + "return ptr - o.ptr;";
+			};
+			o + "DCON_RELEASE_INLINE bool operator>(@it_name@ const& o) const noexcept" + block{
+				o + "return ptr > o.ptr;";
+			};
+			o + "DCON_RELEASE_INLINE bool operator>=(@it_name@ const& o) const noexcept" + block{
+				o + "return ptr >= o.ptr;";
+			};
+			o + "DCON_RELEASE_INLINE bool operator<(@it_name@ const& o) const noexcept" + block{
+				o + "return ptr < o.ptr;";
+			};
+			o + "DCON_RELEASE_INLINE bool operator<=(@it_name@ const& o) const noexcept" + block{
+				o + "return ptr <= o.ptr;";
+			};
+			o + "DCON_RELEASE_INLINE @rel@_const_fat_id operator[](ptrdiff_t n) const noexcept" + block{
+				o + "return @rel@_const_fat_id(container, *(ptr + n));";
+			};
+		}
+	};
+
+	o + line_break{};
+	return o;
+}
+
+basic_builder& relation_iterator_foreach_as_implementation(basic_builder& o, relationship_object_def const& obj, relationship_object_def const& rel, related_object const& l) {
+
+	o + substitute{ "obj", obj.name };
+	o + substitute{ "rel", rel.name };
+	o + substitute{ "rel_prop", l.property_name };
+
+	o + substitute{ "it_name", std::string("iterator_") + obj.name + "_foreach_" + rel.name + "_as_" + l.property_name };
+
+	o + "@it_name@::@it_name@(data_container& c,  @obj@_id fr) noexcept : container(c)" + block{
+		if(l.ltype == list_type::list) {
+			o + "list_pos = container.@rel@.m_head_back_@rel_prop@.vptr()[fr.index()];";
+		} else if(l.ltype == list_type::array) {
+			o + "ptr = dcon::get_range(container.@rel@.@rel_prop@_storage, container.@rel@.m_array_@rel_prop@.vptr()[fr.index()]).first;";
+		} else if(l.ltype == list_type::std_vector) {
+			o + "ptr = container.@rel@.m_array_@rel_prop@.vptr()[fr.index()].data();";
+		}
+	};
+
+	if(l.ltype != list_type::list) {
+		o + "@it_name@::@it_name@(data_container& c, @obj@_id fr, int) noexcept : container(c)" + block{
+			if(l.ltype == list_type::array) {
+				o + "ptr = dcon::get_range(container.@rel@.@rel_prop@_storage, container.@rel@.m_array_@rel_prop@.vptr()[fr.index()]).second;";
+			} else if(l.ltype == list_type::std_vector) {
+				o + "auto& vref = container.@rel@.m_array_@rel_prop@.vptr()[fr.index()];";
+				o + "ptr = vref.data() + vref.size();";
+			}
+		};
+	}
+
+	o + "DCON_RELEASE_INLINE @it_name@& @it_name@::operator++() noexcept" + block{
+		if(l.ltype == list_type::list) {
+			o + "list_pos = container.@rel@.m_link_@rel_prop@.vptr()[list_pos.index()].right;";
+		} else {
+			o + "++ptr;";
+		}
+		o + "return *this;";
+	};
+	o + "DCON_RELEASE_INLINE @it_name@& @it_name@::operator--() noexcept" + block{
+		if(l.ltype == list_type::list) {
+			o + "list_pos = container.@rel@.m_link_@rel_prop@.vptr()[list_pos.index()].left;";
+		} else {
+			o + "--ptr;";
+		}
+		o + "return *this;";
+	};
+
+	o + substitute{ "it_name", std::string("const_iterator_") + obj.name + "_foreach_" + rel.name + "_as_" + l.property_name };
+	o + "@it_name@::@it_name@(data_container const& c,  @obj@_id fr) noexcept : container(c)" + block{
+		if(l.ltype == list_type::list) {
+			o + "list_pos = container.@rel@.m_head_back_@rel_prop@.vptr()[fr.index()];";
+		} else if(l.ltype == list_type::array) {
+			o + "ptr = dcon::get_range(container.@rel@.@rel_prop@_storage, container.@rel@.m_array_@rel_prop@.vptr()[fr.index()]).first;";
+		} else if(l.ltype == list_type::std_vector) {
+			o + "ptr = container.@rel@.m_array_@rel_prop@.vptr()[fr.index()].data();";
+		}
+	};
+	if(l.ltype != list_type::list) {
+		o + "@it_name@::@it_name@(data_container const& c, @obj@_id fr, int) noexcept : container(c)" + block{
+			if(l.ltype == list_type::array) {
+				o + "ptr = dcon::get_range(container.@rel@.@rel_prop@_storage, container.@rel@.m_array_@rel_prop@.vptr()[fr.index()]).second;";
+			} else if(l.ltype == list_type::std_vector) {
+				o + "auto& vref = container.@rel@.m_array_@rel_prop@.vptr()[fr.index()];";
+				o + "ptr = vref.data() + vref.size();";
+			}
+		};
+	}
+	o + "DCON_RELEASE_INLINE @it_name@& @it_name@::operator++() noexcept" + block{
+		if(l.ltype == list_type::list) {
+			o + "list_pos = container.@rel@.m_link_@rel_prop@.vptr()[list_pos.index()].right;";
+		} else {
+			o + "++ptr;";
+		}
+		o + "return *this;";
+	};
+	o + "DCON_RELEASE_INLINE @it_name@& @it_name@::operator--() noexcept" + block{
+		if(l.ltype == list_type::list) {
+			o + "list_pos = container.@rel@.m_link_@rel_prop@.vptr()[list_pos.index()].left;";
+		} else {
+			o + "--ptr;";
+		}
+		o + "return *this;";
+	};
+
+	o + line_break{};
+	return o;
+}
+
+basic_builder& relation_iterator_prop_from_declaration(basic_builder& o, relationship_object_def const& obj, in_relation_information const& ir, related_object const& l) {
+
+
+	o + line_break{};
+	return o;
+}
+
 basic_builder& object_iterator_declaration(basic_builder& o, relationship_object_def const& obj) {
 	o + substitute{ "obj", obj.name };
 	o + "class object_iterator_@obj@" + class_block{
@@ -1794,6 +2097,7 @@ basic_builder& object_iterator_declaration(basic_builder& o, relationship_object
 		o + "object_iterator_@obj@(data_container& c, uint32_t i) noexcept;";
 
 		o + "DCON_RELEASE_INLINE object_iterator_@obj@& operator++() noexcept;";
+		o + "DCON_RELEASE_INLINE object_iterator_@obj@& operator--() noexcept;";
 		
 		o + "DCON_RELEASE_INLINE bool operator==(object_iterator_@obj@ const& o) const noexcept" + block{
 			o + "return &container == &o.container && index == o.index;";
@@ -1801,9 +2105,44 @@ basic_builder& object_iterator_declaration(basic_builder& o, relationship_object
 		o + "DCON_RELEASE_INLINE bool operator!=(object_iterator_@obj@ const& o) const noexcept" + block{
 			o + "return !(*this == o);";
 		};
-		o + "DCON_RELEASE_INLINE @obj@_fat_id operator*() noexcept" + block{
+		o + "DCON_RELEASE_INLINE @obj@_fat_id operator*() const noexcept" + block{
 			o + "return @obj@_fat_id(container, @obj@_id(@obj@_id::value_base_t(index)));";
 		};
+
+		if(obj.store_type != storage_type::erasable) {
+			o + "DCON_RELEASE_INLINE object_iterator_@obj@& operator+=(int32_t n) noexcept" + block{
+				o + "index = uint32_t(int32_t(index) + n);";
+				o + "return *this;";
+			};
+			o + "DCON_RELEASE_INLINE object_iterator_@obj@& operator-=(int32_t n) noexcept" + block{
+				o + "index = uint32_t(int32_t(index) - n);";
+				o + "return *this;";
+			};
+			o + "DCON_RELEASE_INLINE object_iterator_@obj@ operator+(int32_t n) const noexcept" + block{
+				o + "return object_iterator_@obj@(container, uint32_t(int32_t(index) + n));";
+			};
+			o + "DCON_RELEASE_INLINE object_iterator_@obj@ operator-(int32_t n) const noexcept" + block{
+				o + "return object_iterator_@obj@(container, uint32_t(int32_t(index) - n));";
+			};
+			o + "DCON_RELEASE_INLINE int32_t operator-(object_iterator_@obj@ const& o) const noexcept" + block{
+				o + "return int32_t(index) - int32_t(o.index);";
+			};
+			o + "DCON_RELEASE_INLINE bool operator>(object_iterator_@obj@ const& o) const noexcept" + block{
+				o + "return index > o.index;";
+			};
+			o + "DCON_RELEASE_INLINE bool operator>=(object_iterator_@obj@ const& o) const noexcept" + block{
+				o + "return index >= o.index;";
+			};
+			o + "DCON_RELEASE_INLINE bool operator<(object_iterator_@obj@ const& o) const noexcept" + block{
+				o + "return index < o.index;";
+			};
+			o + "DCON_RELEASE_INLINE bool operator<=(object_iterator_@obj@ const& o) const noexcept" + block{
+				o + "return index <= o.index;";
+			};
+			o + "DCON_RELEASE_INLINE @obj@_fat_id operator[](int32_t n) const noexcept" + block{
+				o + "return @obj@_fat_id(container, @obj@_id(@obj@_id::value_base_t(int32_t(index) + n)));";
+			};
+		}
 	};
 	o + "class const_object_iterator_@obj@" + class_block{
 		o + "private:";
@@ -1814,6 +2153,7 @@ basic_builder& object_iterator_declaration(basic_builder& o, relationship_object
 		o + "const_object_iterator_@obj@(data_container const& c, uint32_t i) noexcept;";
 
 		o + "DCON_RELEASE_INLINE const_object_iterator_@obj@& operator++() noexcept;";
+		o + "DCON_RELEASE_INLINE const_object_iterator_@obj@& operator--() noexcept;";
 
 		o + "DCON_RELEASE_INLINE bool operator==(const_object_iterator_@obj@ const& o) const noexcept" + block{
 			o + "return &container == &o.container && index == o.index;";
@@ -1824,6 +2164,41 @@ basic_builder& object_iterator_declaration(basic_builder& o, relationship_object
 		o + "DCON_RELEASE_INLINE @obj@_const_fat_id operator*() const noexcept" + block{
 			o + "return @obj@_const_fat_id(container, @obj@_id(@obj@_id::value_base_t(index)));";
 		};
+
+		if(obj.store_type != storage_type::erasable) {
+			o + "DCON_RELEASE_INLINE const_object_iterator_@obj@& operator+=(int32_t n) noexcept" + block{
+				o + "index = uint32_t(int32_t(index) + n);";
+				o + "return *this;";
+			};
+			o + "DCON_RELEASE_INLINE const_object_iterator_@obj@& operator-=(int32_t n) noexcept" + block{
+				o + "index = uint32_t(int32_t(index) - n);";
+				o + "return *this;";
+			};
+			o + "DCON_RELEASE_INLINE const_object_iterator_@obj@ operator+(int32_t n) const noexcept" + block{
+				o + "return const_object_iterator_@obj@(container, uint32_t(int32_t(index) + n));";
+			};
+			o + "DCON_RELEASE_INLINE const_object_iterator_@obj@ operator-(int32_t n) const noexcept" + block{
+				o + "return const_object_iterator_@obj@(container, uint32_t(int32_t(index) - n));";
+			};
+			o + "DCON_RELEASE_INLINE int32_t operator-(const_object_iterator_@obj@ const& o) const noexcept" + block{
+				o + "return int32_t(index) - int32_t(o.index);";
+			};
+			o + "DCON_RELEASE_INLINE bool operator>(const_object_iterator_@obj@ const& o) const noexcept" + block{
+				o + "return index > o.index;";
+			};
+			o + "DCON_RELEASE_INLINE bool operator>=(const_object_iterator_@obj@ const& o) const noexcept" + block{
+				o + "return index >= o.index;";
+			};
+			o + "DCON_RELEASE_INLINE bool operator<(const_object_iterator_@obj@ const& o) const noexcept" + block{
+				o + "return index < o.index;";
+			};
+			o + "DCON_RELEASE_INLINE bool operator<=(const_object_iterator_@obj@ const& o) const noexcept" + block{
+				o + "return index <= o.index;";
+			};
+			o + "DCON_RELEASE_INLINE @obj@_const_fat_id operator[](int32_t n) const noexcept" + block{
+				o + "return @obj@_const_fat_id(container, @obj@_id(@obj@_id::value_base_t(int32_t(index) + n)));";
+			};
+		}
 	};
 
 	o + line_break{};
@@ -1866,6 +2241,28 @@ basic_builder& object_iterator_implementation(basic_builder& o, relationship_obj
 			};
 		} else {
 			o + "++index;";
+		}
+		o + "return *this;";
+	};
+	o + "DCON_RELEASE_INLINE object_iterator_@obj@& object_iterator_@obj@::operator--() noexcept" + block{
+		if(obj.store_type == storage_type::erasable) {
+			o + "--index;";
+			o + "while(container.@obj@.m__index.vptr()[index] != @obj@_id(@obj@_id::value_base_t(index)) && index < container.@obj@.size_used)" + block{
+				o + "--index;";
+			};
+		} else {
+			o + "--index;";
+		}
+		o + "return *this;";
+	};
+	o + "DCON_RELEASE_INLINE const_object_iterator_@obj@& const_object_iterator_@obj@::operator--() noexcept" + block{
+		if(obj.store_type == storage_type::erasable) {
+			o + "--index;";
+			o + "while(container.@obj@.m__index.vptr()[index] != @obj@_id(@obj@_id::value_base_t(index)) && index < container.@obj@.size_used)" + block{
+				o + "--index;";
+			};
+		} else {
+			o + "--index;";
 		}
 		o + "return *this;";
 	};

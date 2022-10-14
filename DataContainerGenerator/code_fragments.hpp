@@ -61,3 +61,7 @@ basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definit
 
 basic_builder& object_iterator_declaration(basic_builder& o, relationship_object_def const& obj);
 basic_builder& object_iterator_implementation(basic_builder& o, relationship_object_def const& obj);
+
+basic_builder& relation_iterator_foreach_as_generator(basic_builder& o, relationship_object_def const& obj, relationship_object_def const& rel, related_object const& l);
+basic_builder& relation_iterator_foreach_as_declaration(basic_builder& o, relationship_object_def const& obj, relationship_object_def const& rel, related_object const& l);
+basic_builder& relation_iterator_foreach_as_implementation(basic_builder& o, relationship_object_def const& obj, relationship_object_def const& rel, related_object const& l);

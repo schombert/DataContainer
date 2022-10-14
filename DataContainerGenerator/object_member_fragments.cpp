@@ -2171,6 +2171,14 @@ void join_getter_text(basic_builder& o, property_def const& ip, bool add_prefix,
 }
 
 void many_getter_setter_text(basic_builder & o, list_type ltype, bool remove_all_needs_sort, bool has_multiplicity) {
+
+	o + "DCON_RELEASE_INLINE internal::const_iterator_@obj@_foreach_@rel@_as_@rel_prop@_generator @obj@_get_@rel@@as_suffix@(@obj@_id id) const" + block{
+		o + "return internal::const_iterator_@obj@_foreach_@rel@_as_@rel_prop@_generator(*this, id);";
+	};
+	o + "DCON_RELEASE_INLINE internal::iterator_@obj@_foreach_@rel@_as_@rel_prop@_generator @obj@_get_@rel@@as_suffix@(@obj@_id id)" + block{
+		o + "return internal::iterator_@obj@_foreach_@rel@_as_@rel_prop@_generator(*this, id);";
+	};
+
 	o + "template<typename T>";
 	o + "DCON_RELEASE_INLINE void @obj@_for_each_@rel@@as_suffix@(@obj@_id id, T&& func) const" + block{
 		o + "if(bool(id))" + block{
@@ -2443,6 +2451,13 @@ void make_related_member_declarations(basic_builder& o, file_def const& parsed_f
 				o + "DCON_RELEASE_INLINE void @namesp@remove_all_@rel@_as_@rel_prop@() const noexcept" + block{
 					o + "container.@obj@_remove_all_@rel@_as_@rel_prop@(id);";
 				};
+				o + "DCON_RELEASE_INLINE internal::iterator_@obj@_foreach_@rel@_as_@rel_prop@_generator @namesp@get_@rel@_as_@rel_prop@() const" + block{
+					o + "return internal::iterator_@obj@_foreach_@rel@_as_@rel_prop@_generator(container, id);";
+				};
+			} else {
+				o + "DCON_RELEASE_INLINE internal::const_iterator_@obj@_foreach_@rel@_as_@rel_prop@_generator @namesp@get_@rel@_as_@rel_prop@() const" + block{
+					o + "return internal::const_iterator_@obj@_foreach_@rel@_as_@rel_prop@_generator(container, id);";
+				};
 			}
 		}
 		bool is_only_of_type = true;
@@ -2467,6 +2482,13 @@ void make_related_member_declarations(basic_builder& o, file_def const& parsed_f
 				if(!const_mode) {
 					o + "DCON_RELEASE_INLINE void @namesp@remove_all_@rel@() const noexcept" + block{
 						o + "container.@obj@_remove_all_@rel@(id);";
+					};
+					o + "DCON_RELEASE_INLINE internal::iterator_@obj@_foreach_@rel@_as_@rel_prop@_generator @namesp@get_@rel@() const" + block{
+						o + "return internal::iterator_@obj@_foreach_@rel@_as_@rel_prop@_generator(container, id);";
+					};
+				} else {
+					o + "DCON_RELEASE_INLINE internal::const_iterator_@obj@_foreach_@rel@_as_@rel_prop@_generator @namesp@get_@rel@() const" + block{
+						o + "return internal::const_iterator_@obj@_foreach_@rel@_as_@rel_prop@_generator(container, id);";
 					};
 				}
 			}

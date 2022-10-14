@@ -413,16 +413,34 @@ int main(int argc, char *argv[]) {
 
 		for(auto& ob : parsed_file.relationship_objects) {
 			//predeclare helpers
-			output += "\t\tclass const_object_iterator_" + ob.name + ";";
-			output += "\t\tclass object_iterator_" + ob.name + ";";
+			output += "\t\tclass const_object_iterator_" + ob.name + ";\n";
+			output += "\t\tclass object_iterator_" + ob.name + ";\n";
+
+			for(auto& idx : ob.indexed_objects) {
+				if(idx.index == index_type::many) {
+					output += "\t\tclass const_iterator_" + idx.type_name + "_foreach_" + ob.name + "_as_" + idx.property_name + ";\n";
+					output += "\t\tclass iterator_" + idx.type_name + "_foreach_" + ob.name + "_as_" + idx.property_name + ";\n";
+					output += "\t\tstruct const_iterator_" + idx.type_name + "_foreach_" + ob.name + "_as_" + idx.property_name + "_generator;\n";
+					output += "\t\tstruct iterator_" + idx.type_name + "_foreach_" + ob.name + "_as_" + idx.property_name + "_generator;\n";
+				}
+			}
+
 			output += "\n";
 
 			//object class begin
 			output += "\t\tclass alignas(64) " + ob.name + "_class {\n";
 
 
-			output += "\t\t\tfriend const_object_iterator_" + ob.name + ";";
-			output += "\t\t\tfriend object_iterator_" + ob.name + ";";
+			output += "\t\t\tfriend const_object_iterator_" + ob.name + ";\n";
+			output += "\t\t\tfriend object_iterator_" + ob.name + ";\n";
+
+
+			for(auto& idx : ob.indexed_objects) {
+				if(idx.index == index_type::many) {
+					output += "\t\t\tfriend const_iterator_" + idx.type_name + "_foreach_" + ob.name + "_as_" + idx.property_name + ";\n";
+					output += "\t\t\tfriend iterator_" + idx.type_name + "_foreach_" + ob.name + "_as_" + idx.property_name + ";\n";
+				}
+			}
 
 			//begin members declaration
 
@@ -566,6 +584,13 @@ int main(int argc, char *argv[]) {
 		output += "\tnamespace internal {\n";
 		for(auto& ob : parsed_file.relationship_objects) {
 			output += object_iterator_declaration(o, ob).to_string(2);
+
+			for(auto& ir : ob.relationships_involved_in) {
+				if(ir.linked_as->index == index_type::many) {
+					output += relation_iterator_foreach_as_declaration(o, ob, *ir.rel_ptr, *ir.linked_as).to_string(2);
+					output += relation_iterator_foreach_as_generator(o, ob, *ir.rel_ptr, *ir.linked_as).to_string(2);
+				}
+			}
 		}
 		output += "\t}\n\n";
 
@@ -791,6 +816,12 @@ int main(int argc, char *argv[]) {
 		}
 		for(auto& ob : parsed_file.relationship_objects) {
 			output += object_iterator_implementation(o, ob).to_string(2);
+
+			for(auto& ir : ob.relationships_involved_in) {
+				if(ir.linked_as->index == index_type::many) {
+					output += relation_iterator_foreach_as_implementation(o, ob, *ir.rel_ptr, *ir.linked_as).to_string(2);
+				}
+			}
 		}
 		output += "\t};\n\n";
 		output += "\n";

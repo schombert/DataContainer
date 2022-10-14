@@ -119,6 +119,20 @@ TEST_CASE("array pool index storage", "[relationships_tests]") {
 		std::array<bool, 7> foundvals{ false, false, false, false, false, false, false };
 		int32_t found_count = 0;
 
+		for(auto fi : b3.get_relate_in_array()) {
+			foundvals[fi.get_left().id.index()] = true;
+			found_count++;
+		}
+
+		REQUIRE(foundvals[6]);
+		REQUIRE(foundvals[2]);
+		REQUIRE(foundvals[3]);
+		REQUIRE(found_count == 3);
+	}
+	{
+		std::array<bool, 7> foundvals{ false, false, false, false, false, false, false };
+		int32_t found_count = 0;
+
 		b2.for_each_left_from_relate_in_array([&](auto fi) {
 			foundvals[fi.id.index()] = true;
 			found_count++;
@@ -291,6 +305,22 @@ TEST_CASE("list index storage", "[relationships_tests]") {
 		REQUIRE(foundvals[3]);
 		REQUIRE(found_count == 3);
 	}
+
+	{
+		std::array<bool, 7> foundvals{ false, false, false, false, false, false, false };
+		int32_t found_count = 0;
+		
+		for(auto fi : b3.get_relate_in_list()) {
+			foundvals[fi.get_left().id.index()] = true;
+			found_count++;
+		}
+
+		REQUIRE(foundvals[6]);
+		REQUIRE(foundvals[2]);
+		REQUIRE(foundvals[3]);
+		REQUIRE(found_count == 3);
+	}
+
 	{
 		std::array<bool, 7> foundvals{ false, false, false, false, false, false, false };
 		int32_t found_count = 0;
