@@ -1783,6 +1783,97 @@ basic_builder& make_relation_force_create(basic_builder& o, relationship_object_
 	return o;
 }
 
+basic_builder& object_iterator_declaration(basic_builder& o, relationship_object_def const& obj) {
+	o + substitute{ "obj", obj.name };
+	o + "class object_iterator_@obj@" + class_block{
+		o + "private:";
+		o + "data_container& container;";
+		o + "uint32_t index = 0;";
+
+		o + "public:";
+		o + "object_iterator_@obj@(data_container& c, uint32_t i) noexcept;";
+
+		o + "DCON_RELEASE_INLINE object_iterator_@obj@& operator++() noexcept;";
+		
+		o + "DCON_RELEASE_INLINE bool operator==(object_iterator_@obj@ const& o) const noexcept" + block{
+			o + "return &container == &o.container && index == o.index;";
+		};
+		o + "DCON_RELEASE_INLINE bool operator!=(object_iterator_@obj@ const& o) const noexcept" + block{
+			o + "return !(*this == o);";
+		};
+		o + "DCON_RELEASE_INLINE @obj@_fat_id operator*() noexcept" + block{
+			o + "return @obj@_fat_id(container, @obj@_id(@obj@_id::value_base_t(index)));";
+		};
+	};
+	o + "class const_object_iterator_@obj@" + class_block{
+		o + "private:";
+		o + "data_container const& container;";
+		o + "uint32_t index = 0;";
+
+		o + "public:";
+		o + "const_object_iterator_@obj@(data_container const& c, uint32_t i) noexcept;";
+
+		o + "DCON_RELEASE_INLINE const_object_iterator_@obj@& operator++() noexcept;";
+
+		o + "DCON_RELEASE_INLINE bool operator==(const_object_iterator_@obj@ const& o) const noexcept" + block{
+			o + "return &container == &o.container && index == o.index;";
+		};
+		o + "DCON_RELEASE_INLINE bool operator!=(const_object_iterator_@obj@ const& o) const noexcept" + block{
+			o + "return !(*this == o);";
+		};
+		o + "DCON_RELEASE_INLINE @obj@_const_fat_id operator*() const noexcept" + block{
+			o + "return @obj@_const_fat_id(container, @obj@_id(@obj@_id::value_base_t(index)));";
+		};
+	};
+
+	o + line_break{};
+	return o;
+}
+
+basic_builder& object_iterator_implementation(basic_builder& o, relationship_object_def const& obj) {
+	o + substitute{ "obj", obj.name };
+
+	o + "object_iterator_@obj@::object_iterator_@obj@(data_container& c, uint32_t i) noexcept : container(c), index(i)" + block{
+		if(obj.store_type == storage_type::erasable) {
+			o + "while(container.@obj@.m__index.vptr()[index] != @obj@_id(@obj@_id::value_base_t(index)) && index < container.@obj@.size_used)" + block{
+				o + "++index;";
+			};
+		}
+	};
+	o + "const_object_iterator_@obj@::const_object_iterator_@obj@(data_container const& c, uint32_t i) noexcept : container(c), index(i)" + block{
+		if(obj.store_type == storage_type::erasable) {
+			o + "while(container.@obj@.m__index.vptr()[index] != @obj@_id(@obj@_id::value_base_t(index)) && index < container.@obj@.size_used)" + block{
+				o + "++index;";
+			};
+		}
+	};
+	o + "DCON_RELEASE_INLINE object_iterator_@obj@& object_iterator_@obj@::operator++() noexcept" + block{
+		if(obj.store_type == storage_type::erasable) {
+			o + "++index;";
+			o + "while(container.@obj@.m__index.vptr()[index] != @obj@_id(@obj@_id::value_base_t(index)) && index < container.@obj@.size_used)" + block{
+				o + "++index;";
+			};
+		} else {
+			o + "++index;";
+		}
+		o + "return *this;";
+	};
+	o + "DCON_RELEASE_INLINE const_object_iterator_@obj@& const_object_iterator_@obj@::operator++() noexcept" + block{
+		if(obj.store_type == storage_type::erasable) {
+			o + "++index;";
+			o + "while(container.@obj@.m__index.vptr()[index] != @obj@_id(@obj@_id::value_base_t(index)) && index < container.@obj@.size_used)" + block{
+				o + "++index;";
+			};
+		} else {
+			o + "++index;";
+		}
+		o + "return *this;";
+	};
+
+	o + line_break{};
+	return o;
+}
+
 basic_builder& make_iterate_over_objects(basic_builder& o, relationship_object_def const& obj) {
 	o + substitute{ "obj", obj.name };
 
@@ -1797,6 +1888,30 @@ basic_builder& make_iterate_over_objects(basic_builder& o, relationship_object_d
 			}
 		};
 	};
+
+	auto const appstr = std::string(" in_") + obj.name + " ;";
+
+	o + "friend internal::const_object_iterator_@obj@;";
+	o + "friend internal::object_iterator_@obj@;";
+	
+	o + "struct" + block{
+		o + "internal::object_iterator_@obj@ begin()" + block{
+			o + "data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_@obj@));";
+			o + "return internal::object_iterator_@obj@(*container, uint32_t(0));";
+		};
+		o + "internal::object_iterator_@obj@ end()" + block{
+			o + "data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_@obj@));";
+			o + "return internal::object_iterator_@obj@(*container, container->@obj@_size());";
+		};
+		o + "internal::const_object_iterator_@obj@ begin() const" + block{
+			o + "data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_@obj@));";
+			o + "return internal::const_object_iterator_@obj@(*container, uint32_t(0));";
+		};
+		o + "internal::const_object_iterator_@obj@ end() const" + block{
+			o + "data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_@obj@));";
+			o + "return internal::const_object_iterator_@obj@(*container, container->@obj@_size());";
+		};
+	} + append{ appstr.c_str() };
 	o + line_break{};
 	return o;
 }

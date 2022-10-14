@@ -58,3 +58,6 @@ basic_builder& make_query_instance_types(basic_builder& o, prepared_query_defini
 basic_builder& make_query_instance_definitions(basic_builder& o, prepared_query_definition const& pdef);
 basic_builder& make_query_iterator_declarations(basic_builder& o, prepared_query_definition const& pdef);
 basic_builder& make_query_iterator_body(basic_builder& o, prepared_query_definition const& pdef, std::string const& ns, bool is_const);
+
+basic_builder& object_iterator_declaration(basic_builder& o, relationship_object_def const& obj);
+basic_builder& object_iterator_implementation(basic_builder& o, relationship_object_def const& obj);

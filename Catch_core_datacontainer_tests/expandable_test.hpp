@@ -183,8 +183,9 @@ namespace ex1 {
 	class data_container;
 
 	namespace internal {
+		class const_object_iterator_top;		class object_iterator_top;
 		class alignas(64) top_class {
-			private:
+			friend const_object_iterator_top;			friend object_iterator_top;			private:
 			//
 			// storage space for wheels of type int32_t
 			//
@@ -203,8 +204,9 @@ namespace ex1 {
 			friend data_container;
 		};
 
+		class const_object_iterator_bottom;		class object_iterator_bottom;
 		class alignas(64) bottom_class {
-			private:
+			friend const_object_iterator_bottom;			friend object_iterator_bottom;			private:
 			//
 			// storage space for legs of type int32_t
 			//
@@ -223,8 +225,9 @@ namespace ex1 {
 			friend data_container;
 		};
 
+		class const_object_iterator_lr_relation;		class object_iterator_lr_relation;
 		class alignas(64) lr_relation_class {
-			private:
+			friend const_object_iterator_lr_relation;			friend object_iterator_lr_relation;			private:
 			//
 			// storage space for _index of type lr_relation_id
 			//
@@ -676,6 +679,114 @@ namespace ex1 {
 		return lr_relation_const_fat_id(c, id);
 	}
 	
+	namespace internal {
+		class object_iterator_top {
+			private:
+			data_container& container;
+			uint32_t index = 0;
+			public:
+			object_iterator_top(data_container& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE object_iterator_top& operator++() noexcept;
+			DCON_RELEASE_INLINE bool operator==(object_iterator_top const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_iterator_top const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE top_fat_id operator*() noexcept {
+				return top_fat_id(container, top_id(top_id::value_base_t(index)));
+			}
+		};
+		class const_object_iterator_top {
+			private:
+			data_container const& container;
+			uint32_t index = 0;
+			public:
+			const_object_iterator_top(data_container const& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_top& operator++() noexcept;
+			DCON_RELEASE_INLINE bool operator==(const_object_iterator_top const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_top const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE top_const_fat_id operator*() const noexcept {
+				return top_const_fat_id(container, top_id(top_id::value_base_t(index)));
+			}
+		};
+		
+		class object_iterator_bottom {
+			private:
+			data_container& container;
+			uint32_t index = 0;
+			public:
+			object_iterator_bottom(data_container& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE object_iterator_bottom& operator++() noexcept;
+			DCON_RELEASE_INLINE bool operator==(object_iterator_bottom const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_iterator_bottom const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bottom_fat_id operator*() noexcept {
+				return bottom_fat_id(container, bottom_id(bottom_id::value_base_t(index)));
+			}
+		};
+		class const_object_iterator_bottom {
+			private:
+			data_container const& container;
+			uint32_t index = 0;
+			public:
+			const_object_iterator_bottom(data_container const& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_bottom& operator++() noexcept;
+			DCON_RELEASE_INLINE bool operator==(const_object_iterator_bottom const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_bottom const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bottom_const_fat_id operator*() const noexcept {
+				return bottom_const_fat_id(container, bottom_id(bottom_id::value_base_t(index)));
+			}
+		};
+		
+		class object_iterator_lr_relation {
+			private:
+			data_container& container;
+			uint32_t index = 0;
+			public:
+			object_iterator_lr_relation(data_container& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE object_iterator_lr_relation& operator++() noexcept;
+			DCON_RELEASE_INLINE bool operator==(object_iterator_lr_relation const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_iterator_lr_relation const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE lr_relation_fat_id operator*() noexcept {
+				return lr_relation_fat_id(container, lr_relation_id(lr_relation_id::value_base_t(index)));
+			}
+		};
+		class const_object_iterator_lr_relation {
+			private:
+			data_container const& container;
+			uint32_t index = 0;
+			public:
+			const_object_iterator_lr_relation(data_container const& c, uint32_t i) noexcept;
+			DCON_RELEASE_INLINE const_object_iterator_lr_relation& operator++() noexcept;
+			DCON_RELEASE_INLINE bool operator==(const_object_iterator_lr_relation const& o) const noexcept {
+				return &container == &o.container && index == o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_lr_relation const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE lr_relation_const_fat_id operator*() const noexcept {
+				return lr_relation_const_fat_id(container, lr_relation_id(lr_relation_id::value_base_t(index)));
+			}
+		};
+		
+	}
+
 	class alignas(64) data_container {
 		public:
 		internal::top_class top;
@@ -1233,6 +1344,26 @@ namespace ex1 {
 				func(tmp);
 			}
 		}
+		friend internal::const_object_iterator_top;
+		friend internal::object_iterator_top;
+		struct {
+			internal::object_iterator_top begin() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_top));
+				return internal::object_iterator_top(*container, uint32_t(0));
+			}
+			internal::object_iterator_top end() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_top));
+				return internal::object_iterator_top(*container, container->top_size());
+			}
+			internal::const_object_iterator_top begin() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_top));
+				return internal::const_object_iterator_top(*container, uint32_t(0));
+			}
+			internal::const_object_iterator_top end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_top));
+				return internal::const_object_iterator_top(*container, container->top_size());
+			}
+		}  in_top ;
 		
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_bottom(T&& func) {
@@ -1241,6 +1372,26 @@ namespace ex1 {
 				func(tmp);
 			}
 		}
+		friend internal::const_object_iterator_bottom;
+		friend internal::object_iterator_bottom;
+		struct {
+			internal::object_iterator_bottom begin() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_bottom));
+				return internal::object_iterator_bottom(*container, uint32_t(0));
+			}
+			internal::object_iterator_bottom end() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_bottom));
+				return internal::object_iterator_bottom(*container, container->bottom_size());
+			}
+			internal::const_object_iterator_bottom begin() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_bottom));
+				return internal::const_object_iterator_bottom(*container, uint32_t(0));
+			}
+			internal::const_object_iterator_bottom end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_bottom));
+				return internal::const_object_iterator_bottom(*container, container->bottom_size());
+			}
+		}  in_bottom ;
 		
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_lr_relation(T&& func) {
@@ -1249,6 +1400,26 @@ namespace ex1 {
 				if(lr_relation.m__index.vptr()[tmp.index()] == tmp) func(tmp);
 			}
 		}
+		friend internal::const_object_iterator_lr_relation;
+		friend internal::object_iterator_lr_relation;
+		struct {
+			internal::object_iterator_lr_relation begin() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_lr_relation));
+				return internal::object_iterator_lr_relation(*container, uint32_t(0));
+			}
+			internal::object_iterator_lr_relation end() {
+				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_lr_relation));
+				return internal::object_iterator_lr_relation(*container, container->lr_relation_size());
+			}
+			internal::const_object_iterator_lr_relation begin() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_lr_relation));
+				return internal::const_object_iterator_lr_relation(*container, uint32_t(0));
+			}
+			internal::const_object_iterator_lr_relation end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_lr_relation));
+				return internal::const_object_iterator_lr_relation(*container, container->lr_relation_size());
+			}
+		}  in_lr_relation ;
 		
 
 
@@ -2237,6 +2408,57 @@ namespace ex1 {
 	
 
 	namespace internal {
+		object_iterator_top::object_iterator_top(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		const_object_iterator_top::const_object_iterator_top(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		DCON_RELEASE_INLINE object_iterator_top& object_iterator_top::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_top& const_object_iterator_top::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		
+		object_iterator_bottom::object_iterator_bottom(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		const_object_iterator_bottom::const_object_iterator_bottom(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+		}
+		DCON_RELEASE_INLINE object_iterator_bottom& object_iterator_bottom::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_bottom& const_object_iterator_bottom::operator++() noexcept {
+			++index;
+			return *this;
+		}
+		
+		object_iterator_lr_relation::object_iterator_lr_relation(data_container& c, uint32_t i) noexcept : container(c), index(i) {
+			while(container.lr_relation.m__index.vptr()[index] != lr_relation_id(lr_relation_id::value_base_t(index)) && index < container.lr_relation.size_used) {
+				++index;
+			}
+		}
+		const_object_iterator_lr_relation::const_object_iterator_lr_relation(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
+			while(container.lr_relation.m__index.vptr()[index] != lr_relation_id(lr_relation_id::value_base_t(index)) && index < container.lr_relation.size_used) {
+				++index;
+			}
+		}
+		DCON_RELEASE_INLINE object_iterator_lr_relation& object_iterator_lr_relation::operator++() noexcept {
+			++index;
+			while(container.lr_relation.m__index.vptr()[index] != lr_relation_id(lr_relation_id::value_base_t(index)) && index < container.lr_relation.size_used) {
+				++index;
+			}
+			return *this;
+		}
+		DCON_RELEASE_INLINE const_object_iterator_lr_relation& const_object_iterator_lr_relation::operator++() noexcept {
+			++index;
+			while(container.lr_relation.m__index.vptr()[index] != lr_relation_id(lr_relation_id::value_base_t(index)) && index < container.lr_relation.size_used) {
+				++index;
+			}
+			return *this;
+		}
+		
 	};
 
 

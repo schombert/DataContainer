@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
 				otemp[otemp.length() - 1] = 'p';
 				return otemp;
 			}
-			return otemp + ".cpp";
+			return otemp + ".hpp";
 		}();
 
 		error_record err(input_file_name);
@@ -412,8 +412,17 @@ int main(int argc, char *argv[]) {
 		}
 
 		for(auto& ob : parsed_file.relationship_objects) {
+			//predeclare helpers
+			output += "\t\tclass const_object_iterator_" + ob.name + ";";
+			output += "\t\tclass object_iterator_" + ob.name + ";";
+			output += "\n";
+
 			//object class begin
 			output += "\t\tclass alignas(64) " + ob.name + "_class {\n";
+
+
+			output += "\t\t\tfriend const_object_iterator_" + ob.name + ";";
+			output += "\t\t\tfriend object_iterator_" + ob.name + ";";
 
 			//begin members declaration
 
@@ -552,6 +561,14 @@ int main(int argc, char *argv[]) {
 			output += make_fat_id(o, obj, parsed_file).to_string(1);
 			output += make_const_fat_id(o, obj, parsed_file).to_string(1);
 		}
+
+		// declare iterator helper
+		output += "\tnamespace internal {\n";
+		for(auto& ob : parsed_file.relationship_objects) {
+			output += object_iterator_declaration(o, ob).to_string(2);
+		}
+		output += "\t}\n\n";
+
 
 		//class data_container begin
 		output += "\tclass alignas(64) data_container {\n";
@@ -771,6 +788,9 @@ int main(int argc, char *argv[]) {
 			//
 			output += make_query_iterator_declarations(o, pq).to_string(2);
 			output += make_query_instance_definitions(o, pq).to_string(2);
+		}
+		for(auto& ob : parsed_file.relationship_objects) {
+			output += object_iterator_implementation(o, ob).to_string(2);
 		}
 		output += "\t};\n\n";
 		output += "\n";

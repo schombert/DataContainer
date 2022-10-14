@@ -137,6 +137,19 @@ TEST_CASE("basic relationship functions", "[core_datacontainer_tests]") {
 	REQUIRE(count == 0);
 	REQUIRE(found_car == false);
 
+	count = 0;
+	found_car = false;
+	for(auto i : ptr->in_car_ownership) {
+		++count;
+		if(i.get_owned_car() == carb)
+			found_car = true;
+	}
+
+	REQUIRE(count == 3);
+	REQUIRE(found_car == true);
+
+	count = 0;
+	found_car = false;
 	ptr->person_for_each_car_ownership_as_owner(persona, [&](car_owner_basic::car_ownership_id i) {
 		++count;
 		if(i.index() == carb.index())
