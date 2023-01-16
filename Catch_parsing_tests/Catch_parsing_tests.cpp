@@ -4,7 +4,7 @@
 #include "..\DataContainerGenerator\parsing.hpp"
 #include "..\DataContainerGenerator\parsing.cpp"
 
-TEST_CASE("correctly fromatted cases", "[parsing_tests]") {
+TEST_CASE("correctly formatted cases", "[parsing_tests]") {
 	{
 		error_record err("dummy_file");
 		char text[] = "key_a key_b";
@@ -68,7 +68,7 @@ TEST_CASE("correctly fromatted cases", "[parsing_tests]") {
 	}
 }
 
-TEST_CASE("incorrectly fromatted cases", "[parsing_tests]") {
+TEST_CASE("incorrectly formatted cases", "[parsing_tests]") {
 	{
 		error_record err("dummy_file");
 		char text[] = "key_a{TEXT IN KEY";
