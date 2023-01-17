@@ -1,7 +1,7 @@
 #include "parsing.hpp"
 #include <assert.h>
 
-char const * advance_to_closing_bracket(char const * pos, char const * end) {
+char const* advance_to_closing_bracket(char const* pos, char const* end) {
 	int32_t depth_count = 0;
 	bool in_quote = false;
 
@@ -22,7 +22,7 @@ char const * advance_to_closing_bracket(char const * pos, char const * end) {
 	return pos;
 }
 
-char const * advance_to_closing_parenthesis(char const * pos, char const * end) {
+char const* advance_to_closing_parenthesis(char const* pos, char const* end) {
 	int32_t depth_count = 0;
 	bool in_quote = false;
 
@@ -43,7 +43,7 @@ char const * advance_to_closing_parenthesis(char const * pos, char const * end) 
 	return pos;
 }
 
-char const * advance_to_closing_square_bracket(char const * pos, char const * end) {
+char const* advance_to_closing_square_bracket(char const* pos, char const* end) {
 	int32_t depth_count = 0;
 	bool in_quote = false;
 
@@ -68,7 +68,7 @@ bool is_ascii_ws(char v) {
 	return v == ' ' || v == '\t' || v == '\n' || v == '\r';
 }
 
-char const * advance_to_non_whitespace(char const * pos, char const * end) {
+char const* advance_to_non_whitespace(char const* pos, char const* end) {
 	while(pos < end) {
 		if(*pos != ' ' && *pos != '\t' && *pos != '\n' && *pos != '\r')
 			return pos;
@@ -77,7 +77,7 @@ char const * advance_to_non_whitespace(char const * pos, char const * end) {
 	return pos;
 }
 
-char const * advance_to_non_whitespace_non_comma(char const * pos, char const * end) {
+char const* advance_to_non_whitespace_non_comma(char const* pos, char const* end) {
 	while(pos < end) {
 		if(*pos != ' ' && *pos != '\t' && *pos != '\n' && *pos != '\r' && *pos != ',')
 			return pos;
@@ -86,7 +86,7 @@ char const * advance_to_non_whitespace_non_comma(char const * pos, char const * 
 	return pos;
 }
 
-char const * advance_to_identifier_end(char const * pos, char const * end) {
+char const* advance_to_identifier_end(char const* pos, char const* end) {
 	while(pos < end) {
 		if(*pos == ' ' || *pos == '\t' || *pos == '\n' || *pos == '\r'
 			|| *pos == ',' || *pos == '(' || *pos == ')' || *pos == '[' || *pos == ']' || *pos == '{'
@@ -101,7 +101,7 @@ char const * advance_to_identifier_end(char const * pos, char const * end) {
 }
 
 
-char const * advance_to_at(char const * pos, char const * end) {
+char const* advance_to_at(char const* pos, char const* end) {
 	while(pos < end) {
 		if(*pos == '@')
 			return pos;
@@ -110,7 +110,7 @@ char const * advance_to_at(char const * pos, char const * end) {
 	return pos;
 }
 
-std::string remove_ats(char const * pos, char const * end) {
+std::string remove_ats(char const* pos, char const* end) {
 	std::string result;
 
 	while(pos < end) {
@@ -122,7 +122,7 @@ std::string remove_ats(char const * pos, char const * end) {
 	return result;
 }
 
-char const * advance_to_whitespace(char const * pos, char const * end) {
+char const* advance_to_whitespace(char const* pos, char const* end) {
 	while(pos < end) {
 		if(*pos == ' ' || *pos == '\t' || *pos == '\n' || *pos == '\r')
 			return pos;
@@ -131,7 +131,7 @@ char const * advance_to_whitespace(char const * pos, char const * end) {
 	return pos;
 }
 
-char const * advance_to_whitespace_or_brace(char const * pos, char const * end) {
+char const* advance_to_whitespace_or_brace(char const* pos, char const* end) {
 	while(pos < end) {
 		if(*pos == ' ' || *pos == '\t' || *pos == '\n' || *pos == '\r' || *pos == '{')
 			return pos;
@@ -140,7 +140,7 @@ char const * advance_to_whitespace_or_brace(char const * pos, char const * end) 
 	return pos;
 }
 
-bool check_for_identifier(char const* identifier, char const * start, char const * end) {
+bool check_for_identifier(char const* identifier, char const* start, char const* end) {
 	char const* pos = advance_to_non_whitespace_non_comma(start, end);
 	char const* id_end = advance_to_identifier_end(pos, end);
 	while(pos < id_end) {
@@ -154,7 +154,7 @@ bool check_for_identifier(char const* identifier, char const * start, char const
 	return *identifier == 0;
 }
 
-char const * reverse_to_non_whitespace(char const * start, char const * pos) {
+char const* reverse_to_non_whitespace(char const* start, char const* pos) {
 	while(pos > start) {
 		if(*(pos - 1) != ' ' && *(pos - 1) != '\t' && *(pos - 1) != '\n' && *(pos - 1) != '\r')
 			return pos;
@@ -163,7 +163,7 @@ char const * reverse_to_non_whitespace(char const * start, char const * pos) {
 	return pos;
 }
 
-std::vector<selection_item> parse_all_selection_items(char const* &start, char const * end, char const * global_start, error_record & err) {
+std::vector<selection_item> parse_all_selection_items(char const*& start, char const* end, char const* global_start, error_record& err) {
 	std::vector<selection_item> result;
 
 	while(start < end) {
@@ -175,11 +175,11 @@ std::vector<selection_item> parse_all_selection_items(char const* &start, char c
 		if(start != end)
 			result.push_back(parse_selection_item(start, end, global_start, err));
 	}
-	
+
 	return result;
 }
 
-std::vector<from_item> parse_all_from_items(char const* &start, char const * end, char const * global_start, error_record & err) {
+std::vector<from_item> parse_all_from_items(char const*& start, char const* end, char const* global_start, error_record& err) {
 	std::vector<from_item> result;
 
 	auto start_copy = start;
@@ -200,7 +200,7 @@ std::vector<from_item> parse_all_from_items(char const* &start, char const * end
 
 }
 
-select_statement_definition parse_select_statement(char const* &start, char const * end, char const * global_start, error_record & err) {
+select_statement_definition parse_select_statement(char const*& start, char const* end, char const* global_start, error_record& err) {
 	select_statement_definition result;
 
 	result.returned_values = parse_all_selection_items(start, end, global_start, err);
@@ -235,7 +235,7 @@ select_statement_definition parse_select_statement(char const* &start, char cons
 	return result;
 }
 
-from_item parse_from_item(char const* &start, char const * end, char const * global_start, error_record & err) {
+from_item parse_from_item(char const*& start, char const* end, char const* global_start, error_record& err) {
 	from_item result;
 
 	start = advance_to_non_whitespace_non_comma(start, end);
@@ -277,7 +277,7 @@ from_item parse_from_item(char const* &start, char const * end, char const * glo
 	return result;
 }
 
-type_name_pair parse_type_and_name(char const* start, char const * end) {
+type_name_pair parse_type_and_name(char const* start, char const* end) {
 	type_name_pair result;
 
 	char const* first_id_end = advance_to_identifier_end(start, end);
@@ -294,7 +294,7 @@ type_name_pair parse_type_and_name(char const* start, char const * end) {
 	return result;
 }
 
-qualified_name parse_qual_name(char const* &start, char const * end, char const * global_start, error_record & err) {
+qualified_name parse_qual_name(char const*& start, char const* end, char const*, error_record&) {
 	qualified_name result;
 
 	char const* non_ws_start = advance_to_non_whitespace_non_comma(start, end);
@@ -344,7 +344,7 @@ qualified_name parse_qual_name(char const* &start, char const * end, char const 
 	return result;
 }
 
-selection_item parse_selection_item(char const* &start, char const * end, char const * global_start, error_record & err) {
+selection_item parse_selection_item(char const*& start, char const* end, char const* global_start, error_record& err) {
 	selection_item result;
 
 	char const* non_ws_start = advance_to_non_whitespace(start, end);
@@ -367,7 +367,7 @@ selection_item parse_selection_item(char const* &start, char const * end, char c
 	return result;
 }
 
-row_col_pair calculate_line_from_position(char const * start, char const * pos) {
+row_col_pair calculate_line_from_position(char const* start, char const* pos) {
 	row_col_pair result;
 	result.row = 1;
 	result.column = 1;
@@ -385,7 +385,7 @@ row_col_pair calculate_line_from_position(char const * start, char const * pos) 
 	return result;
 }
 
-parsed_item extract_item(char const * input, char const * end, char const * global_start, error_record & err) {
+parsed_item extract_item(char const* input, char const* end, char const* global_start, error_record& err) {
 	parsed_item result;
 
 	result.key.start = advance_to_non_whitespace(input, end);
@@ -421,7 +421,7 @@ load_save_def parse_load_save_def(char const* start, char const* end, char const
 			std::string kstr = extracted.key.to_string();
 			if(kstr == "name") {
 				if(extracted.values.size() != 1) {
-					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 3, 
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 3,
 						std::string("wrong number of parameters for \"name\""));
 				} else {
 					result.name = extracted.values[0].to_string();
@@ -432,7 +432,7 @@ load_save_def parse_load_save_def(char const* start, char const* end, char const
 						std::string("wrong number of parameters for \"only_objects\""));
 				} else if(result.objects_filter == filter_type::default_exclude) {
 					result.objects_filter = filter_type::include;
-					for(uint32_t i = 0; i < extracted.values.size(); ++ i)
+					for(uint32_t i = 0; i < extracted.values.size(); ++i)
 						result.obj_tags.push_back(extracted.values[0].to_string());
 				} else {
 					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 5,
@@ -452,14 +452,14 @@ load_save_def parse_load_save_def(char const* start, char const* end, char const
 				}
 			} else if(kstr == "only_properties") {
 				if(extracted.values.size() == 0) {
-					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 7, 
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 7,
 						std::string("wrong number of parameters for \"only_properties\""));
 				} else if(result.properties_filter == filter_type::default_exclude) {
 					result.properties_filter = filter_type::include;
 					for(uint32_t i = 0; i < extracted.values.size(); ++i)
 						result.property_tags.push_back(extracted.values[0].to_string());
 				} else {
-					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 8, 
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 8,
 						std::string("illegal setting of the properties filter a second time"));
 				}
 			} else if(kstr == "exclude_properties") {
@@ -483,7 +483,7 @@ load_save_def parse_load_save_def(char const* start, char const* end, char const
 	return result;
 }
 
-related_object parse_link_def(char const * start, char const * end, char const * global_start, error_record & err_out) {
+related_object parse_link_def(char const* start, char const* end, char const* global_start, error_record& err_out) {
 	related_object result;
 
 	char const* pos = start;
@@ -540,7 +540,7 @@ related_object parse_link_def(char const * start, char const * end, char const *
 				}
 			} else if(kstr == "object") {
 				if(extracted.values.size() != 1) {
-					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 15, 
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 15,
 						std::string("wrong number of parameters for \"object\""));
 				} else {
 					result.type_name = extracted.values[0].to_string();
@@ -561,7 +561,7 @@ related_object parse_link_def(char const * start, char const * end, char const *
 				}
 			} else if(kstr == "multiple") {
 				if(extracted.values.size() != 1 && extracted.values.size() != 2) {
-					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 18, 
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 18,
 						std::string("wrong number of parameters for \"multiple\""));
 				} else {
 					result.multiplicity = std::stoi(extracted.values[0].to_string());
@@ -603,7 +603,7 @@ related_object parse_link_def(char const * start, char const * end, char const *
 	return result;
 }
 
-composite_index_def parse_composite_key(char const * start, char const * end, char const * global_start, error_record & err_out) {
+composite_index_def parse_composite_key(char const* start, char const* end, char const* global_start, error_record& err_out) {
 	composite_index_def result;
 
 	char const* pos = start;
@@ -628,7 +628,7 @@ composite_index_def parse_composite_key(char const * start, char const * end, ch
 					result.component_indexes.push_back(key_component{ extracted.values[0].to_string(), std::string(), 0, 0 });
 				}
 			} else {
-				err_out.add(calculate_line_from_position(global_start, extracted.key.start), 25, 
+				err_out.add(calculate_line_from_position(global_start, extracted.key.start), 25,
 					std::string("unexpected token \"") + kstr + "\" while parsing composite key");
 			}
 		}
@@ -636,7 +636,7 @@ composite_index_def parse_composite_key(char const * start, char const * end, ch
 	return result;
 }
 
-property_def parse_property_def(char const * start, char const * end, char const * global_start, error_record & err_out) {
+property_def parse_property_def(char const* start, char const* end, char const* global_start, error_record& err_out) {
 	property_def result;
 
 	char const* pos = start;
@@ -771,7 +771,7 @@ property_def parse_property_def(char const * start, char const * end, char const
 	return result;
 }
 
-relationship_object_def parse_relationship(char const * start, char const * end, char const * global_start, error_record & err_out) {
+relationship_object_def parse_relationship(char const* start, char const* end, char const* global_start, error_record& err_out) {
 	relationship_object_def result;
 
 	result.is_relationship = true;
@@ -865,16 +865,16 @@ relationship_object_def parse_relationship(char const * start, char const * end,
 					member_function_spec ns;
 					ns.signature = remove_ats(extracted.values[0].start, extracted.values[0].end);
 					ns.is_const = false;
-					char const* pos = advance_to_at(extracted.values[0].start, extracted.values[0].end) + 1;
-					char const* id_end = advance_to_identifier_end(pos, extracted.values[0].end);
-					ns.name = std::string(pos, id_end);
-					pos = id_end;
-					while(pos < extracted.values[0].end) {
-						pos = advance_to_at(pos, extracted.values[0].end) + 1;
-						id_end = advance_to_identifier_end(pos, extracted.values[0].end);
-						if(id_end != pos)
-							ns.parameter_names.push_back(std::string(pos, id_end));
-						pos = id_end;
+					char const* local_pos = advance_to_at(extracted.values[0].start, extracted.values[0].end) + 1;
+					char const* id_end = advance_to_identifier_end(local_pos, extracted.values[0].end);
+					ns.name = std::string(local_pos, id_end);
+					local_pos = id_end;
+					while(local_pos < extracted.values[0].end) {
+						local_pos = advance_to_at(local_pos, extracted.values[0].end) + 1;
+						id_end = advance_to_identifier_end(local_pos, extracted.values[0].end);
+						if(id_end != local_pos)
+							ns.parameter_names.push_back(std::string(local_pos, id_end));
+						local_pos = id_end;
 					}
 					result.member_functions.push_back(ns);
 				}
@@ -886,16 +886,16 @@ relationship_object_def parse_relationship(char const * start, char const * end,
 					member_function_spec ns;
 					ns.signature = remove_ats(extracted.values[0].start, extracted.values[0].end);
 					ns.is_const = true;
-					char const* pos = advance_to_at(extracted.values[0].start, extracted.values[0].end) + 1;
-					char const* id_end = advance_to_identifier_end(pos, extracted.values[0].end);
-					ns.name = std::string(pos, id_end);
-					pos = id_end;
-					while(pos < extracted.values[0].end) {
-						pos = advance_to_at(pos, extracted.values[0].end) + 1;
-						id_end = advance_to_identifier_end(pos, extracted.values[0].end);
-						if(id_end != pos)
-							ns.parameter_names.push_back(std::string(pos, id_end));
-						pos = id_end;
+					char const* local_pos = advance_to_at(extracted.values[0].start, extracted.values[0].end) + 1;
+					char const* id_end = advance_to_identifier_end(local_pos, extracted.values[0].end);
+					ns.name = std::string(local_pos, id_end);
+					local_pos = id_end;
+					while(local_pos < extracted.values[0].end) {
+						local_pos = advance_to_at(local_pos, extracted.values[0].end) + 1;
+						id_end = advance_to_identifier_end(local_pos, extracted.values[0].end);
+						if(id_end != local_pos)
+							ns.parameter_names.push_back(std::string(local_pos, id_end));
+						local_pos = id_end;
 					}
 					result.member_functions.push_back(ns);
 				}
@@ -922,7 +922,7 @@ relationship_object_def parse_relationship(char const * start, char const * end,
 	return result;
 }
 
-relationship_object_def parse_object(char const * start, char const * end, char const * global_start, error_record & err_out) {
+relationship_object_def parse_object(char const* start, char const* end, char const* global_start, error_record& err_out) {
 	relationship_object_def result;
 
 	result.is_relationship = false;
@@ -1007,16 +1007,16 @@ relationship_object_def parse_object(char const * start, char const * end, char 
 					member_function_spec ns;
 					ns.signature = remove_ats(extracted.values[0].start, extracted.values[0].end);
 					ns.is_const = false;
-					char const* pos = advance_to_at(extracted.values[0].start, extracted.values[0].end) + 1;
-					char const* id_end = advance_to_identifier_end(pos, extracted.values[0].end);
-					ns.name = std::string(pos, id_end);
-					pos = id_end;
-					while(pos < extracted.values[0].end) {
-						pos = advance_to_at(pos, extracted.values[0].end) + 1;
-						id_end = advance_to_identifier_end(pos, extracted.values[0].end);
-						if(id_end != pos)
-							ns.parameter_names.push_back(std::string(pos, id_end));
-						pos = id_end;
+					char const* local_pos = advance_to_at(extracted.values[0].start, extracted.values[0].end) + 1;
+					char const* id_end = advance_to_identifier_end(local_pos, extracted.values[0].end);
+					ns.name = std::string(local_pos, id_end);
+					local_pos = id_end;
+					while(local_pos < extracted.values[0].end) {
+						local_pos = advance_to_at(local_pos, extracted.values[0].end) + 1;
+						id_end = advance_to_identifier_end(local_pos, extracted.values[0].end);
+						if(id_end != local_pos)
+							ns.parameter_names.push_back(std::string(local_pos, id_end));
+						local_pos = id_end;
 					}
 					result.member_functions.push_back(ns);
 				}
@@ -1028,16 +1028,16 @@ relationship_object_def parse_object(char const * start, char const * end, char 
 					member_function_spec ns;
 					ns.signature = remove_ats(extracted.values[0].start, extracted.values[0].end);
 					ns.is_const = true;
-					char const* pos = advance_to_at(extracted.values[0].start, extracted.values[0].end) + 1;
-					char const* id_end = advance_to_identifier_end(pos, extracted.values[0].end);
-					ns.name = std::string(pos, id_end);
-					pos = id_end;
-					while(pos < extracted.values[0].end) {
-						pos = advance_to_at(pos, extracted.values[0].end) + 1;
-						id_end = advance_to_identifier_end(pos, extracted.values[0].end);
-						if(id_end != pos)
-							ns.parameter_names.push_back(std::string(pos, id_end));
-						pos = id_end;
+					char const* local_pos = advance_to_at(extracted.values[0].start, extracted.values[0].end) + 1;
+					char const* id_end = advance_to_identifier_end(local_pos, extracted.values[0].end);
+					ns.name = std::string(local_pos, id_end);
+					local_pos = id_end;
+					while(local_pos < extracted.values[0].end) {
+						local_pos = advance_to_at(local_pos, extracted.values[0].end) + 1;
+						id_end = advance_to_identifier_end(local_pos, extracted.values[0].end);
+						if(id_end != local_pos)
+							ns.parameter_names.push_back(std::string(local_pos, id_end));
+						local_pos = id_end;
 					}
 					result.member_functions.push_back(ns);
 				}
@@ -1050,7 +1050,7 @@ relationship_object_def parse_object(char const * start, char const * end, char 
 	return result;
 }
 
-std::vector<std::string> parse_legacy_types(char const * start, char const * end, char const * global_start, error_record & err_out) {
+std::vector<std::string> parse_legacy_types(char const* start, char const* end, char const* global_start, error_record& err_out) {
 	std::vector<std::string> result;
 
 	char const* pos = start;
@@ -1076,7 +1076,7 @@ std::vector<std::string> parse_legacy_types(char const * start, char const * end
 	return result;
 }
 
-conversion_def parse_conversion_def(char const * start, char const * end, char const * global_start, error_record & err_out) {
+conversion_def parse_conversion_def(char const* start, char const* end, char const* global_start, error_record& err_out) {
 	conversion_def result;
 	char const* pos = start;
 	while(pos < end) {
@@ -1114,7 +1114,7 @@ conversion_def parse_conversion_def(char const * start, char const * end, char c
 	return result;
 }
 
-std::vector<type_name_pair> parse_query_parameters_list(char const* &start, char const * end, char const * global_start, error_record & err) {
+std::vector<type_name_pair> parse_query_parameters_list(char const*& start, char const* end, char const* global_start, error_record& err) {
 	std::vector<type_name_pair> result;
 
 	char const* pos = start;
@@ -1124,7 +1124,7 @@ std::vector<type_name_pair> parse_query_parameters_list(char const* &start, char
 
 		if(extracted.key.start != extracted.key.end) {
 			std::string kstr = extracted.key.to_string();
-			
+
 			if(extracted.values.size() == 0) {
 				err.add(calculate_line_from_position(global_start, extracted.key.start), 73,
 					std::string("missing type declaration"));
@@ -1140,7 +1140,7 @@ std::vector<type_name_pair> parse_query_parameters_list(char const* &start, char
 	return result;
 }
 
-query_definition parse_query_definition(char const* &start, char const * end, char const * global_start, error_record & err) {
+query_definition parse_query_definition(char const*& start, char const* end, char const* global_start, error_record& err) {
 	query_definition result;
 	char const* pos = start;
 	while(pos < end) {
@@ -1183,7 +1183,7 @@ query_definition parse_query_definition(char const* &start, char const * end, ch
 	return result;
 }
 
-file_def parse_file(char const * start, char const * end, error_record & err_out) {
+file_def parse_file(char const* start, char const* end, error_record& err_out) {
 	file_def parsed_file;
 
 	char const* pos = start;
@@ -1312,7 +1312,7 @@ related_object const* find_common_link(relationship_object_def const& obja, rela
 	return found;
 }
 
-prepared_query_definition make_prepared_definition(file_def const& parsed_file, query_definition const& def, error_record & err) {
+prepared_query_definition make_prepared_definition(file_def const& parsed_file, query_definition const& def, error_record& err) {
 	prepared_query_definition result;
 
 	result.parameters = def.parameters;
@@ -1333,7 +1333,7 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 			result.table_slots[i].internally_named_as = std::string("m_parameters.") + def.select.from[i].table_identifier.member_name;
 			result.table_slots[i].reference_name = def.select.from[i].table_identifier.as_name;
 			std::string param_id;
-			for(auto &p : def.parameters) {
+			for(auto& p : def.parameters) {
 				if(p.name == def.select.from[i].table_identifier.member_name)
 					param_id = p.type;
 			}
@@ -1353,7 +1353,7 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 				if(!result.table_slots[i].actual_table) {
 					err.add(def.line, 93, std::string("Could not find an object or relationship named ")
 						+ derived_type + " as required by usage of parameter "
-						+ def.select.from[i].table_identifier.member_name +" in a from clause");
+						+ def.select.from[i].table_identifier.member_name + " in a from clause");
 					return result;
 				}
 			} else {
@@ -1377,7 +1377,7 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 					+ def.select.from[i].table_identifier.member_name + " referenced in a from clause");
 				return result;
 			}
-			
+
 			if(def.select.from[i].left_of_join == "") {
 				if(i != 0) {
 					result.table_slots[i].joined_to = &(result.table_slots[i - 1]);
@@ -1452,7 +1452,7 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 					found = &s;
 					break;
 				}
-				if(std::find_if(s.actual_table->properties.begin(), s.actual_table->properties.end(), 
+				if(std::find_if(s.actual_table->properties.begin(), s.actual_table->properties.end(),
 					[&](property_def const& prop) { return prop.name == val.property.member_name; }) != s.actual_table->properties.end()) {
 					found = &s;
 					break;
@@ -1466,7 +1466,7 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 			if(s.is_group_slot)
 				after_group_slot = true;
 		}
-		
+
 		if(!found) {
 			if(val.property.type_name != "") {
 				err.add(def.line, 99,
@@ -1569,7 +1569,7 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 										+ std::string(at_end + 1, bracket_end) + ")";
 									at_end = bracket_end + 1;
 								} else {
-									err.add(def.line, 102, 
+									err.add(def.line, 102,
 										std::string("variable of array type missing an indexing expression: ")
 										+ std::string(next_at, at_end));
 									return result;
@@ -1614,7 +1614,7 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 							result.where_conditional += "m_container."
 								+ val.derived_from_slot->actual_table->name + "_get_"
 								+ val.from_property->name
-								+ "(" + val.derived_from_slot->internally_named_as + ", " 
+								+ "(" + val.derived_from_slot->internally_named_as + ", "
 								+ std::string(at_end + 1, bracket_end) + ")";
 							at_end = bracket_end + 1;
 						} else {
@@ -1636,7 +1636,7 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 		}
 
 		if(!found) {
-			err.add(def.line, 104, 
+			err.add(def.line, 104,
 				std::string("No replacement found for ")
 				+ std::string(next_at, at_end));
 			return result;
