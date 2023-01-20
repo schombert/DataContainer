@@ -1,7 +1,7 @@
 ///////////////////////// ankerl::unordered_dense::{map, set} /////////////////////////
 
 // A fast & densely stored hashmap and hashset based on robin-hood backward shift deletion.
-// Version 2.0.0
+// Version 3.0.2
 // https://github.com/martinus/unordered_dense
 //
 // Licensed under the MIT License <http://opensource.org/licenses/MIT>.
@@ -30,9 +30,9 @@
 #define ANKERL_UNORDERED_DENSE_H
 
 // see https://semver.org/spec/v2.0.0.html
-#define ANKERL_UNORDERED_DENSE_VERSION_MAJOR 2 // NOLINT(cppcoreguidelines-macro-usage) incompatible API changes
+#define ANKERL_UNORDERED_DENSE_VERSION_MAJOR 3 // NOLINT(cppcoreguidelines-macro-usage) incompatible API changes
 #define ANKERL_UNORDERED_DENSE_VERSION_MINOR 0 // NOLINT(cppcoreguidelines-macro-usage) backwards compatible functionality
-#define ANKERL_UNORDERED_DENSE_VERSION_PATCH 0 // NOLINT(cppcoreguidelines-macro-usage) backwards compatible bug fixes
+#define ANKERL_UNORDERED_DENSE_VERSION_PATCH 2 // NOLINT(cppcoreguidelines-macro-usage) backwards compatible bug fixes
 
 // API versioning with inline namespace, see https://www.foonathan.net/2018/11/inline-namespaces/
 #define ANKERL_UNORDERED_DENSE_VERSION_CONCAT1(major, minor, patch) v##major##_##minor##_##patch
@@ -79,7 +79,15 @@
 #        if __has_include(<memory_resource>)
 #            undef ANKERL_UNORDERED_DENSE_PMR
 #            define ANKERL_UNORDERED_DENSE_PMR 1 // NOLINT(cppcoreguidelines-macro-usage)
-#            include <memory_resource>           // for polymorphic_allocator
+#            define ANKERL_UNORDERED_DENSE_PMR_ALLOCATOR \
+                std::pmr::polymorphic_allocator // NOLINT(cppcoreguidelines-macro-usage)
+#            include <memory_resource>          // for polymorphic_allocator
+#        elif __has_include(<experimental/memory_resource>)
+#            undef ANKERL_UNORDERED_DENSE_PMR
+#            define ANKERL_UNORDERED_DENSE_PMR 1 // NOLINT(cppcoreguidelines-macro-usage)
+#            define ANKERL_UNORDERED_DENSE_PMR_ALLOCATOR \
+                std::experimental::pmr::polymorphic_allocator // NOLINT(cppcoreguidelines-macro-usage)
+#            include <experimental/memory_resource>           // for polymorphic_allocator
 #        endif
 #    endif
 
@@ -364,16 +372,34 @@ namespace ankerl::unordered_dense {
             template <typename T>
             using detect_iterator = typename T::iterator;
 
+            template <typename T>
+            using detect_reserve = decltype(std::declval<T&>().reserve(size_t{}));
+
             // enable_if helpers
 
             template <typename Mapped>
             constexpr bool is_map_v = !std::is_void_v<Mapped>;
 
+            // clang-format off
             template <typename Hash, typename KeyEqual>
             constexpr bool is_transparent_v = is_detected_v<detect_is_transparent, Hash> && is_detected_v<detect_is_transparent, KeyEqual>;
+            // clang-format on
 
             template <typename From, typename To1, typename To2>
             constexpr bool is_neither_convertible_v = !std::is_convertible_v<From, To1> && !std::is_convertible_v<From, To2>;
+
+            template <typename T>
+            constexpr bool has_reserve = is_detected_v<detect_reserve, T>;
+
+            // base type for map has mapped_type
+            template <class T>
+            struct base_table_type_map {
+                using mapped_type = T;
+            };
+
+            // base type for set doesn't have mapped_type
+            struct base_table_type_set {
+            };
 
             // This is it, the table. Doubles as map and set, and uses `void` for T when its used as a set.
             template <class Key,
@@ -382,12 +408,12 @@ namespace ankerl::unordered_dense {
                 class KeyEqual,
                 class AllocatorOrContainer,
                 class Bucket>
-            class table {
+            class table : public std::conditional_t<is_map_v<T>, base_table_type_map<T>, base_table_type_set> {
             public:
                 using value_container_type = std::conditional_t<
                     is_detected_v<detect_iterator, AllocatorOrContainer>,
                     AllocatorOrContainer,
-                    typename std::vector<typename std::conditional_t<std::is_void_v<T>, Key, std::pair<Key, T>>, AllocatorOrContainer>>;
+                    typename std::vector<typename std::conditional_t<is_map_v<T>, std::pair<Key, T>, Key>, AllocatorOrContainer>>;
 
             private:
                 using bucket_alloc =
@@ -399,7 +425,6 @@ namespace ankerl::unordered_dense {
 
             public:
                 using key_type = Key;
-                using mapped_type = T;
                 using value_type = typename value_container_type::value_type;
                 using size_type = typename value_container_type::size_type;
                 using difference_type = typename value_container_type::difference_type;
@@ -410,8 +435,8 @@ namespace ankerl::unordered_dense {
                 using const_reference = typename value_container_type::const_reference;
                 using pointer = typename value_container_type::pointer;
                 using const_pointer = typename value_container_type::const_pointer;
-                using iterator = typename value_container_type::iterator;
                 using const_iterator = typename value_container_type::const_iterator;
+                using iterator = std::conditional_t<is_map_v<T>, typename value_container_type::iterator, const_iterator>;
                 using bucket_type = Bucket;
 
             private:
@@ -478,10 +503,10 @@ namespace ankerl::unordered_dense {
                 }
 
                 [[nodiscard]] static constexpr auto get_key(value_type const& vt) -> key_type const& {
-                    if constexpr(std::is_void_v<T>) {
-                        return vt;
-                    } else {
+                    if constexpr(is_map_v<T>) {
                         return vt.first;
+                    } else {
+                        return vt;
                     }
                 }
 
@@ -748,13 +773,16 @@ namespace ankerl::unordered_dense {
                     : table(0) {
                 }
 
-                explicit table(size_t /*bucket_count*/,
+                explicit table(size_t bucket_count,
                     Hash const& hash = Hash(),
                     KeyEqual const& equal = KeyEqual(),
                     allocator_type const& alloc_or_container = allocator_type())
                     : m_values(alloc_or_container)
                     , m_hash(hash)
                     , m_equal(equal) {
+                    if(0 != bucket_count) {
+                        reserve(bucket_count);
+                    }
                 }
 
                 table(size_t bucket_count, allocator_type const& alloc)
@@ -836,8 +864,10 @@ namespace ankerl::unordered_dense {
                 }
 
                 ~table() {
-                    auto ba = bucket_alloc(m_values.get_allocator());
-                    bucket_alloc_traits::deallocate(ba, m_buckets, bucket_count());
+                    if(nullptr != m_buckets) {
+                        auto ba = bucket_alloc(m_values.get_allocator());
+                        bucket_alloc_traits::deallocate(ba, m_buckets, bucket_count());
+                    }
                 }
 
                 auto operator=(table const& other) -> table& {
@@ -1196,6 +1226,7 @@ namespace ankerl::unordered_dense {
                     return begin() + static_cast<difference_type>(value_idx_to_remove);
                 }
 
+                template <typename Q = T, std::enable_if_t<is_map_v<Q>, bool> = true>
                 auto erase(const_iterator it) -> iterator {
                     return erase(begin() + (it - cbegin()));
                 }
@@ -1387,7 +1418,10 @@ namespace ankerl::unordered_dense {
 
                 void reserve(size_t capa) {
                     capa = std::min(capa, max_size());
-                    m_values.reserve(capa);
+                    if constexpr(has_reserve<value_container_type>) {
+                        // std::deque doesn't have reserve(). Make sure we only call when available
+                        m_values.reserve(capa);
+                    }
                     auto shifts = calc_shifts_for_size(std::max(capa, size()));
                     if(0 == m_num_buckets || shifts < m_shifts) {
                         m_shifts = shifts;
@@ -1423,14 +1457,14 @@ namespace ankerl::unordered_dense {
                     }
                     for(auto const& b_entry : b) {
                         auto it = a.find(get_key(b_entry));
-                        if constexpr(std::is_void_v<T>) {
-                            // set: only check that the key is here
-                            if(a.end() == it) {
+                        if constexpr(is_map_v<T>) {
+                            // map: check that key is here, then also check that value is the same
+                            if(a.end() == it || !(b_entry.second == it->second)) {
                                 return false;
                             }
                         } else {
-                            // map: check that key is here, then also check that value is the same
-                            if(a.end() == it || !(b_entry.second == it->second)) {
+                            // set: only check that the key is here
+                            if(a.end() == it) {
                                 return false;
                             }
                         }
@@ -1469,10 +1503,10 @@ namespace ankerl::unordered_dense {
                 class Hash = hash<Key>,
                 class KeyEqual = std::equal_to<Key>,
                 class Bucket = bucket_type::standard>
-            using map = detail::table<Key, T, Hash, KeyEqual, std::pmr::polymorphic_allocator<std::pair<Key, T>>, Bucket>;
+            using map = detail::table<Key, T, Hash, KeyEqual, ANKERL_UNORDERED_DENSE_PMR_ALLOCATOR<std::pair<Key, T>>, Bucket>;
 
             template <class Key, class Hash = hash<Key>, class KeyEqual = std::equal_to<Key>, class Bucket = bucket_type::standard>
-            using set = detail::table<Key, void, Hash, KeyEqual, std::pmr::polymorphic_allocator<Key>, Bucket>;
+            using set = detail::table<Key, void, Hash, KeyEqual, ANKERL_UNORDERED_DENSE_PMR_ALLOCATOR<Key>, Bucket>;
 
         } // namespace pmr
 

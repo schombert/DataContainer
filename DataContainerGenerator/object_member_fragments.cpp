@@ -628,7 +628,7 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 						o + "#endif";
 					} else {
 						o + "DCON_RELEASE_INLINE void @namesp@set_@prop@(@index_type@ i, bool v) const" + block{
-							"container.@obj@_set_@prop@(id, i, v);";
+							o + "container.@obj@_set_@prop@(id, i, v);";
 						};
 						o + "DCON_RELEASE_INLINE void @namesp@resize_@prop@(uint32_t sz) const noexcept" + block{
 							o + "container.@obj@_resize_@prop@(sz);";
@@ -1930,6 +1930,25 @@ void join_setter_text(basic_builder& o, property_def const& ip, bool add_prefix,
 				};
 			}
 				break;
+		case property_type::object:
+			if(add_prefix) {
+				if(as_primary_key) {
+					o + "void @obj@_set_@prop@_from_@rel@(@obj@_id ref_id, @type@ const& val)" + block{
+						o + "@rel@_set_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())), val);";
+					};
+				} else {
+					o + "void @obj@_set_@prop@_from_@rel@(@obj@_id id, @type@ const& val)" + block{
+						o + "if(auto ref_id = @rel@.m_link_back_@as_name@.vptr()[id.index()]; bool(ref_id))" + block{
+							o + "@rel@_set_@prop@(ref_id, val);";
+						};
+					};
+				}
+			} else {
+				o + "DCON_RELEASE_INLINE void @namesp@set_@prop@_from_@rel@(@type@ const& v) const noexcept" + block{
+					o + "container.@obj@_set_@prop@_from_@rel@(id, v);";
+				};
+			}
+			break;
 		case property_type::other:
 			break;
 		case property_type::array_bitfield:
@@ -1947,7 +1966,7 @@ void join_setter_text(basic_builder& o, property_def const& ip, bool add_prefix,
 				}
 			} else {
 				o + "DCON_RELEASE_INLINE void @namesp@set_@prop@_from_@rel@(@i_type@ i, bool v) const noexcept" + block{
-					"container.@obj@_set_@prop@_from_@rel@(id, i, v);";
+					o + "container.@obj@_set_@prop@_from_@rel@(id, i, v);";
 				};
 			}
 			break;
@@ -1968,7 +1987,7 @@ void join_setter_text(basic_builder& o, property_def const& ip, bool add_prefix,
 				}
 			} else {
 				o + "DCON_RELEASE_INLINE void @namesp@set_@prop@_from_@rel@(@i_type@ i, @type@ v) const noexcept" + block{
-					"container.@obj@_set_@prop@_from_@rel@(id, i, v);";
+					o + "container.@obj@_set_@prop@_from_@rel@(id, i, v);";
 				};
 			}
 				break;
@@ -2020,6 +2039,41 @@ void join_getter_text(basic_builder& o, property_def const& ip, bool add_prefix,
 				o + "DCON_RELEASE_INLINE bool @namesp@get_@prop@_from_@rel@() const noexcept" + block{
 					o + "return container.@obj@_get_@prop@_from_@rel@(id);";
 				};
+			}
+			break;
+		case property_type::object:
+			if(add_prefix) {
+				if(ip.protection != protection_type::read_only && !ip.hook_set) {
+					if(as_primary_key) {
+						o + "@type@& @obj@_get_@prop@_from_@rel@(@obj@_id ref_id) const" + block{
+							o + "return @rel@_get_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())));";
+						};
+					} else {
+						o + "@type@& @obj@_get_@prop@_from_@rel@(@obj@_id id) const" + block{
+							o + "return @rel@_get_@prop@(@rel@.m_link_back_@as_name@.vptr()[id.index()]);";
+						};
+					}
+				} else {
+					if(as_primary_key) {
+						o + "@type@ const& @obj@_get_@prop@_from_@rel@(@obj@_id ref_id) const" + block{
+							o + "return @rel@_get_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())));";
+						};
+					} else {
+						o + "@type@ const& @obj@_get_@prop@_from_@rel@(@obj@_id id) const" + block{
+							o + "return @rel@_get_@prop@(@rel@.m_link_back_@as_name@.vptr()[id.index()]);";
+						};
+					}
+				}
+			} else {
+				if(ip.protection != protection_type::read_only && !ip.hook_set) {
+					o + "DCON_RELEASE_INLINE @type@& @namesp@get_@prop@_from_@rel@() const noexcept" + block{
+							o + "return container.@obj@_get_@prop@_from_@rel@(id);";
+					};
+				} else {
+					o + "DCON_RELEASE_INLINE @type@ const& @namesp@get_@prop@_from_@rel@() const noexcept" + block{
+							o + "return container.@obj@_get_@prop@_from_@rel@(id);";
+					};
+				}
 			}
 			break;
 		case property_type::vectorizable:

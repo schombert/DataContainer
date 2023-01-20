@@ -579,7 +579,6 @@ TEST_CASE("for compatactable remove in the other direction", "[core_datacontaine
 	REQUIRE(found_car == false);
 }
 
-
 TEST_CASE("for erasable basic relationship functions", "[core_datacontainer_tests]") {
 	auto ptr = std::make_unique< cob3::data_container >();
 

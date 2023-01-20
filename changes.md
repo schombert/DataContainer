@@ -1,6 +1,11 @@
 ### version 0.2.1
 
 - updated unordered_dense header
+- Fixed a few bugs, thanks to Clang
+
+### version 0.2.1
+
+- updated unordered_dense header
 - added an iterator interface (supporting `for(auto i : ...)` loops) for iterating over all of the object instances in the data container and all of the relationships linked via a `many` link to an object instance.
 
 ### version 0.2.0

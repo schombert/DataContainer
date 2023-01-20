@@ -17,6 +17,7 @@ dcon::entity_id make_entity(dcon::data_container& dc) {
 	return dc.try_create_entity(dcon::position_id(), dcon::sprite_id());
 }
 
+
 TEST_CASE("destructor test", "[ecs_tutorial_tests]") {
 	auto ptr = std::make_unique<dcon::data_container>();
 

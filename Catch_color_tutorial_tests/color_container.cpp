@@ -19,7 +19,6 @@ float dcon::colored_thing_const_fat_id::get_blue() {
 	return get_color().blue;
 }
 
-
 void dcon::data_container::deserialize_rgb(std::byte const* start, std::byte const* end, load_record& record_in_out) {
 	if(!record_in_out.colored_thing_color) {
 		float const* found_red = nullptr;
