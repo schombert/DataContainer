@@ -344,9 +344,12 @@ int main(int argc, char *argv[]) {
 		output += "#else\n";
 		output += "#define DCON_RELEASE_INLINE inline\n";
 		output += "#endif\n";
+
+		output += "#ifdef _MSC_VER\n";
 		output += "#pragma warning( push )\n";
 		output += "#pragma warning( disable : 4324 )\n";
-		
+		output += "#endif\n";
+
 		output += "\n";
 		output += "namespace " + parsed_file.namspace + " {\n";
 
@@ -838,7 +841,10 @@ int main(int argc, char *argv[]) {
 
 
 		output += "#undef DCON_RELEASE_INLINE\n";
+		
+		output += "#ifdef _MSC_VER\n";
 		output += "#pragma warning( pop )\n";
+		output += "#endif\n";
 
 		//newline at end of file
 		output += "\n";
