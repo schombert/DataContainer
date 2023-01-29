@@ -29,8 +29,10 @@
 #else
 #define DCON_RELEASE_INLINE inline
 #endif
+#ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4324 )
+#endif
 
 namespace cob2 {
 	struct load_record {
@@ -2878,5 +2880,7 @@ namespace cob2 {
 }
 
 #undef DCON_RELEASE_INLINE
+#ifdef _MSC_VER
 #pragma warning( pop )
+#endif
 

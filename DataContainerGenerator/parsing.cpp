@@ -1605,8 +1605,8 @@ prepared_query_definition make_prepared_definition(file_def const& parsed_file, 
 			for(auto& val : result.exposed_values) {
 				if(val.exposed_name == at_value.name && !found) {
 
-					if(val.from_property && val.from_property->type == property_type::array_bitfield || val.from_property->type == property_type::array_other
-						|| val.from_property->type == property_type::array_vectorizable) {
+					if(val.from_property && (val.from_property->type == property_type::array_bitfield || val.from_property->type == property_type::array_other
+						|| val.from_property->type == property_type::array_vectorizable)) {
 
 						if(at_end < where_end && *at_end == '[') {
 							char const* bracket_end = advance_to_closing_square_bracket(at_end + 1, where_end);
