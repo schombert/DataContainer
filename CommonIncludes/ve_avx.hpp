@@ -129,15 +129,23 @@ namespace ve {
 			return _mm_cvtss_f32(sums);
 		}
 		RELEASE_INLINE float operator[](uint32_t i) const noexcept {
-#ifdef _MSC_VER 
+#ifdef _MSC_VER
+#ifdef __clang__
+			return value[i];
+#else
 			return value.m256_f32[i];
+#endif
 #else
 			return value[i];
 #endif
 		}
 		RELEASE_INLINE void set(uint32_t i, float v) noexcept {
-#ifdef _MSC_VER 
+#ifdef _MSC_VER
+#ifdef __clang__
+			value[i] = v;
+#else
 			value.m256_f32[i] = v;
+#endif
 #else
 			value[i] = v;
 #endif
