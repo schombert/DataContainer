@@ -54,6 +54,7 @@ namespace ve {
 		return vbitfield_type{ uint8_t(~(a.v ^ b.v)) };
 	}
 
+
 	struct alignas(__m256) mask_vector {
 		using wrapped_value = bool;
 
@@ -103,7 +104,19 @@ namespace ve {
 				case 7: value = _mm256_castsi256_ps(_mm256_insert_epi32(tmp, -(int32_t(v)), 7)); break;
 			}
 		}
+		RELEASE_INLINE operator vbitfield_type() const noexcept {
+			vbitfield_type t;
+			t.v = uint8_t(_mm256_movemask_ps(value));
+			return t;
+		}
 	};
+
+
+	RELEASE_INLINE vbitfield_type compress_mask(mask_vector mask) {
+		vbitfield_type t;
+		t.v = uint8_t(_mm256_movemask_ps(mask));
+		return t;
+	}
 
 	struct alignas(__m256) fp_vector {
 		using wrapped_value = float;
@@ -940,12 +953,6 @@ namespace ve {
 	template<typename T>
 	RELEASE_INLINE mask_vector is_invalid(tagged_vector<T> i) {
 		return i == tagged_vector<T>();
-	}
-
-	RELEASE_INLINE vbitfield_type compress_mask(mask_vector mask) {
-		vbitfield_type t;
-		t.v = uint8_t(_mm256_movemask_ps(mask));
-		return t;
 	}
 
 

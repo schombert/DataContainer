@@ -102,6 +102,11 @@ namespace ve {
 				case 7: value = _mm256_castsi256_ps(_mm256_insert_epi32(tmp, -(int32_t(v)), 7)); break;
 			}
 		}
+		RELEASE_INLINE operator vbitfield_type() const noexcept {
+			vbitfield_type t;
+			t.v = uint8_t(_mm256_movemask_ps(value));
+			return t;
+		}
 	};
 
 	struct alignas(__m256) fp_vector {

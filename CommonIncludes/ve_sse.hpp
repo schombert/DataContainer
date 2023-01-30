@@ -93,7 +93,17 @@ namespace ve {
 			}
 			
 		}
+		RELEASE_INLINE operator vbitfield_type() const noexcept {
+			vbitfield_type t;
+			t.v = uint8_t(_mm_movemask_ps(value));
+			return t;
+		}
 	};
+
+
+
+	
+
 
 	struct alignas(__m128) fp_vector {
 		using wrapped_value = float;
