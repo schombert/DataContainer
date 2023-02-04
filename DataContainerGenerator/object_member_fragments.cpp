@@ -4,8 +4,10 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 	property_def const& prop, bool add_prefix, std::string const& namesp, bool const_mode) {
 
 	auto upresult = to_fat_index_type(parsed_file, prop.data_type, const_mode);
+	auto cupresult = to_fat_index_type(parsed_file, prop.data_type, true);
 
 	o + substitute{ "type", upresult.has_value() ? *upresult : normalize_type(prop.data_type) };
+	o + substitute{ "const_up_type", cupresult.has_value() ? *cupresult : normalize_type(prop.data_type) };
 	o + substitute{ "base_type", normalize_type(prop.data_type) };
 	o + substitute{ "prop", prop.name };
 	o + substitute{ "index_type", prop.array_index_type };
@@ -252,14 +254,12 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 			case property_type::vectorizable:
 				if(add_prefix) {
 					if (upresult.has_value()) {
-						o + "DCON_RELEASE_INLINE @type@ const& @obj@_get_@prop@(@obj@_id id) const noexcept" + block{
+						o + "DCON_RELEASE_INLINE @const_up_type@ const& @obj@_get_@prop@(@obj@_id id) const noexcept" + block{
+							o + "return @const_up_type@(*this, @obj@.m_@prop@.vptr()[id.index()]);";
+						};
+						o + "DCON_RELEASE_INLINE @type@ @obj@_get_@prop@(@obj@_id id) noexcept" + block{
 							o + "return @type@(*this, @obj@.m_@prop@.vptr()[id.index()]);";
 						};
-						if (prop.protection != protection_type::read_only && !prop.hook_set) {
-							o + "DCON_RELEASE_INLINE @type@& @obj@_get_@prop@(@obj@_id id) noexcept" + block{
-								o + "return @type@(*this, @obj@.m_@prop@.vptr()[id.index()]);";
-							};
-						}
 					}
 					else {
 						o + "DCON_RELEASE_INLINE @type@ const& @obj@_get_@prop@(@obj@_id id) const noexcept" + block{
