@@ -6,6 +6,7 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 	auto upresult = to_fat_index_type(parsed_file, prop.data_type, const_mode);
 
 	o + substitute{ "type", upresult.has_value() ? *upresult : normalize_type(prop.data_type) };
+	o + substitute{ "base_type", normalize_type(prop.data_type) };
 	o + substitute{ "prop", prop.name };
 	o + substitute{ "index_type", prop.array_index_type };
 	o + substitute{ "namesp", namesp };
@@ -66,13 +67,13 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 					}
 
 					o + "#ifndef DCON_NO_VE";
-					o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@(@vector_position@<@obj@_id> id) const" + block{
+					o + "ve::value_to_vector_type<@base_type@> @obj@_get_@prop@(@vector_position@<@obj@_id> id) const" + block{
 						o + "return ve::apply([t = this](@obj@_id i){ return t->@obj@_get_@prop@(i); }, id);";
 					};
-					o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@(ve::partial_contiguous_tags<@obj@_id> id) const" + block{
+					o + "ve::value_to_vector_type<@base_type@> @obj@_get_@prop@(ve::partial_contiguous_tags<@obj@_id> id) const" + block{
 						o + "return ve::apply([t = this](@obj@_id i){ return t->@obj@_get_@prop@(i); }, id);";
 					};
-					o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@(ve::tagged_vector<@obj@_id> id) const" + block{
+					o + "ve::value_to_vector_type<@base_type@> @obj@_get_@prop@(ve::tagged_vector<@obj@_id> id) const" + block{
 						o + "return ve::apply([t = this](@obj@_id i){ return t->@obj@_get_@prop@(i); }, id);";
 					};
 					o + "#endif";
@@ -250,13 +251,25 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 				break;
 			case property_type::vectorizable:
 				if(add_prefix) {
-					o + "DCON_RELEASE_INLINE @type@ const& @obj@_get_@prop@(@obj@_id id) const noexcept" + block{
-						o + "return @obj@.m_@prop@.vptr()[id.index()];";
-					};
-					if(prop.protection != protection_type::read_only && !prop.hook_set) {
-						o + "DCON_RELEASE_INLINE @type@& @obj@_get_@prop@(@obj@_id id) noexcept" + block{
+					if (upresult.has_value()) {
+						o + "DCON_RELEASE_INLINE @type@ const& @obj@_get_@prop@(@obj@_id id) const noexcept" + block{
+							o + "return @type@(*this, @obj@.m_@prop@.vptr()[id.index()]);";
+						};
+						if (prop.protection != protection_type::read_only && !prop.hook_set) {
+							o + "DCON_RELEASE_INLINE @type@& @obj@_get_@prop@(@obj@_id id) noexcept" + block{
+								o + "return @type@(*this, @obj@.m_@prop@.vptr()[id.index()]);";
+							};
+						}
+					}
+					else {
+						o + "DCON_RELEASE_INLINE @type@ const& @obj@_get_@prop@(@obj@_id id) const noexcept" + block{
 							o + "return @obj@.m_@prop@.vptr()[id.index()];";
 						};
+						if (prop.protection != protection_type::read_only && !prop.hook_set) {
+							o + "DCON_RELEASE_INLINE @type@& @obj@_get_@prop@(@obj@_id id) noexcept" + block{
+								o + "return @obj@.m_@prop@.vptr()[id.index()];";
+							};
+						}
 					}
 
 					if(prop.protection == protection_type::hidden) {
@@ -270,13 +283,13 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 					}
 
 					o + "#ifndef DCON_NO_VE";
-					o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@type@> @obj@_get_@prop@(@vector_position@<@obj@_id> id) const noexcept" + block{
+					o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@base_type@> @obj@_get_@prop@(@vector_position@<@obj@_id> id) const noexcept" + block{
 						o + "return ve::load(id, @obj@.m_@prop@.vptr());";
 					};
-					o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@type@> @obj@_get_@prop@(ve::partial_contiguous_tags<@obj@_id> id) const noexcept" + block{
+					o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@base_type@> @obj@_get_@prop@(ve::partial_contiguous_tags<@obj@_id> id) const noexcept" + block{
 						o + "return ve::load(id, @obj@.m_@prop@.vptr());";
 					};
-					o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@type@> @obj@_get_@prop@(ve::tagged_vector<@obj@_id> id) const noexcept" + block{
+					o + "DCON_RELEASE_INLINE ve::value_to_vector_type<@base_type@> @obj@_get_@prop@(ve::tagged_vector<@obj@_id> id) const noexcept" + block{
 						o + "return ve::load(id, @obj@.m_@prop@.vptr());";
 					};
 					o + "#endif";
@@ -552,24 +565,24 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 					break;
 				case property_type::vectorizable:
 					if(add_prefix) {
-						o + "void @obj@_set_@prop@(@obj@_id id, @type@ value);";
+						o + "void @obj@_set_@prop@(@obj@_id id, @base_type@ value);";
 
 						if(prop.protection == protection_type::read_only || prop.protection == protection_type::hidden)
-							o + "friend void @obj@_fat_id::set_@prop@(@type@) const;";
+							o + "friend void @obj@_fat_id::set_@prop@(@base_type@) const;";
 
 						o + "#ifndef DCON_NO_VE";
-						o + "void @obj@_set_@prop@(@vector_position@<@obj@_id> id, ve::value_to_vector_type<@type@> value)" + block{
-							o + "ve::apply(value, [t = this](@obj@_id i, @type@ v){ t->@obj@_set_@prop@(i, v); }, id);";
+						o + "void @obj@_set_@prop@(@vector_position@<@obj@_id> id, ve::value_to_vector_type<@base_type@> value)" + block{
+							o + "ve::apply(value, [t = this](@obj@_id i, @base_type@ v){ t->@obj@_set_@prop@(i, v); }, id);";
 						};
-						o + "void @obj@_set_@prop@(ve::partial_contiguous_tags<@obj@_id> id, ve::value_to_vector_type<@type@> value)" + block{
-							o + "ve::apply(value, [t = this](@obj@_id i, @type@ v){ t->@obj@_set_@prop@(i, v); }, id);";
+						o + "void @obj@_set_@prop@(ve::partial_contiguous_tags<@obj@_id> id, ve::value_to_vector_type<@base_type@> value)" + block{
+							o + "ve::apply(value, [t = this](@obj@_id i, @base_type@ v){ t->@obj@_set_@prop@(i, v); }, id);";
 						};
-						o + "void @obj@_set_@prop@(ve::tagged_vector<@obj@_id> id, ve::value_to_vector_type<@type@> value)" + block{
-							o + "ve::apply(value, [t = this](@obj@_id i, @type@ v){ t->@obj@_set_@prop@(i, v); }, id);";
+						o + "void @obj@_set_@prop@(ve::tagged_vector<@obj@_id> id, ve::value_to_vector_type<@base_type@> value)" + block{
+							o + "ve::apply(value, [t = this](@obj@_id i, @base_type@ v){ t->@obj@_set_@prop@(i, v); }, id);";
 						};
 						o + "#endif";
 					} else {
-						o + "DCON_RELEASE_INLINE void @namesp@set_@prop@(@type@ v) const" + block{
+						o + "DCON_RELEASE_INLINE void @namesp@set_@prop@(@base_type@ v) const" + block{
 							o + "container.@obj@_set_@prop@(id, v);";
 						};
 					}
@@ -718,27 +731,27 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 					break;
 				case property_type::vectorizable:
 					if(add_prefix) {
-						o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(@obj@_id id, @type@ value) noexcept" + block{
+						o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(@obj@_id id, @base_type@ value) noexcept" + block{
 							o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
 						};
 
 						if(prop.protection == protection_type::read_only || prop.protection == protection_type::hidden) {
-							o + "friend void @obj@_fat_id::set_@prop@(@type@) const noexcept;";
+							o + "friend void @obj@_fat_id::set_@prop@(@base_type@) const noexcept;";
 						}
 
 						o + "#ifndef DCON_NO_VE";
-						o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(@vector_position@<@obj@_id> id, ve::value_to_vector_type<@type@> values) noexcept" + block{
+						o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(@vector_position@<@obj@_id> id, ve::value_to_vector_type<@base_type@> values) noexcept" + block{
 							o + "ve::store(id, @obj@.m_@prop@.vptr(), values);";
 						};
-						o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(ve::partial_contiguous_tags<@obj@_id> id, ve::value_to_vector_type<@type@> values) noexcept" + block{
+						o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(ve::partial_contiguous_tags<@obj@_id> id, ve::value_to_vector_type<@base_type@> values) noexcept" + block{
 							o + "ve::store(id, @obj@.m_@prop@.vptr(), values);";
 						};
-						o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(ve::tagged_vector<@obj@_id> id, ve::value_to_vector_type<@type@> values) noexcept" + block{
+						o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(ve::tagged_vector<@obj@_id> id, ve::value_to_vector_type<@base_type@> values) noexcept" + block{
 							o + "ve::store(id, @obj@.m_@prop@.vptr(), values);";
 						};
 						o + "#endif";
 					} else {
-						o + "DCON_RELEASE_INLINE void @namesp@set_@prop@(@type@ v) const noexcept" + block{
+						o + "DCON_RELEASE_INLINE void @namesp@set_@prop@(@base_type@ v) const noexcept" + block{
 							o + "container.@obj@_set_@prop@(id, v);";
 						};
 					}
