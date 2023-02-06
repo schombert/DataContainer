@@ -254,7 +254,7 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 			case property_type::vectorizable:
 				if(add_prefix) {
 					if (upresult.has_value()) {
-						o + "DCON_RELEASE_INLINE @const_up_type@ const& @obj@_get_@prop@(@obj@_id id) const noexcept" + block{
+						o + "DCON_RELEASE_INLINE @const_up_type@ @obj@_get_@prop@(@obj@_id id) const noexcept" + block{
 							o + "return @const_up_type@(*this, @obj@.m_@prop@.vptr()[id.index()]);";
 						};
 						o + "DCON_RELEASE_INLINE @type@ @obj@_get_@prop@(@obj@_id id) noexcept" + block{
