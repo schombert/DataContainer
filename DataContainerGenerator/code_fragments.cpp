@@ -718,7 +718,15 @@ basic_builder& move_value_from_back(basic_builder& o, std::string const& object_
 	if(is_expandable) {
 		o + "@t_obj@.m_@t_prop@.values.pop_back();";
 	} else {
-		o + "@t_obj@.m_@t_prop@.vptr()[@t_source@.index()] = @t_null@;";
+		if (multiplicity > 1) {
+			for (int32_t i = 0; i < multiplicity; ++i) {
+				o + substitute{ "i", std::to_string(i) };
+				o + "@t_obj@.m_@t_prop@.vptr()[@t_source@.index()][@i@]  = @t_null@;";
+			}
+		}
+		else {
+			o + "@t_obj@.m_@t_prop@.vptr()[@t_source@.index()] = @t_null@;";
+		}
 	}
 
 	return o;
