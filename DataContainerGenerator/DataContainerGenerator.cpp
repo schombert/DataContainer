@@ -326,11 +326,6 @@ int main(int argc, char *argv[]) {
 		if(needs_hash_include) {
 			output += "#include \"unordered_dense.h\"\n";
 		}
-		for(auto& i : parsed_file.includes) {
-			output += "#include ";
-			output += i;
-			output += "\n";
-		}
 
 		//open new namespace
 		output += "\n";
@@ -382,6 +377,15 @@ int main(int argc, char *argv[]) {
 		output += "}\n\n";
 		output += "#endif\n";
 
+		//
+		// other includes go here, so they can see ids
+		//
+
+		for (auto& i : parsed_file.includes) {
+			output += "#include ";
+			output += i;
+			output += "\n";
+		}
 
 		//reopen namespace
 		output += "namespace " + parsed_file.namspace + " {\n";
