@@ -74,7 +74,7 @@ basic_builder& make_value_to_vector_type(basic_builder& o, std::string const& qu
 	o + substitute("type", qualified_name)
 		+ "template<>"
 		+ "struct value_to_vector_type_s<@type@>" + class_block {
-			o + "using type = tagged_vector<@type@>;";
+			o + "using type = ::ve::tagged_vector<@type@>;";
 		} + line_break{};
 	return o;
 }

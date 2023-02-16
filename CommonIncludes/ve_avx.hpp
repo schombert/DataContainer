@@ -229,7 +229,14 @@ namespace ve {
 		RELEASE_INLINE constexpr operator __m256i() const {
 			return value;
 		}
-
+		RELEASE_INLINE __m256i to_original_values() const {
+			if constexpr (tag_type::zero_is_null_t::value) {
+				return _mm256_set_m128i(_mm_add_epi32(_mm256_extractf128_si256(value, 1), _mm_set1_epi32(int32_t(1))), _mm_add_epi32(_mm256_extractf128_si256(value, 0), _mm_set1_epi32(int32_t(1))));
+			}
+			else {
+				return value;
+			}
+		}
 		RELEASE_INLINE tag_type operator[](uint32_t i) const noexcept {
 			if constexpr(tag_type::zero_is_null_t::value) {
 				tag_type r;
@@ -1524,7 +1531,7 @@ namespace ve {
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto store(contiguous_tags<T> e, U* dest, tagged_vector<U> values) -> std::enable_if_t<sizeof(U) == 4, void> {
-		_mm256_store_si256((__m128i*)(dest + e.value), values.to_original_values());
+		_mm256_store_si256((__m256i*)(dest + e.value), values.to_original_values());
 	}
 
 	template<typename T>
@@ -1541,7 +1548,7 @@ namespace ve {
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto store(unaligned_contiguous_tags<T> e, U* dest, tagged_vector<U> values) -> std::enable_if_t<sizeof(U) == 4, void> {
-		_mm256_store_si256((__m128i*)(dest + e.value), values.to_original_values());
+		_mm256_store_si256((__m256i*)(dest + e.value), values.to_original_values());
 	}
 
 	template<typename T>

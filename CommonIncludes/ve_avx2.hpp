@@ -222,9 +222,15 @@ namespace ve {
 		{}
 		RELEASE_INLINE constexpr tagged_vector(__m256i v, std::true_type) : value(v) {}
 
-		RELEASE_INLINE constexpr operator __m256i() const
-		{
+		RELEASE_INLINE constexpr operator __m256i() const {
 			return value;
+		}
+		RELEASE_INLINE __m256i to_original_values() const {
+			if constexpr (tag_type::zero_is_null_t::value) {
+				return _mm256_add_epi32(value, _mm256_set1_epi32(1));
+			} else {
+				return value;
+			}
 		}
 
 		RELEASE_INLINE tag_type operator[](uint32_t i) const noexcept {
@@ -1340,7 +1346,7 @@ namespace ve {
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto store(contiguous_tags<T> e, U* dest, tagged_vector<U> values) -> std::enable_if_t<sizeof(U) == 4, void> {
-		_mm256_store_si256((__m128i*)(dest + e.value), values.to_original_values());
+		_mm256_store_si256((__m256i*)(dest + e.value), values.to_original_values());
 	}
 
 	template<typename T>
@@ -1357,7 +1363,7 @@ namespace ve {
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto store(unaligned_contiguous_tags<T> e, U* dest, tagged_vector<U> values) -> std::enable_if_t<sizeof(U) == 4, void> {
-		_mm256_store_si256((__m128i*)(dest + e.value), values.to_original_values());
+		_mm256_store_si256((__m256i*)(dest + e.value), values.to_original_values());
 	}
 
 	template<typename T>
@@ -1378,7 +1384,7 @@ namespace ve {
 	template<typename T, typename U>
 	RELEASE_INLINE auto store(partial_contiguous_tags<T> e, U* dest, tagged_vector<U> values) -> std::enable_if_t<sizeof(U) == 4, void> {
 		__m256i mask = _mm256_loadu_si256((__m256i const*)(load_masks + uint32_t(8) - e.subcount));
-		_mm256_maskstore_epi32(dest + e.value, mask, values.to_original_values());
+		_mm256_maskstore_epi32((int32_t*)(dest + e.value), mask, values.to_original_values());
 	}
 	template<typename T>
 	RELEASE_INLINE void store(contiguous_tags_base<T> e, int16_t* dest, int_vector values) {
