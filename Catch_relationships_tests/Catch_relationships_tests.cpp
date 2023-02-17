@@ -99,16 +99,14 @@ TEST_CASE("array pool index storage", "[relationships_tests]") {
 	REQUIRE(a6.get_right_from_relate_in_array() == dcon::thingyB_id());
 	REQUIRE(a7.get_right_from_relate_in_array() == b3);
 
-	{
+	 {
 		std::array<bool, 7> foundvals{false, false, false, false, false, false, false};
 		int32_t found_count = 0;
 
-		b3.for_each_left_from_relate_in_array([&](auto fi) {
-			foundvals[fi.id.index()] = true;
+		for (auto rid : b3.get_relate_in_array()) {
+			foundvals[rid.get_left().id.index()] = true;
 			found_count++;
-		});
-
-		REQUIRE(b3.has_left_from_relate_in_array(a7));
+		}
 
 		REQUIRE(foundvals[6]);
 		REQUIRE(foundvals[2]);
@@ -133,12 +131,15 @@ TEST_CASE("array pool index storage", "[relationships_tests]") {
 		std::array<bool, 7> foundvals{ false, false, false, false, false, false, false };
 		int32_t found_count = 0;
 
-		b2.for_each_left_from_relate_in_array([&](auto fi) {
-			foundvals[fi.id.index()] = true;
-			found_count++;
-		});
 
-		REQUIRE(b2.has_left_from_relate_in_array(a5));
+		bool found_a5 = false;
+		for (auto rid : b2.get_relate_in_array()) {
+			foundvals[rid.get_left().id.index()] = true;
+			found_count++;
+			found_a5 = found_a5 || rid.get_left() == a5;
+		}
+
+		REQUIRE(found_a5);
 
 		REQUIRE(foundvals[4]);
 		REQUIRE(foundvals[1]);
@@ -148,12 +149,14 @@ TEST_CASE("array pool index storage", "[relationships_tests]") {
 		std::array<bool, 7> foundvals{ false, false, false, false, false, false, false };
 		int32_t found_count = 0;
 
-		b1.for_each_left_from_relate_in_array([&](auto fi) {
-			foundvals[fi.id.index()] = true;
+		bool found_a1 = false;
+		for (auto rid : b1.get_relate_in_array_as_right()) {
+			foundvals[rid.get_left().id.index()] = true;
 			found_count++;
-		});
+			found_a1 = found_a1 || rid.get_left() == a1;
+		}
 
-		REQUIRE(b1.has_left_from_relate_in_array(a1));
+		REQUIRE(found_a1);
 
 		REQUIRE(foundvals[0]);
 		REQUIRE(found_count == 1);
@@ -175,12 +178,14 @@ TEST_CASE("array pool index storage", "[relationships_tests]") {
 		std::array<bool, 7> foundvals{ false, false, false, false, false, false, false };
 		int32_t found_count = 0;
 
-		b3.for_each_left_from_relate_in_array([&](auto fi) {
-			foundvals[fi.id.index()] = true;
+		bool found_a2 = false;
+		for (auto rid : b3.get_relate_in_array_as_right()) {
+			foundvals[rid.get_left().id.index()] = true;
 			found_count++;
-		});
+			found_a2 = found_a2 || rid.get_left() == a2;
+		}
+		REQUIRE(found_a2);
 
-		REQUIRE(b3.has_left_from_relate_in_array(a2));
 
 		REQUIRE(foundvals[1]);
 		REQUIRE(foundvals[2]);
@@ -191,12 +196,13 @@ TEST_CASE("array pool index storage", "[relationships_tests]") {
 		std::array<bool, 7> foundvals{ false, false, false, false, false, false, false };
 		int32_t found_count = 0;
 
-		b2.for_each_left_from_relate_in_array([&](auto fi) {
-			foundvals[fi.id.index()] = true;
+		bool found_a5 = false;
+		for (auto rid : b2.get_relate_in_array_as_right()) {
+			foundvals[rid.get_left().id.index()] = true;
 			found_count++;
-		});
-
-		REQUIRE(b2.has_left_from_relate_in_array(a5));
+			found_a5 = found_a5 || rid.get_left() == a5;
+		}
+		REQUIRE(found_a5);
 
 		REQUIRE(foundvals[4]);
 		REQUIRE(found_count == 1);
@@ -205,12 +211,13 @@ TEST_CASE("array pool index storage", "[relationships_tests]") {
 		std::array<bool, 7> foundvals{ false, false, false, false, false, false, false };
 		int32_t found_count = 0;
 
-		b1.for_each_left_from_relate_in_array([&](auto fi) {
-			foundvals[fi.id.index()] = true;
+		bool found_a1 = false;
+		for (auto rid : b1.get_relate_in_array_as_right()) {
+			foundvals[rid.get_left().id.index()] = true;
 			found_count++;
-		});
-
-		REQUIRE(b1.has_left_from_relate_in_array(a1));
+			found_a1 = found_a1 || rid.get_left() == a1;
+		}
+		REQUIRE(found_a1);
 
 		REQUIRE(foundvals[0]);
 		REQUIRE(found_count == 1);
@@ -229,12 +236,13 @@ TEST_CASE("array pool index storage", "[relationships_tests]") {
 		std::array<bool, 7> foundvals{ false, false, false, false, false, false, false };
 		int32_t found_count = 0;
 
-		b2.for_each_left_from_relate_in_array([&](auto fi) {
-			foundvals[fi.id.index()] = true;
+		bool found_a5 = false;
+		for (auto rid : b2.get_relate_in_array_as_right()) {
+			foundvals[rid.get_left().id.index()] = true;
 			found_count++;
-		});
-
-		REQUIRE(b2.has_left_from_relate_in_array(a5));
+			found_a5 = found_a5 || rid.get_left() == a5;
+		}
+		REQUIRE(found_a5);
 
 		REQUIRE(foundvals[4]);
 		REQUIRE(found_count == 1);
@@ -243,12 +251,13 @@ TEST_CASE("array pool index storage", "[relationships_tests]") {
 		std::array<bool, 7> foundvals{ false, false, false, false, false, false, false };
 		int32_t found_count = 0;
 
-		b1.for_each_left_from_relate_in_array([&](auto fi) {
-			foundvals[fi.id.index()] = true;
+		bool found_a1 = false;
+		for (auto rid : b1.get_relate_in_array_as_right()) {
+			foundvals[rid.get_left().id.index()] = true;
 			found_count++;
-		});
-
-		REQUIRE(b1.has_left_from_relate_in_array(a1));
+			found_a1 = found_a1 || rid.get_left() == a1;
+		}
+		REQUIRE(found_a1);
 
 		REQUIRE(foundvals[0]);
 		REQUIRE(found_count == 1);
@@ -293,12 +302,14 @@ TEST_CASE("list index storage", "[relationships_tests]") {
 		std::array<bool, 7> foundvals{ false, false, false, false, false, false, false };
 		int32_t found_count = 0;
 
-		b3.for_each_left_from_relate_in_list([&](auto fi) {
-			foundvals[fi.id.index()] = true;
-			found_count++;
-		});
 
-		REQUIRE(b3.has_left_from_relate_in_list(a7));
+		bool found_a7 = false;
+		for (auto rid : b3.get_relate_in_list()) {
+			foundvals[rid.get_left().id.index()] = true;
+			found_count++;
+			found_a7 = found_a7 || rid.get_left() == a7;
+		}
+		REQUIRE(found_a7);
 
 		REQUIRE(foundvals[6]);
 		REQUIRE(foundvals[2]);
@@ -325,12 +336,13 @@ TEST_CASE("list index storage", "[relationships_tests]") {
 		std::array<bool, 7> foundvals{ false, false, false, false, false, false, false };
 		int32_t found_count = 0;
 
-		b2.for_each_left_from_relate_in_list([&](auto fi) {
-			foundvals[fi.id.index()] = true;
+		bool found_a5 = false;
+		for (auto rid : b2.get_relate_in_list()) {
+			foundvals[rid.get_left().id.index()] = true;
 			found_count++;
-		});
-
-		REQUIRE(b2.has_left_from_relate_in_list(a5));
+			found_a5 = found_a5 || rid.get_left() == a5;
+		}
+		REQUIRE(found_a5);
 
 		REQUIRE(foundvals[4]);
 		REQUIRE(foundvals[1]);
@@ -340,12 +352,13 @@ TEST_CASE("list index storage", "[relationships_tests]") {
 		std::array<bool, 7> foundvals{ false, false, false, false, false, false, false };
 		int32_t found_count = 0;
 
-		b1.for_each_left_from_relate_in_list([&](auto fi) {
-			foundvals[fi.id.index()] = true;
+		bool found_a1 = false;
+		for (auto rid : b1.get_relate_in_list()) {
+			foundvals[rid.get_left().id.index()] = true;
 			found_count++;
-		});
-
-		REQUIRE(b1.has_left_from_relate_in_list(a1));
+			found_a1 = found_a1 || rid.get_left() == a1;
+		}
+		REQUIRE(found_a1);
 
 		REQUIRE(foundvals[0]);
 		REQUIRE(found_count == 1);
@@ -367,12 +380,13 @@ TEST_CASE("list index storage", "[relationships_tests]") {
 		std::array<bool, 7> foundvals{ false, false, false, false, false, false, false };
 		int32_t found_count = 0;
 
-		b3.for_each_left_from_relate_in_list([&](auto fi) {
-			foundvals[fi.id.index()] = true;
+		bool found_a2 = false;
+		for (auto rid : b3.get_relate_in_list()) {
+			foundvals[rid.get_left().id.index()] = true;
 			found_count++;
-		});
-
-		REQUIRE(b3.has_left_from_relate_in_list(a2));
+			found_a2 = found_a2 || rid.get_left() == a2;
+		}
+		REQUIRE(found_a2);
 
 		REQUIRE(foundvals[1]);
 		REQUIRE(foundvals[2]);
@@ -383,12 +397,13 @@ TEST_CASE("list index storage", "[relationships_tests]") {
 		std::array<bool, 7> foundvals{ false, false, false, false, false, false, false };
 		int32_t found_count = 0;
 
-		b2.for_each_left_from_relate_in_list([&](auto fi) {
-			foundvals[fi.id.index()] = true;
+		bool found_a5 = false;
+		for (auto rid : b2.get_relate_in_list()) {
+			foundvals[rid.get_left().id.index()] = true;
 			found_count++;
-		});
-
-		REQUIRE(b2.has_left_from_relate_in_list(a5));
+			found_a5 = found_a5 || rid.get_left() == a5;
+		}
+		REQUIRE(found_a5);
 
 		REQUIRE(foundvals[4]);
 		REQUIRE(found_count == 1);
@@ -397,12 +412,13 @@ TEST_CASE("list index storage", "[relationships_tests]") {
 		std::array<bool, 7> foundvals{ false, false, false, false, false, false, false };
 		int32_t found_count = 0;
 
-		b1.for_each_left_from_relate_in_list([&](auto fi) {
-			foundvals[fi.id.index()] = true;
+		bool found_a1 = false;
+		for (auto rid : b1.get_relate_in_list()) {
+			foundvals[rid.get_left().id.index()] = true;
 			found_count++;
-		});
-
-		REQUIRE(b1.has_left_from_relate_in_list(a1));
+			found_a1 = found_a1 || rid.get_left() == a1;
+		}
+		REQUIRE(found_a1);
 
 		REQUIRE(foundvals[0]);
 		REQUIRE(found_count == 1);
@@ -421,12 +437,13 @@ TEST_CASE("list index storage", "[relationships_tests]") {
 		std::array<bool, 7> foundvals{ false, false, false, false, false, false, false };
 		int32_t found_count = 0;
 
-		b2.for_each_left_from_relate_in_list([&](auto fi) {
-			foundvals[fi.id.index()] = true;
+		bool found_a5 = false;
+		for (auto rid : b2.get_relate_in_list()) {
+			foundvals[rid.get_left().id.index()] = true;
 			found_count++;
-		});
-
-		REQUIRE(b2.has_left_from_relate_in_list(a5));
+			found_a5 = found_a5 || rid.get_left() == a5;
+		}
+		REQUIRE(found_a5);
 
 		REQUIRE(foundvals[4]);
 		REQUIRE(found_count == 1);
@@ -435,12 +452,13 @@ TEST_CASE("list index storage", "[relationships_tests]") {
 		std::array<bool, 7> foundvals{ false, false, false, false, false, false, false };
 		int32_t found_count = 0;
 
-		b1.for_each_left_from_relate_in_list([&](auto fi) {
-			foundvals[fi.id.index()] = true;
+		bool found_a1 = false;
+		for (auto rid : b1.get_relate_in_list()) {
+			foundvals[rid.get_left().id.index()] = true;
 			found_count++;
-		});
-
-		REQUIRE(b1.has_left_from_relate_in_list(a1));
+			found_a1 = found_a1 || rid.get_left() == a1;
+		}
+		REQUIRE(found_a1);
 
 		REQUIRE(foundvals[0]);
 		REQUIRE(found_count == 1);

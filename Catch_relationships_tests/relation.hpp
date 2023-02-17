@@ -528,62 +528,62 @@ namespace dcon {
 namespace ve {
 	template<>
 	struct value_to_vector_type_s<dcon::thingyA_id> {
-		using type = tagged_vector<dcon::thingyA_id>;
+		using type = ::ve::tagged_vector<dcon::thingyA_id>;
 	};
 	
 	template<>
 	struct value_to_vector_type_s<dcon::thingyB_id> {
-		using type = tagged_vector<dcon::thingyB_id>;
+		using type = ::ve::tagged_vector<dcon::thingyB_id>;
 	};
 	
 	template<>
 	struct value_to_vector_type_s<dcon::relate_same_id> {
-		using type = tagged_vector<dcon::relate_same_id>;
+		using type = ::ve::tagged_vector<dcon::relate_same_id>;
 	};
 	
 	template<>
 	struct value_to_vector_type_s<dcon::relate_in_array_id> {
-		using type = tagged_vector<dcon::relate_in_array_id>;
+		using type = ::ve::tagged_vector<dcon::relate_in_array_id>;
 	};
 	
 	template<>
 	struct value_to_vector_type_s<dcon::relate_in_list_id> {
-		using type = tagged_vector<dcon::relate_in_list_id>;
+		using type = ::ve::tagged_vector<dcon::relate_in_list_id>;
 	};
 	
 	template<>
 	struct value_to_vector_type_s<dcon::many_many_id> {
-		using type = tagged_vector<dcon::many_many_id>;
+		using type = ::ve::tagged_vector<dcon::many_many_id>;
 	};
 	
 	template<>
 	struct value_to_vector_type_s<dcon::relate_as_optional_id> {
-		using type = tagged_vector<dcon::relate_as_optional_id>;
+		using type = ::ve::tagged_vector<dcon::relate_as_optional_id>;
 	};
 	
 	template<>
 	struct value_to_vector_type_s<dcon::relate_as_non_optional_id> {
-		using type = tagged_vector<dcon::relate_as_non_optional_id>;
+		using type = ::ve::tagged_vector<dcon::relate_as_non_optional_id>;
 	};
 	
 	template<>
 	struct value_to_vector_type_s<dcon::relate_as_multipleA_id> {
-		using type = tagged_vector<dcon::relate_as_multipleA_id>;
+		using type = ::ve::tagged_vector<dcon::relate_as_multipleA_id>;
 	};
 	
 	template<>
 	struct value_to_vector_type_s<dcon::relate_as_multipleB_id> {
-		using type = tagged_vector<dcon::relate_as_multipleB_id>;
+		using type = ::ve::tagged_vector<dcon::relate_as_multipleB_id>;
 	};
 	
 	template<>
 	struct value_to_vector_type_s<dcon::relate_as_multipleC_id> {
-		using type = tagged_vector<dcon::relate_as_multipleC_id>;
+		using type = ::ve::tagged_vector<dcon::relate_as_multipleC_id>;
 	};
 	
 	template<>
 	struct value_to_vector_type_s<dcon::relate_as_multipleD_id> {
-		using type = tagged_vector<dcon::relate_as_multipleD_id>;
+		using type = ::ve::tagged_vector<dcon::relate_as_multipleD_id>;
 	};
 	
 }
@@ -1424,9 +1424,6 @@ namespace dcon {
 		DCON_RELEASE_INLINE void remove_all_relate_as_optional() const noexcept;
 		DCON_RELEASE_INLINE internal::iterator_thingyA_foreach_relate_as_optional_as_left_generator get_relate_as_optional() const;
 		template<typename T>
-		DCON_RELEASE_INLINE void for_each_right_from_relate_as_optional(T&& func) const;
-		DCON_RELEASE_INLINE bool has_right_from_relate_as_optional(thingyB_id target) const;
-		template<typename T>
 		DCON_RELEASE_INLINE void for_each_relate_as_non_optional_as_left(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> range_of_relate_as_non_optional_as_left() const;
 		DCON_RELEASE_INLINE void remove_all_relate_as_non_optional_as_left() const noexcept;
@@ -1436,9 +1433,6 @@ namespace dcon {
 		DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> range_of_relate_as_non_optional() const;
 		DCON_RELEASE_INLINE void remove_all_relate_as_non_optional() const noexcept;
 		DCON_RELEASE_INLINE internal::iterator_thingyA_foreach_relate_as_non_optional_as_left_generator get_relate_as_non_optional() const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_right_from_relate_as_non_optional(T&& func) const;
-		DCON_RELEASE_INLINE bool has_right_from_relate_as_non_optional(thingyB_id target) const;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_relate_as_multipleA_as_left(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<relate_as_multipleA_id const*, relate_as_multipleA_id const*> range_of_relate_as_multipleA_as_left() const;
@@ -1533,9 +1527,6 @@ namespace dcon {
 		DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> range_of_relate_as_optional() const;
 		DCON_RELEASE_INLINE internal::const_iterator_thingyA_foreach_relate_as_optional_as_left_generator get_relate_as_optional() const;
 		template<typename T>
-		DCON_RELEASE_INLINE void for_each_right_from_relate_as_optional(T&& func) const;
-		DCON_RELEASE_INLINE bool has_right_from_relate_as_optional(thingyB_id target) const;
-		template<typename T>
 		DCON_RELEASE_INLINE void for_each_relate_as_non_optional_as_left(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> range_of_relate_as_non_optional_as_left() const;
 		DCON_RELEASE_INLINE internal::const_iterator_thingyA_foreach_relate_as_non_optional_as_left_generator get_relate_as_non_optional_as_left() const;
@@ -1543,9 +1534,6 @@ namespace dcon {
 		DCON_RELEASE_INLINE void for_each_relate_as_non_optional(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> range_of_relate_as_non_optional() const;
 		DCON_RELEASE_INLINE internal::const_iterator_thingyA_foreach_relate_as_non_optional_as_left_generator get_relate_as_non_optional() const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_right_from_relate_as_non_optional(T&& func) const;
-		DCON_RELEASE_INLINE bool has_right_from_relate_as_non_optional(thingyB_id target) const;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_relate_as_multipleA_as_left(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<relate_as_multipleA_id const*, relate_as_multipleA_id const*> range_of_relate_as_multipleA_as_left() const;
@@ -1624,9 +1612,6 @@ namespace dcon {
 		DCON_RELEASE_INLINE void remove_all_relate_in_array() const noexcept;
 		DCON_RELEASE_INLINE internal::iterator_thingyB_foreach_relate_in_array_as_right_generator get_relate_in_array() const;
 		template<typename T>
-		DCON_RELEASE_INLINE void for_each_left_from_relate_in_array(T&& func) const;
-		DCON_RELEASE_INLINE bool has_left_from_relate_in_array(thingyA_id target) const;
-		template<typename T>
 		DCON_RELEASE_INLINE void for_each_relate_in_list_as_right(T&& func) const;
 		DCON_RELEASE_INLINE void remove_all_relate_in_list_as_right() const noexcept;
 		DCON_RELEASE_INLINE internal::iterator_thingyB_foreach_relate_in_list_as_right_generator get_relate_in_list_as_right() const;
@@ -1634,9 +1619,6 @@ namespace dcon {
 		DCON_RELEASE_INLINE void for_each_relate_in_list(T&& func) const;
 		DCON_RELEASE_INLINE void remove_all_relate_in_list() const noexcept;
 		DCON_RELEASE_INLINE internal::iterator_thingyB_foreach_relate_in_list_as_right_generator get_relate_in_list() const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_left_from_relate_in_list(T&& func) const;
-		DCON_RELEASE_INLINE bool has_left_from_relate_in_list(thingyA_id target) const;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_relate_as_optional_as_right(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> range_of_relate_as_optional_as_right() const;
@@ -1648,9 +1630,6 @@ namespace dcon {
 		DCON_RELEASE_INLINE void remove_all_relate_as_optional() const noexcept;
 		DCON_RELEASE_INLINE internal::iterator_thingyB_foreach_relate_as_optional_as_right_generator get_relate_as_optional() const;
 		template<typename T>
-		DCON_RELEASE_INLINE void for_each_left_from_relate_as_optional(T&& func) const;
-		DCON_RELEASE_INLINE bool has_left_from_relate_as_optional(thingyA_id target) const;
-		template<typename T>
 		DCON_RELEASE_INLINE void for_each_relate_as_non_optional_as_right(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> range_of_relate_as_non_optional_as_right() const;
 		DCON_RELEASE_INLINE void remove_all_relate_as_non_optional_as_right() const noexcept;
@@ -1660,9 +1639,6 @@ namespace dcon {
 		DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> range_of_relate_as_non_optional() const;
 		DCON_RELEASE_INLINE void remove_all_relate_as_non_optional() const noexcept;
 		DCON_RELEASE_INLINE internal::iterator_thingyB_foreach_relate_as_non_optional_as_right_generator get_relate_as_non_optional() const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_left_from_relate_as_non_optional(T&& func) const;
-		DCON_RELEASE_INLINE bool has_left_from_relate_as_non_optional(thingyA_id target) const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 		
 	};
@@ -1726,17 +1702,11 @@ namespace dcon {
 		DCON_RELEASE_INLINE std::pair<relate_in_array_id const*, relate_in_array_id const*> range_of_relate_in_array() const;
 		DCON_RELEASE_INLINE internal::const_iterator_thingyB_foreach_relate_in_array_as_right_generator get_relate_in_array() const;
 		template<typename T>
-		DCON_RELEASE_INLINE void for_each_left_from_relate_in_array(T&& func) const;
-		DCON_RELEASE_INLINE bool has_left_from_relate_in_array(thingyA_id target) const;
-		template<typename T>
 		DCON_RELEASE_INLINE void for_each_relate_in_list_as_right(T&& func) const;
 		DCON_RELEASE_INLINE internal::const_iterator_thingyB_foreach_relate_in_list_as_right_generator get_relate_in_list_as_right() const;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_relate_in_list(T&& func) const;
 		DCON_RELEASE_INLINE internal::const_iterator_thingyB_foreach_relate_in_list_as_right_generator get_relate_in_list() const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_left_from_relate_in_list(T&& func) const;
-		DCON_RELEASE_INLINE bool has_left_from_relate_in_list(thingyA_id target) const;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_relate_as_optional_as_right(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> range_of_relate_as_optional_as_right() const;
@@ -1746,9 +1716,6 @@ namespace dcon {
 		DCON_RELEASE_INLINE std::pair<relate_as_optional_id const*, relate_as_optional_id const*> range_of_relate_as_optional() const;
 		DCON_RELEASE_INLINE internal::const_iterator_thingyB_foreach_relate_as_optional_as_right_generator get_relate_as_optional() const;
 		template<typename T>
-		DCON_RELEASE_INLINE void for_each_left_from_relate_as_optional(T&& func) const;
-		DCON_RELEASE_INLINE bool has_left_from_relate_as_optional(thingyA_id target) const;
-		template<typename T>
 		DCON_RELEASE_INLINE void for_each_relate_as_non_optional_as_right(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> range_of_relate_as_non_optional_as_right() const;
 		DCON_RELEASE_INLINE internal::const_iterator_thingyB_foreach_relate_as_non_optional_as_right_generator get_relate_as_non_optional_as_right() const;
@@ -1756,9 +1723,6 @@ namespace dcon {
 		DCON_RELEASE_INLINE void for_each_relate_as_non_optional(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<relate_as_non_optional_id const*, relate_as_non_optional_id const*> range_of_relate_as_non_optional() const;
 		DCON_RELEASE_INLINE internal::const_iterator_thingyB_foreach_relate_as_non_optional_as_right_generator get_relate_as_non_optional() const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_left_from_relate_as_non_optional(T&& func) const;
-		DCON_RELEASE_INLINE bool has_left_from_relate_as_non_optional(thingyA_id target) const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 		
 	};
@@ -4770,19 +4734,6 @@ namespace dcon {
 			dcon::local_vector<relate_as_optional_id> temp(rng.first, rng.second);
 			std::for_each(temp.begin(), temp.end(), [t = this](relate_as_optional_id i) { t->relate_as_optional_set_left(i, thingyA_id()); });
 		}
-		template<typename T>
-		void thingyA_for_each_right_from_relate_as_optional(thingyA_id id, T&& func) const {
-			thingyA_for_each_relate_as_optional_as_left(id, [&](relate_as_optional_id i) {
-				func(relate_as_optional_get_right(i));
-			} );
-		}
-		bool thingyA_has_right_from_relate_as_optional(thingyA_id id, thingyB_id target) const {
-			auto vrange = dcon::get_range(relate_as_optional.left_storage, relate_as_optional.m_array_left.vptr()[id.index()]);
-			for(auto pos = vrange.first; pos != vrange.second; ++pos) {
-				if(relate_as_optional.m_right.vptr()[pos->index()] == target) return true;
-			}
-			return false;
-		}
 		DCON_RELEASE_INLINE internal::const_iterator_thingyA_foreach_relate_as_non_optional_as_left_generator thingyA_get_relate_as_non_optional_as_left(thingyA_id id) const {
 			return internal::const_iterator_thingyA_foreach_relate_as_non_optional_as_left_generator(*this, id);
 		}
@@ -4834,19 +4785,6 @@ namespace dcon {
 			auto rng = thingyA_range_of_relate_as_non_optional_as_left(id);
 			dcon::local_vector<relate_as_non_optional_id> temp(rng.first, rng.second);
 			std::for_each(temp.begin(), temp.end(), [t = this](relate_as_non_optional_id i) { t->relate_as_non_optional_set_left(i, thingyA_id()); });
-		}
-		template<typename T>
-		void thingyA_for_each_right_from_relate_as_non_optional(thingyA_id id, T&& func) const {
-			thingyA_for_each_relate_as_non_optional_as_left(id, [&](relate_as_non_optional_id i) {
-				func(relate_as_non_optional_get_right(i));
-			} );
-		}
-		bool thingyA_has_right_from_relate_as_non_optional(thingyA_id id, thingyB_id target) const {
-			auto vrange = dcon::get_range(relate_as_non_optional.left_storage, relate_as_non_optional.m_array_left.vptr()[id.index()]);
-			for(auto pos = vrange.first; pos != vrange.second; ++pos) {
-				if(relate_as_non_optional.m_right.vptr()[pos->index()] == target) return true;
-			}
-			return false;
 		}
 		DCON_RELEASE_INLINE internal::const_iterator_thingyA_foreach_relate_as_multipleA_as_left_generator thingyA_get_relate_as_multipleA_as_left(thingyA_id id) const {
 			return internal::const_iterator_thingyA_foreach_relate_as_multipleA_as_left_generator(*this, id);
@@ -5085,19 +5023,6 @@ namespace dcon {
 			dcon::local_vector<relate_in_array_id> temp(rng.first, rng.second);
 			std::for_each(temp.begin(), temp.end(), [t = this](relate_in_array_id i) { t->relate_in_array_set_right(i, thingyB_id()); });
 		}
-		template<typename T>
-		void thingyB_for_each_left_from_relate_in_array(thingyB_id id, T&& func) const {
-			thingyB_for_each_relate_in_array_as_right(id, [&](relate_in_array_id i) {
-				func(relate_in_array_get_left(i));
-			} );
-		}
-		bool thingyB_has_left_from_relate_in_array(thingyB_id id, thingyA_id target) const {
-			auto vrange = dcon::get_range(relate_in_array.right_storage, relate_in_array.m_array_right.vptr()[id.index()]);
-			for(auto pos = vrange.first; pos != vrange.second; ++pos) {
-				if(pos->index() == target.index()) return true;
-			}
-			return false;
-		}
 		DCON_RELEASE_INLINE internal::const_iterator_thingyB_foreach_relate_in_list_as_right_generator thingyB_get_relate_in_list_as_right(thingyB_id id) const {
 			return internal::const_iterator_thingyB_foreach_relate_in_list_as_right_generator(*this, id);
 		}
@@ -5135,18 +5060,6 @@ namespace dcon {
 			dcon::local_vector<relate_in_list_id> temp;
 			thingyB_for_each_relate_in_list_as_right(id, [&](relate_in_list_id j) { temp.push_back(j); });
 			std::for_each(temp.begin(), temp.end(), [t = this](relate_in_list_id i) { t->relate_in_list_set_right(i, thingyB_id()); });
-		}
-		template<typename T>
-		void thingyB_for_each_left_from_relate_in_list(thingyB_id id, T&& func) const {
-			thingyB_for_each_relate_in_list_as_right(id, [&](relate_in_list_id i) {
-				func(relate_in_list_get_left(i));
-			} );
-		}
-		bool thingyB_has_left_from_relate_in_list(thingyB_id id, thingyA_id target) const {
-			for(auto list_pos = relate_in_list.m_head_back_right.vptr()[id.index()]; bool(list_pos); list_pos = relate_in_list.m_link_right.vptr()[list_pos.index()].right) {
-				if(list_pos.index() == target.index()) return true;
-			}
-			return false;
 		}
 		DCON_RELEASE_INLINE internal::const_iterator_thingyB_foreach_relate_as_optional_as_right_generator thingyB_get_relate_as_optional_as_right(thingyB_id id) const {
 			return internal::const_iterator_thingyB_foreach_relate_as_optional_as_right_generator(*this, id);
@@ -5200,19 +5113,6 @@ namespace dcon {
 			dcon::local_vector<relate_as_optional_id> temp(rng.first, rng.second);
 			std::for_each(temp.begin(), temp.end(), [t = this](relate_as_optional_id i) { t->relate_as_optional_set_right(i, thingyB_id()); });
 		}
-		template<typename T>
-		void thingyB_for_each_left_from_relate_as_optional(thingyB_id id, T&& func) const {
-			thingyB_for_each_relate_as_optional_as_right(id, [&](relate_as_optional_id i) {
-				func(relate_as_optional_get_left(i));
-			} );
-		}
-		bool thingyB_has_left_from_relate_as_optional(thingyB_id id, thingyA_id target) const {
-			auto vrange = dcon::get_range(relate_as_optional.right_storage, relate_as_optional.m_array_right.vptr()[id.index()]);
-			for(auto pos = vrange.first; pos != vrange.second; ++pos) {
-				if(relate_as_optional.m_left.vptr()[pos->index()] == target) return true;
-			}
-			return false;
-		}
 		DCON_RELEASE_INLINE internal::const_iterator_thingyB_foreach_relate_as_non_optional_as_right_generator thingyB_get_relate_as_non_optional_as_right(thingyB_id id) const {
 			return internal::const_iterator_thingyB_foreach_relate_as_non_optional_as_right_generator(*this, id);
 		}
@@ -5264,19 +5164,6 @@ namespace dcon {
 			auto rng = thingyB_range_of_relate_as_non_optional_as_right(id);
 			dcon::local_vector<relate_as_non_optional_id> temp(rng.first, rng.second);
 			std::for_each(temp.begin(), temp.end(), [t = this](relate_as_non_optional_id i) { t->relate_as_non_optional_set_right(i, thingyB_id()); });
-		}
-		template<typename T>
-		void thingyB_for_each_left_from_relate_as_non_optional(thingyB_id id, T&& func) const {
-			thingyB_for_each_relate_as_non_optional_as_right(id, [&](relate_as_non_optional_id i) {
-				func(relate_as_non_optional_get_left(i));
-			} );
-		}
-		bool thingyB_has_left_from_relate_as_non_optional(thingyB_id id, thingyA_id target) const {
-			auto vrange = dcon::get_range(relate_as_non_optional.right_storage, relate_as_non_optional.m_array_right.vptr()[id.index()]);
-			for(auto pos = vrange.first; pos != vrange.second; ++pos) {
-				if(relate_as_non_optional.m_left.vptr()[pos->index()] == target) return true;
-			}
-			return false;
 		}
 		DCON_RELEASE_INLINE bool thingyB_is_valid(thingyB_id id) const noexcept {
 			return bool(id) && uint32_t(id.index()) < thingyB.size_used && thingyB.m__index.vptr()[id.index()] == id;
@@ -10675,13 +10562,6 @@ namespace dcon {
 		return internal::iterator_thingyA_foreach_relate_as_optional_as_left_generator(container, id);
 	}
 	template<typename T>
-	DCON_RELEASE_INLINE void thingyA_fat_id::for_each_right_from_relate_as_optional(T&& func) const {
-		container.thingyA_for_each_right_from_relate_as_optional(id, [&, t = this](thingyB_id i){func(fatten(t->container, i));});
-	}
-	DCON_RELEASE_INLINE bool thingyA_fat_id::has_right_from_relate_as_optional(thingyB_id target) const {
-		return container.thingyA_has_right_from_relate_as_optional(id, target);
-	}
-	template<typename T>
 	DCON_RELEASE_INLINE void thingyA_fat_id::for_each_relate_as_non_optional_as_left(T&& func) const {
 		container.thingyA_for_each_relate_as_non_optional_as_left(id, [&, t = this](relate_as_non_optional_id i){func(fatten(t->container, i));});
 	}
@@ -10706,13 +10586,6 @@ namespace dcon {
 	}
 	DCON_RELEASE_INLINE internal::iterator_thingyA_foreach_relate_as_non_optional_as_left_generator thingyA_fat_id::get_relate_as_non_optional() const {
 		return internal::iterator_thingyA_foreach_relate_as_non_optional_as_left_generator(container, id);
-	}
-	template<typename T>
-	DCON_RELEASE_INLINE void thingyA_fat_id::for_each_right_from_relate_as_non_optional(T&& func) const {
-		container.thingyA_for_each_right_from_relate_as_non_optional(id, [&, t = this](thingyB_id i){func(fatten(t->container, i));});
-	}
-	DCON_RELEASE_INLINE bool thingyA_fat_id::has_right_from_relate_as_non_optional(thingyB_id target) const {
-		return container.thingyA_has_right_from_relate_as_non_optional(id, target);
 	}
 	template<typename T>
 	DCON_RELEASE_INLINE void thingyA_fat_id::for_each_relate_as_multipleA_as_left(T&& func) const {
@@ -10827,13 +10700,6 @@ namespace dcon {
 		return internal::const_iterator_thingyA_foreach_relate_as_optional_as_left_generator(container, id);
 	}
 	template<typename T>
-	DCON_RELEASE_INLINE void thingyA_const_fat_id::for_each_right_from_relate_as_optional(T&& func) const {
-		container.thingyA_for_each_right_from_relate_as_optional(id, [&, t = this](thingyB_id i){func(fatten(t->container, i));});
-	}
-	DCON_RELEASE_INLINE bool thingyA_const_fat_id::has_right_from_relate_as_optional(thingyB_id target) const {
-		return container.thingyA_has_right_from_relate_as_optional(id, target);
-	}
-	template<typename T>
 	DCON_RELEASE_INLINE void thingyA_const_fat_id::for_each_relate_as_non_optional_as_left(T&& func) const {
 		container.thingyA_for_each_relate_as_non_optional_as_left(id, [&, t = this](relate_as_non_optional_id i){func(fatten(t->container, i));});
 	}
@@ -10852,13 +10718,6 @@ namespace dcon {
 	}
 	DCON_RELEASE_INLINE internal::const_iterator_thingyA_foreach_relate_as_non_optional_as_left_generator thingyA_const_fat_id::get_relate_as_non_optional() const {
 		return internal::const_iterator_thingyA_foreach_relate_as_non_optional_as_left_generator(container, id);
-	}
-	template<typename T>
-	DCON_RELEASE_INLINE void thingyA_const_fat_id::for_each_right_from_relate_as_non_optional(T&& func) const {
-		container.thingyA_for_each_right_from_relate_as_non_optional(id, [&, t = this](thingyB_id i){func(fatten(t->container, i));});
-	}
-	DCON_RELEASE_INLINE bool thingyA_const_fat_id::has_right_from_relate_as_non_optional(thingyB_id target) const {
-		return container.thingyA_has_right_from_relate_as_non_optional(id, target);
 	}
 	template<typename T>
 	DCON_RELEASE_INLINE void thingyA_const_fat_id::for_each_relate_as_multipleA_as_left(T&& func) const {
@@ -10943,13 +10802,6 @@ namespace dcon {
 		return internal::iterator_thingyB_foreach_relate_in_array_as_right_generator(container, id);
 	}
 	template<typename T>
-	DCON_RELEASE_INLINE void thingyB_fat_id::for_each_left_from_relate_in_array(T&& func) const {
-		container.thingyB_for_each_left_from_relate_in_array(id, [&, t = this](thingyA_id i){func(fatten(t->container, i));});
-	}
-	DCON_RELEASE_INLINE bool thingyB_fat_id::has_left_from_relate_in_array(thingyA_id target) const {
-		return container.thingyB_has_left_from_relate_in_array(id, target);
-	}
-	template<typename T>
 	DCON_RELEASE_INLINE void thingyB_fat_id::for_each_relate_in_list_as_right(T&& func) const {
 		container.thingyB_for_each_relate_in_list_as_right(id, [&, t = this](relate_in_list_id i){func(fatten(t->container, i));});
 	}
@@ -10968,13 +10820,6 @@ namespace dcon {
 	}
 	DCON_RELEASE_INLINE internal::iterator_thingyB_foreach_relate_in_list_as_right_generator thingyB_fat_id::get_relate_in_list() const {
 		return internal::iterator_thingyB_foreach_relate_in_list_as_right_generator(container, id);
-	}
-	template<typename T>
-	DCON_RELEASE_INLINE void thingyB_fat_id::for_each_left_from_relate_in_list(T&& func) const {
-		container.thingyB_for_each_left_from_relate_in_list(id, [&, t = this](thingyA_id i){func(fatten(t->container, i));});
-	}
-	DCON_RELEASE_INLINE bool thingyB_fat_id::has_left_from_relate_in_list(thingyA_id target) const {
-		return container.thingyB_has_left_from_relate_in_list(id, target);
 	}
 	template<typename T>
 	DCON_RELEASE_INLINE void thingyB_fat_id::for_each_relate_as_optional_as_right(T&& func) const {
@@ -11003,13 +10848,6 @@ namespace dcon {
 		return internal::iterator_thingyB_foreach_relate_as_optional_as_right_generator(container, id);
 	}
 	template<typename T>
-	DCON_RELEASE_INLINE void thingyB_fat_id::for_each_left_from_relate_as_optional(T&& func) const {
-		container.thingyB_for_each_left_from_relate_as_optional(id, [&, t = this](thingyA_id i){func(fatten(t->container, i));});
-	}
-	DCON_RELEASE_INLINE bool thingyB_fat_id::has_left_from_relate_as_optional(thingyA_id target) const {
-		return container.thingyB_has_left_from_relate_as_optional(id, target);
-	}
-	template<typename T>
 	DCON_RELEASE_INLINE void thingyB_fat_id::for_each_relate_as_non_optional_as_right(T&& func) const {
 		container.thingyB_for_each_relate_as_non_optional_as_right(id, [&, t = this](relate_as_non_optional_id i){func(fatten(t->container, i));});
 	}
@@ -11034,13 +10872,6 @@ namespace dcon {
 	}
 	DCON_RELEASE_INLINE internal::iterator_thingyB_foreach_relate_as_non_optional_as_right_generator thingyB_fat_id::get_relate_as_non_optional() const {
 		return internal::iterator_thingyB_foreach_relate_as_non_optional_as_right_generator(container, id);
-	}
-	template<typename T>
-	DCON_RELEASE_INLINE void thingyB_fat_id::for_each_left_from_relate_as_non_optional(T&& func) const {
-		container.thingyB_for_each_left_from_relate_as_non_optional(id, [&, t = this](thingyA_id i){func(fatten(t->container, i));});
-	}
-	DCON_RELEASE_INLINE bool thingyB_fat_id::has_left_from_relate_as_non_optional(thingyA_id target) const {
-		return container.thingyB_has_left_from_relate_as_non_optional(id, target);
 	}
 	DCON_RELEASE_INLINE bool thingyB_fat_id::is_valid() const noexcept {
 		return container.thingyB_is_valid(id);
@@ -11070,13 +10901,6 @@ namespace dcon {
 		return internal::const_iterator_thingyB_foreach_relate_in_array_as_right_generator(container, id);
 	}
 	template<typename T>
-	DCON_RELEASE_INLINE void thingyB_const_fat_id::for_each_left_from_relate_in_array(T&& func) const {
-		container.thingyB_for_each_left_from_relate_in_array(id, [&, t = this](thingyA_id i){func(fatten(t->container, i));});
-	}
-	DCON_RELEASE_INLINE bool thingyB_const_fat_id::has_left_from_relate_in_array(thingyA_id target) const {
-		return container.thingyB_has_left_from_relate_in_array(id, target);
-	}
-	template<typename T>
 	DCON_RELEASE_INLINE void thingyB_const_fat_id::for_each_relate_in_list_as_right(T&& func) const {
 		container.thingyB_for_each_relate_in_list_as_right(id, [&, t = this](relate_in_list_id i){func(fatten(t->container, i));});
 	}
@@ -11089,13 +10913,6 @@ namespace dcon {
 	}
 	DCON_RELEASE_INLINE internal::const_iterator_thingyB_foreach_relate_in_list_as_right_generator thingyB_const_fat_id::get_relate_in_list() const {
 		return internal::const_iterator_thingyB_foreach_relate_in_list_as_right_generator(container, id);
-	}
-	template<typename T>
-	DCON_RELEASE_INLINE void thingyB_const_fat_id::for_each_left_from_relate_in_list(T&& func) const {
-		container.thingyB_for_each_left_from_relate_in_list(id, [&, t = this](thingyA_id i){func(fatten(t->container, i));});
-	}
-	DCON_RELEASE_INLINE bool thingyB_const_fat_id::has_left_from_relate_in_list(thingyA_id target) const {
-		return container.thingyB_has_left_from_relate_in_list(id, target);
 	}
 	template<typename T>
 	DCON_RELEASE_INLINE void thingyB_const_fat_id::for_each_relate_as_optional_as_right(T&& func) const {
@@ -11118,13 +10935,6 @@ namespace dcon {
 		return internal::const_iterator_thingyB_foreach_relate_as_optional_as_right_generator(container, id);
 	}
 	template<typename T>
-	DCON_RELEASE_INLINE void thingyB_const_fat_id::for_each_left_from_relate_as_optional(T&& func) const {
-		container.thingyB_for_each_left_from_relate_as_optional(id, [&, t = this](thingyA_id i){func(fatten(t->container, i));});
-	}
-	DCON_RELEASE_INLINE bool thingyB_const_fat_id::has_left_from_relate_as_optional(thingyA_id target) const {
-		return container.thingyB_has_left_from_relate_as_optional(id, target);
-	}
-	template<typename T>
 	DCON_RELEASE_INLINE void thingyB_const_fat_id::for_each_relate_as_non_optional_as_right(T&& func) const {
 		container.thingyB_for_each_relate_as_non_optional_as_right(id, [&, t = this](relate_as_non_optional_id i){func(fatten(t->container, i));});
 	}
@@ -11143,13 +10953,6 @@ namespace dcon {
 	}
 	DCON_RELEASE_INLINE internal::const_iterator_thingyB_foreach_relate_as_non_optional_as_right_generator thingyB_const_fat_id::get_relate_as_non_optional() const {
 		return internal::const_iterator_thingyB_foreach_relate_as_non_optional_as_right_generator(container, id);
-	}
-	template<typename T>
-	DCON_RELEASE_INLINE void thingyB_const_fat_id::for_each_left_from_relate_as_non_optional(T&& func) const {
-		container.thingyB_for_each_left_from_relate_as_non_optional(id, [&, t = this](thingyA_id i){func(fatten(t->container, i));});
-	}
-	DCON_RELEASE_INLINE bool thingyB_const_fat_id::has_left_from_relate_as_non_optional(thingyA_id target) const {
-		return container.thingyB_has_left_from_relate_as_non_optional(id, target);
 	}
 	DCON_RELEASE_INLINE bool thingyB_const_fat_id::is_valid() const noexcept {
 		return container.thingyB_is_valid(id);

@@ -2562,6 +2562,8 @@ void make_related_member_declarations(basic_builder& o, file_def const& parsed_f
 
 			o + substitute{ "as_name", in_rel.linked_as->property_name };
 
+			/* DISABLED UNTIL MORE WORK CAN BE DONE	
+
 			for(auto& ir : in_rel.rel_ptr->indexed_objects) {
 				if(ir.related_to != &obj) {
 					o + substitute{ "r_prop", ir.property_name };
@@ -2617,6 +2619,8 @@ void make_related_member_declarations(basic_builder& o, file_def const& parsed_f
 					}
 				}
 			}
+
+			*/
 		}
 	}
 
