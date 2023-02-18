@@ -234,24 +234,24 @@ basic_builder& make_array_member_container(basic_builder& o,
 			o + "~dtype_@name@() { ::operator delete(values, std::align_val_t{ 64 }); }";
 			if(!is_bitfield) {
 				o + "DCON_RELEASE_INLINE void copy_value(int32_t dest, int32_t source)" + block{
-					o + "for(int32_t i = 0; i < int32_t(size); ++i)" + block{
-						o + "vptr(i)[dest] = vptr(i)[source];";
+					o + "for(int32_t bi = 0; bi < int32_t(size); ++bi)" + block{
+						o + "vptr(bi)[dest] = vptr(bi)[source];";
 					};
 				};
 				o + "DCON_RELEASE_INLINE void zero_at(int32_t dest)" + block{
-					o + "for(int32_t i = 0; i < int32_t(size); ++i)" + block{
-						o + "vptr(i)[dest] = @type@{};";
+					o + "for(int32_t ci = 0; ci < int32_t(size); ++ci)" + block{
+						o + "vptr(ci)[dest] = @type@{};";
 					};
 				};
 			} else {
 				o + "DCON_RELEASE_INLINE void copy_value(int32_t dest, int32_t source)" + block{
-					o + "for(int32_t i = 0; i < int32_t(size); ++i)" + block{
-						o + "dcon::bit_vector_set(vptr(i), dest, dcon::bit_vector_test(vptr(i), source));";
+					o + "for(int32_t bi = 0; bi < int32_t(size); ++bi)" + block{
+						o + "dcon::bit_vector_set(vptr(bi), dest, dcon::bit_vector_test(vptr(bi), source));";
 					};
 				};
 				o + "DCON_RELEASE_INLINE void zero_at(int32_t dest)" + block{
-					o + "for(int32_t i = 0; i < int32_t(size); ++i)" + block{
-						o + "dcon::bit_vector_set(vptr(i), dest, false);";
+					o + "for(int32_t ci = 0; ci < int32_t(size); ++ci)" + block{
+						o + "dcon::bit_vector_set(vptr(ci), dest, false);";
 					};
 				};
 			}
@@ -445,8 +445,8 @@ basic_builder& clear_value_range(basic_builder& o, std::string const& object_nam
 				"[t = this](dcon::stable_mk_2_tag& i){ t->@t_obj@.@t_prop@_storage.release(i); });";
 		}
 	} else if(type == property_type::bitfield) {
-		o + "for(uint32_t i = @begin@; i < 8 * (((@begin@ + 7) / 8)); ++i)" + block{
-			o + "dcon::bit_vector_set(@t_obj@.m_@t_prop@.vptr(), i, false);";
+		o + "for(uint32_t s = @begin@; s < 8 * (((@begin@ + 7) / 8)); ++s)" + block{
+			o + "dcon::bit_vector_set(@t_obj@.m_@t_prop@.vptr(), s, false);";
 		};
 		o + "std::fill_n(@t_obj@.m_@t_prop@.vptr() + (@begin@ + 7) / 8, (@begin@ + @count@ + 7) / 8 - (@begin@ + 7) / 8, dcon::bitfield_type{0});";
 	} else if(type == property_type::object) {
@@ -458,8 +458,8 @@ basic_builder& clear_value_range(basic_builder& o, std::string const& object_nam
 		};
 	} else if(type == property_type::array_bitfield) {
 		o + "for(int32_t s = 0; s < int32_t(@t_obj@.m_@t_prop@.size); ++s)" + block{
-			o + "for(uint32_t i = @begin@; i < 8 * (((@begin@ + 7) / 8)); ++i)" + block{
-				o + "dcon::bit_vector_set(@t_obj@.m_@t_prop@.vptr(s), i, false);";
+			o + "for(uint32_t t = @begin@; t < 8 * (((@begin@ + 7) / 8)); ++t)" + block{
+				o + "dcon::bit_vector_set(@t_obj@.m_@t_prop@.vptr(s), t, false);";
 			};
 			o + "std::fill_n(@t_obj@.m_@t_prop@.vptr(s) + (@begin@ + 7) / 8, (@begin@ + @count@ + 7) / 8 - (@begin@ + 7) / 8, dcon::bitfield_type{0});";
 		};
@@ -485,8 +485,8 @@ basic_builder& shrink_value_range(basic_builder& o, std::string const& object_na
 			o + "@t_obj@.m_@t_prop@.values.resize(1 + @begin@);";
 		}
 	} else if(type == property_type::bitfield) {
-		o + "for(uint32_t i = @begin@; i < 8 * (((@begin@ + 7) / 8)); ++i)" + block{
-			o + "dcon::bit_vector_set(@t_obj@.m_@t_prop@.vptr(), i, false);";
+		o + "for(uint32_t s = @begin@; s < 8 * (((@begin@ + 7) / 8)); ++s)" + block{
+			o + "dcon::bit_vector_set(@t_obj@.m_@t_prop@.vptr(), s, false);";
 		};
 		o + "@t_obj@.m_@t_prop@.values.resize(1 + (@begin@ + 7) / 8);";
 	} else if(type == property_type::array_other || type == property_type::array_vectorizable) {
@@ -495,8 +495,8 @@ basic_builder& shrink_value_range(basic_builder& o, std::string const& object_na
 		};
 	} else if(type == property_type::array_bitfield) {
 		o + "for(int32_t s = 0; s < int32_t(@t_obj@.m_@t_prop@.size); ++s)" + block{
-			o + "for(uint32_t i = @begin@; i < 8 * (((@begin@ + 7) / 8)); ++i)" + block{
-				o + "dcon::bit_vector_set(@t_obj@.m_@t_prop@.vptr(s), i, false);";
+			o + "for(uint32_t t = @begin@; t < 8 * (((@begin@ + 7) / 8)); ++t)" + block{
+				o + "dcon::bit_vector_set(@t_obj@.m_@t_prop@.vptr(s), t, false);";
 			};
 			o + "@t_obj@.m_@t_prop@.values[s].resize(1 + (@begin@ + 7) / 8);";
 		};

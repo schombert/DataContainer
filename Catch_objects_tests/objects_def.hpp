@@ -381,13 +381,13 @@ namespace dcon {
 				}
 				~dtype_big_array() { ::operator delete(values, std::align_val_t{ 64 }); }
 				DCON_RELEASE_INLINE void copy_value(int32_t dest, int32_t source) {
-					for(int32_t i = 0; i < int32_t(size); ++i) {
-						vptr(i)[dest] = vptr(i)[source];
+					for(int32_t bi = 0; bi < int32_t(size); ++bi) {
+						vptr(bi)[dest] = vptr(bi)[source];
 					}
 				}
 				DCON_RELEASE_INLINE void zero_at(int32_t dest) {
-					for(int32_t i = 0; i < int32_t(size); ++i) {
-						vptr(i)[dest] = float{};
+					for(int32_t ci = 0; ci < int32_t(size); ++ci) {
+						vptr(ci)[dest] = float{};
 					}
 				}
 			}
@@ -423,13 +423,13 @@ namespace dcon {
 				}
 				~dtype_big_array_bf() { ::operator delete(values, std::align_val_t{ 64 }); }
 				DCON_RELEASE_INLINE void copy_value(int32_t dest, int32_t source) {
-					for(int32_t i = 0; i < int32_t(size); ++i) {
-						dcon::bit_vector_set(vptr(i), dest, dcon::bit_vector_test(vptr(i), source));
+					for(int32_t bi = 0; bi < int32_t(size); ++bi) {
+						dcon::bit_vector_set(vptr(bi), dest, dcon::bit_vector_test(vptr(bi), source));
 					}
 				}
 				DCON_RELEASE_INLINE void zero_at(int32_t dest) {
-					for(int32_t i = 0; i < int32_t(size); ++i) {
-						dcon::bit_vector_set(vptr(i), dest, false);
+					for(int32_t ci = 0; ci < int32_t(size); ++ci) {
+						dcon::bit_vector_set(vptr(ci), dest, false);
 					}
 				}
 			}
@@ -2665,8 +2665,8 @@ namespace dcon {
 			const uint32_t old_size = thingy.size_used;
 			if(new_size < old_size) {
 				std::fill_n(thingy.m_some_value.vptr() + new_size, old_size - new_size, int32_t{});
-				for(uint32_t i = new_size; i < 8 * (((new_size + 7) / 8)); ++i) {
-					dcon::bit_vector_set(thingy.m_bf_value.vptr(), i, false);
+				for(uint32_t s = new_size; s < 8 * (((new_size + 7) / 8)); ++s) {
+					dcon::bit_vector_set(thingy.m_bf_value.vptr(), s, false);
 				}
 				std::fill_n(thingy.m_bf_value.vptr() + (new_size + 7) / 8, (new_size + old_size - new_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});
 				std::destroy_n(thingy.m_obj_value.vptr() + new_size, old_size - new_size);
@@ -2676,8 +2676,8 @@ namespace dcon {
 					std::fill_n(thingy.m_big_array.vptr(s) + new_size, old_size - new_size, float{});
 				}
 				for(int32_t s = 0; s < int32_t(thingy.m_big_array_bf.size); ++s) {
-					for(uint32_t i = new_size; i < 8 * (((new_size + 7) / 8)); ++i) {
-						dcon::bit_vector_set(thingy.m_big_array_bf.vptr(s), i, false);
+					for(uint32_t t = new_size; t < 8 * (((new_size + 7) / 8)); ++t) {
+						dcon::bit_vector_set(thingy.m_big_array_bf.vptr(s), t, false);
 					}
 					std::fill_n(thingy.m_big_array_bf.vptr(s) + (new_size + 7) / 8, (new_size + old_size - new_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});
 				}
@@ -2757,8 +2757,8 @@ namespace dcon {
 			const uint32_t old_size = thingy2.size_used;
 			if(new_size < old_size) {
 				thingy2.m_some_value.values.resize(1 + new_size);
-				for(uint32_t i = new_size; i < 8 * (((new_size + 7) / 8)); ++i) {
-					dcon::bit_vector_set(thingy2.m_bf_value.vptr(), i, false);
+				for(uint32_t s = new_size; s < 8 * (((new_size + 7) / 8)); ++s) {
+					dcon::bit_vector_set(thingy2.m_bf_value.vptr(), s, false);
 				}
 				thingy2.m_bf_value.values.resize(1 + (new_size + 7) / 8);
 				thingy2.m_obj_value.values.resize(1 + new_size);
@@ -2768,8 +2768,8 @@ namespace dcon {
 					thingy2.m_big_array.values[s].resize(1 + new_size);
 				}
 				for(int32_t s = 0; s < int32_t(thingy2.m_big_array_bf.size); ++s) {
-					for(uint32_t i = new_size; i < 8 * (((new_size + 7) / 8)); ++i) {
-						dcon::bit_vector_set(thingy2.m_big_array_bf.vptr(s), i, false);
+					for(uint32_t t = new_size; t < 8 * (((new_size + 7) / 8)); ++t) {
+						dcon::bit_vector_set(thingy2.m_big_array_bf.vptr(s), t, false);
 					}
 					thingy2.m_big_array_bf.values[s].resize(1 + (new_size + 7) / 8);
 				}
