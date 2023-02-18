@@ -501,27 +501,27 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 				break;
 			case property_type::special_vector:
 				if(add_prefix) {
-					o + "DCON_RELEASE_INLINE dcon::dcon_vv_const_fat_id<@type@> @obj@_get_@prop@(@obj@_id id) const noexcept" + block{
-						o + "return dcon::dcon_vv_const_fat_id<@type@>(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()]);";
+					o + "DCON_RELEASE_INLINE dcon::dcon_vv_const_fat_id<@base_type@> @obj@_get_@prop@(@obj@_id id) const noexcept" + block{
+						o + "return dcon::dcon_vv_const_fat_id<@base_type@>(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()]);";
 					};
 					if(prop.protection != protection_type::read_only && !prop.hook_set) {
-						o + "DCON_RELEASE_INLINE dcon::dcon_vv_fat_id<@type@> @obj@_get_@prop@(@obj@_id id) noexcept" + block{
-							o + "return dcon::dcon_vv_fat_id<@type@>(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()]);";
+						o + "DCON_RELEASE_INLINE dcon::dcon_vv_fat_id<@base_type@> @obj@_get_@prop@(@obj@_id id) noexcept" + block{
+							o + "return dcon::dcon_vv_fat_id<@base_type@>(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[id.index()]);";
 						};
 					}
 
 					if(prop.protection == protection_type::hidden) {
-						o + "friend dcon::dcon_vv_fat_id<@type@> @obj@_fat_id::get_@prop@() const noexcept;";
-						o + "friend dcon::dcon_vv_const_fat_id<@type@> @obj@_const_fat_id::get_@prop@() const noexcept;";
+						o + "friend dcon::dcon_vv_fat_id<@base_type@> @obj@_fat_id::get_@prop@() const noexcept;";
+						o + "friend dcon::dcon_vv_const_fat_id<@base_type@> @obj@_const_fat_id::get_@prop@() const noexcept;";
 					}
 
 				} else {
 					if(const_mode || prop.protection == protection_type::read_only || prop.hook_set) {
-						o + "DCON_RELEASE_INLINE dcon::dcon_vv_const_fat_id<@type@> @namesp@get_@prop@() const noexcept" + block{
+						o + "DCON_RELEASE_INLINE dcon::dcon_vv_const_fat_id<@base_type@> @namesp@get_@prop@() const noexcept" + block{
 							o + "return container.@obj@_get_@prop@(id);";
 						};
 					} else {
-						o + "DCON_RELEASE_INLINE dcon::dcon_vv_fat_id<@type@> @namesp@get_@prop@() const noexcept" + block{
+						o + "DCON_RELEASE_INLINE dcon::dcon_vv_fat_id<@base_type@> @namesp@get_@prop@() const noexcept" + block{
 							o + "return container.@obj@_get_@prop@(id);";
 						};
 					}
