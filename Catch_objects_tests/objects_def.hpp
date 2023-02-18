@@ -264,27 +264,27 @@ namespace dcon {
 namespace ve {
 	template<>
 	struct value_to_vector_type_s<dcon::thingy_id> {
-		using type = tagged_vector<dcon::thingy_id>;
+		using type = ::ve::tagged_vector<dcon::thingy_id>;
 	};
 	
 	template<>
 	struct value_to_vector_type_s<dcon::thingy2_id> {
-		using type = tagged_vector<dcon::thingy2_id>;
+		using type = ::ve::tagged_vector<dcon::thingy2_id>;
 	};
 	
 	template<>
 	struct value_to_vector_type_s<dcon::dummy_rel_id> {
-		using type = tagged_vector<dcon::dummy_rel_id>;
+		using type = ::ve::tagged_vector<dcon::dummy_rel_id>;
 	};
 	
 	template<>
 	struct value_to_vector_type_s<dcon::oop_thingy_id> {
-		using type = tagged_vector<dcon::oop_thingy_id>;
+		using type = ::ve::tagged_vector<dcon::oop_thingy_id>;
 	};
 	
 	template<>
 	struct value_to_vector_type_s<dcon::dummy_rel_B_id> {
-		using type = tagged_vector<dcon::dummy_rel_B_id>;
+		using type = ::ve::tagged_vector<dcon::dummy_rel_B_id>;
 	};
 	
 }
