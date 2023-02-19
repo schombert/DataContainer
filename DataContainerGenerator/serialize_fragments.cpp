@@ -165,7 +165,7 @@ basic_builder& make_serialize_size(basic_builder& o, file_def const& parsed_file
 					o + "if(serialize_selection.@obj@_@prop@)" + block{
 						o + "total_size += @vtype_name_sz@;";
 						o + "total_size += sizeof(uint16_t);";
-						o + "total_size += @obj@.m_@prop@.size * (@obj@.size_used + 7) / 8;";
+						o + "total_size += @obj@.m_@prop@.size * ((@obj@.size_used + 7) / 8);";
 						o + "dcon::record_header iheader(0, \"$array\", \"@obj@\", \"@prop@\");";
 						o + "total_size += iheader.serialize_size();";
 					};
@@ -293,7 +293,7 @@ void make_serialize_single_object(basic_builder& o, const relationship_object_de
 			o + substitute{ "vname_sz", std::to_string(strlen("bitfield") + 1) };
 
 			o + "if(serialize_selection.@obj@_@prop@)" + block{
-				o + "dcon::record_header header(@vname_sz@ + sizeof(uint16_t) + @obj@.m_@prop@.size * (@obj@.size_used + 7) / 8, \"$array\", \"@obj@\", \"@prop@\");";
+				o + "dcon::record_header header(@vname_sz@ + sizeof(uint16_t) + @obj@.m_@prop@.size * ((@obj@.size_used + 7) / 8), \"$array\", \"@obj@\", \"@prop@\");";
 				o + "header.serialize(output_buffer);";
 
 				o + "std::memcpy(reinterpret_cast<char*>(output_buffer), \"bitfield\", @vname_sz@);";
