@@ -626,12 +626,16 @@ namespace dcon {
 
 	template<typename object_type>
 	void load_range(stable_variable_vector_base<object_type>& storage, stable_mk_2_tag& i, object_type const* first, object_type const* last) {
-		storage.increase_capacity(i, static_cast<uint32_t>(last - first));
-		if(i != std::numeric_limits<stable_mk_2_tag>::max()) {
-			uint64_t* const backing_storage = static_cast<stable_variable_vector_storage_mk_2<object_type, 1, 1>&>(storage).backing_storage;
-			detail::mk_2_header* header = (detail::mk_2_header*)(backing_storage + i);
-			header->size = static_cast<uint16_t>(last - first);
-			memcpy(detail::to_data<object_type>(header), first, (last - first) * sizeof(object_type));
+		if (last == first) {
+			storage.release(i);
+		} else {
+			storage.increase_capacity(i, static_cast<uint32_t>(last - first));
+			if (i != std::numeric_limits<stable_mk_2_tag>::max()) {
+				uint64_t* const backing_storage = static_cast<stable_variable_vector_storage_mk_2<object_type, 1, 1>&>(storage).backing_storage;
+				detail::mk_2_header* header = (detail::mk_2_header*)(backing_storage + i);
+				header->size = static_cast<uint16_t>(last - first);
+				memcpy(detail::to_data<object_type>(header), first, (last - first) * sizeof(object_type));
+			}
 		}
 	}
 
