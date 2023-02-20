@@ -14,7 +14,11 @@
 
 
 #ifndef VE_NO_TBB
+#ifdef PREFER_ONE_TBB
+#include "oneapi/tbb.h"
+#else
 #include <ppl.h>
+#endif
 #endif
 
 #ifdef NDEBUG 
