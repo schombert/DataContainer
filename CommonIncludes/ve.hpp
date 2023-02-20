@@ -16,7 +16,7 @@
 #ifndef VE_NO_TBB
 #ifdef PREFER_ONE_TBB
 #include "oneapi/tbb.h"
-namespace concurrency = oneapi::tbb
+namespace concurrency = oneapi::tbb;
 #else
 #include <ppl.h>
 #endif
