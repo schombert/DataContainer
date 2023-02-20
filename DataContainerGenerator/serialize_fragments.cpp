@@ -456,7 +456,7 @@ void deserialize_size_fragment(basic_builder& o, relationship_object_def const& 
 void deserialize_erasable_index_fragment(basic_builder& o, relationship_object_def const& ob, bool with_mask) {
 	o + substitute{ "u_type" , size_to_tag_type(ob.size) };
 	o + substitute{ "mcon", with_mask ? std::string(" && mask.") + ob.name + "__index" : std::string() };
-	o + "else if(header.is_property(\"_index\")@mcon@)" + block{
+	o + "else if(header.is_property(\"_index\")@mcon@)" + block{ //fix
 		o + "if(header.is_type(\"@u_type@\"))" + block{
 			o + "std::memcpy(@obj@.m__index.vptr(), reinterpret_cast<@u_type@ const*>(input_buffer), "
 				"std::min(size_t(@obj@.size_used) * sizeof(@u_type@), header.record_size));";
