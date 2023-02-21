@@ -697,8 +697,12 @@ TEST_CASE("mathematical operations", "[ve_tests]") {
 #else // SSE
 	auto mvres = ve::compress_mask(mveca);
 	REQUIRE(mvres.v == uint8_t(0x01 | 0x02 | 0x08));
+	
 #endif
 #endif
+	for (int32_t i = 0; i < ve::vector_size; ++i) {
+		REQUIRE(ve::mask_vector(mvres)[i] == mveca[i]);
+	}
 
 	auto mres = mveca & mvecb;
 	for(int32_t i = 0; i < ve::vector_size; ++i) {

@@ -68,7 +68,7 @@ namespace ve {
 			const auto mask_filter = _mm_setr_epi32(
 				0x00000001, 0x00000002, 0x00000004, 0x00000008);
 			//value = _mm_castsi128_ps(_mm_xor_si128(_mm_and_si128(repeated_mask, mask_filter), _mm_set1_epi32(-1)));
-			value = _mm_cmp_ps(_mm_setzero_ps(), _mm_castsi128_ps(_mm_and_si128(repeated_mask, mask_filter)), _CMP_NEQ_OQ);
+			value = _mm_castsi128_ps(_mm_cmpeq_epi32(mask_filter, _mm_and_si128(repeated_mask, mask_filter)));
 		}
 		RELEASE_INLINE constexpr mask_vector(__m128 v) : value(v) {}
 		RELEASE_INLINE constexpr operator __m128() const {
@@ -732,22 +732,22 @@ namespace ve {
 	}
 
 	RELEASE_INLINE mask_vector operator<(fp_vector a, fp_vector b) {
-		return _mm_cmp_ps(a, b, _CMP_LT_OQ);
+		return _mm_cmplt_ps(a, b);
 	}
 	RELEASE_INLINE mask_vector operator>(fp_vector a, fp_vector b) {
-		return _mm_cmp_ps(a, b, _CMP_GT_OQ);
+		return _mm_cmpgt_ps(a, b);
 	}
 	RELEASE_INLINE mask_vector operator<=(fp_vector a, fp_vector b) {
-		return _mm_cmp_ps(a, b, _CMP_LE_OQ);
+		return _mm_cmple_ps(a, b);
 	}
 	RELEASE_INLINE mask_vector operator>=(fp_vector a, fp_vector b) {
-		return _mm_cmp_ps(a, b, _CMP_GE_OQ);
+		return _mm_cmpge_ps(a, b);
 	}
 	RELEASE_INLINE mask_vector operator==(fp_vector a, fp_vector b) {
-		return _mm_cmp_ps(a, b, _CMP_EQ_OQ);
+		return _mm_cmpeq_ps(a, b);
 	}
 	RELEASE_INLINE mask_vector operator!=(fp_vector a, fp_vector b) {
-		return _mm_cmp_ps(a, b, _CMP_NEQ_OQ);
+		return _mm_cmpneq_ps(a, b);
 	}
 
 	RELEASE_INLINE mask_vector operator<(int_vector a, int_vector b) {
