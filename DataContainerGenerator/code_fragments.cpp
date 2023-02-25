@@ -216,7 +216,7 @@ basic_builder& make_array_member_container(basic_builder& o,
 				o + "return reinterpret_cast<@type@*>(values + @pad_value@ + i * @size@);";
 			};
 			o + +"DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t)" + block{
-				o + "std::byte* temp = (std::byte*)(::operator new(@pad_value@ + sz * @size@, std::align_val_t{ 64 }));";
+				o + "std::byte* temp = sz > 0 ? (std::byte*)(::operator new(@pad_value@ + sz * @size@, std::align_val_t{ 64 })) : nullptr;";
 				o + "if(sz > size)" + block {
 					o + "if(values)" + block {
 						o + "std::memcpy(temp, values, @pad_value@ + size * @size@);";
@@ -224,7 +224,7 @@ basic_builder& make_array_member_container(basic_builder& o,
 					} +append{"else"} + block{
 						o + "std::memset(temp, 0, @pad_value@ + sz * @size@);";
 					};
-				} +append{ "else" } +block{
+				} +append{ "else if(sz > 0)" } +block{
 					o + "std::memcpy(temp, values, @pad_value@ + sz * @size@);";
 				};
 				o + "::operator delete(values, std::align_val_t{ 64 });";
