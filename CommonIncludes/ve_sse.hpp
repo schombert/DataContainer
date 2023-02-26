@@ -676,7 +676,7 @@ namespace ve {
 		return _mm_and_si128(a.value, b.value);
 	}
 	RELEASE_INLINE int_vector operator^(int_vector a, int_vector b) {
-		return return _mm_xor_si128(a.value, b.value);
+		return _mm_xor_si128(a.value, b.value);
 	}
 	RELEASE_INLINE int_vector operator~(int_vector a) {
 		return int_vector() ^ a;
