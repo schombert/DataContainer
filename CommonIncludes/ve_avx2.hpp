@@ -779,6 +779,12 @@ namespace ve {
 	RELEASE_INLINE mask_vector and_not(mask_vector a, mask_vector b) {
 		return _mm256_andnot_ps(b, a);
 	}
+	RELEASE_INLINE mask_vector operator&&(mask_vector a, mask_vector b) {
+		return _mm256_and_ps(a, b);
+	}
+	RELEASE_INLINE mask_vector operator||(mask_vector a, mask_vector b) {
+		return _mm256_or_ps(a, b);
+	}
 
 	RELEASE_INLINE fp_vector inverse(fp_vector a) {
 		return _mm256_rcp_ps(a);

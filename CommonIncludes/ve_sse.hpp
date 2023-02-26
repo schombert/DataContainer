@@ -701,6 +701,13 @@ namespace ve {
 		return _mm_andnot_ps(b, a);
 	}
 
+	RELEASE_INLINE mask_vector operator&&(mask_vector a, mask_vector b) {
+		return _mm_and_ps(a, b);
+	}
+	RELEASE_INLINE mask_vector operator||(mask_vector a, mask_vector b) {
+		return _mm_or_ps(a, b);
+	}
+
 	RELEASE_INLINE fp_vector inverse(fp_vector a) {
 		return _mm_rcp_ps(a);
 	}
