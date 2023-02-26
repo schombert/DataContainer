@@ -342,11 +342,12 @@ namespace dcon {
 			//
 			// storage space for pooled_v of type dcon::stable_mk_2_tag
 			//
-			struct dtype_pooled_v {
+			struct alignas(64) dtype_pooled_v {
+				uint8_t padding[(63 + sizeof(dcon::stable_mk_2_tag)) & ~uint64_t(63)];
 				dcon::stable_mk_2_tag values[1200];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_pooled_v() { std::uninitialized_fill_n(values, 1200, std::numeric_limits<dcon::stable_mk_2_tag>::max()); }
+				dtype_pooled_v() { std::uninitialized_fill_n(values - 1, 1 + 1200, std::numeric_limits<dcon::stable_mk_2_tag>::max()); }
 			}
 			m_pooled_v;
 			
@@ -364,7 +365,7 @@ namespace dcon {
 					return reinterpret_cast<float*>(values + ((uint64_t(63) + sizeof(float)) & ~uint64_t(63)) + i * (sizeof(float) * 1200 + uint64_t(64) - ((sizeof(float) * 1200) & uint64_t(63)) + ((sizeof(float) + uint64_t(63)) & ~uint64_t(63))));
 				}
 				DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t) {
-					std::byte* temp = (std::byte*)(::operator new(((uint64_t(63) + sizeof(float)) & ~uint64_t(63)) + sz * (sizeof(float) * 1200 + uint64_t(64) - ((sizeof(float) * 1200) & uint64_t(63)) + ((sizeof(float) + uint64_t(63)) & ~uint64_t(63))), std::align_val_t{ 64 }));
+					std::byte* temp = sz > 0 ? (std::byte*)(::operator new(((uint64_t(63) + sizeof(float)) & ~uint64_t(63)) + sz * (sizeof(float) * 1200 + uint64_t(64) - ((sizeof(float) * 1200) & uint64_t(63)) + ((sizeof(float) + uint64_t(63)) & ~uint64_t(63))), std::align_val_t{ 64 })) : nullptr;
 					if(sz > size) {
 						if(values) {
 							std::memcpy(temp, values, ((uint64_t(63) + sizeof(float)) & ~uint64_t(63)) + size * (sizeof(float) * 1200 + uint64_t(64) - ((sizeof(float) * 1200) & uint64_t(63)) + ((sizeof(float) + uint64_t(63)) & ~uint64_t(63))));
@@ -372,7 +373,7 @@ namespace dcon {
 						} else {
 							std::memset(temp, 0, ((uint64_t(63) + sizeof(float)) & ~uint64_t(63)) + sz * (sizeof(float) * 1200 + uint64_t(64) - ((sizeof(float) * 1200) & uint64_t(63)) + ((sizeof(float) + uint64_t(63)) & ~uint64_t(63))));
 						}
-					} else {
+					} else if(sz > 0) {
 						std::memcpy(temp, values, ((uint64_t(63) + sizeof(float)) & ~uint64_t(63)) + sz * (sizeof(float) * 1200 + uint64_t(64) - ((sizeof(float) * 1200) & uint64_t(63)) + ((sizeof(float) + uint64_t(63)) & ~uint64_t(63))));
 					}
 					::operator delete(values, std::align_val_t{ 64 });
@@ -406,7 +407,7 @@ namespace dcon {
 					return reinterpret_cast<dcon::bitfield_type*>(values + ((uint64_t(63) + sizeof(dcon::bitfield_type)) & ~uint64_t(63)) + i * ( (1200 + 7) / 8 + uint64_t(64) - (( (1200 + 7) / 8) & uint64_t(63)) ));
 				}
 				DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t) {
-					std::byte* temp = (std::byte*)(::operator new(((uint64_t(63) + sizeof(dcon::bitfield_type)) & ~uint64_t(63)) + sz * ( (1200 + 7) / 8 + uint64_t(64) - (( (1200 + 7) / 8) & uint64_t(63)) ), std::align_val_t{ 64 }));
+					std::byte* temp = sz > 0 ? (std::byte*)(::operator new(((uint64_t(63) + sizeof(dcon::bitfield_type)) & ~uint64_t(63)) + sz * ( (1200 + 7) / 8 + uint64_t(64) - (( (1200 + 7) / 8) & uint64_t(63)) ), std::align_val_t{ 64 })) : nullptr;
 					if(sz > size) {
 						if(values) {
 							std::memcpy(temp, values, ((uint64_t(63) + sizeof(dcon::bitfield_type)) & ~uint64_t(63)) + size * ( (1200 + 7) / 8 + uint64_t(64) - (( (1200 + 7) / 8) & uint64_t(63)) ));
@@ -414,7 +415,7 @@ namespace dcon {
 						} else {
 							std::memset(temp, 0, ((uint64_t(63) + sizeof(dcon::bitfield_type)) & ~uint64_t(63)) + sz * ( (1200 + 7) / 8 + uint64_t(64) - (( (1200 + 7) / 8) & uint64_t(63)) ));
 						}
-					} else {
+					} else if(sz > 0) {
 						std::memcpy(temp, values, ((uint64_t(63) + sizeof(dcon::bitfield_type)) & ~uint64_t(63)) + sz * ( (1200 + 7) / 8 + uint64_t(64) - (( (1200 + 7) / 8) & uint64_t(63)) ));
 					}
 					::operator delete(values, std::align_val_t{ 64 });
@@ -485,7 +486,7 @@ namespace dcon {
 			//
 			// storage space for pooled_v of type dcon::stable_mk_2_tag
 			//
-			struct dtype_pooled_v {
+			struct alignas(64) dtype_pooled_v {
 				std::vector<dcon::stable_mk_2_tag> values;
 				DCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }
 				DCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }
@@ -3370,7 +3371,7 @@ namespace dcon {
 			if(serialize_selection.thingy_big_array_bf) {
 				total_size += 9;
 				total_size += sizeof(uint16_t);
-				total_size += thingy.m_big_array_bf.size * (thingy.size_used + 7) / 8;
+				total_size += thingy.m_big_array_bf.size * ((thingy.size_used + 7) / 8);
 				dcon::record_header iheader(0, "$array", "thingy", "big_array_bf");
 				total_size += iheader.serialize_size();
 			}
@@ -3416,7 +3417,7 @@ namespace dcon {
 			if(serialize_selection.thingy2_big_array_bf) {
 				total_size += 9;
 				total_size += sizeof(uint16_t);
-				total_size += thingy2.m_big_array_bf.size * (thingy2.size_used + 7) / 8;
+				total_size += thingy2.m_big_array_bf.size * ((thingy2.size_used + 7) / 8);
 				dcon::record_header iheader(0, "$array", "thingy2", "big_array_bf");
 				total_size += iheader.serialize_size();
 			}
@@ -3525,7 +3526,7 @@ namespace dcon {
 				}
 			}
 			if(serialize_selection.thingy_big_array_bf) {
-				dcon::record_header header(9 + sizeof(uint16_t) + thingy.m_big_array_bf.size * (thingy.size_used + 7) / 8, "$array", "thingy", "big_array_bf");
+				dcon::record_header header(9 + sizeof(uint16_t) + thingy.m_big_array_bf.size * ((thingy.size_used + 7) / 8), "$array", "thingy", "big_array_bf");
 				header.serialize(output_buffer);
 				std::memcpy(reinterpret_cast<char*>(output_buffer), "bitfield", 9);
 				output_buffer += 9;
@@ -3595,7 +3596,7 @@ namespace dcon {
 				}
 			}
 			if(serialize_selection.thingy2_big_array_bf) {
-				dcon::record_header header(9 + sizeof(uint16_t) + thingy2.m_big_array_bf.size * (thingy2.size_used + 7) / 8, "$array", "thingy2", "big_array_bf");
+				dcon::record_header header(9 + sizeof(uint16_t) + thingy2.m_big_array_bf.size * ((thingy2.size_used + 7) / 8), "$array", "thingy2", "big_array_bf");
 				header.serialize(output_buffer);
 				std::memcpy(reinterpret_cast<char*>(output_buffer), "bitfield", 9);
 				output_buffer += 9;

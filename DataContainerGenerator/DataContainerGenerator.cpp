@@ -472,7 +472,7 @@ int main(int argc, char *argv[]) {
 					//fill in with special vector type and pool object
 					output += make_member_container(o, p.name, "dcon::stable_mk_2_tag",
 						std::to_string(ob.size),
-						struct_padding::none, ob.is_expandable, "std::numeric_limits<dcon::stable_mk_2_tag>::max()").to_string(3);
+						struct_padding::fixed, ob.is_expandable, "std::numeric_limits<dcon::stable_mk_2_tag>::max()").to_string(3);
 					
 					output += "\t\t\tdcon::stable_variable_vector_storage_mk_2<" + p.data_type + ", 16, " + std::to_string(p.special_pool_size) + " > " + p.name + "_storage;\n";
 				} else if(p.type == property_type::array_bitfield) {
@@ -524,7 +524,7 @@ int main(int argc, char *argv[]) {
 							output += make_member_container(o, std::string("array_") + i.property_name,
 								"dcon::stable_mk_2_tag",
 								std::to_string(i.related_to->size),
-								struct_padding::none, i.related_to->is_expandable,
+								struct_padding::fixed, i.related_to->is_expandable,
 								"std::numeric_limits<dcon::stable_mk_2_tag>::max()").to_string(3);
 
 							output += "\t\t\tdcon::stable_variable_vector_storage_mk_2<" + ob.name + "_id, 8, " + std::to_string(ob.size * 2) + " > "
