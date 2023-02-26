@@ -755,6 +755,19 @@ namespace ve {
 		return int_vector() - a;
 	}
 
+	RELEASE_INLINE int_vector operator|(int_vector a, int_vector b) {
+		return int_vector(_mm_or_si128(a.value_low, b.value_low), _mm_or_si128(a.value_high, b.value_high));
+	}
+	RELEASE_INLINE int_vector operator&(int_vector a, int_vector b) {
+		return int_vector(_mm_and_si128(a.value_low, b.value_low), _mm_and_si128(a.value_high, b.value_high));
+	}
+	RELEASE_INLINE int_vector operator^(int_vector a, int_vector b) {
+		return int_vector(_mm_xor_si128(a.value_low, b.value_low), _mm_xor_si128(a.value_high, b.value_high));
+	}
+	RELEASE_INLINE int_vector operator~(int_vector a) {
+		return int_vector() ^ a;
+	}
+
 	RELEASE_INLINE mask_vector operator&(mask_vector a, mask_vector b) {
 		return _mm256_and_ps(a, b);
 	}
