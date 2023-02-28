@@ -296,14 +296,22 @@ TEST_CASE("deserialize a related object", "[serialization_tests]") {
 	REQUIRE(target.get_i_value() == 35);
 	REQUIRE(target.get_f_value() == 7.5f);
 
-	REQUIRE(target.has_right_from_dummy_rel(s1));
-	REQUIRE(target.has_right_from_dummy_rel(s2));
-	REQUIRE(target.has_right_from_dummy_rel(s5));
-	REQUIRE(target.has_right_from_dummy_rel(s7));
+	auto contains_fn = [](os::thingy_fat_id target, os::thingy2_id o) {
+		for (auto r : target.get_dummy_rel()) {
+			if (r.get_right() == o)
+				return true;
+		}
+		return false;
+	};
 
-	REQUIRE(!target.has_right_from_dummy_rel(s3));
-	REQUIRE(!target.has_right_from_dummy_rel(s4));
-	REQUIRE(!target.has_right_from_dummy_rel(s6));
+	REQUIRE(contains_fn(target, s1));
+	REQUIRE(contains_fn(target, s2));
+	REQUIRE(contains_fn(target, s5));
+	REQUIRE(contains_fn(target, s7));
+
+	REQUIRE(!contains_fn(target, s3));
+	REQUIRE(!contains_fn(target, s4));
+	REQUIRE(!contains_fn(target, s6));
 
 	REQUIRE(ptr->thingy2_get_some_value(s1) == 1);
 	REQUIRE(ptr->thingy2_get_some_value(s4) == 4);
@@ -328,13 +336,13 @@ TEST_CASE("deserialize a related object", "[serialization_tests]") {
 	REQUIRE(target.get_f_value() == 7.5f);
 
 	REQUIRE(ptr->get_dummy_rel_by_joint(target, s5).value == 0);
-	REQUIRE(!target.has_right_from_dummy_rel(s1));
-	REQUIRE(!target.has_right_from_dummy_rel(s2));
-	REQUIRE(!target.has_right_from_dummy_rel(s5));
-	REQUIRE(!target.has_right_from_dummy_rel(s7));
-	REQUIRE(!target.has_right_from_dummy_rel(s3));
-	REQUIRE(!target.has_right_from_dummy_rel(s4));
-	REQUIRE(!target.has_right_from_dummy_rel(s6));
+	REQUIRE(!contains_fn(target, s1));
+	REQUIRE(!contains_fn(target, s2));
+	REQUIRE(!contains_fn(target, s5));
+	REQUIRE(!contains_fn(target, s7));
+	REQUIRE(!contains_fn(target, s3));
+	REQUIRE(!contains_fn(target, s4));
+	REQUIRE(!contains_fn(target, s6));
 
 	REQUIRE(ptr->thingy2_get_some_value(s1) == 0);
 	REQUIRE(ptr->thingy2_get_some_value(s4) == 0);
@@ -362,14 +370,14 @@ TEST_CASE("deserialize a related object", "[serialization_tests]") {
 	REQUIRE(target.get_i_value() == 35);
 	REQUIRE(target.get_f_value() == 7.5f);
 
-	REQUIRE(target.has_right_from_dummy_rel(s1));
-	REQUIRE(target.has_right_from_dummy_rel(s2));
-	REQUIRE(target.has_right_from_dummy_rel(s5));
-	REQUIRE(target.has_right_from_dummy_rel(s7));
+	REQUIRE(contains_fn(target, s1));
+	REQUIRE(contains_fn(target, s2));
+	REQUIRE(contains_fn(target, s5));
+	REQUIRE(contains_fn(target, s7));
 
-	REQUIRE(!target.has_right_from_dummy_rel(s3));
-	REQUIRE(!target.has_right_from_dummy_rel(s4));
-	REQUIRE(!target.has_right_from_dummy_rel(s6));
+	REQUIRE(!contains_fn(target, s3));
+	REQUIRE(!contains_fn(target, s4));
+	REQUIRE(!contains_fn(target, s6));
 
 	REQUIRE(ptr->thingy2_get_some_value(s1) == 1);
 	REQUIRE(ptr->thingy2_get_some_value(s4) == 4);
@@ -426,14 +434,22 @@ TEST_CASE("upgrading", "[serialization_tests]") {
 	REQUIRE(target.get_i_value() == 35);
 	REQUIRE(target.get_f_value() == 7.5f);
 
-	REQUIRE(target.has_right_from_dummy_rel(s1));
-	REQUIRE(target.has_right_from_dummy_rel(s2));
-	REQUIRE(target.has_right_from_dummy_rel(s5));
-	REQUIRE(target.has_right_from_dummy_rel(s7));
+	auto contains_fn = [](os::thingy_fat_id target, os::thingy2_id o) {
+		for (auto r : target.get_dummy_rel()) {
+			if (r.get_right() == o)
+				return true;
+		}
+		return false;
+	};
 
-	REQUIRE(!target.has_right_from_dummy_rel(s3));
-	REQUIRE(!target.has_right_from_dummy_rel(s4));
-	REQUIRE(!target.has_right_from_dummy_rel(s6));
+	REQUIRE(contains_fn(target, s1));
+	REQUIRE(contains_fn(target, s2));
+	REQUIRE(contains_fn(target, s5));
+	REQUIRE(contains_fn(target, s7));
+
+	REQUIRE(!contains_fn(target, s3));
+	REQUIRE(!contains_fn(target, s4));
+	REQUIRE(!contains_fn(target, s6));
 
 	REQUIRE(ptr->thingy2_get_some_value(s1) == 1);
 	REQUIRE(ptr->thingy2_get_some_value(s4) == 4);
@@ -485,14 +501,22 @@ TEST_CASE("upgrading", "[serialization_tests]") {
 	REQUIRE(targetb.get_i_value() == 35);
 	REQUIRE(targetb.get_f_value() == 7.5f);
 
-	REQUIRE(targetb.has_right_from_dummy_rel(s1b));
-	REQUIRE(targetb.has_right_from_dummy_rel(s2b));
-	REQUIRE(targetb.has_right_from_dummy_rel(s5b));
-	REQUIRE(targetb.has_right_from_dummy_rel(s7b));
+	auto ncontains_fn = [](ns::thingy_fat_id target, ns::thingy2_id o) {
+		for (auto r : target.get_dummy_rel()) {
+			if (r.get_right() == o)
+				return true;
+		}
+		return false;
+	};
 
-	REQUIRE(!targetb.has_right_from_dummy_rel(s3b));
-	REQUIRE(!targetb.has_right_from_dummy_rel(s4b));
-	REQUIRE(!targetb.has_right_from_dummy_rel(s6b));
+	REQUIRE(ncontains_fn(targetb, s1b));
+	REQUIRE(ncontains_fn(targetb, s2b));
+	REQUIRE(ncontains_fn(targetb, s5b));
+	REQUIRE(ncontains_fn(targetb, s7b));
+
+	REQUIRE(!ncontains_fn(targetb, s3b));
+	REQUIRE(!ncontains_fn(targetb, s4b));
+	REQUIRE(!ncontains_fn(targetb, s6b));
 
 	REQUIRE(ptrb->thingy2_get_some_value(s1b) == 1);
 	REQUIRE(ptrb->thingy2_get_some_value(s4b) == 4);

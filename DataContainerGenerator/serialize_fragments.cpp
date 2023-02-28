@@ -887,36 +887,40 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 
 			// wrap: gaurantee enough space to read entire buffer
 			o + "if(input_buffer + header.record_size <= end)" + block{
-				bool first_header_if = true;
-				for (auto& ob : parsed_file.relationship_objects) {
-					o + substitute{ "obj", ob.name } + substitute{ "obj_sz", std::to_string(ob.size) }
-					+ substitute{ "mcon", with_mask ? std::string(" && mask.") + ob.name : std::string() };
-					if (first_header_if)
-						first_header_if = false;
-					else
-						o + append{ "else" };
 
-					o + "if(header.is_object(\"@obj@\")@mcon@)" + block{ //has matched object
-						deserialize_size_fragment(o, ob);
-						if (ob.store_type == storage_type::erasable) {
-							deserialize_erasable_index_fragment(o, ob, with_mask);
-						} // end: load index handling for erasable
+				o + "do" + block{
 
-						for (auto& iob : ob.indexed_objects) {
-							deserialize_individual_link_fragment(o, ob, iob, with_mask);
-						} // end index properties
+					//bool first_header_if = true;
+					for (auto& ob : parsed_file.relationship_objects) {
+						o + substitute{ "obj", ob.name } + substitute{ "obj_sz", std::to_string(ob.size) }
+						+ substitute{ "mcon", with_mask ? std::string(" && mask.") + ob.name : std::string() };
+						//if (first_header_if)
+						//	first_header_if = false;
+						//else
+						//	o + append{ "else" };
 
-						if (ob.is_relationship) {
-							deserialize_relationship_end_links_fragment(o, ob, with_mask);
-						}
+						o + "if(header.is_object(\"@obj@\")@mcon@)" + block{ //has matched object
+							deserialize_size_fragment(o, ob);
+							if (ob.store_type == storage_type::erasable) {
+								deserialize_erasable_index_fragment(o, ob, with_mask);
+							} // end: load index handling for erasable
 
-						for (auto& prop : ob.properties) {
-							deserialize_individual_property_fragment(o, parsed_file, ob, prop, with_mask);
-						} // end loop over object properties 
+							for (auto& iob : ob.indexed_objects) {
+								deserialize_individual_link_fragment(o, ob, iob, with_mask);
+							} // end index properties
 
-					}; // end "header object == object type" in output
+							if (ob.is_relationship) {
+								deserialize_relationship_end_links_fragment(o, ob, with_mask);
+							}
 
-				} // end loop over object and relation types
+							for (auto& prop : ob.properties) {
+								deserialize_individual_property_fragment(o, parsed_file, ob, prop, with_mask);
+							} // end loop over object properties 
+							o + "break;";
+						}; // end "header object == object type" in output
+
+					} // end loop over object and relation types
+				} + append{ "while(false);" }; // end generated do while 
 			}; // end if ensuring that buffer has enough space to read entire record
 			o + "input_buffer += header.record_size;";
 		};
