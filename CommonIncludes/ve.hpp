@@ -65,6 +65,7 @@ namespace ve {
 
 		vectorizable_buffer& operator=(vectorizable_buffer&& other) noexcept {
 			std::swap(values, other.values);
+			return *this;
 		}
 
 		T* vptr() const noexcept { return values + uint64_t(64) / sizeof(T); }
