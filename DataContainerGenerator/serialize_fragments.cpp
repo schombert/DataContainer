@@ -578,13 +578,14 @@ void deserialize_relationship_end_links_fragment(basic_builder& o, relationship_
 			}
 			o + substitute{ "params", params } + substitute{"ckname", cc.name};
 
+			o + "@obj@.hashm_@ckname@.clear();";
 			o + "for(uint32_t idx = 0; idx < @obj@.size_used; ++idx)" + block{
 				o + "auto this_key = @obj@_id(@obj@_id::value_base_t(idx));";
 				o + "if(@obj@_is_valid(@obj@_id(@obj@_id::value_base_t(idx))))" + block{
 					o + "auto key_dat = @obj@.to_@ckname@_keydata(@params@);";
-					o + "if(auto it = @obj@.hashm_@ckname@.find(key_dat); it !=  @obj@.hashm_@ckname@.end())" + block{
-						o + "delete_@obj@(it->second);";
-					};
+					//o + "if(auto it = @obj@.hashm_@ckname@.find(key_dat); it !=  @obj@.hashm_@ckname@.end())" + block{
+					//	o + "delete_@obj@(it->second);";
+					//};
 					o + "@obj@.hashm_@ckname@.insert_or_assign(key_dat, this_key);";
 				};
 			};
@@ -885,7 +886,7 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 			o + "dcon::record_header header;";
 			o + "header.deserialize(input_buffer, end);";
 
-			// wrap: gaurantee enough space to read entire buffer
+			// wrap: guarantee enough space to read entire buffer
 			o + "if(input_buffer + header.record_size <= end)" + block{
 
 				o + "do" + block{

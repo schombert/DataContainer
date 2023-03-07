@@ -29,8 +29,10 @@
 #else
 #define DCON_RELEASE_INLINE inline
 #endif
+#ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4324 )
+#endif
 
 namespace dcon {
 	struct load_record {
@@ -166,17 +168,17 @@ namespace dcon {
 namespace ve {
 	template<>
 	struct value_to_vector_type_s<dcon::entity_id> {
-		using type = tagged_vector<dcon::entity_id>;
+		using type = ::ve::tagged_vector<dcon::entity_id>;
 	};
 	
 	template<>
 	struct value_to_vector_type_s<dcon::position_id> {
-		using type = tagged_vector<dcon::position_id>;
+		using type = ::ve::tagged_vector<dcon::position_id>;
 	};
 	
 	template<>
 	struct value_to_vector_type_s<dcon::sprite_id> {
-		using type = tagged_vector<dcon::sprite_id>;
+		using type = ::ve::tagged_vector<dcon::sprite_id>;
 	};
 	
 }
@@ -1831,409 +1833,414 @@ namespace dcon {
 				dcon::record_header header;
 				header.deserialize(input_buffer, end);
 				if(input_buffer + header.record_size <= end) {
-					if(header.is_object("entity")) {
-						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-							if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= entity.size_used) {
-								entity_resize(0);
-							}
-							entity_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-							serialize_selection.entity = true;
-						}
-						else if(header.is_property("__index")) {
-							if(header.is_type("uint16_t")) {
-								std::memcpy(entity.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), header.record_size));
-								serialize_selection.entity__index = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									entity.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+					do {
+						if(header.is_object("entity")) {
+							if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+								if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= entity.size_used) {
+									entity_resize(0);
 								}
-								serialize_selection.entity__index = true;
+								entity_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+								serialize_selection.entity = true;
 							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									entity.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							else if(header.is_property("_index")) {
+								if(header.is_type("uint16_t")) {
+									std::memcpy(entity.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), header.record_size));
+									serialize_selection.entity__index = true;
 								}
-								serialize_selection.entity__index = true;
-							}
-							if(serialize_selection.entity__index == true) {
-								entity.size_used = 0;
-								entity.first_free = entity_id();
-								for(int32_t j = 3000 - 1; j > 0; --j) {
-									if(entity.m__index.vptr()[j] != entity_id(uint16_t(j))) {
-										entity.m__index.vptr()[j] = entity.first_free;
-										entity.first_free = entity_id(uint16_t(j));
-									} else {
-										entity.size_used = std::max(entity.size_used, uint32_t(j));
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										entity.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.entity__index = true;
+								}
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										entity.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.entity__index = true;
+								}
+								if(serialize_selection.entity__index == true) {
+									entity.size_used = 0;
+									entity.first_free = entity_id();
+									for(int32_t j = 3000 - 1; j > 0; --j) {
+										if(entity.m__index.vptr()[j] != entity_id(uint16_t(j))) {
+											entity.m__index.vptr()[j] = entity.first_free;
+											entity.first_free = entity_id(uint16_t(j));
+										} else {
+											entity.size_used = std::max(entity.size_used, uint32_t(j));
+										}
 									}
 								}
 							}
-						}
-						else if(header.is_property("position_component")) {
-							if(header.is_type("uint16_t")) {
-								std::memcpy(entity.m_position_component.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), header.record_size));
-								serialize_selection.entity_position_component = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									entity.m_position_component.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							else if(header.is_property("position_component")) {
+								if(header.is_type("uint16_t")) {
+									std::memcpy(entity.m_position_component.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), header.record_size));
+									serialize_selection.entity_position_component = true;
 								}
-								serialize_selection.entity_position_component = true;
-							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									entity.m_position_component.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										entity.m_position_component.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.entity_position_component = true;
 								}
-								serialize_selection.entity_position_component = true;
-							}
-						}
-						else if(header.is_property("sprite_component")) {
-							if(header.is_type("uint16_t")) {
-								std::memcpy(entity.m_sprite_component.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), header.record_size));
-								serialize_selection.entity_sprite_component = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									entity.m_sprite_component.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-								}
-								serialize_selection.entity_sprite_component = true;
-							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									entity.m_sprite_component.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-								}
-								serialize_selection.entity_sprite_component = true;
-							}
-						}
-						else if(header.is_property("$index_end")) {
-							if(serialize_selection.entity_position_component == true) {
-								for(uint32_t i = 0; i < entity.size_used; ++i) {
-									auto tmp = entity.m_position_component.vptr()[i];
-									entity.m_position_component.vptr()[i] = position_id();
-									internal_entity_set_position_component(entity_id(entity_id::value_base_t(i)), tmp);
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										entity.m_position_component.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.entity_position_component = true;
 								}
 							}
-							if(serialize_selection.entity_sprite_component == true) {
-								for(uint32_t i = 0; i < entity.size_used; ++i) {
-									auto tmp = entity.m_sprite_component.vptr()[i];
-									entity.m_sprite_component.vptr()[i] = sprite_id();
-									internal_entity_set_sprite_component(entity_id(entity_id::value_base_t(i)), tmp);
+							else if(header.is_property("sprite_component")) {
+								if(header.is_type("uint16_t")) {
+									std::memcpy(entity.m_sprite_component.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), header.record_size));
+									serialize_selection.entity_sprite_component = true;
+								}
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										entity.m_sprite_component.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.entity_sprite_component = true;
+								}
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										entity.m_sprite_component.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.entity_sprite_component = true;
 								}
 							}
-						}
-					} else
-					if(header.is_object("position")) {
-						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-							position_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-							serialize_selection.position = true;
-						}
-						else if(header.is_property("__index")) {
-							if(header.is_type("uint16_t")) {
-								std::memcpy(position.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(uint16_t), header.record_size));
-								serialize_selection.position__index = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									position.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							else if(header.is_property("$index_end")) {
+								if(serialize_selection.entity_position_component == true) {
+									for(uint32_t i = 0; i < entity.size_used; ++i) {
+										auto tmp = entity.m_position_component.vptr()[i];
+										entity.m_position_component.vptr()[i] = position_id();
+										internal_entity_set_position_component(entity_id(entity_id::value_base_t(i)), tmp);
+									}
 								}
-								serialize_selection.position__index = true;
-							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									position.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position__index = true;
-							}
-							if(serialize_selection.position__index == true) {
-								position.size_used = 0;
-								position.first_free = position_id();
-								for(int32_t j = 3000 - 1; j > 0; --j) {
-									if(position.m__index.vptr()[j] != position_id(uint16_t(j))) {
-										position.m__index.vptr()[j] = position.first_free;
-										position.first_free = position_id(uint16_t(j));
-									} else {
-										position.size_used = std::max(position.size_used, uint32_t(j));
+								if(serialize_selection.entity_sprite_component == true) {
+									for(uint32_t i = 0; i < entity.size_used; ++i) {
+										auto tmp = entity.m_sprite_component.vptr()[i];
+										entity.m_sprite_component.vptr()[i] = sprite_id();
+										internal_entity_set_sprite_component(entity_id(entity_id::value_base_t(i)), tmp);
 									}
 								}
 							}
+							break;
 						}
-						else if(header.is_property("x")) {
-							if(header.is_type("float")) {
-								std::memcpy(position.m_x.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), header.record_size));
-								serialize_selection.position_x = true;
+						if(header.is_object("position")) {
+							if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+								position_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+								serialize_selection.position = true;
 							}
-							else if(header.is_type("int8_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
-									position.m_x.vptr()[i] = float(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+							else if(header.is_property("_index")) {
+								if(header.is_type("uint16_t")) {
+									std::memcpy(position.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(uint16_t), header.record_size));
+									serialize_selection.position__index = true;
 								}
-								serialize_selection.position_x = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									position.m_x.vptr()[i] = float(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										position.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position__index = true;
 								}
-								serialize_selection.position_x = true;
-							}
-							else if(header.is_type("int16_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
-									position.m_x.vptr()[i] = float(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										position.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position__index = true;
 								}
-								serialize_selection.position_x = true;
-							}
-							else if(header.is_type("uint16_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-									position.m_x.vptr()[i] = float(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_x = true;
-							}
-							else if(header.is_type("int32_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int32_t))); ++i) {
-									position.m_x.vptr()[i] = float(*(reinterpret_cast<int32_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_x = true;
-							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									position.m_x.vptr()[i] = float(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_x = true;
-							}
-							else if(header.is_type("int64_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
-									position.m_x.vptr()[i] = float(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_x = true;
-							}
-							else if(header.is_type("uint64_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
-									position.m_x.vptr()[i] = float(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_x = true;
-							}
-							else if(header.is_type("double")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
-									position.m_x.vptr()[i] = float(*(reinterpret_cast<double const*>(input_buffer) + i));
-								}
-								serialize_selection.position_x = true;
-							}
-						}
-						else if(header.is_property("y")) {
-							if(header.is_type("float")) {
-								std::memcpy(position.m_y.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), header.record_size));
-								serialize_selection.position_y = true;
-							}
-							else if(header.is_type("int8_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
-									position.m_y.vptr()[i] = float(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_y = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									position.m_y.vptr()[i] = float(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_y = true;
-							}
-							else if(header.is_type("int16_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
-									position.m_y.vptr()[i] = float(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_y = true;
-							}
-							else if(header.is_type("uint16_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-									position.m_y.vptr()[i] = float(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_y = true;
-							}
-							else if(header.is_type("int32_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int32_t))); ++i) {
-									position.m_y.vptr()[i] = float(*(reinterpret_cast<int32_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_y = true;
-							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									position.m_y.vptr()[i] = float(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_y = true;
-							}
-							else if(header.is_type("int64_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
-									position.m_y.vptr()[i] = float(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_y = true;
-							}
-							else if(header.is_type("uint64_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
-									position.m_y.vptr()[i] = float(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_y = true;
-							}
-							else if(header.is_type("double")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
-									position.m_y.vptr()[i] = float(*(reinterpret_cast<double const*>(input_buffer) + i));
-								}
-								serialize_selection.position_y = true;
-							}
-						}
-						else if(header.is_property("rotation")) {
-							if(header.is_type("float")) {
-								std::memcpy(position.m_rotation.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), header.record_size));
-								serialize_selection.position_rotation = true;
-							}
-							else if(header.is_type("int8_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
-									position.m_rotation.vptr()[i] = float(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_rotation = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									position.m_rotation.vptr()[i] = float(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_rotation = true;
-							}
-							else if(header.is_type("int16_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
-									position.m_rotation.vptr()[i] = float(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_rotation = true;
-							}
-							else if(header.is_type("uint16_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-									position.m_rotation.vptr()[i] = float(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_rotation = true;
-							}
-							else if(header.is_type("int32_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int32_t))); ++i) {
-									position.m_rotation.vptr()[i] = float(*(reinterpret_cast<int32_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_rotation = true;
-							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									position.m_rotation.vptr()[i] = float(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_rotation = true;
-							}
-							else if(header.is_type("int64_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
-									position.m_rotation.vptr()[i] = float(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_rotation = true;
-							}
-							else if(header.is_type("uint64_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
-									position.m_rotation.vptr()[i] = float(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_rotation = true;
-							}
-							else if(header.is_type("double")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
-									position.m_rotation.vptr()[i] = float(*(reinterpret_cast<double const*>(input_buffer) + i));
-								}
-								serialize_selection.position_rotation = true;
-							}
-						}
-					} else
-					if(header.is_object("sprite")) {
-						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-							sprite_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-							serialize_selection.sprite = true;
-						}
-						else if(header.is_property("__index")) {
-							if(header.is_type("uint16_t")) {
-								std::memcpy(sprite.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(sprite.size_used) * sizeof(uint16_t), header.record_size));
-								serialize_selection.sprite__index = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									sprite.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-								}
-								serialize_selection.sprite__index = true;
-							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									sprite.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-								}
-								serialize_selection.sprite__index = true;
-							}
-							if(serialize_selection.sprite__index == true) {
-								sprite.size_used = 0;
-								sprite.first_free = sprite_id();
-								for(int32_t j = 3000 - 1; j > 0; --j) {
-									if(sprite.m__index.vptr()[j] != sprite_id(uint16_t(j))) {
-										sprite.m__index.vptr()[j] = sprite.first_free;
-										sprite.first_free = sprite_id(uint16_t(j));
-									} else {
-										sprite.size_used = std::max(sprite.size_used, uint32_t(j));
+								if(serialize_selection.position__index == true) {
+									position.size_used = 0;
+									position.first_free = position_id();
+									for(int32_t j = 3000 - 1; j > 0; --j) {
+										if(position.m__index.vptr()[j] != position_id(uint16_t(j))) {
+											position.m__index.vptr()[j] = position.first_free;
+											position.first_free = position_id(uint16_t(j));
+										} else {
+											position.size_used = std::max(position.size_used, uint32_t(j));
+										}
 									}
 								}
 							}
+							else if(header.is_property("x")) {
+								if(header.is_type("float")) {
+									std::memcpy(position.m_x.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), header.record_size));
+									serialize_selection.position_x = true;
+								}
+								else if(header.is_type("int8_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
+										position.m_x.vptr()[i] = float(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_x = true;
+								}
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										position.m_x.vptr()[i] = float(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_x = true;
+								}
+								else if(header.is_type("int16_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
+										position.m_x.vptr()[i] = float(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_x = true;
+								}
+								else if(header.is_type("uint16_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+										position.m_x.vptr()[i] = float(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_x = true;
+								}
+								else if(header.is_type("int32_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int32_t))); ++i) {
+										position.m_x.vptr()[i] = float(*(reinterpret_cast<int32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_x = true;
+								}
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										position.m_x.vptr()[i] = float(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_x = true;
+								}
+								else if(header.is_type("int64_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
+										position.m_x.vptr()[i] = float(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_x = true;
+								}
+								else if(header.is_type("uint64_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
+										position.m_x.vptr()[i] = float(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_x = true;
+								}
+								else if(header.is_type("double")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
+										position.m_x.vptr()[i] = float(*(reinterpret_cast<double const*>(input_buffer) + i));
+									}
+									serialize_selection.position_x = true;
+								}
+							}
+							else if(header.is_property("y")) {
+								if(header.is_type("float")) {
+									std::memcpy(position.m_y.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), header.record_size));
+									serialize_selection.position_y = true;
+								}
+								else if(header.is_type("int8_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
+										position.m_y.vptr()[i] = float(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_y = true;
+								}
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										position.m_y.vptr()[i] = float(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_y = true;
+								}
+								else if(header.is_type("int16_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
+										position.m_y.vptr()[i] = float(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_y = true;
+								}
+								else if(header.is_type("uint16_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+										position.m_y.vptr()[i] = float(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_y = true;
+								}
+								else if(header.is_type("int32_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int32_t))); ++i) {
+										position.m_y.vptr()[i] = float(*(reinterpret_cast<int32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_y = true;
+								}
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										position.m_y.vptr()[i] = float(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_y = true;
+								}
+								else if(header.is_type("int64_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
+										position.m_y.vptr()[i] = float(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_y = true;
+								}
+								else if(header.is_type("uint64_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
+										position.m_y.vptr()[i] = float(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_y = true;
+								}
+								else if(header.is_type("double")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
+										position.m_y.vptr()[i] = float(*(reinterpret_cast<double const*>(input_buffer) + i));
+									}
+									serialize_selection.position_y = true;
+								}
+							}
+							else if(header.is_property("rotation")) {
+								if(header.is_type("float")) {
+									std::memcpy(position.m_rotation.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), header.record_size));
+									serialize_selection.position_rotation = true;
+								}
+								else if(header.is_type("int8_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
+										position.m_rotation.vptr()[i] = float(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_rotation = true;
+								}
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										position.m_rotation.vptr()[i] = float(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_rotation = true;
+								}
+								else if(header.is_type("int16_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
+										position.m_rotation.vptr()[i] = float(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_rotation = true;
+								}
+								else if(header.is_type("uint16_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+										position.m_rotation.vptr()[i] = float(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_rotation = true;
+								}
+								else if(header.is_type("int32_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int32_t))); ++i) {
+										position.m_rotation.vptr()[i] = float(*(reinterpret_cast<int32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_rotation = true;
+								}
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										position.m_rotation.vptr()[i] = float(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_rotation = true;
+								}
+								else if(header.is_type("int64_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
+										position.m_rotation.vptr()[i] = float(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_rotation = true;
+								}
+								else if(header.is_type("uint64_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
+										position.m_rotation.vptr()[i] = float(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_rotation = true;
+								}
+								else if(header.is_type("double")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
+										position.m_rotation.vptr()[i] = float(*(reinterpret_cast<double const*>(input_buffer) + i));
+									}
+									serialize_selection.position_rotation = true;
+								}
+							}
+							break;
 						}
-						else if(header.is_property("sprite_id")) {
-							if(header.is_type("uint16_t")) {
-								std::memcpy(sprite.m_sprite_id.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(sprite.size_used) * sizeof(uint16_t), header.record_size));
-								serialize_selection.sprite_sprite_id = true;
+						if(header.is_object("sprite")) {
+							if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+								sprite_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+								serialize_selection.sprite = true;
 							}
-							else if(header.is_type("int8_t")) {
-								for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
-									sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+							else if(header.is_property("_index")) {
+								if(header.is_type("uint16_t")) {
+									std::memcpy(sprite.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(sprite.size_used) * sizeof(uint16_t), header.record_size));
+									serialize_selection.sprite__index = true;
 								}
-								serialize_selection.sprite_sprite_id = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										sprite.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.sprite__index = true;
 								}
-								serialize_selection.sprite_sprite_id = true;
-							}
-							else if(header.is_type("int16_t")) {
-								for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
-									sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										sprite.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.sprite__index = true;
 								}
-								serialize_selection.sprite_sprite_id = true;
-							}
-							else if(header.is_type("int32_t")) {
-								for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(int32_t))); ++i) {
-									sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<int32_t const*>(input_buffer) + i));
+								if(serialize_selection.sprite__index == true) {
+									sprite.size_used = 0;
+									sprite.first_free = sprite_id();
+									for(int32_t j = 3000 - 1; j > 0; --j) {
+										if(sprite.m__index.vptr()[j] != sprite_id(uint16_t(j))) {
+											sprite.m__index.vptr()[j] = sprite.first_free;
+											sprite.first_free = sprite_id(uint16_t(j));
+										} else {
+											sprite.size_used = std::max(sprite.size_used, uint32_t(j));
+										}
+									}
 								}
-								serialize_selection.sprite_sprite_id = true;
 							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							else if(header.is_property("sprite_id")) {
+								if(header.is_type("uint16_t")) {
+									std::memcpy(sprite.m_sprite_id.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(sprite.size_used) * sizeof(uint16_t), header.record_size));
+									serialize_selection.sprite_sprite_id = true;
 								}
-								serialize_selection.sprite_sprite_id = true;
-							}
-							else if(header.is_type("int64_t")) {
-								for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
-									sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+								else if(header.is_type("int8_t")) {
+									for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
+										sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.sprite_sprite_id = true;
 								}
-								serialize_selection.sprite_sprite_id = true;
-							}
-							else if(header.is_type("uint64_t")) {
-								for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
-									sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.sprite_sprite_id = true;
 								}
-								serialize_selection.sprite_sprite_id = true;
-							}
-							else if(header.is_type("float")) {
-								for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(float))); ++i) {
-									sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<float const*>(input_buffer) + i));
+								else if(header.is_type("int16_t")) {
+									for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
+										sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.sprite_sprite_id = true;
 								}
-								serialize_selection.sprite_sprite_id = true;
-							}
-							else if(header.is_type("double")) {
-								for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
-									sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<double const*>(input_buffer) + i));
+								else if(header.is_type("int32_t")) {
+									for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(int32_t))); ++i) {
+										sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<int32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.sprite_sprite_id = true;
 								}
-								serialize_selection.sprite_sprite_id = true;
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.sprite_sprite_id = true;
+								}
+								else if(header.is_type("int64_t")) {
+									for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
+										sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.sprite_sprite_id = true;
+								}
+								else if(header.is_type("uint64_t")) {
+									for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
+										sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.sprite_sprite_id = true;
+								}
+								else if(header.is_type("float")) {
+									for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(float))); ++i) {
+										sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<float const*>(input_buffer) + i));
+									}
+									serialize_selection.sprite_sprite_id = true;
+								}
+								else if(header.is_type("double")) {
+									for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
+										sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<double const*>(input_buffer) + i));
+									}
+									serialize_selection.sprite_sprite_id = true;
+								}
 							}
+							break;
 						}
-					}
+					} while(false);
 				}
 				input_buffer += header.record_size;
 			}
@@ -2247,409 +2254,414 @@ namespace dcon {
 				dcon::record_header header;
 				header.deserialize(input_buffer, end);
 				if(input_buffer + header.record_size <= end) {
-					if(header.is_object("entity") && mask.entity) {
-						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-							if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= entity.size_used) {
-								entity_resize(0);
-							}
-							entity_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-							serialize_selection.entity = true;
-						}
-						else if(header.is_property("__index") && mask.entity__index) {
-							if(header.is_type("uint16_t")) {
-								std::memcpy(entity.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), header.record_size));
-								serialize_selection.entity__index = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									entity.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+					do {
+						if(header.is_object("entity") && mask.entity) {
+							if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+								if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= entity.size_used) {
+									entity_resize(0);
 								}
-								serialize_selection.entity__index = true;
+								entity_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+								serialize_selection.entity = true;
 							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									entity.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							else if(header.is_property("_index") && mask.entity__index) {
+								if(header.is_type("uint16_t")) {
+									std::memcpy(entity.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), header.record_size));
+									serialize_selection.entity__index = true;
 								}
-								serialize_selection.entity__index = true;
-							}
-							if(serialize_selection.entity__index == true) {
-								entity.size_used = 0;
-								entity.first_free = entity_id();
-								for(int32_t j = 3000 - 1; j > 0; --j) {
-									if(entity.m__index.vptr()[j] != entity_id(uint16_t(j))) {
-										entity.m__index.vptr()[j] = entity.first_free;
-										entity.first_free = entity_id(uint16_t(j));
-									} else {
-										entity.size_used = std::max(entity.size_used, uint32_t(j));
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										entity.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.entity__index = true;
+								}
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										entity.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.entity__index = true;
+								}
+								if(serialize_selection.entity__index == true) {
+									entity.size_used = 0;
+									entity.first_free = entity_id();
+									for(int32_t j = 3000 - 1; j > 0; --j) {
+										if(entity.m__index.vptr()[j] != entity_id(uint16_t(j))) {
+											entity.m__index.vptr()[j] = entity.first_free;
+											entity.first_free = entity_id(uint16_t(j));
+										} else {
+											entity.size_used = std::max(entity.size_used, uint32_t(j));
+										}
 									}
 								}
 							}
-						}
-						else if(header.is_property("position_component") && mask.entity_position_component) {
-							if(header.is_type("uint16_t")) {
-								std::memcpy(entity.m_position_component.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), header.record_size));
-								serialize_selection.entity_position_component = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									entity.m_position_component.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							else if(header.is_property("position_component") && mask.entity_position_component) {
+								if(header.is_type("uint16_t")) {
+									std::memcpy(entity.m_position_component.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), header.record_size));
+									serialize_selection.entity_position_component = true;
 								}
-								serialize_selection.entity_position_component = true;
-							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									entity.m_position_component.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										entity.m_position_component.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.entity_position_component = true;
 								}
-								serialize_selection.entity_position_component = true;
-							}
-						}
-						else if(header.is_property("sprite_component") && mask.entity_sprite_component) {
-							if(header.is_type("uint16_t")) {
-								std::memcpy(entity.m_sprite_component.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), header.record_size));
-								serialize_selection.entity_sprite_component = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									entity.m_sprite_component.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-								}
-								serialize_selection.entity_sprite_component = true;
-							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									entity.m_sprite_component.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-								}
-								serialize_selection.entity_sprite_component = true;
-							}
-						}
-						else if(header.is_property("$index_end") && mask.entity) {
-							if(serialize_selection.entity_position_component == true) {
-								for(uint32_t i = 0; i < entity.size_used; ++i) {
-									auto tmp = entity.m_position_component.vptr()[i];
-									entity.m_position_component.vptr()[i] = position_id();
-									internal_entity_set_position_component(entity_id(entity_id::value_base_t(i)), tmp);
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										entity.m_position_component.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.entity_position_component = true;
 								}
 							}
-							if(serialize_selection.entity_sprite_component == true) {
-								for(uint32_t i = 0; i < entity.size_used; ++i) {
-									auto tmp = entity.m_sprite_component.vptr()[i];
-									entity.m_sprite_component.vptr()[i] = sprite_id();
-									internal_entity_set_sprite_component(entity_id(entity_id::value_base_t(i)), tmp);
+							else if(header.is_property("sprite_component") && mask.entity_sprite_component) {
+								if(header.is_type("uint16_t")) {
+									std::memcpy(entity.m_sprite_component.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), header.record_size));
+									serialize_selection.entity_sprite_component = true;
+								}
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										entity.m_sprite_component.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.entity_sprite_component = true;
+								}
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(entity.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										entity.m_sprite_component.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.entity_sprite_component = true;
 								}
 							}
-						}
-					} else
-					if(header.is_object("position") && mask.position) {
-						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-							position_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-							serialize_selection.position = true;
-						}
-						else if(header.is_property("__index") && mask.position__index) {
-							if(header.is_type("uint16_t")) {
-								std::memcpy(position.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(uint16_t), header.record_size));
-								serialize_selection.position__index = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									position.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							else if(header.is_property("$index_end") && mask.entity) {
+								if(serialize_selection.entity_position_component == true) {
+									for(uint32_t i = 0; i < entity.size_used; ++i) {
+										auto tmp = entity.m_position_component.vptr()[i];
+										entity.m_position_component.vptr()[i] = position_id();
+										internal_entity_set_position_component(entity_id(entity_id::value_base_t(i)), tmp);
+									}
 								}
-								serialize_selection.position__index = true;
-							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									position.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position__index = true;
-							}
-							if(serialize_selection.position__index == true) {
-								position.size_used = 0;
-								position.first_free = position_id();
-								for(int32_t j = 3000 - 1; j > 0; --j) {
-									if(position.m__index.vptr()[j] != position_id(uint16_t(j))) {
-										position.m__index.vptr()[j] = position.first_free;
-										position.first_free = position_id(uint16_t(j));
-									} else {
-										position.size_used = std::max(position.size_used, uint32_t(j));
+								if(serialize_selection.entity_sprite_component == true) {
+									for(uint32_t i = 0; i < entity.size_used; ++i) {
+										auto tmp = entity.m_sprite_component.vptr()[i];
+										entity.m_sprite_component.vptr()[i] = sprite_id();
+										internal_entity_set_sprite_component(entity_id(entity_id::value_base_t(i)), tmp);
 									}
 								}
 							}
+							break;
 						}
-						else if(header.is_property("x") && mask.position_x) {
-							if(header.is_type("float")) {
-								std::memcpy(position.m_x.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), header.record_size));
-								serialize_selection.position_x = true;
+						if(header.is_object("position") && mask.position) {
+							if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+								position_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+								serialize_selection.position = true;
 							}
-							else if(header.is_type("int8_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
-									position.m_x.vptr()[i] = float(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+							else if(header.is_property("_index") && mask.position__index) {
+								if(header.is_type("uint16_t")) {
+									std::memcpy(position.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(uint16_t), header.record_size));
+									serialize_selection.position__index = true;
 								}
-								serialize_selection.position_x = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									position.m_x.vptr()[i] = float(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										position.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position__index = true;
 								}
-								serialize_selection.position_x = true;
-							}
-							else if(header.is_type("int16_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
-									position.m_x.vptr()[i] = float(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										position.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position__index = true;
 								}
-								serialize_selection.position_x = true;
-							}
-							else if(header.is_type("uint16_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-									position.m_x.vptr()[i] = float(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_x = true;
-							}
-							else if(header.is_type("int32_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int32_t))); ++i) {
-									position.m_x.vptr()[i] = float(*(reinterpret_cast<int32_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_x = true;
-							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									position.m_x.vptr()[i] = float(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_x = true;
-							}
-							else if(header.is_type("int64_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
-									position.m_x.vptr()[i] = float(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_x = true;
-							}
-							else if(header.is_type("uint64_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
-									position.m_x.vptr()[i] = float(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_x = true;
-							}
-							else if(header.is_type("double")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
-									position.m_x.vptr()[i] = float(*(reinterpret_cast<double const*>(input_buffer) + i));
-								}
-								serialize_selection.position_x = true;
-							}
-						}
-						else if(header.is_property("y") && mask.position_y) {
-							if(header.is_type("float")) {
-								std::memcpy(position.m_y.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), header.record_size));
-								serialize_selection.position_y = true;
-							}
-							else if(header.is_type("int8_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
-									position.m_y.vptr()[i] = float(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_y = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									position.m_y.vptr()[i] = float(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_y = true;
-							}
-							else if(header.is_type("int16_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
-									position.m_y.vptr()[i] = float(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_y = true;
-							}
-							else if(header.is_type("uint16_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-									position.m_y.vptr()[i] = float(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_y = true;
-							}
-							else if(header.is_type("int32_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int32_t))); ++i) {
-									position.m_y.vptr()[i] = float(*(reinterpret_cast<int32_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_y = true;
-							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									position.m_y.vptr()[i] = float(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_y = true;
-							}
-							else if(header.is_type("int64_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
-									position.m_y.vptr()[i] = float(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_y = true;
-							}
-							else if(header.is_type("uint64_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
-									position.m_y.vptr()[i] = float(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_y = true;
-							}
-							else if(header.is_type("double")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
-									position.m_y.vptr()[i] = float(*(reinterpret_cast<double const*>(input_buffer) + i));
-								}
-								serialize_selection.position_y = true;
-							}
-						}
-						else if(header.is_property("rotation") && mask.position_rotation) {
-							if(header.is_type("float")) {
-								std::memcpy(position.m_rotation.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), header.record_size));
-								serialize_selection.position_rotation = true;
-							}
-							else if(header.is_type("int8_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
-									position.m_rotation.vptr()[i] = float(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_rotation = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									position.m_rotation.vptr()[i] = float(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_rotation = true;
-							}
-							else if(header.is_type("int16_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
-									position.m_rotation.vptr()[i] = float(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_rotation = true;
-							}
-							else if(header.is_type("uint16_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-									position.m_rotation.vptr()[i] = float(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_rotation = true;
-							}
-							else if(header.is_type("int32_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int32_t))); ++i) {
-									position.m_rotation.vptr()[i] = float(*(reinterpret_cast<int32_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_rotation = true;
-							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									position.m_rotation.vptr()[i] = float(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_rotation = true;
-							}
-							else if(header.is_type("int64_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
-									position.m_rotation.vptr()[i] = float(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_rotation = true;
-							}
-							else if(header.is_type("uint64_t")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
-									position.m_rotation.vptr()[i] = float(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
-								}
-								serialize_selection.position_rotation = true;
-							}
-							else if(header.is_type("double")) {
-								for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
-									position.m_rotation.vptr()[i] = float(*(reinterpret_cast<double const*>(input_buffer) + i));
-								}
-								serialize_selection.position_rotation = true;
-							}
-						}
-					} else
-					if(header.is_object("sprite") && mask.sprite) {
-						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-							sprite_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-							serialize_selection.sprite = true;
-						}
-						else if(header.is_property("__index") && mask.sprite__index) {
-							if(header.is_type("uint16_t")) {
-								std::memcpy(sprite.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(sprite.size_used) * sizeof(uint16_t), header.record_size));
-								serialize_selection.sprite__index = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									sprite.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-								}
-								serialize_selection.sprite__index = true;
-							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									sprite.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-								}
-								serialize_selection.sprite__index = true;
-							}
-							if(serialize_selection.sprite__index == true) {
-								sprite.size_used = 0;
-								sprite.first_free = sprite_id();
-								for(int32_t j = 3000 - 1; j > 0; --j) {
-									if(sprite.m__index.vptr()[j] != sprite_id(uint16_t(j))) {
-										sprite.m__index.vptr()[j] = sprite.first_free;
-										sprite.first_free = sprite_id(uint16_t(j));
-									} else {
-										sprite.size_used = std::max(sprite.size_used, uint32_t(j));
+								if(serialize_selection.position__index == true) {
+									position.size_used = 0;
+									position.first_free = position_id();
+									for(int32_t j = 3000 - 1; j > 0; --j) {
+										if(position.m__index.vptr()[j] != position_id(uint16_t(j))) {
+											position.m__index.vptr()[j] = position.first_free;
+											position.first_free = position_id(uint16_t(j));
+										} else {
+											position.size_used = std::max(position.size_used, uint32_t(j));
+										}
 									}
 								}
 							}
+							else if(header.is_property("x") && mask.position_x) {
+								if(header.is_type("float")) {
+									std::memcpy(position.m_x.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), header.record_size));
+									serialize_selection.position_x = true;
+								}
+								else if(header.is_type("int8_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
+										position.m_x.vptr()[i] = float(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_x = true;
+								}
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										position.m_x.vptr()[i] = float(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_x = true;
+								}
+								else if(header.is_type("int16_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
+										position.m_x.vptr()[i] = float(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_x = true;
+								}
+								else if(header.is_type("uint16_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+										position.m_x.vptr()[i] = float(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_x = true;
+								}
+								else if(header.is_type("int32_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int32_t))); ++i) {
+										position.m_x.vptr()[i] = float(*(reinterpret_cast<int32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_x = true;
+								}
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										position.m_x.vptr()[i] = float(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_x = true;
+								}
+								else if(header.is_type("int64_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
+										position.m_x.vptr()[i] = float(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_x = true;
+								}
+								else if(header.is_type("uint64_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
+										position.m_x.vptr()[i] = float(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_x = true;
+								}
+								else if(header.is_type("double")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
+										position.m_x.vptr()[i] = float(*(reinterpret_cast<double const*>(input_buffer) + i));
+									}
+									serialize_selection.position_x = true;
+								}
+							}
+							else if(header.is_property("y") && mask.position_y) {
+								if(header.is_type("float")) {
+									std::memcpy(position.m_y.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), header.record_size));
+									serialize_selection.position_y = true;
+								}
+								else if(header.is_type("int8_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
+										position.m_y.vptr()[i] = float(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_y = true;
+								}
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										position.m_y.vptr()[i] = float(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_y = true;
+								}
+								else if(header.is_type("int16_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
+										position.m_y.vptr()[i] = float(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_y = true;
+								}
+								else if(header.is_type("uint16_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+										position.m_y.vptr()[i] = float(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_y = true;
+								}
+								else if(header.is_type("int32_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int32_t))); ++i) {
+										position.m_y.vptr()[i] = float(*(reinterpret_cast<int32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_y = true;
+								}
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										position.m_y.vptr()[i] = float(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_y = true;
+								}
+								else if(header.is_type("int64_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
+										position.m_y.vptr()[i] = float(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_y = true;
+								}
+								else if(header.is_type("uint64_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
+										position.m_y.vptr()[i] = float(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_y = true;
+								}
+								else if(header.is_type("double")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
+										position.m_y.vptr()[i] = float(*(reinterpret_cast<double const*>(input_buffer) + i));
+									}
+									serialize_selection.position_y = true;
+								}
+							}
+							else if(header.is_property("rotation") && mask.position_rotation) {
+								if(header.is_type("float")) {
+									std::memcpy(position.m_rotation.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), header.record_size));
+									serialize_selection.position_rotation = true;
+								}
+								else if(header.is_type("int8_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
+										position.m_rotation.vptr()[i] = float(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_rotation = true;
+								}
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										position.m_rotation.vptr()[i] = float(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_rotation = true;
+								}
+								else if(header.is_type("int16_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
+										position.m_rotation.vptr()[i] = float(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_rotation = true;
+								}
+								else if(header.is_type("uint16_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+										position.m_rotation.vptr()[i] = float(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_rotation = true;
+								}
+								else if(header.is_type("int32_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int32_t))); ++i) {
+										position.m_rotation.vptr()[i] = float(*(reinterpret_cast<int32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_rotation = true;
+								}
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										position.m_rotation.vptr()[i] = float(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_rotation = true;
+								}
+								else if(header.is_type("int64_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
+										position.m_rotation.vptr()[i] = float(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_rotation = true;
+								}
+								else if(header.is_type("uint64_t")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
+										position.m_rotation.vptr()[i] = float(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.position_rotation = true;
+								}
+								else if(header.is_type("double")) {
+									for(uint32_t i = 0; i < std::min(position.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
+										position.m_rotation.vptr()[i] = float(*(reinterpret_cast<double const*>(input_buffer) + i));
+									}
+									serialize_selection.position_rotation = true;
+								}
+							}
+							break;
 						}
-						else if(header.is_property("sprite_id") && mask.sprite_sprite_id) {
-							if(header.is_type("uint16_t")) {
-								std::memcpy(sprite.m_sprite_id.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(sprite.size_used) * sizeof(uint16_t), header.record_size));
-								serialize_selection.sprite_sprite_id = true;
+						if(header.is_object("sprite") && mask.sprite) {
+							if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+								sprite_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+								serialize_selection.sprite = true;
 							}
-							else if(header.is_type("int8_t")) {
-								for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
-									sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+							else if(header.is_property("_index") && mask.sprite__index) {
+								if(header.is_type("uint16_t")) {
+									std::memcpy(sprite.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(sprite.size_used) * sizeof(uint16_t), header.record_size));
+									serialize_selection.sprite__index = true;
 								}
-								serialize_selection.sprite_sprite_id = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										sprite.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.sprite__index = true;
 								}
-								serialize_selection.sprite_sprite_id = true;
-							}
-							else if(header.is_type("int16_t")) {
-								for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
-									sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										sprite.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.sprite__index = true;
 								}
-								serialize_selection.sprite_sprite_id = true;
-							}
-							else if(header.is_type("int32_t")) {
-								for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(int32_t))); ++i) {
-									sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<int32_t const*>(input_buffer) + i));
+								if(serialize_selection.sprite__index == true) {
+									sprite.size_used = 0;
+									sprite.first_free = sprite_id();
+									for(int32_t j = 3000 - 1; j > 0; --j) {
+										if(sprite.m__index.vptr()[j] != sprite_id(uint16_t(j))) {
+											sprite.m__index.vptr()[j] = sprite.first_free;
+											sprite.first_free = sprite_id(uint16_t(j));
+										} else {
+											sprite.size_used = std::max(sprite.size_used, uint32_t(j));
+										}
+									}
 								}
-								serialize_selection.sprite_sprite_id = true;
 							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							else if(header.is_property("sprite_id") && mask.sprite_sprite_id) {
+								if(header.is_type("uint16_t")) {
+									std::memcpy(sprite.m_sprite_id.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(sprite.size_used) * sizeof(uint16_t), header.record_size));
+									serialize_selection.sprite_sprite_id = true;
 								}
-								serialize_selection.sprite_sprite_id = true;
-							}
-							else if(header.is_type("int64_t")) {
-								for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
-									sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+								else if(header.is_type("int8_t")) {
+									for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
+										sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.sprite_sprite_id = true;
 								}
-								serialize_selection.sprite_sprite_id = true;
-							}
-							else if(header.is_type("uint64_t")) {
-								for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
-									sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.sprite_sprite_id = true;
 								}
-								serialize_selection.sprite_sprite_id = true;
-							}
-							else if(header.is_type("float")) {
-								for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(float))); ++i) {
-									sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<float const*>(input_buffer) + i));
+								else if(header.is_type("int16_t")) {
+									for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
+										sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.sprite_sprite_id = true;
 								}
-								serialize_selection.sprite_sprite_id = true;
-							}
-							else if(header.is_type("double")) {
-								for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
-									sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<double const*>(input_buffer) + i));
+								else if(header.is_type("int32_t")) {
+									for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(int32_t))); ++i) {
+										sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<int32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.sprite_sprite_id = true;
 								}
-								serialize_selection.sprite_sprite_id = true;
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.sprite_sprite_id = true;
+								}
+								else if(header.is_type("int64_t")) {
+									for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
+										sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.sprite_sprite_id = true;
+								}
+								else if(header.is_type("uint64_t")) {
+									for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
+										sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.sprite_sprite_id = true;
+								}
+								else if(header.is_type("float")) {
+									for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(float))); ++i) {
+										sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<float const*>(input_buffer) + i));
+									}
+									serialize_selection.sprite_sprite_id = true;
+								}
+								else if(header.is_type("double")) {
+									for(uint32_t i = 0; i < std::min(sprite.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
+										sprite.m_sprite_id.vptr()[i] = uint16_t(*(reinterpret_cast<double const*>(input_buffer) + i));
+									}
+									serialize_selection.sprite_sprite_id = true;
+								}
 							}
+							break;
 						}
-					}
+					} while(false);
 				}
 				input_buffer += header.record_size;
 			}
@@ -3238,5 +3250,7 @@ namespace dcon {
 }
 
 #undef DCON_RELEASE_INLINE
+#ifdef _MSC_VER
 #pragma warning( pop )
+#endif
 

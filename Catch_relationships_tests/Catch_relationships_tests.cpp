@@ -488,11 +488,15 @@ TEST_CASE("many many relation test", "[relationships_tests]") {
 	REQUIRE(ptr->get_many_many_by_joint(o1, o2, o1, o3, o1, o2) == r3);
 	REQUIRE(false == bool(ptr->try_create_many_many(o1, o2, o1, o3, o1, o2, o3)));
 
+	auto dummy = fatten(*ptr, ptr->try_create_many_many(o1, o1, o1, o3, o3, o3, o1));
+	ptr->delete_many_many(dummy);
+	REQUIRE(dummy.is_valid() == false);
+
 	auto r5 = fatten(*ptr, ptr->force_create_many_many(o1, o2, o1, o3, o1, o2, o3));
 
 	REQUIRE(bool(r5));
 
-	REQUIRE(r3.is_valid() == false);
+	REQUIRE(r3 == r5); // this is because we expect the new r5 to overwrite its slot
 	REQUIRE(ptr->get_many_many_by_joint(o1, o2, o1, o3, o1, o2) == r5);
 
 	REQUIRE(r5.try_set_B(o3));

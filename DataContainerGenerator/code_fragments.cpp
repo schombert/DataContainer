@@ -1722,6 +1722,23 @@ basic_builder& make_relation_force_create(basic_builder& o, relationship_object_
 			}
 		}
 
+		for (auto& ck : cob.composite_indexes) {
+			std::string params;
+			for (auto& idx : ck.component_indexes) {
+				if (params.length() > 0)
+					params += ", ";
+				params += idx.property_name + "_p";
+			}
+			o + substitute{ "params", params } + substitute{ "ckname", ck.name };
+			o + inline_block{
+				o + "auto key_dat = @obj@.to_@ckname@_keydata(@params@);";
+				o + "if(auto it = @obj@.hashm_@ckname@.find(key_dat); it !=  @obj@.hashm_@ckname@.end())" + block{
+					o + "delete_@obj@(it->second);";
+				};
+			};
+		}
+
+
 		if(cob.primary_key.points_to != nullptr) {
 			for(auto& iob : cob.indexed_objects) {
 				if(cob.primary_key == iob) {
@@ -1757,9 +1774,6 @@ basic_builder& make_relation_force_create(basic_builder& o, relationship_object_
 			o + substitute{ "params", params } +substitute{ "ckname", ck.name };
 			o + inline_block{
 				o + "auto key_dat = @obj@.to_@ckname@_keydata(@params@);";
-				o + "if(auto it = @obj@.hashm_@ckname@.find(key_dat); it !=  @obj@.hashm_@ckname@.end())" + block{
-					o + "delete_@obj@(it->second);";
-				};
 				o + "@obj@.hashm_@ckname@.insert_or_assign(key_dat, new_id);";
 			};
 		}
@@ -2604,12 +2618,10 @@ basic_builder& make_composite_key_getter(basic_builder& o, std::string const& ob
 			inner_params += k.property_name + "_p";
 		} else {
 			outer_params += k.object_type + "_id " + k.property_name + "_p0";
-			inner_params += "{" + k.property_name + "_p0";
+			inner_params += k.property_name + "_p";
 			for(int32_t i = 1; i < k.multiplicity; ++i) {
 				outer_params += ", " +  k.object_type + "_id " + k.property_name + "_p" + std::to_string(i);
-				inner_params += ", " + k.property_name + "_p" + std::to_string(i);
 			}
-			inner_params += "}";
 		}
 	}
 	o + substitute{"obj", obj_name } +substitute{ "ckname", cc.name }+substitute{ "oparams", outer_params }
