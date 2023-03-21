@@ -566,7 +566,9 @@ int main(int argc, char *argv[]) {
 
 			// constructor
 			if(ob.store_type == storage_type::erasable && !ob.is_expandable) {
-				output += make_erasable_object_constructor(o, ob.name, ob.size).to_string(3);
+				output += make_erasable_object_constructor(o, ob, ob.name, ob.size).to_string(3);
+			} else if(!ob.is_expandable) {
+				output += make_other_object_constructor(o, ob, ob.name, ob.size).to_string(3);
 			}
 
 			//object class end

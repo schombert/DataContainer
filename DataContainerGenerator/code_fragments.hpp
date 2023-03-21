@@ -20,7 +20,8 @@ basic_builder& make_array_member_container(basic_builder& o,
 
 std::string expand_size_to_fill_cacheline_calculation(std::string const& member_type, size_t base_size);
 
-basic_builder& make_erasable_object_constructor(basic_builder& o, std::string const& name, size_t size);
+basic_builder& make_erasable_object_constructor(basic_builder& o, relationship_object_def const& obj, std::string const& name, size_t size);
+basic_builder& make_other_object_constructor(basic_builder& o, relationship_object_def const& obj, std::string const& name, size_t size);
 
 basic_builder& make_pop_back(basic_builder& o, relationship_object_def const& obj);
 basic_builder& make_object_resize(basic_builder& o, relationship_object_def const& obj);

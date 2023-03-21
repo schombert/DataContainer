@@ -619,6 +619,8 @@ namespace dcon {
 
 
 			public:
+			thingyA_class() {
+			}
 			friend data_container;
 		};
 
@@ -697,6 +699,9 @@ namespace dcon {
 			
 
 			public:
+			relate_same_class() {
+				hashm_joint.reserve(1200);
+			}
 			friend data_container;
 		};
 
@@ -742,6 +747,8 @@ namespace dcon {
 
 
 			public:
+			relate_in_array_class() {
+			}
 			friend data_container;
 		};
 
@@ -797,6 +804,8 @@ namespace dcon {
 
 
 			public:
+			relate_in_list_class() {
+			}
 			friend data_container;
 		};
 
@@ -924,6 +933,7 @@ namespace dcon {
 					m__index.vptr()[i] = first_free;
 					first_free = many_many_id(uint16_t(i));
 				}
+				hashm_joint.reserve(200);
 			}
 			friend data_container;
 		};
@@ -1182,6 +1192,7 @@ namespace dcon {
 					m__index.vptr()[i] = first_free;
 					first_free = relate_as_multipleA_id(uint16_t(i));
 				}
+				hashm_joint.reserve(400);
 			}
 			friend data_container;
 		};

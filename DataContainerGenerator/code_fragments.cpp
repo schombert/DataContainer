@@ -268,13 +268,31 @@ std::string expand_size_to_fill_cacheline_calculation(std::string const& member_
 		"& ~(uint32_t(64) / uint32_t(sizeof(" + member_type + ")) - uint32_t(1)) : uint32_t(" + std::to_string(base_size) + "))";
 }
 
-basic_builder& make_erasable_object_constructor(basic_builder& o, std::string const& name, size_t size) {
+basic_builder& make_erasable_object_constructor(basic_builder& o, relationship_object_def const& obj, std::string const& name, size_t size) {
 	o + substitute{ "name", name } +substitute{ "size", std::to_string(size) } +substitute{"u_type", size_to_tag_type(size) }
 	+"@name@_class()" + block{
 		o + "for(int32_t i = @size@ - 1; i >= 0; --i)" + block{
 			o + "m__index.vptr()[i] = first_free;";
 			o + "first_free = @name@_id(@u_type@(i));";
 		};
+		if (obj.is_expandable == false) {
+			for (auto& cc : obj.composite_indexes) {
+				o + substitute{ "ccname", cc.name };
+				o + "hashm_@ccname@.reserve(@size@);";
+			}
+		}
+	};
+	return o;
+}
+basic_builder& make_other_object_constructor(basic_builder& o, relationship_object_def const& obj, std::string const& name, size_t size) {
+	o + substitute{ "name", name } + substitute{ "size", std::to_string(size) } + substitute{ "u_type", size_to_tag_type(size) }
+	+ "@name@_class()" + block{
+		if (obj.is_expandable == false) {
+			for (auto& cc : obj.composite_indexes) {
+				o + substitute{ "ccname", cc.name };
+				o + "hashm_@ccname@.reserve(@size@);";
+			}
+		}
 	};
 	return o;
 }
