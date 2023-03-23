@@ -474,14 +474,16 @@ void deserialize_erasable_index_fragment(basic_builder& o, relationship_object_d
 
 		//redo free list
 		o + "if(serialize_selection.@obj@__index == true)" + block{
-			o + "@obj@.size_used = 0;";
+			// SEE BELOW
+			// o + "@obj@.size_used = 0;";
 			o + "@obj@.first_free = @obj@_id();";
 			o + "for(int32_t j = @obj_sz@ - 1; j > 0; --j)" + block{
 				o + "if(@obj@.m__index.vptr()[j] != @obj@_id(@u_type@(j)))" + block{
 					o + "@obj@.m__index.vptr()[j] = @obj@.first_free;";
 					o + "@obj@.first_free = @obj@_id(@u_type@(j));";
 				} + append{"else"} + block{
-					o + "@obj@.size_used = std::max(@obj@.size_used, uint32_t(j));";
+					// CANT DO THIS: need to preserve the size as a constant because other deserialization relies on it
+					// o + "@obj@.size_used = std::max(@obj@.size_used, uint32_t(j));";
 				};
 			};
 		};

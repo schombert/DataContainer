@@ -249,6 +249,8 @@ namespace ns {
 
 
 			public:
+			thingy_class() {
+			}
 			friend data_container;
 		};
 
@@ -275,6 +277,8 @@ namespace ns {
 
 
 			public:
+			thingy2_class() {
+			}
 			friend data_container;
 		};
 
@@ -326,6 +330,9 @@ namespace ns {
 			
 
 			public:
+			dummy_rel_class() {
+				hashm_joint.reserve(300);
+			}
 			friend data_container;
 		};
 
@@ -1151,6 +1158,9 @@ namespace ns {
 		}
 		#endif
 		DCON_RELEASE_INLINE void thingy_set_i_value(thingy_id id, int16_t value) noexcept {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			thingy.m_i_value.vptr()[id.index()] = value;
 		}
 		#ifndef DCON_NO_VE
@@ -1185,6 +1195,9 @@ namespace ns {
 		}
 		#endif
 		DCON_RELEASE_INLINE void thingy_set_f_value(thingy_id id, float value) noexcept {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			thingy.m_f_value.vptr()[id.index()] = value;
 		}
 		#ifndef DCON_NO_VE
@@ -1211,6 +1224,9 @@ namespace ns {
 			return thingy.m_obj_value.vptr()[id.index()];
 		}
 		DCON_RELEASE_INLINE void thingy_set_obj_value(thingy_id id, c_struct_b const& value) noexcept {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			thingy.m_obj_value.vptr()[id.index()] = value;
 		}
 		//
@@ -1223,6 +1239,9 @@ namespace ns {
 			return thingy.m_custom_struct.vptr()[id.index()];
 		}
 		DCON_RELEASE_INLINE void thingy_set_custom_struct(thingy_id id, c_struct const& value) noexcept {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			thingy.m_custom_struct.vptr()[id.index()] = value;
 		}
 		DCON_RELEASE_INLINE internal::const_iterator_thingy_foreach_dummy_rel_as_left_generator thingy_get_dummy_rel_as_left(thingy_id id) const {
@@ -1307,6 +1326,9 @@ namespace ns {
 		}
 		#endif
 		DCON_RELEASE_INLINE void thingy2_set_some_value(thingy2_id id, int32_t value) noexcept {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			thingy2.m_some_value.vptr()[id.index()] = value;
 		}
 		#ifndef DCON_NO_VE
@@ -1536,6 +1558,9 @@ namespace ns {
 			thingy_id id_removed = id;
 			thingy_id last_id(thingy_id::value_base_t(thingy.size_used - 1));
 			if(id_removed == last_id) { pop_back_thingy(); return; }
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			thingy_remove_all_dummy_rel_as_left(id_removed);
 			thingy_for_each_dummy_rel_as_left(last_id, [this, id_removed, last_id](dummy_rel_id i) {
 				dummy_rel.hashm_joint.erase(dummy_rel.to_joint_keydata(dummy_rel.m_left.vptr()[i.index()], thingy2_id(thingy2_id::value_base_t(i.index()))));
@@ -1607,6 +1632,9 @@ namespace ns {
 			thingy2_id id_removed = id;
 			thingy2_id last_id(thingy2_id::value_base_t(thingy2.size_used - 1));
 			if(id_removed == last_id) { pop_back_thingy2(); return; }
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			delete_dummy_rel(dummy_rel_id(dummy_rel_id::value_base_t(id_removed.index())));
 			internal_move_relationship_dummy_rel(dummy_rel_id(dummy_rel_id::value_base_t(last_id.index())), dummy_rel_id(dummy_rel_id::value_base_t(id_removed.index())));
 			dummy_rel.size_used = thingy2.size_used - 1;
@@ -1638,6 +1666,9 @@ namespace ns {
 		// container delete for dummy_rel
 		//
 		void delete_dummy_rel(dummy_rel_id id_removed) {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id_removed.index() >= 0);
+			#endif
 			dummy_rel.hashm_joint.erase( dummy_rel.to_joint_keydata(dummy_rel.m_left.vptr()[id_removed.index()], thingy2_id(thingy2_id::value_base_t(id_removed.index()))) );
 			internal_dummy_rel_set_left(id_removed, thingy_id());
 		}
@@ -1691,13 +1722,16 @@ namespace ns {
 		// container force create relationship for dummy_rel
 		//
 		dummy_rel_id force_create_dummy_rel(thingy_id left_p, thingy2_id right_p) {
-			dummy_rel_id new_id(dummy_rel_id::value_base_t(right_p.index()));
-			if(dummy_rel.size_used < uint32_t(right_p.value)) dummy_rel_resize(uint32_t(right_p.value));
 			 {
 				auto key_dat = dummy_rel.to_joint_keydata(left_p, right_p);
 				if(auto it = dummy_rel.hashm_joint.find(key_dat); it !=  dummy_rel.hashm_joint.end()) {
 					delete_dummy_rel(it->second);
 				}
+			}
+			dummy_rel_id new_id(dummy_rel_id::value_base_t(right_p.index()));
+			if(dummy_rel.size_used < uint32_t(right_p.value)) dummy_rel_resize(uint32_t(right_p.value));
+			 {
+				auto key_dat = dummy_rel.to_joint_keydata(left_p, right_p);
 				dummy_rel.hashm_joint.insert_or_assign(key_dat, new_id);
 			}
 			internal_dummy_rel_set_left(new_id, left_p);
@@ -2278,13 +2312,11 @@ namespace ns {
 										internal_dummy_rel_set_left(dummy_rel_id(dummy_rel_id::value_base_t(i)), tmp);
 									}
 								}
+								dummy_rel.hashm_joint.clear();
 								for(uint32_t idx = 0; idx < dummy_rel.size_used; ++idx) {
 									auto this_key = dummy_rel_id(dummy_rel_id::value_base_t(idx));
 									if(dummy_rel_is_valid(dummy_rel_id(dummy_rel_id::value_base_t(idx)))) {
 										auto key_dat = dummy_rel.to_joint_keydata(dummy_rel.m_left.vptr()[idx], thingy2_id(thingy2_id::value_base_t(idx)));
-										if(auto it = dummy_rel.hashm_joint.find(key_dat); it !=  dummy_rel.hashm_joint.end()) {
-											delete_dummy_rel(it->second);
-										}
 										dummy_rel.hashm_joint.insert_or_assign(key_dat, this_key);
 									}
 								}
@@ -2557,13 +2589,11 @@ namespace ns {
 										internal_dummy_rel_set_left(dummy_rel_id(dummy_rel_id::value_base_t(i)), tmp);
 									}
 								}
+								dummy_rel.hashm_joint.clear();
 								for(uint32_t idx = 0; idx < dummy_rel.size_used; ++idx) {
 									auto this_key = dummy_rel_id(dummy_rel_id::value_base_t(idx));
 									if(dummy_rel_is_valid(dummy_rel_id(dummy_rel_id::value_base_t(idx)))) {
 										auto key_dat = dummy_rel.to_joint_keydata(dummy_rel.m_left.vptr()[idx], thingy2_id(thingy2_id::value_base_t(idx)));
-										if(auto it = dummy_rel.hashm_joint.find(key_dat); it !=  dummy_rel.hashm_joint.end()) {
-											delete_dummy_rel(it->second);
-										}
 										dummy_rel.hashm_joint.insert_or_assign(key_dat, this_key);
 									}
 								}
