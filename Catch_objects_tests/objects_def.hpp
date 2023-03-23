@@ -440,6 +440,8 @@ namespace dcon {
 
 
 			public:
+			thingy_class() {
+			}
 			friend data_container;
 		};
 
@@ -606,6 +608,8 @@ namespace dcon {
 
 
 			public:
+			dummy_rel_class() {
+			}
 			friend data_container;
 		};
 
@@ -644,6 +648,8 @@ namespace dcon {
 
 
 			public:
+			oop_thingy_class() {
+			}
 			friend data_container;
 		};
 
@@ -682,6 +688,8 @@ namespace dcon {
 
 
 			public:
+			dummy_rel_B_class() {
+			}
 			friend data_container;
 		};
 
@@ -1847,6 +1855,9 @@ namespace dcon {
 		}
 		#endif
 		DCON_RELEASE_INLINE void thingy_set_some_value(thingy_id id, int32_t value) noexcept {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			thingy.m_some_value.vptr()[id.index()] = value;
 		}
 		#ifndef DCON_NO_VE
@@ -1878,6 +1889,9 @@ namespace dcon {
 		}
 		#endif
 		DCON_RELEASE_INLINE void thingy_set_bf_value(thingy_id id, bool value) noexcept {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			dcon::bit_vector_set(thingy.m_bf_value.vptr(), id.index(), value);
 		}
 		#ifndef DCON_NO_VE
@@ -1937,6 +1951,9 @@ namespace dcon {
 			return thingy.m_obj_value.vptr()[id.index()];
 		}
 		DCON_RELEASE_INLINE void thingy_set_obj_value(thingy_id id, std::vector<float> const& value) noexcept {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			thingy.m_obj_value.vptr()[id.index()] = value;
 		}
 		//
@@ -1972,6 +1989,10 @@ namespace dcon {
 		}
 		#endif
 		DCON_RELEASE_INLINE void thingy_set_big_array(thingy_id id, int32_t n, float value) noexcept {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			assert(dcon::get_index(n) >= 0);
+			#endif
 			thingy.m_big_array.vptr(dcon::get_index(n))[id.index()] = value;
 		}
 		DCON_RELEASE_INLINE void thingy_resize_big_array(uint32_t size) noexcept {
@@ -2009,6 +2030,10 @@ namespace dcon {
 		}
 		#endif
 		DCON_RELEASE_INLINE void thingy_set_big_array_bf(thingy_id id, int32_t n, bool value) noexcept {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			assert(dcon::get_index(n) >= 0);
+			#endif
 			dcon::bit_vector_set(thingy.m_big_array_bf.vptr(dcon::get_index(n)), id.index(), value);
 		}
 		DCON_RELEASE_INLINE void thingy_resize_big_array_bf(uint32_t size) noexcept {
@@ -2113,6 +2138,9 @@ namespace dcon {
 		}
 		#endif
 		DCON_RELEASE_INLINE void thingy2_set_some_value(thingy2_id id, int32_t value) noexcept {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			thingy2.m_some_value.vptr()[id.index()] = value;
 		}
 		#ifndef DCON_NO_VE
@@ -2144,6 +2172,9 @@ namespace dcon {
 		}
 		#endif
 		DCON_RELEASE_INLINE void thingy2_set_bf_value(thingy2_id id, bool value) noexcept {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			dcon::bit_vector_set(thingy2.m_bf_value.vptr(), id.index(), value);
 		}
 		#ifndef DCON_NO_VE
@@ -2173,6 +2204,9 @@ namespace dcon {
 			return thingy2.m_obj_value.vptr()[id.index()];
 		}
 		DCON_RELEASE_INLINE void thingy2_set_obj_value(thingy2_id id, std::vector<float> const& value) noexcept {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			thingy2.m_obj_value.vptr()[id.index()] = value;
 		}
 		//
@@ -2208,6 +2242,10 @@ namespace dcon {
 		}
 		#endif
 		DCON_RELEASE_INLINE void thingy2_set_big_array(thingy2_id id, int32_t n, float value) noexcept {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			assert(dcon::get_index(n) >= 0);
+			#endif
 			thingy2.m_big_array.vptr(dcon::get_index(n))[id.index()] = value;
 		}
 		DCON_RELEASE_INLINE void thingy2_resize_big_array(uint32_t size) noexcept {
@@ -2245,6 +2283,10 @@ namespace dcon {
 		}
 		#endif
 		DCON_RELEASE_INLINE void thingy2_set_big_array_bf(thingy2_id id, int32_t n, bool value) noexcept {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			assert(dcon::get_index(n) >= 0);
+			#endif
 			dcon::bit_vector_set(thingy2.m_big_array_bf.vptr(dcon::get_index(n)), id.index(), value);
 		}
 		DCON_RELEASE_INLINE void thingy2_resize_big_array_bf(uint32_t size) noexcept {
@@ -2442,6 +2484,9 @@ namespace dcon {
 		}
 		private:
 		DCON_RELEASE_INLINE void oop_thingy_set_pstruct(oop_thingy_id id, my_struct const& value) noexcept {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			oop_thingy.m_pstruct.vptr()[id.index()] = value;
 		}
 		friend void oop_thingy_fat_id::set_pstruct(my_struct const&) const noexcept;
@@ -2472,6 +2517,9 @@ namespace dcon {
 		public:
 		private:
 		DCON_RELEASE_INLINE void oop_thingy_set_pfloat(oop_thingy_id id, float value) noexcept {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			oop_thingy.m_pfloat.vptr()[id.index()] = value;
 		}
 		friend void oop_thingy_fat_id::set_pfloat(float) const noexcept;
@@ -2711,6 +2759,9 @@ namespace dcon {
 			thingy_id id_removed = id;
 			thingy_id last_id(thingy_id::value_base_t(thingy.size_used - 1));
 			if(id_removed == last_id) { pop_back_thingy(); return; }
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			on_delete_thingy(id_removed);
 			delete_dummy_rel(dummy_rel_id(dummy_rel_id::value_base_t(id_removed.index())));
 			internal_move_relationship_dummy_rel(dummy_rel_id(dummy_rel_id::value_base_t(last_id.index())), dummy_rel_id(dummy_rel_id::value_base_t(id_removed.index())));
@@ -2814,6 +2865,9 @@ namespace dcon {
 			thingy2_id id_removed = id;
 			thingy2_id last_id(thingy2_id::value_base_t(thingy2.size_used - 1));
 			if(id_removed == last_id) { pop_back_thingy2(); return; }
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			thingy2_remove_dummy_rel_as_right(id_removed);
 			if(auto bk = dummy_rel.m_link_back_right.vptr()[last_id.index()]; bool(bk)) {
 				dummy_rel.m_right.vptr()[bk.index()] = id_removed;
@@ -2859,6 +2913,9 @@ namespace dcon {
 		// container delete for dummy_rel
 		//
 		void delete_dummy_rel(dummy_rel_id id_removed) {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id_removed.index() >= 0);
+			#endif
 			internal_dummy_rel_set_right(id_removed, thingy2_id());
 		}
 		
@@ -2966,6 +3023,9 @@ namespace dcon {
 			oop_thingy_id id_removed = id;
 			oop_thingy_id last_id(oop_thingy_id::value_base_t(oop_thingy.size_used - 1));
 			if(id_removed == last_id) { pop_back_oop_thingy(); return; }
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			oop_thingy_remove_dummy_rel_B_as_left(id_removed);
 			if(auto bk = dummy_rel_B.m_link_back_left.vptr()[last_id.index()]; bool(bk)) {
 				dummy_rel_B.m_left.vptr()[bk.index()] = id_removed;
@@ -3004,6 +3064,9 @@ namespace dcon {
 		// container delete for dummy_rel_B
 		//
 		void delete_dummy_rel_B(dummy_rel_B_id id_removed) {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id_removed.index() >= 0);
+			#endif
 			internal_dummy_rel_B_set_left(id_removed, oop_thingy_id());
 		}
 		

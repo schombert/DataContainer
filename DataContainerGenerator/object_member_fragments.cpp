@@ -716,6 +716,9 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 				case property_type::bitfield:
 					if(add_prefix) {
 						o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(@obj@_id id, bool value) noexcept" + block{
+							o + "#ifdef DCON_TRAP_INVALID_STORE";
+							o + "assert(id.index() >= 0);";
+							o + "#endif";
 							o + "dcon::bit_vector_set(@obj@.m_@prop@.vptr(), id.index(), value);";
 						};
 
@@ -743,6 +746,9 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 				case property_type::vectorizable:
 					if(add_prefix) {
 						o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(@obj@_id id, @base_type@ value) noexcept" + block{
+							o + "#ifdef DCON_TRAP_INVALID_STORE";
+							o + "assert(id.index() >= 0);";
+							o + "#endif";
 							o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
 						};
 
@@ -770,6 +776,9 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 				case property_type::other:
 					if(add_prefix) {
 						o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(@obj@_id id, @type@ const& value) noexcept" + block{
+							o + "#ifdef DCON_TRAP_INVALID_STORE";
+							o + "assert(id.index() >= 0);";
+							o + "#endif";
 							o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
 						};
 
@@ -785,6 +794,9 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 				case property_type::object:
 					if(add_prefix) {
 						o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(@obj@_id id, @type@ const& value) noexcept" + block{
+							o + "#ifdef DCON_TRAP_INVALID_STORE";
+							o + "assert(id.index() >= 0);";
+							o + "#endif";
 							o + "@obj@.m_@prop@.vptr()[id.index()] = value;";
 						};
 
@@ -800,6 +812,10 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 				case property_type::array_bitfield:
 					if(add_prefix) {
 						o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(@obj@_id id, @index_type@ n, bool value) noexcept" + block{
+							o + "#ifdef DCON_TRAP_INVALID_STORE";
+							o + "assert(id.index() >= 0);";
+							o + "assert(dcon::get_index(n) >= 0);";
+							o + "#endif";
 							o + "dcon::bit_vector_set(@obj@.m_@prop@.vptr(dcon::get_index(n)), id.index(), value);";
 						};
 						o + "DCON_RELEASE_INLINE void @obj@_resize_@prop@(uint32_t size) noexcept" + block{
@@ -834,6 +850,10 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 				case property_type::array_other:
 					if(add_prefix) {
 						o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(@obj@_id id, @index_type@ n, @type@ const& value) noexcept" + block{
+							o + "#ifdef DCON_TRAP_INVALID_STORE";
+							o + "assert(id.index() >= 0);";
+							o + "assert(dcon::get_index(n) >= 0);";
+							o + "#endif";
 							o + "@obj@.m_@prop@.vptr(dcon::get_index(n))[id.index()] = value;";
 						};
 						o + "DCON_RELEASE_INLINE void @obj@_resize_@prop@(uint32_t size) noexcept" + block{
@@ -856,6 +876,10 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 				case property_type::array_vectorizable:
 					if(add_prefix) {
 						o + "DCON_RELEASE_INLINE void @obj@_set_@prop@(@obj@_id id, @index_type@ n, @base_type@ value) noexcept" + block{
+							o + "#ifdef DCON_TRAP_INVALID_STORE";
+							o + "assert(id.index() >= 0);";
+							o + "assert(dcon::get_index(n) >= 0);";
+							o + "#endif";
 							o + "@obj@.m_@prop@.vptr(dcon::get_index(n))[id.index()] = value;";
 						};
 						o + "DCON_RELEASE_INLINE void @obj@_resize_@prop@(uint32_t size) noexcept" + block{

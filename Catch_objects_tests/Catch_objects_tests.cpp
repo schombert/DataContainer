@@ -1,5 +1,6 @@
 #define CATCH_CONFIG_MAIN 
 #define DCON_USE_EXCEPTIONS
+#define DCON_TRAP_INVALID_STORE
 
 #include "catch.hpp"
 #include "common_types.hpp"

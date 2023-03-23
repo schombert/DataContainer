@@ -862,6 +862,11 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 		o + "@obj@_id id_removed = id;";
 		o + "@obj@_id last_id(@obj@_id::value_base_t(@obj@.size_used - 1));";
 		o + "if(id_removed == last_id) { pop_back_@obj@(); return; }";
+
+		o + "#ifdef DCON_TRAP_INVALID_STORE";
+		o + "assert(id.index() >= 0);";
+		o + "#endif";
+
 		if(cob.hook_delete)
 			o + "on_delete_@obj@(id_removed);";
 
@@ -1230,6 +1235,11 @@ basic_builder& make_clearing_delete(basic_builder& o, relationship_object_def co
 	o + heading{ "container delete for @obj@" };
 
 	o + "void delete_@obj@(@obj@_id id_removed)" + block{
+
+		o + "#ifdef DCON_TRAP_INVALID_STORE";
+		o + "assert(id_removed.index() >= 0);";
+		o + "#endif";
+
 		if(cob.hook_delete)
 			o + "on_delete_@obj@(id_removed);";
 

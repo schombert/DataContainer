@@ -1,6 +1,8 @@
 #define CATCH_CONFIG_MAIN 
 #pragma warning(disable : 4127)
 
+#define DCON_TRAP_INVALID_STORE
+
 #include "..\CommonIncludes\catch.hpp"
 #include "..\CommonIncludes\ve.hpp"
 #include "..\CommonIncludes\common_types.hpp"

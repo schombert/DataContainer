@@ -162,17 +162,17 @@ namespace ex1 {
 namespace ve {
 	template<>
 	struct value_to_vector_type_s<ex1::top_id> {
-		using type = tagged_vector<ex1::top_id>;
+		using type = ::ve::tagged_vector<ex1::top_id>;
 	};
 	
 	template<>
 	struct value_to_vector_type_s<ex1::bottom_id> {
-		using type = tagged_vector<ex1::bottom_id>;
+		using type = ::ve::tagged_vector<ex1::bottom_id>;
 	};
 	
 	template<>
 	struct value_to_vector_type_s<ex1::lr_relation_id> {
-		using type = tagged_vector<ex1::lr_relation_id>;
+		using type = ::ve::tagged_vector<ex1::lr_relation_id>;
 	};
 	
 }
@@ -380,12 +380,6 @@ namespace ex1 {
 		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation() const;
 		DCON_RELEASE_INLINE void remove_all_lr_relation() const noexcept;
 		DCON_RELEASE_INLINE internal::iterator_top_foreach_lr_relation_as_left_generator get_lr_relation() const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_right_from_lr_relation(T&& func) const;
-		DCON_RELEASE_INLINE bool has_right_from_lr_relation(bottom_id target) const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_thingies_from_lr_relation(T&& func) const;
-		DCON_RELEASE_INLINE bool has_thingies_from_lr_relation(int32_t target) const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 		
 	};
@@ -448,12 +442,6 @@ namespace ex1 {
 		DCON_RELEASE_INLINE void for_each_lr_relation(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation() const;
 		DCON_RELEASE_INLINE internal::const_iterator_top_foreach_lr_relation_as_left_generator get_lr_relation() const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_right_from_lr_relation(T&& func) const;
-		DCON_RELEASE_INLINE bool has_right_from_lr_relation(bottom_id target) const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_thingies_from_lr_relation(T&& func) const;
-		DCON_RELEASE_INLINE bool has_thingies_from_lr_relation(int32_t target) const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 		
 	};
@@ -513,12 +501,6 @@ namespace ex1 {
 		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation() const;
 		DCON_RELEASE_INLINE void remove_all_lr_relation() const noexcept;
 		DCON_RELEASE_INLINE internal::iterator_bottom_foreach_lr_relation_as_right_generator get_lr_relation() const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_left_from_lr_relation(T&& func) const;
-		DCON_RELEASE_INLINE bool has_left_from_lr_relation(top_id target) const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_thingies_from_lr_relation(T&& func) const;
-		DCON_RELEASE_INLINE bool has_thingies_from_lr_relation(int32_t target) const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 		
 	};
@@ -581,12 +563,6 @@ namespace ex1 {
 		DCON_RELEASE_INLINE void for_each_lr_relation(T&& func) const;
 		DCON_RELEASE_INLINE std::pair<lr_relation_id const*, lr_relation_id const*> range_of_lr_relation() const;
 		DCON_RELEASE_INLINE internal::const_iterator_bottom_foreach_lr_relation_as_right_generator get_lr_relation() const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_left_from_lr_relation(T&& func) const;
-		DCON_RELEASE_INLINE bool has_left_from_lr_relation(top_id target) const;
-		template<typename T>
-		DCON_RELEASE_INLINE void for_each_thingies_from_lr_relation(T&& func) const;
-		DCON_RELEASE_INLINE bool has_thingies_from_lr_relation(int32_t target) const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 		
 	};
@@ -1241,6 +1217,9 @@ namespace ex1 {
 		}
 		#endif
 		DCON_RELEASE_INLINE void top_set_wheels(top_id id, int32_t value) noexcept {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			top.m_wheels.vptr()[id.index()] = value;
 		}
 		#ifndef DCON_NO_VE
@@ -1306,32 +1285,6 @@ namespace ex1 {
 			dcon::local_vector<lr_relation_id> temp(rng.first, rng.second);
 			std::for_each(temp.begin(), temp.end(), [t = this](lr_relation_id i) { t->lr_relation_set_left(i, top_id()); });
 		}
-		template<typename T>
-		void top_for_each_right_from_lr_relation(top_id id, T&& func) const {
-			top_for_each_lr_relation_as_left(id, [&](lr_relation_id i) {
-				func(lr_relation_get_right(i));
-			} );
-		}
-		bool top_has_right_from_lr_relation(top_id id, bottom_id target) const {
-			auto& vref = lr_relation.m_array_left.vptr()[id.index()];
-			for(auto pos = vref.begin(); pos != vref.end(); ++pos) {
-				if(lr_relation.m_right.vptr()[pos->index()] == target) return true;
-			}
-			return false;
-		}
-		template<typename T>
-		void top_for_each_thingies_from_lr_relation(top_id id, T&& func) const {
-			top_for_each_lr_relation_as_left(id, [&](lr_relation_id i) {
-				func(lr_relation_get_thingies(i));
-			} );
-		}
-		bool top_has_thingies_from_lr_relation(top_id id, int32_t target) const {
-			auto& vref = lr_relation.m_array_left.vptr()[id.index()];
-			for(auto pos = vref.begin(); pos != vref.end(); ++pos) {
-				if(lr_relation.m_thingies.vptr()[pos->index()] == target) return true;
-			}
-			return false;
-		}
 		DCON_RELEASE_INLINE bool top_is_valid(top_id id) const noexcept {
 			return bool(id) && uint32_t(id.index()) < top.size_used;
 		}
@@ -1362,6 +1315,9 @@ namespace ex1 {
 		}
 		#endif
 		DCON_RELEASE_INLINE void bottom_set_legs(bottom_id id, int32_t value) noexcept {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			bottom.m_legs.vptr()[id.index()] = value;
 		}
 		#ifndef DCON_NO_VE
@@ -1427,32 +1383,6 @@ namespace ex1 {
 			dcon::local_vector<lr_relation_id> temp(rng.first, rng.second);
 			std::for_each(temp.begin(), temp.end(), [t = this](lr_relation_id i) { t->lr_relation_set_right(i, bottom_id()); });
 		}
-		template<typename T>
-		void bottom_for_each_left_from_lr_relation(bottom_id id, T&& func) const {
-			bottom_for_each_lr_relation_as_right(id, [&](lr_relation_id i) {
-				func(lr_relation_get_left(i));
-			} );
-		}
-		bool bottom_has_left_from_lr_relation(bottom_id id, top_id target) const {
-			auto& vref = lr_relation.m_array_right.vptr()[id.index()];
-			for(auto pos = vref.begin(); pos != vref.end(); ++pos) {
-				if(lr_relation.m_left.vptr()[pos->index()] == target) return true;
-			}
-			return false;
-		}
-		template<typename T>
-		void bottom_for_each_thingies_from_lr_relation(bottom_id id, T&& func) const {
-			bottom_for_each_lr_relation_as_right(id, [&](lr_relation_id i) {
-				func(lr_relation_get_thingies(i));
-			} );
-		}
-		bool bottom_has_thingies_from_lr_relation(bottom_id id, int32_t target) const {
-			auto& vref = lr_relation.m_array_right.vptr()[id.index()];
-			for(auto pos = vref.begin(); pos != vref.end(); ++pos) {
-				if(lr_relation.m_thingies.vptr()[pos->index()] == target) return true;
-			}
-			return false;
-		}
 		DCON_RELEASE_INLINE bool bottom_is_valid(bottom_id id) const noexcept {
 			return bool(id) && uint32_t(id.index()) < bottom.size_used;
 		}
@@ -1483,6 +1413,9 @@ namespace ex1 {
 		}
 		#endif
 		DCON_RELEASE_INLINE void lr_relation_set_thingies(lr_relation_id id, int32_t value) noexcept {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			lr_relation.m_thingies.vptr()[id.index()] = value;
 		}
 		#ifndef DCON_NO_VE
@@ -1634,6 +1567,9 @@ namespace ex1 {
 			top_id id_removed = id;
 			top_id last_id(top_id::value_base_t(top.size_used - 1));
 			if(id_removed == last_id) { pop_back_top(); return; }
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			top_remove_all_lr_relation_as_left(id_removed);
 			top_for_each_lr_relation_as_left(last_id, [this, id_removed, last_id](lr_relation_id i) {
 				lr_relation.m_left.vptr()[i.index()] = id_removed;
@@ -2068,289 +2004,294 @@ namespace ex1 {
 				dcon::record_header header;
 				header.deserialize(input_buffer, end);
 				if(input_buffer + header.record_size <= end) {
-					if(header.is_object("top")) {
-						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-							top_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-							serialize_selection.top = true;
+					do {
+						if(header.is_object("top")) {
+							if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+								top_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+								serialize_selection.top = true;
+							}
+							else if(header.is_property("wheels")) {
+								if(header.is_type("int32_t")) {
+									std::memcpy(top.m_wheels.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(top.size_used) * sizeof(int32_t), header.record_size));
+									serialize_selection.top_wheels = true;
+								}
+								else if(header.is_type("int8_t")) {
+									for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
+										top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.top_wheels = true;
+								}
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.top_wheels = true;
+								}
+								else if(header.is_type("int16_t")) {
+									for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
+										top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.top_wheels = true;
+								}
+								else if(header.is_type("uint16_t")) {
+									for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+										top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.top_wheels = true;
+								}
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.top_wheels = true;
+								}
+								else if(header.is_type("int64_t")) {
+									for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
+										top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.top_wheels = true;
+								}
+								else if(header.is_type("uint64_t")) {
+									for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
+										top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.top_wheels = true;
+								}
+								else if(header.is_type("float")) {
+									for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(float))); ++i) {
+										top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<float const*>(input_buffer) + i));
+									}
+									serialize_selection.top_wheels = true;
+								}
+								else if(header.is_type("double")) {
+									for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
+										top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<double const*>(input_buffer) + i));
+									}
+									serialize_selection.top_wheels = true;
+								}
+							}
+							break;
 						}
-						else if(header.is_property("wheels")) {
-							if(header.is_type("int32_t")) {
-								std::memcpy(top.m_wheels.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(top.size_used) * sizeof(int32_t), header.record_size));
-								serialize_selection.top_wheels = true;
+						if(header.is_object("bottom")) {
+							if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+								bottom_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+								serialize_selection.bottom = true;
 							}
-							else if(header.is_type("int8_t")) {
-								for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
-									top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+							else if(header.is_property("legs")) {
+								if(header.is_type("int32_t")) {
+									std::memcpy(bottom.m_legs.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(bottom.size_used) * sizeof(int32_t), header.record_size));
+									serialize_selection.bottom_legs = true;
 								}
-								serialize_selection.top_wheels = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								else if(header.is_type("int8_t")) {
+									for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
+										bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.bottom_legs = true;
 								}
-								serialize_selection.top_wheels = true;
-							}
-							else if(header.is_type("int16_t")) {
-								for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
-									top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.bottom_legs = true;
 								}
-								serialize_selection.top_wheels = true;
-							}
-							else if(header.is_type("uint16_t")) {
-								for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-									top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+								else if(header.is_type("int16_t")) {
+									for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
+										bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.bottom_legs = true;
 								}
-								serialize_selection.top_wheels = true;
-							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								else if(header.is_type("uint16_t")) {
+									for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+										bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.bottom_legs = true;
 								}
-								serialize_selection.top_wheels = true;
-							}
-							else if(header.is_type("int64_t")) {
-								for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
-									top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.bottom_legs = true;
 								}
-								serialize_selection.top_wheels = true;
-							}
-							else if(header.is_type("uint64_t")) {
-								for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
-									top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+								else if(header.is_type("int64_t")) {
+									for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
+										bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.bottom_legs = true;
 								}
-								serialize_selection.top_wheels = true;
-							}
-							else if(header.is_type("float")) {
-								for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(float))); ++i) {
-									top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<float const*>(input_buffer) + i));
+								else if(header.is_type("uint64_t")) {
+									for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
+										bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.bottom_legs = true;
 								}
-								serialize_selection.top_wheels = true;
-							}
-							else if(header.is_type("double")) {
-								for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
-									top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<double const*>(input_buffer) + i));
+								else if(header.is_type("float")) {
+									for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(float))); ++i) {
+										bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<float const*>(input_buffer) + i));
+									}
+									serialize_selection.bottom_legs = true;
 								}
-								serialize_selection.top_wheels = true;
+								else if(header.is_type("double")) {
+									for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
+										bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<double const*>(input_buffer) + i));
+									}
+									serialize_selection.bottom_legs = true;
+								}
 							}
+							break;
 						}
-					} else
-					if(header.is_object("bottom")) {
-						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-							bottom_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-							serialize_selection.bottom = true;
-						}
-						else if(header.is_property("legs")) {
-							if(header.is_type("int32_t")) {
-								std::memcpy(bottom.m_legs.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(bottom.size_used) * sizeof(int32_t), header.record_size));
-								serialize_selection.bottom_legs = true;
-							}
-							else if(header.is_type("int8_t")) {
-								for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
-									bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+						if(header.is_object("lr_relation")) {
+							if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+								if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= lr_relation.size_used) {
+									lr_relation_resize(0);
 								}
-								serialize_selection.bottom_legs = true;
+								lr_relation_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+								serialize_selection.lr_relation = true;
 							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							else if(header.is_property("_index")) {
+								if(header.is_type("uint32_t")) {
+									std::memcpy(lr_relation.m__index.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
+									serialize_selection.lr_relation__index = true;
 								}
-								serialize_selection.bottom_legs = true;
-							}
-							else if(header.is_type("int16_t")) {
-								for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
-									bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										lr_relation.m__index.vptr()[i].value = uint32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation__index = true;
 								}
-								serialize_selection.bottom_legs = true;
-							}
-							else if(header.is_type("uint16_t")) {
-								for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-									bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+								else if(header.is_type("uint16_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+										lr_relation.m__index.vptr()[i].value = uint32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation__index = true;
 								}
-								serialize_selection.bottom_legs = true;
-							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-								}
-								serialize_selection.bottom_legs = true;
-							}
-							else if(header.is_type("int64_t")) {
-								for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
-									bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
-								}
-								serialize_selection.bottom_legs = true;
-							}
-							else if(header.is_type("uint64_t")) {
-								for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
-									bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
-								}
-								serialize_selection.bottom_legs = true;
-							}
-							else if(header.is_type("float")) {
-								for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(float))); ++i) {
-									bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<float const*>(input_buffer) + i));
-								}
-								serialize_selection.bottom_legs = true;
-							}
-							else if(header.is_type("double")) {
-								for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
-									bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<double const*>(input_buffer) + i));
-								}
-								serialize_selection.bottom_legs = true;
-							}
-						}
-					} else
-					if(header.is_object("lr_relation")) {
-						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-							if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= lr_relation.size_used) {
-								lr_relation_resize(0);
-							}
-							lr_relation_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-							serialize_selection.lr_relation = true;
-						}
-						else if(header.is_property("__index")) {
-							if(header.is_type("uint32_t")) {
-								std::memcpy(lr_relation.m__index.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
-								serialize_selection.lr_relation__index = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									lr_relation.m__index.vptr()[i].value = uint32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation__index = true;
-							}
-							else if(header.is_type("uint16_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-									lr_relation.m__index.vptr()[i].value = uint32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation__index = true;
-							}
-							if(serialize_selection.lr_relation__index == true) {
-								lr_relation.size_used = 0;
-								lr_relation.first_free = lr_relation_id();
-								for(int32_t j = 0 - 1; j > 0; --j) {
-									if(lr_relation.m__index.vptr()[j] != lr_relation_id(uint32_t(j))) {
-										lr_relation.m__index.vptr()[j] = lr_relation.first_free;
-										lr_relation.first_free = lr_relation_id(uint32_t(j));
-									} else {
-										lr_relation.size_used = std::max(lr_relation.size_used, uint32_t(j));
+								if(serialize_selection.lr_relation__index == true) {
+									lr_relation.size_used = 0;
+									lr_relation.first_free = lr_relation_id();
+									for(int32_t j = 0 - 1; j > 0; --j) {
+										if(lr_relation.m__index.vptr()[j] != lr_relation_id(uint32_t(j))) {
+											lr_relation.m__index.vptr()[j] = lr_relation.first_free;
+											lr_relation.first_free = lr_relation_id(uint32_t(j));
+										} else {
+											lr_relation.size_used = std::max(lr_relation.size_used, uint32_t(j));
+										}
 									}
 								}
 							}
+							else if(header.is_property("left")) {
+								if(header.is_type("uint32_t")) {
+									std::memcpy(lr_relation.m_left.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
+									serialize_selection.lr_relation_left = true;
+								}
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										lr_relation.m_left.vptr()[i].value = uint32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_left = true;
+								}
+								else if(header.is_type("uint16_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+										lr_relation.m_left.vptr()[i].value = uint32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_left = true;
+								}
+							}
+							else if(header.is_property("right")) {
+								if(header.is_type("uint32_t")) {
+									std::memcpy(lr_relation.m_right.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
+									serialize_selection.lr_relation_right = true;
+								}
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										lr_relation.m_right.vptr()[i].value = uint32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_right = true;
+								}
+								else if(header.is_type("uint16_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+										lr_relation.m_right.vptr()[i].value = uint32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_right = true;
+								}
+							}
+							else if(header.is_property("$index_end")) {
+								if(serialize_selection.lr_relation_left == true) {
+									for(uint32_t i = 0; i < lr_relation.size_used; ++i) {
+										auto tmp = lr_relation.m_left.vptr()[i];
+										lr_relation.m_left.vptr()[i] = top_id();
+										internal_lr_relation_set_left(lr_relation_id(lr_relation_id::value_base_t(i)), tmp);
+									}
+								}
+								if(serialize_selection.lr_relation_right == true) {
+									for(uint32_t i = 0; i < lr_relation.size_used; ++i) {
+										auto tmp = lr_relation.m_right.vptr()[i];
+										lr_relation.m_right.vptr()[i] = bottom_id();
+										internal_lr_relation_set_right(lr_relation_id(lr_relation_id::value_base_t(i)), tmp);
+									}
+								}
+							}
+							else if(header.is_property("thingies")) {
+								if(header.is_type("int32_t")) {
+									std::memcpy(lr_relation.m_thingies.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(int32_t), header.record_size));
+									serialize_selection.lr_relation_thingies = true;
+								}
+								else if(header.is_type("int8_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
+										lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_thingies = true;
+								}
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_thingies = true;
+								}
+								else if(header.is_type("int16_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
+										lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_thingies = true;
+								}
+								else if(header.is_type("uint16_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+										lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_thingies = true;
+								}
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_thingies = true;
+								}
+								else if(header.is_type("int64_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
+										lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_thingies = true;
+								}
+								else if(header.is_type("uint64_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
+										lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_thingies = true;
+								}
+								else if(header.is_type("float")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(float))); ++i) {
+										lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<float const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_thingies = true;
+								}
+								else if(header.is_type("double")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
+										lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<double const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_thingies = true;
+								}
+							}
+							break;
 						}
-						else if(header.is_property("left")) {
-							if(header.is_type("uint32_t")) {
-								std::memcpy(lr_relation.m_left.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
-								serialize_selection.lr_relation_left = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									lr_relation.m_left.vptr()[i].value = uint32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_left = true;
-							}
-							else if(header.is_type("uint16_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-									lr_relation.m_left.vptr()[i].value = uint32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_left = true;
-							}
-						}
-						else if(header.is_property("right")) {
-							if(header.is_type("uint32_t")) {
-								std::memcpy(lr_relation.m_right.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
-								serialize_selection.lr_relation_right = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									lr_relation.m_right.vptr()[i].value = uint32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_right = true;
-							}
-							else if(header.is_type("uint16_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-									lr_relation.m_right.vptr()[i].value = uint32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_right = true;
-							}
-						}
-						else if(header.is_property("$index_end")) {
-							if(serialize_selection.lr_relation_left == true) {
-								for(uint32_t i = 0; i < lr_relation.size_used; ++i) {
-									auto tmp = lr_relation.m_left.vptr()[i];
-									lr_relation.m_left.vptr()[i] = top_id();
-									internal_lr_relation_set_left(lr_relation_id(lr_relation_id::value_base_t(i)), tmp);
-								}
-							}
-							if(serialize_selection.lr_relation_right == true) {
-								for(uint32_t i = 0; i < lr_relation.size_used; ++i) {
-									auto tmp = lr_relation.m_right.vptr()[i];
-									lr_relation.m_right.vptr()[i] = bottom_id();
-									internal_lr_relation_set_right(lr_relation_id(lr_relation_id::value_base_t(i)), tmp);
-								}
-							}
-						}
-						else if(header.is_property("thingies")) {
-							if(header.is_type("int32_t")) {
-								std::memcpy(lr_relation.m_thingies.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(int32_t), header.record_size));
-								serialize_selection.lr_relation_thingies = true;
-							}
-							else if(header.is_type("int8_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
-									lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_thingies = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_thingies = true;
-							}
-							else if(header.is_type("int16_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
-									lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_thingies = true;
-							}
-							else if(header.is_type("uint16_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-									lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_thingies = true;
-							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_thingies = true;
-							}
-							else if(header.is_type("int64_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
-									lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_thingies = true;
-							}
-							else if(header.is_type("uint64_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
-									lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_thingies = true;
-							}
-							else if(header.is_type("float")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(float))); ++i) {
-									lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<float const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_thingies = true;
-							}
-							else if(header.is_type("double")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
-									lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<double const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_thingies = true;
-							}
-						}
-					}
+					} while(false);
 				}
 				input_buffer += header.record_size;
 			}
@@ -2364,289 +2305,294 @@ namespace ex1 {
 				dcon::record_header header;
 				header.deserialize(input_buffer, end);
 				if(input_buffer + header.record_size <= end) {
-					if(header.is_object("top") && mask.top) {
-						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-							top_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-							serialize_selection.top = true;
+					do {
+						if(header.is_object("top") && mask.top) {
+							if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+								top_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+								serialize_selection.top = true;
+							}
+							else if(header.is_property("wheels") && mask.top_wheels) {
+								if(header.is_type("int32_t")) {
+									std::memcpy(top.m_wheels.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(top.size_used) * sizeof(int32_t), header.record_size));
+									serialize_selection.top_wheels = true;
+								}
+								else if(header.is_type("int8_t")) {
+									for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
+										top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.top_wheels = true;
+								}
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.top_wheels = true;
+								}
+								else if(header.is_type("int16_t")) {
+									for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
+										top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.top_wheels = true;
+								}
+								else if(header.is_type("uint16_t")) {
+									for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+										top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.top_wheels = true;
+								}
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.top_wheels = true;
+								}
+								else if(header.is_type("int64_t")) {
+									for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
+										top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.top_wheels = true;
+								}
+								else if(header.is_type("uint64_t")) {
+									for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
+										top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.top_wheels = true;
+								}
+								else if(header.is_type("float")) {
+									for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(float))); ++i) {
+										top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<float const*>(input_buffer) + i));
+									}
+									serialize_selection.top_wheels = true;
+								}
+								else if(header.is_type("double")) {
+									for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
+										top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<double const*>(input_buffer) + i));
+									}
+									serialize_selection.top_wheels = true;
+								}
+							}
+							break;
 						}
-						else if(header.is_property("wheels") && mask.top_wheels) {
-							if(header.is_type("int32_t")) {
-								std::memcpy(top.m_wheels.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(top.size_used) * sizeof(int32_t), header.record_size));
-								serialize_selection.top_wheels = true;
+						if(header.is_object("bottom") && mask.bottom) {
+							if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+								bottom_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+								serialize_selection.bottom = true;
 							}
-							else if(header.is_type("int8_t")) {
-								for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
-									top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+							else if(header.is_property("legs") && mask.bottom_legs) {
+								if(header.is_type("int32_t")) {
+									std::memcpy(bottom.m_legs.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(bottom.size_used) * sizeof(int32_t), header.record_size));
+									serialize_selection.bottom_legs = true;
 								}
-								serialize_selection.top_wheels = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+								else if(header.is_type("int8_t")) {
+									for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
+										bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.bottom_legs = true;
 								}
-								serialize_selection.top_wheels = true;
-							}
-							else if(header.is_type("int16_t")) {
-								for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
-									top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.bottom_legs = true;
 								}
-								serialize_selection.top_wheels = true;
-							}
-							else if(header.is_type("uint16_t")) {
-								for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-									top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+								else if(header.is_type("int16_t")) {
+									for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
+										bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.bottom_legs = true;
 								}
-								serialize_selection.top_wheels = true;
-							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+								else if(header.is_type("uint16_t")) {
+									for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+										bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.bottom_legs = true;
 								}
-								serialize_selection.top_wheels = true;
-							}
-							else if(header.is_type("int64_t")) {
-								for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
-									top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.bottom_legs = true;
 								}
-								serialize_selection.top_wheels = true;
-							}
-							else if(header.is_type("uint64_t")) {
-								for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
-									top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+								else if(header.is_type("int64_t")) {
+									for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
+										bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.bottom_legs = true;
 								}
-								serialize_selection.top_wheels = true;
-							}
-							else if(header.is_type("float")) {
-								for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(float))); ++i) {
-									top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<float const*>(input_buffer) + i));
+								else if(header.is_type("uint64_t")) {
+									for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
+										bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.bottom_legs = true;
 								}
-								serialize_selection.top_wheels = true;
-							}
-							else if(header.is_type("double")) {
-								for(uint32_t i = 0; i < std::min(top.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
-									top.m_wheels.vptr()[i] = int32_t(*(reinterpret_cast<double const*>(input_buffer) + i));
+								else if(header.is_type("float")) {
+									for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(float))); ++i) {
+										bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<float const*>(input_buffer) + i));
+									}
+									serialize_selection.bottom_legs = true;
 								}
-								serialize_selection.top_wheels = true;
+								else if(header.is_type("double")) {
+									for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
+										bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<double const*>(input_buffer) + i));
+									}
+									serialize_selection.bottom_legs = true;
+								}
 							}
+							break;
 						}
-					} else
-					if(header.is_object("bottom") && mask.bottom) {
-						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-							bottom_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-							serialize_selection.bottom = true;
-						}
-						else if(header.is_property("legs") && mask.bottom_legs) {
-							if(header.is_type("int32_t")) {
-								std::memcpy(bottom.m_legs.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(bottom.size_used) * sizeof(int32_t), header.record_size));
-								serialize_selection.bottom_legs = true;
-							}
-							else if(header.is_type("int8_t")) {
-								for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
-									bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+						if(header.is_object("lr_relation") && mask.lr_relation) {
+							if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+								if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= lr_relation.size_used) {
+									lr_relation_resize(0);
 								}
-								serialize_selection.bottom_legs = true;
+								lr_relation_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+								serialize_selection.lr_relation = true;
 							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							else if(header.is_property("_index") && mask.lr_relation__index) {
+								if(header.is_type("uint32_t")) {
+									std::memcpy(lr_relation.m__index.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
+									serialize_selection.lr_relation__index = true;
 								}
-								serialize_selection.bottom_legs = true;
-							}
-							else if(header.is_type("int16_t")) {
-								for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
-									bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										lr_relation.m__index.vptr()[i].value = uint32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation__index = true;
 								}
-								serialize_selection.bottom_legs = true;
-							}
-							else if(header.is_type("uint16_t")) {
-								for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-									bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+								else if(header.is_type("uint16_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+										lr_relation.m__index.vptr()[i].value = uint32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation__index = true;
 								}
-								serialize_selection.bottom_legs = true;
-							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-								}
-								serialize_selection.bottom_legs = true;
-							}
-							else if(header.is_type("int64_t")) {
-								for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
-									bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
-								}
-								serialize_selection.bottom_legs = true;
-							}
-							else if(header.is_type("uint64_t")) {
-								for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
-									bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
-								}
-								serialize_selection.bottom_legs = true;
-							}
-							else if(header.is_type("float")) {
-								for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(float))); ++i) {
-									bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<float const*>(input_buffer) + i));
-								}
-								serialize_selection.bottom_legs = true;
-							}
-							else if(header.is_type("double")) {
-								for(uint32_t i = 0; i < std::min(bottom.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
-									bottom.m_legs.vptr()[i] = int32_t(*(reinterpret_cast<double const*>(input_buffer) + i));
-								}
-								serialize_selection.bottom_legs = true;
-							}
-						}
-					} else
-					if(header.is_object("lr_relation") && mask.lr_relation) {
-						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-							if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= lr_relation.size_used) {
-								lr_relation_resize(0);
-							}
-							lr_relation_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-							serialize_selection.lr_relation = true;
-						}
-						else if(header.is_property("__index") && mask.lr_relation__index) {
-							if(header.is_type("uint32_t")) {
-								std::memcpy(lr_relation.m__index.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
-								serialize_selection.lr_relation__index = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									lr_relation.m__index.vptr()[i].value = uint32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation__index = true;
-							}
-							else if(header.is_type("uint16_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-									lr_relation.m__index.vptr()[i].value = uint32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation__index = true;
-							}
-							if(serialize_selection.lr_relation__index == true) {
-								lr_relation.size_used = 0;
-								lr_relation.first_free = lr_relation_id();
-								for(int32_t j = 0 - 1; j > 0; --j) {
-									if(lr_relation.m__index.vptr()[j] != lr_relation_id(uint32_t(j))) {
-										lr_relation.m__index.vptr()[j] = lr_relation.first_free;
-										lr_relation.first_free = lr_relation_id(uint32_t(j));
-									} else {
-										lr_relation.size_used = std::max(lr_relation.size_used, uint32_t(j));
+								if(serialize_selection.lr_relation__index == true) {
+									lr_relation.size_used = 0;
+									lr_relation.first_free = lr_relation_id();
+									for(int32_t j = 0 - 1; j > 0; --j) {
+										if(lr_relation.m__index.vptr()[j] != lr_relation_id(uint32_t(j))) {
+											lr_relation.m__index.vptr()[j] = lr_relation.first_free;
+											lr_relation.first_free = lr_relation_id(uint32_t(j));
+										} else {
+											lr_relation.size_used = std::max(lr_relation.size_used, uint32_t(j));
+										}
 									}
 								}
 							}
+							else if(header.is_property("left") && mask.lr_relation_left) {
+								if(header.is_type("uint32_t")) {
+									std::memcpy(lr_relation.m_left.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
+									serialize_selection.lr_relation_left = true;
+								}
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										lr_relation.m_left.vptr()[i].value = uint32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_left = true;
+								}
+								else if(header.is_type("uint16_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+										lr_relation.m_left.vptr()[i].value = uint32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_left = true;
+								}
+							}
+							else if(header.is_property("right") && mask.lr_relation_right) {
+								if(header.is_type("uint32_t")) {
+									std::memcpy(lr_relation.m_right.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
+									serialize_selection.lr_relation_right = true;
+								}
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										lr_relation.m_right.vptr()[i].value = uint32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_right = true;
+								}
+								else if(header.is_type("uint16_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+										lr_relation.m_right.vptr()[i].value = uint32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_right = true;
+								}
+							}
+							else if(header.is_property("$index_end") && mask.lr_relation) {
+								if(serialize_selection.lr_relation_left == true) {
+									for(uint32_t i = 0; i < lr_relation.size_used; ++i) {
+										auto tmp = lr_relation.m_left.vptr()[i];
+										lr_relation.m_left.vptr()[i] = top_id();
+										internal_lr_relation_set_left(lr_relation_id(lr_relation_id::value_base_t(i)), tmp);
+									}
+								}
+								if(serialize_selection.lr_relation_right == true) {
+									for(uint32_t i = 0; i < lr_relation.size_used; ++i) {
+										auto tmp = lr_relation.m_right.vptr()[i];
+										lr_relation.m_right.vptr()[i] = bottom_id();
+										internal_lr_relation_set_right(lr_relation_id(lr_relation_id::value_base_t(i)), tmp);
+									}
+								}
+							}
+							else if(header.is_property("thingies") && mask.lr_relation_thingies) {
+								if(header.is_type("int32_t")) {
+									std::memcpy(lr_relation.m_thingies.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(int32_t), header.record_size));
+									serialize_selection.lr_relation_thingies = true;
+								}
+								else if(header.is_type("int8_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
+										lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_thingies = true;
+								}
+								else if(header.is_type("uint8_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_thingies = true;
+								}
+								else if(header.is_type("int16_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
+										lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_thingies = true;
+								}
+								else if(header.is_type("uint16_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+										lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_thingies = true;
+								}
+								else if(header.is_type("uint32_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_thingies = true;
+								}
+								else if(header.is_type("int64_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
+										lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_thingies = true;
+								}
+								else if(header.is_type("uint64_t")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
+										lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_thingies = true;
+								}
+								else if(header.is_type("float")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(float))); ++i) {
+										lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<float const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_thingies = true;
+								}
+								else if(header.is_type("double")) {
+									for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
+										lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<double const*>(input_buffer) + i));
+									}
+									serialize_selection.lr_relation_thingies = true;
+								}
+							}
+							break;
 						}
-						else if(header.is_property("left") && mask.lr_relation_left) {
-							if(header.is_type("uint32_t")) {
-								std::memcpy(lr_relation.m_left.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
-								serialize_selection.lr_relation_left = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									lr_relation.m_left.vptr()[i].value = uint32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_left = true;
-							}
-							else if(header.is_type("uint16_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-									lr_relation.m_left.vptr()[i].value = uint32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_left = true;
-							}
-						}
-						else if(header.is_property("right") && mask.lr_relation_right) {
-							if(header.is_type("uint32_t")) {
-								std::memcpy(lr_relation.m_right.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(uint32_t), header.record_size));
-								serialize_selection.lr_relation_right = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									lr_relation.m_right.vptr()[i].value = uint32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_right = true;
-							}
-							else if(header.is_type("uint16_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-									lr_relation.m_right.vptr()[i].value = uint32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_right = true;
-							}
-						}
-						else if(header.is_property("$index_end") && mask.lr_relation) {
-							if(serialize_selection.lr_relation_left == true) {
-								for(uint32_t i = 0; i < lr_relation.size_used; ++i) {
-									auto tmp = lr_relation.m_left.vptr()[i];
-									lr_relation.m_left.vptr()[i] = top_id();
-									internal_lr_relation_set_left(lr_relation_id(lr_relation_id::value_base_t(i)), tmp);
-								}
-							}
-							if(serialize_selection.lr_relation_right == true) {
-								for(uint32_t i = 0; i < lr_relation.size_used; ++i) {
-									auto tmp = lr_relation.m_right.vptr()[i];
-									lr_relation.m_right.vptr()[i] = bottom_id();
-									internal_lr_relation_set_right(lr_relation_id(lr_relation_id::value_base_t(i)), tmp);
-								}
-							}
-						}
-						else if(header.is_property("thingies") && mask.lr_relation_thingies) {
-							if(header.is_type("int32_t")) {
-								std::memcpy(lr_relation.m_thingies.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(lr_relation.size_used) * sizeof(int32_t), header.record_size));
-								serialize_selection.lr_relation_thingies = true;
-							}
-							else if(header.is_type("int8_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
-									lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_thingies = true;
-							}
-							else if(header.is_type("uint8_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-									lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_thingies = true;
-							}
-							else if(header.is_type("int16_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
-									lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_thingies = true;
-							}
-							else if(header.is_type("uint16_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-									lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_thingies = true;
-							}
-							else if(header.is_type("uint32_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-									lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_thingies = true;
-							}
-							else if(header.is_type("int64_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
-									lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_thingies = true;
-							}
-							else if(header.is_type("uint64_t")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
-									lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_thingies = true;
-							}
-							else if(header.is_type("float")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(float))); ++i) {
-									lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<float const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_thingies = true;
-							}
-							else if(header.is_type("double")) {
-								for(uint32_t i = 0; i < std::min(lr_relation.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
-									lr_relation.m_thingies.vptr()[i] = int32_t(*(reinterpret_cast<double const*>(input_buffer) + i));
-								}
-								serialize_selection.lr_relation_thingies = true;
-							}
-						}
-					}
+					} while(false);
 				}
 				input_buffer += header.record_size;
 			}
@@ -2687,20 +2633,6 @@ namespace ex1 {
 	DCON_RELEASE_INLINE internal::iterator_top_foreach_lr_relation_as_left_generator top_fat_id::get_lr_relation() const {
 		return internal::iterator_top_foreach_lr_relation_as_left_generator(container, id);
 	}
-	template<typename T>
-	DCON_RELEASE_INLINE void top_fat_id::for_each_right_from_lr_relation(T&& func) const {
-		container.top_for_each_right_from_lr_relation(id, [&, t = this](bottom_id i){func(fatten(t->container, i));});
-	}
-	DCON_RELEASE_INLINE bool top_fat_id::has_right_from_lr_relation(bottom_id target) const {
-		return container.top_has_right_from_lr_relation(id, target);
-	}
-	template<typename T>
-	DCON_RELEASE_INLINE void top_fat_id::for_each_thingies_from_lr_relation(T&& func) const {
-		container.top_for_each_thingies_from_lr_relation(id, func);
-	}
-	DCON_RELEASE_INLINE bool top_fat_id::has_thingies_from_lr_relation(int32_t target) const {
-		return container.top_has_thingies_from_lr_relation(id, target);
-	}
 	DCON_RELEASE_INLINE bool top_fat_id::is_valid() const noexcept {
 		return container.top_is_valid(id);
 	}
@@ -2727,20 +2659,6 @@ namespace ex1 {
 	}
 	DCON_RELEASE_INLINE internal::const_iterator_top_foreach_lr_relation_as_left_generator top_const_fat_id::get_lr_relation() const {
 		return internal::const_iterator_top_foreach_lr_relation_as_left_generator(container, id);
-	}
-	template<typename T>
-	DCON_RELEASE_INLINE void top_const_fat_id::for_each_right_from_lr_relation(T&& func) const {
-		container.top_for_each_right_from_lr_relation(id, [&, t = this](bottom_id i){func(fatten(t->container, i));});
-	}
-	DCON_RELEASE_INLINE bool top_const_fat_id::has_right_from_lr_relation(bottom_id target) const {
-		return container.top_has_right_from_lr_relation(id, target);
-	}
-	template<typename T>
-	DCON_RELEASE_INLINE void top_const_fat_id::for_each_thingies_from_lr_relation(T&& func) const {
-		container.top_for_each_thingies_from_lr_relation(id, func);
-	}
-	DCON_RELEASE_INLINE bool top_const_fat_id::has_thingies_from_lr_relation(int32_t target) const {
-		return container.top_has_thingies_from_lr_relation(id, target);
 	}
 	DCON_RELEASE_INLINE bool top_const_fat_id::is_valid() const noexcept {
 		return container.top_is_valid(id);
@@ -2778,20 +2696,6 @@ namespace ex1 {
 	DCON_RELEASE_INLINE internal::iterator_bottom_foreach_lr_relation_as_right_generator bottom_fat_id::get_lr_relation() const {
 		return internal::iterator_bottom_foreach_lr_relation_as_right_generator(container, id);
 	}
-	template<typename T>
-	DCON_RELEASE_INLINE void bottom_fat_id::for_each_left_from_lr_relation(T&& func) const {
-		container.bottom_for_each_left_from_lr_relation(id, [&, t = this](top_id i){func(fatten(t->container, i));});
-	}
-	DCON_RELEASE_INLINE bool bottom_fat_id::has_left_from_lr_relation(top_id target) const {
-		return container.bottom_has_left_from_lr_relation(id, target);
-	}
-	template<typename T>
-	DCON_RELEASE_INLINE void bottom_fat_id::for_each_thingies_from_lr_relation(T&& func) const {
-		container.bottom_for_each_thingies_from_lr_relation(id, func);
-	}
-	DCON_RELEASE_INLINE bool bottom_fat_id::has_thingies_from_lr_relation(int32_t target) const {
-		return container.bottom_has_thingies_from_lr_relation(id, target);
-	}
 	DCON_RELEASE_INLINE bool bottom_fat_id::is_valid() const noexcept {
 		return container.bottom_is_valid(id);
 	}
@@ -2818,20 +2722,6 @@ namespace ex1 {
 	}
 	DCON_RELEASE_INLINE internal::const_iterator_bottom_foreach_lr_relation_as_right_generator bottom_const_fat_id::get_lr_relation() const {
 		return internal::const_iterator_bottom_foreach_lr_relation_as_right_generator(container, id);
-	}
-	template<typename T>
-	DCON_RELEASE_INLINE void bottom_const_fat_id::for_each_left_from_lr_relation(T&& func) const {
-		container.bottom_for_each_left_from_lr_relation(id, [&, t = this](top_id i){func(fatten(t->container, i));});
-	}
-	DCON_RELEASE_INLINE bool bottom_const_fat_id::has_left_from_lr_relation(top_id target) const {
-		return container.bottom_has_left_from_lr_relation(id, target);
-	}
-	template<typename T>
-	DCON_RELEASE_INLINE void bottom_const_fat_id::for_each_thingies_from_lr_relation(T&& func) const {
-		container.bottom_for_each_thingies_from_lr_relation(id, func);
-	}
-	DCON_RELEASE_INLINE bool bottom_const_fat_id::has_thingies_from_lr_relation(int32_t target) const {
-		return container.bottom_has_thingies_from_lr_relation(id, target);
 	}
 	DCON_RELEASE_INLINE bool bottom_const_fat_id::is_valid() const noexcept {
 		return container.bottom_is_valid(id);
