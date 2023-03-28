@@ -450,13 +450,14 @@ void deserialize_size_fragment(basic_builder& o, relationship_object_def const& 
 		}
 		o + "@obj@_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));";
 		o + "serialize_selection.@obj@ = true;";
+		o + "break;";
 	};
 }
 
 void deserialize_erasable_index_fragment(basic_builder& o, relationship_object_def const& ob, bool with_mask) {
 	o + substitute{ "u_type" , size_to_tag_type(ob.size) };
 	o + substitute{ "mcon", with_mask ? std::string(" && mask.") + ob.name + "__index" : std::string() };
-	o + "else if(header.is_property(\"_index\")@mcon@)" + block{ //fix
+	o + "if(header.is_property(\"_index\")@mcon@)" + block{ //fix
 		o + "if(header.is_type(\"@u_type@\"))" + block{
 			o + "std::memcpy(@obj@.m__index.vptr(), reinterpret_cast<@u_type@ const*>(input_buffer), "
 				"std::min(size_t(@obj@.size_used) * sizeof(@u_type@), header.record_size));";
@@ -487,6 +488,7 @@ void deserialize_erasable_index_fragment(basic_builder& o, relationship_object_d
 				};
 			};
 		};
+		o + "break;";
 	};
 }
 
@@ -502,7 +504,7 @@ void deserialize_individual_link_fragment(basic_builder& o, relationship_object_
 		//std::array<@u_type@,@mult@>
 
 		if(iob.multiplicity == 1) {
-			o + "else if(header.is_property(\"@prop@\")@mcon@)" + block{
+			o + "if(header.is_property(\"@prop@\")@mcon@)" + block{
 				o + "if(header.is_type(\"@u_type@\"))" + block{
 					o + "std::memcpy(@obj@.m_@prop@.vptr(), reinterpret_cast<@u_type@ const*>(input_buffer), "
 						"std::min(size_t(@obj@.size_used) * sizeof(@u_type@), header.record_size));";
@@ -517,9 +519,10 @@ void deserialize_individual_link_fragment(basic_builder& o, relationship_object_
 				if(size_to_tag_type(iob.related_to->size) != "uint32_t") {
 					wrong_type_cast(o, "uint32_t", iob.property_name, size_to_tag_type(iob.related_to->size), true);
 				}
+				o + "break;";
 			};
 		} else {
-			o + "else if(header.is_property(\"@prop@\")@mcon@)" + block{
+			o + "if(header.is_property(\"@prop@\")@mcon@)" + block{
 				o + "if(header.is_type(\"std::array<@u_type@,@mult@>\"))" + block{
 					o + "std::memcpy(@obj@.m_@prop@.vptr(), reinterpret_cast<std::array<@u_type@,@mult@> const*>(input_buffer), "
 					"std::min(size_t(@obj@.size_used) * sizeof(std::array<@u_type@, @mult@>), header.record_size));";
@@ -534,6 +537,7 @@ void deserialize_individual_link_fragment(basic_builder& o, relationship_object_
 				if(size_to_tag_type(iob.related_to->size) != "uint32_t") {
 					wrong_type_cast_with_multiplicity(o, "uint32_t", iob.property_name, size_to_tag_type(iob.related_to->size), iob.multiplicity);
 				}
+				o + "break;";
 			};
 		}
 	}
@@ -543,7 +547,7 @@ void deserialize_relationship_end_links_fragment(basic_builder& o, relationship_
 	bool with_mask) {
 
 	o + substitute{ "mcon", with_mask ? std::string(" && mask.") + ob.name : std::string() };
-	o + "else if(header.is_property(\"$index_end\")@mcon@)" + block{
+	o + "if(header.is_property(\"$index_end\")@mcon@)" + block{
 		for(auto& iob : ob.indexed_objects) {
 			if(ob.primary_key != iob) {
 				o + substitute{ "prop", iob.property_name } + substitute{ "type", iob.type_name };
@@ -592,6 +596,7 @@ void deserialize_relationship_end_links_fragment(basic_builder& o, relationship_
 				};
 			};
 		}
+		o + "break;";
 	};
 }
 
@@ -856,7 +861,7 @@ void deserialize_individual_property_fragment(basic_builder& o, file_def const& 
 
 	o + substitute{ "prop", prop.name } + substitute{ "type", normalize_type(prop.data_type) };
 	o + substitute{ "mcon", with_mask ? std::string(" && mask.") + ob.name + "_" + prop.name : std::string() };
-	o + "else if(header.is_property(\"@prop@\")@mcon@)" + block{
+	o + "if(header.is_property(\"@prop@\")@mcon@)" + block{
 		if(prop.is_derived) {
 
 		} else if(prop.type == property_type::bitfield) {
@@ -872,6 +877,7 @@ void deserialize_individual_property_fragment(basic_builder& o, file_def const& 
 		} else {
 			deserialize_basic_property_fragment(o, parsed_file, ob, prop, with_mask);
 		} // end prop type cases
+		o + "break;";
 	}; // end header property == property type" in output 
 }
 
@@ -903,22 +909,24 @@ basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, b
 						//	o + append{ "else" };
 
 						o + "if(header.is_object(\"@obj@\")@mcon@)" + block{ //has matched object
-							deserialize_size_fragment(o, ob);
-							if (ob.store_type == storage_type::erasable) {
-								deserialize_erasable_index_fragment(o, ob, with_mask);
-							} // end: load index handling for erasable
+							o + "do" + block{
+								deserialize_size_fragment(o, ob);
+								if (ob.store_type == storage_type::erasable) {
+									deserialize_erasable_index_fragment(o, ob, with_mask);
+								} // end: load index handling for erasable
 
-							for (auto& iob : ob.indexed_objects) {
-								deserialize_individual_link_fragment(o, ob, iob, with_mask);
-							} // end index properties
+								for (auto& iob : ob.indexed_objects) {
+									deserialize_individual_link_fragment(o, ob, iob, with_mask);
+								} // end index properties
 
-							if (ob.is_relationship) {
-								deserialize_relationship_end_links_fragment(o, ob, with_mask);
-							}
+								if (ob.is_relationship) {
+									deserialize_relationship_end_links_fragment(o, ob, with_mask);
+								}
 
-							for (auto& prop : ob.properties) {
-								deserialize_individual_property_fragment(o, parsed_file, ob, prop, with_mask);
-							} // end loop over object properties 
+								for (auto& prop : ob.properties) {
+									deserialize_individual_property_fragment(o, parsed_file, ob, prop, with_mask);
+								} // end loop over object properties
+							} + append{ "while(false);" };
 							o + "break;";
 						}; // end "header object == object type" in output
 
