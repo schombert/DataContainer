@@ -306,6 +306,41 @@ namespace ve {
 		}
 	};
 
+	template<>
+	struct contiguous_tags_base<int32_t> {
+		uint32_t value = 0;
+		using tag_type = int32_t;
+		using wrapped_value = tag_type;
+
+		constexpr contiguous_tags_base() : value(0) {}
+		constexpr explicit contiguous_tags_base(uint32_t v) : value(v) {}
+		constexpr contiguous_tags_base(const contiguous_tags_base& v) noexcept = default;
+		constexpr contiguous_tags_base(contiguous_tags_base&& v) noexcept = default;
+
+		template<typename T, typename = std::enable_if_t<std::is_constructible_v<tag_type, T> && !std::is_same_v<tag_type, T>> >
+		constexpr contiguous_tags_base(contiguous_tags_base<T> v) : value(v.value) {}
+
+		contiguous_tags_base& operator=(contiguous_tags_base&& v) noexcept = default;
+		contiguous_tags_base& operator=(contiguous_tags_base const& v) noexcept = default;
+
+		template<typename T>
+		std::enable_if_t<std::is_constructible_v<tag_type, T> && !std::is_same_v<tag_type, T>, contiguous_tags_base&> operator=(contiguous_tags_base<T> v) noexcept {
+			value = v.value;
+			return *this;
+		}
+
+		RELEASE_INLINE tag_type operator[](uint32_t i) const noexcept {
+			return tag_type(value + i);
+		}
+
+		constexpr bool operator==(contiguous_tags_base<tag_type> o) const noexcept {
+			return value == o.value;
+		}
+		constexpr bool operator!=(contiguous_tags_base<tag_type> o) const noexcept {
+			return value != o.value;
+		}
+	};
+
 	template<typename tag_type>
 	struct unaligned_contiguous_tags : public contiguous_tags_base<tag_type> {
 
