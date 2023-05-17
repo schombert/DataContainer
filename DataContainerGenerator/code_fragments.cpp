@@ -646,7 +646,7 @@ basic_builder& make_object_resize(basic_builder& o, relationship_object_def cons
 			}
 			for(auto& cr : cob.relationships_involved_in) {
 				if(cr.linked_as->is_primary_key) {
-					o + (cr.relation_name + "_resize(std::min(new_size, " + cr.relation_name + ".size_used));");
+					o + (cr.relation_name + "_resize(std::min<uint32_t>(new_size, " + cr.relation_name + ".size_used));");
 				} else if(cr.linked_as->index == index_type::at_most_one) {
 					o + (cr.relation_name + "_resize(0);");
 				} else if(cr.linked_as->index == index_type::many) {

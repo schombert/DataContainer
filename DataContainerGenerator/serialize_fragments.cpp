@@ -361,7 +361,7 @@ basic_builder& wrong_type_cast(basic_builder& o, std::string const& wrong_type, 
 	o + substitute{ "w_prop", prop_name };
 	o + substitute{ "c_type", prop_type };
 	o + "else if(header.is_type(\"@w_type@\"))" + block{
-		o + "for(uint32_t i = 0; i < std::min(@obj@.size_used, uint32_t(header.record_size / sizeof(@w_type@))); ++i)" + block{
+		o + "for(uint32_t i = 0; i < std::min<uint32_t>(@obj@.size_used, uint32_t(header.record_size / sizeof(@w_type@))); ++i)" + block{
 			if (cast_to_value)
 				o + "@obj@.m_@w_prop@.vptr()[i].value = @c_type@(*(reinterpret_cast<@w_type@ const*>(input_buffer) + i));";
 			else
@@ -380,7 +380,7 @@ basic_builder& wrong_type_cast_with_multiplicity(basic_builder& o, std::string c
 	o + substitute{ "mult", std::to_string(multiplicity) };
 
 	o + "else if(header.is_type(\"std::array<@w_type@,@mult@>\"))" + block{
-		o + "for(uint32_t i = 0; i < std::min(@obj@.size_used, uint32_t(header.record_size / sizeof(std::array<@w_type@,@mult@>))); ++i)" + block{
+		o + "for(uint32_t i = 0; i < std::min<uint32_t>(@obj@.size_used, uint32_t(header.record_size / sizeof(std::array<@w_type@,@mult@>))); ++i)" + block{
 			for (int32_t j = 0; j < multiplicity; ++j) {
 				o + substitute{ "j", std::to_string(j) };
 				o + "@obj@.m_@w_prop@.vptr()[i][@j@].value = @c_type@((*(reinterpret_cast<std::array<@w_type@,@mult@> const*>(input_buffer) + i))[@j@]);";
@@ -460,7 +460,7 @@ void deserialize_erasable_index_fragment(basic_builder& o, relationship_object_d
 	o + "if(header.is_property(\"_index\")@mcon@)" + block{ //fix
 		o + "if(header.is_type(\"@u_type@\"))" + block{
 			o + "std::memcpy(@obj@.m__index.vptr(), reinterpret_cast<@u_type@ const*>(input_buffer), "
-				"std::min(size_t(@obj@.size_used) * sizeof(@u_type@), header.record_size));";
+				"std::min<size_t>(size_t(@obj@.size_used) * sizeof(@u_type@), header.record_size));";
 			o + "serialize_selection.@obj@__index = true;";
 		};
 		if(size_to_tag_type(ob.size) != "uint8_t") {
@@ -507,7 +507,7 @@ void deserialize_individual_link_fragment(basic_builder& o, relationship_object_
 			o + "if(header.is_property(\"@prop@\")@mcon@)" + block{
 				o + "if(header.is_type(\"@u_type@\"))" + block{
 					o + "std::memcpy(@obj@.m_@prop@.vptr(), reinterpret_cast<@u_type@ const*>(input_buffer), "
-						"std::min(size_t(@obj@.size_used) * sizeof(@u_type@), header.record_size));";
+						"std::min<size_t>(size_t(@obj@.size_used) * sizeof(@u_type@), header.record_size));";
 					o + "serialize_selection.@obj@_@prop@ = true;";
 				};
 				if(size_to_tag_type(iob.related_to->size) != "uint8_t") {
@@ -525,7 +525,7 @@ void deserialize_individual_link_fragment(basic_builder& o, relationship_object_
 			o + "if(header.is_property(\"@prop@\")@mcon@)" + block{
 				o + "if(header.is_type(\"std::array<@u_type@,@mult@>\"))" + block{
 					o + "std::memcpy(@obj@.m_@prop@.vptr(), reinterpret_cast<std::array<@u_type@,@mult@> const*>(input_buffer), "
-					"std::min(size_t(@obj@.size_used) * sizeof(std::array<@u_type@, @mult@>), header.record_size));";
+					"std::min<size_t>(size_t(@obj@.size_used) * sizeof(std::array<@u_type@, @mult@>), header.record_size));";
 					o + "serialize_selection.@obj@_@prop@ = true;";
 				};
 				if(size_to_tag_type(iob.related_to->size) != "uint8_t") {
@@ -605,7 +605,7 @@ void deserialize_bitfield_property_fragment(basic_builder& o, file_def const& pa
 
 	o + "if(header.is_type(\"bitfield\"))" + block{
 		o + "std::memcpy(@obj@.m_@prop@.vptr(), reinterpret_cast<dcon::bitfield_type const*>(input_buffer)"
-			", std::min(size_t(@obj@.size_used + 7) / 8, header.record_size));";
+			", std::min<size_t>(size_t(@obj@.size_used + 7) / 8, header.record_size));";
 		o + "serialize_selection.@obj@_@prop@ = true;";
 	};
 	conversion_attempt(o, parsed_file, "bool", true);
@@ -626,7 +626,7 @@ void deserialize_special_vector_property_fragment(basic_builder& o, file_def con
 				o + "uint16_t sz = 0;";
 
 				o + "if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size)" + block{
-					o + "sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), "
+					o + "sz = uint16_t(std::min<size_t>(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), "
 						"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(@type@) ));";
 					o + "icpy += sizeof(uint16_t);";
 				};
@@ -651,7 +651,7 @@ void deserialize_special_vector_property_fragment(basic_builder& o, file_def con
 					o + "for(std::byte const* icpy = zero_pos + 1; ix < @obj@.size_used && icpy < input_buffer + header.record_size; )" + block{
 						o + "uint16_t sz = 0;";
 						o + "if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size)" + block{
-							o + "sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), "
+							o + "sz = uint16_t(std::min<size_t>(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), "
 								"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(@f_type@) ));";
 							o + "icpy += sizeof(uint16_t);";
 						};
@@ -679,7 +679,7 @@ void deserialize_special_vector_property_fragment(basic_builder& o, file_def con
 						o + "for(std::byte const* icpy = zero_pos + 1; ix < @obj@.size_used && icpy < input_buffer + header.record_size; )" + block{
 							o + "uint16_t sz = 0;";
 							o + "if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size)" + block{
-								o + "sz = uint16_t(std::min(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), "
+								o + "sz = uint16_t(std::min<size_t>(size_t(*(reinterpret_cast<uint16_t const*>(icpy))), "
 									"(input_buffer + header.record_size - (icpy + sizeof(uint16_t))) / sizeof(@b_type@) ));";
 								o + "icpy += sizeof(uint16_t);";
 							};
@@ -728,7 +728,7 @@ void deserialize_a_bitfield_property_fragment(basic_builder& o, file_def const& 
 			};
 			o + "for(int32_t s = 0; s < int32_t(@obj@.m_@prop@.size) && icpy < input_buffer + header.record_size; ++s)" + block{
 				o + "std::memcpy(@obj@.m_@prop@.vptr(s), reinterpret_cast<dcon::bitfield_type const*>(icpy)"
-				", std::min(size_t(@obj@.size_used + 7) / 8, size_t(input_buffer + header.record_size - icpy)));";
+				", std::min<size_t>(size_t(@obj@.size_used + 7) / 8, size_t(input_buffer + header.record_size - icpy)));";
 				o + "icpy += (@obj@.size_used + 7) / 8;";
 			};
 			o + "serialize_selection.@obj@_@prop@ = true;";
@@ -778,7 +778,7 @@ void deserialize_a_other_property_fragment(basic_builder& o, file_def const& par
 			};
 			o + "for(int32_t s = 0; s < int32_t(@obj@.m_@prop@.size) && icpy < input_buffer + header.record_size; ++s)" + block{
 				o + "std::memcpy(@obj@.m_@prop@.vptr(s), reinterpret_cast<@type@ const*>(icpy)"
-					", std::min(sizeof(@type@) * @obj@.size_used, size_t(input_buffer + header.record_size - icpy)));";
+					", std::min<size_t>(sizeof(@type@) * @obj@.size_used, size_t(input_buffer + header.record_size - icpy)));";
 				o + "icpy += sizeof(@type@) * @obj@.size_used;";
 			};
 			o + "serialize_selection.@obj@_@prop@ = true;";
@@ -842,7 +842,7 @@ void deserialize_basic_property_fragment(basic_builder& o, file_def const& parse
 
 	o + "if(header.is_type(\"@type@\"))" + block{
 		o + "std::memcpy(@obj@.m_@prop@.vptr(), reinterpret_cast<@type@ const*>(input_buffer)"
-			", std::min(size_t(@obj@.size_used) * sizeof(@type@), header.record_size));";
+			", std::min<size_t>(size_t(@obj@.size_used) * sizeof(@type@), header.record_size));";
 		o + "serialize_selection.@obj@_@prop@ = true;";
 	};
 	conversion_attempt(o, parsed_file, prop.data_type, false);
