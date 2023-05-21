@@ -48,7 +48,7 @@ basic_builder& make_const_fat_id_impl(basic_builder& o, relationship_object_def 
 basic_builder& make_fat_id_impl(basic_builder& o, relationship_object_def const& obj, file_def const& parsed_file);
 
 basic_builder& make_composite_key_declarations(basic_builder& o, std::string const& obj_name, composite_index_def const& cc);
-basic_builder& make_composite_key_getter(basic_builder& o, std::string const& obj_name, composite_index_def const& cc);
+basic_builder& make_composite_key_getter(basic_builder& o, std::string const& obj_name, composite_index_def const& cc, relationship_object_def const& cob);
 
 basic_builder& make_object_member_declarations(basic_builder& o, file_def const& parsed_file, relationship_object_def const& obj,
 	bool add_prefix, bool declaration_mode, std::string const& namesp, bool const_mode);

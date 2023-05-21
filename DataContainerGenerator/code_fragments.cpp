@@ -2632,7 +2632,7 @@ basic_builder& make_composite_key_declarations(basic_builder& o, std::string con
 }
 
 
-basic_builder& make_composite_key_getter(basic_builder& o, std::string const& obj_name, composite_index_def const& cc) {
+basic_builder& make_composite_key_getter(basic_builder& o, std::string const& obj_name, composite_index_def const& cc, relationship_object_def const& cob) {
 	std::string outer_params;
 	std::string inner_params;
 	for(auto& k : cc.component_indexes) {
@@ -2652,6 +2652,7 @@ basic_builder& make_composite_key_getter(basic_builder& o, std::string const& ob
 			}
 		}
 	}
+	
 	o + substitute{"obj", obj_name } +substitute{ "ckname", cc.name }+substitute{ "oparams", outer_params }
 		+ substitute{ "iparams", inner_params };
 	o + "@obj@_id get_@obj@_by_@ckname@(@oparams@)" + block{
@@ -2670,8 +2671,13 @@ basic_builder& make_composite_key_getter(basic_builder& o, std::string const& ob
 				o + "std::sort(@prop@_p.begin(), @prop@_p.end(), [](@id_type@ a, @id_type@ b){ return a.value < b.value; });";
 			}
 		}
-		o + "if(auto it = @obj@.hashm_@ckname@.find(@obj@.to_@ckname@_keydata(@iparams@)); it != @obj@.hashm_@ckname@.end())" + block{
-			o + "return it->second;";
+		/*
+		outside range:
+		check: address of found pointer is between address of begin and address of begin + storage max
+		check: address of found is prior to address of end
+		*/
+		o + "if(auto it = @obj@.hashm_@ckname@.atomic_find(@obj@.to_@ckname@_keydata(@iparams@)); it)" + block{
+			o + "return *it;";
 		};
 		o + "return @obj@_id();";
 	};
