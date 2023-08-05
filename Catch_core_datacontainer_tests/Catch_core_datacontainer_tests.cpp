@@ -352,10 +352,19 @@ TEST_CASE("remove in the other direction", "[core_datacontainer_tests]") {
 	count = 0;
 	found_car = false;
 
-	REQUIRE(ptr->person_has_owned_car_from_car_ownership(persona, carb) == true);
-	REQUIRE(ptr->person_has_owned_car_from_car_ownership(persona, cara) == false);
+	auto orange = ptr->person_get_car_ownership(persona);
+	auto ifind = [&](auto i) {
+		for (auto c : orange)
+			if (c.get_owned_car() == i)
+				return true;
+		return false;
+	};
+	REQUIRE(ifind(carb));
+	REQUIRE(!ifind(cara));
 
-	ptr->person_for_each_owned_car_from_car_ownership(persona, [&](car_owner_basic::car_id) { ++count; });
+	for (auto c : ptr->person_get_car_ownership(persona)) {
+		++count;
+	}
 
 	REQUIRE(count == 2);
 
@@ -556,10 +565,19 @@ TEST_CASE("for compatactable remove in the other direction", "[core_datacontaine
 	count = 0;
 	found_car = false;
 
-	REQUIRE(ptr->person_has_owned_car_from_car_ownership(persona, carb) == true);
-	REQUIRE(ptr->person_has_owned_car_from_car_ownership(persona, cara) == false);
+	auto orange = ptr->person_get_car_ownership(persona);
+	auto ifind = [&](auto i) {
+		for (auto c : orange)
+			if (c.get_owned_car() == i)
+				return true;
+		return false;
+	};
+	REQUIRE(ifind(carb));
+	REQUIRE(!ifind(cara));
 
-	ptr->person_for_each_owned_car_from_car_ownership(persona, [&](cob2::car_id) { ++count; });
+	for (auto c : ptr->person_get_car_ownership(persona)) {
+		++count;
+	}
 
 	REQUIRE(count == 2);
 
@@ -774,10 +792,19 @@ TEST_CASE("for erasable remove in the other direction", "[core_datacontainer_tes
 	count = 0;
 	found_car = false;
 
-	REQUIRE(ptr->person_has_owned_car_from_car_ownership(persona, carb) == true);
-	REQUIRE(ptr->person_has_owned_car_from_car_ownership(persona, cara) == false);
+	auto orange = ptr->person_get_car_ownership(persona);
+	auto ifind = [&](auto i) {
+		for (auto c : orange)
+			if (c.get_owned_car() == i)
+				return true;
+		return false;
+	};
+	REQUIRE(ifind(carb));
+	REQUIRE(!ifind(cara));
 
-	ptr->person_for_each_owned_car_from_car_ownership(persona, [&](cob3::car_id) { ++count; });
+	for (auto c : ptr->person_get_car_ownership(persona)) {
+		++count;
+	}
 
 	REQUIRE(count == 2);
 
@@ -828,29 +855,66 @@ TEST_CASE("objects and relationships with expandable storage", "[core_datacontai
 	REQUIRE(bool(ptr->try_create_lr_relation(te, bf)));
 	REQUIRE(bool(ptr->try_create_lr_relation(tf, bc)));
 
+	
+
 	{
 		auto rng = ptr->bottom_range_of_lr_relation(bc);
 		REQUIRE(rng.second - rng.first == 4);
-		REQUIRE(ptr->bottom_has_left_from_lr_relation(bc, tb));
+		auto ifind = [&]() {
+			auto r = ptr->bottom_get_lr_relation(bc);
+			for (auto c : r)
+				if (c.get_left() == tb)
+					return true;
+			return false;
+		}();
+		REQUIRE(ifind);
 	}
 
 	{
 		auto rng = ptr->bottom_range_of_lr_relation(bd);
 		REQUIRE(rng.second - rng.first == 2);
-		REQUIRE(ptr->bottom_has_left_from_lr_relation(bc, ta));
-		REQUIRE(!ptr->bottom_has_left_from_lr_relation(bc, te));
+		auto ifind = [&]() {
+			auto r = ptr->bottom_get_lr_relation(bd);
+			for (auto c : r)
+				if (c.get_left() == ta)
+					return true;
+			return false;
+		}();
+		REQUIRE(ifind);
+		auto jfind = [&]() {
+			auto r = ptr->bottom_get_lr_relation(bd);
+			for (auto c : r)
+				if (c.get_left() == te)
+					return true;
+			return false;
+		}();
+		REQUIRE(!jfind);
 	}
 
 	{
 		auto rng = ptr->top_range_of_lr_relation(tc);
 		REQUIRE(rng.second - rng.first == 1);
-		REQUIRE(ptr->top_has_right_from_lr_relation(tc, bf));
+		auto ifind = [&]() {
+			auto r = ptr->top_get_lr_relation(tc);
+			for (auto c : r)
+				if (c.get_right() == bf)
+					return true;
+			return false;
+		}();
+		REQUIRE(ifind);
 	}
 
 	{
 		auto rng = ptr->top_range_of_lr_relation(ta);
 		REQUIRE(rng.second - rng.first == 3);
-		REQUIRE(ptr->top_has_right_from_lr_relation(ta, bd));
+		auto ifind = [&]() {
+			auto r = ptr->top_get_lr_relation(ta);
+			for (auto c : r)
+				if (c.get_right() == bd)
+					return true;
+			return false;
+		}();
+		REQUIRE(ifind);
 	}
 
 	ptr->top_remove_all_lr_relation(tb);
@@ -858,12 +922,18 @@ TEST_CASE("objects and relationships with expandable storage", "[core_datacontai
 	{
 		auto rng = ptr->bottom_range_of_lr_relation(bc);
 		REQUIRE(rng.second - rng.first == 3);
-		REQUIRE(!ptr->bottom_has_left_from_lr_relation(bc, tb));
+		auto ifind = [&]() {
+			auto r = ptr->bottom_get_lr_relation(bc);
+			for (auto c : r)
+				if (c.get_left() == tb)
+					return true;
+			return false;
+		}();
+		REQUIRE(!ifind);
 	}
 
 	{
 		auto rng = ptr->top_range_of_lr_relation(tb);
 		REQUIRE(rng.second - rng.first == 0);
-		REQUIRE(!ptr->top_has_right_from_lr_relation(ta, ba));
 	}
 }

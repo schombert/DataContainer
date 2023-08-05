@@ -818,8 +818,9 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 							o + "#endif";
 							o + "dcon::bit_vector_set(@obj@.m_@prop@.vptr(dcon::get_index(n)), id.index(), value);";
 						};
+						o + substitute{ "i_pk_obj", obj.primary_key.points_to ? obj.primary_key.points_to->name : obj.name };
 						o + "DCON_RELEASE_INLINE void @obj@_resize_@prop@(uint32_t size) noexcept" + block{
-							o + "@obj@.m_@prop@.resize(size, @obj@.size_used);";
+							o + "@obj@.m_@prop@.resize(size, @i_pk_obj@.size_used);";
 						};
 
 						if(prop.protection == protection_type::read_only || prop.protection == protection_type::hidden) {
@@ -856,8 +857,9 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 							o + "#endif";
 							o + "@obj@.m_@prop@.vptr(dcon::get_index(n))[id.index()] = value;";
 						};
+						o + substitute{ "i_pk_obj", obj.primary_key.points_to ? obj.primary_key.points_to->name : obj.name };
 						o + "DCON_RELEASE_INLINE void @obj@_resize_@prop@(uint32_t size) noexcept" + block{
-							o + "return @obj@.m_@prop@.resize(size, @obj@.size_used);";
+							o + "return @obj@.m_@prop@.resize(size, @i_pk_obj@.size_used);";
 						};
 
 						if(prop.protection == protection_type::read_only || prop.protection == protection_type::hidden) {
@@ -882,8 +884,9 @@ void make_property_member_declarations(basic_builder& o, file_def const& parsed_
 							o + "#endif";
 							o + "@obj@.m_@prop@.vptr(dcon::get_index(n))[id.index()] = value;";
 						};
+						o + substitute{ "i_pk_obj", obj.primary_key.points_to ? obj.primary_key.points_to->name : obj.name };
 						o + "DCON_RELEASE_INLINE void @obj@_resize_@prop@(uint32_t size) noexcept" + block{
-							o + "return @obj@.m_@prop@.resize(size, @obj@.size_used);";
+							o + "return @obj@.m_@prop@.resize(size, @i_pk_obj@.size_used);";
 						};
 
 						if(prop.protection == protection_type::read_only || prop.protection == protection_type::hidden) {
@@ -1877,9 +1880,10 @@ void make_link_member_declarations(basic_builder& o, file_def const& parsed_file
 
 }
 
-void primary_key_getter_setter_text(basic_builder & o, bool as_multiple) {
+void primary_key_getter_setter_text(basic_builder & o, bool as_multiple, std::string const& pk_name) {
+	o + substitute{ "j_pk_obj", pk_name };
 	o + "DCON_RELEASE_INLINE @rel@_id @prop_type@_get_@rel@@as_suffix@(@prop_type@_id id) const noexcept" + block{
-		o + "return (id.value <= @rel@.size_used) ? @rel@_id(@rel@_id::value_base_t(id.index())) : @rel@_id();";
+		o + "return (id.value <= @j_pk_obj@.size_used) ? @rel@_id(@rel@_id::value_base_t(id.index())) : @rel@_id();";
 	};
 
 	o + "#ifndef DCON_NO_VE";
@@ -2399,7 +2403,7 @@ void make_related_member_declarations(basic_builder& o, file_def const& parsed_f
 		if(add_prefix) {
 			if(in_rel.linked_as->is_primary_key) {
 				o + substitute{ "as_suffix", std::string("_as_") + in_rel.linked_as->property_name };
-				primary_key_getter_setter_text(o, in_rel.linked_as->multiplicity > 1);
+				primary_key_getter_setter_text(o, in_rel.linked_as->multiplicity > 1, obj.name);
 			} else {
 				o + substitute{ "as_suffix", std::string("_as_") + in_rel.linked_as->property_name };
 				unique_getter_setter_text(o, in_rel.linked_as->multiplicity > 1);
@@ -2426,7 +2430,7 @@ void make_related_member_declarations(basic_builder& o, file_def const& parsed_f
 			if(add_prefix) {
 				if(in_rel.linked_as->is_primary_key) {
 					o + substitute{ "as_suffix", "" };
-					primary_key_getter_setter_text(o, in_rel.linked_as->multiplicity > 1);
+					primary_key_getter_setter_text(o, in_rel.linked_as->multiplicity > 1, obj.name);
 				} else {
 					o + substitute{ "as_suffix", "" };
 					unique_getter_setter_text(o, in_rel.linked_as->multiplicity > 1);
@@ -2698,7 +2702,8 @@ basic_builder& make_object_member_declarations(basic_builder& o, file_def const&
 				};
 			}
 		} else if(obj.primary_key.points_to) { // primary key relationship
-			std::string temp = std::string("return bool(id) && uint32_t(id.index()) < @obj@.size_used && ") +
+			o + substitute{ "k_pk_obj", obj.primary_key.points_to->name };
+			std::string temp = std::string("return bool(id) && uint32_t(id.index()) < @k_pk_obj@.size_used && ") +
 				"" + obj.primary_key.points_to->name + "_is_valid(" + obj.primary_key.points_to->name +
 				"_id(" + obj.primary_key.points_to->name + "_id::value_base_t(id.index()))) && (";
 			for(auto& iob : obj.indexed_objects) {

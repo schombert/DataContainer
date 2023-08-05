@@ -19,7 +19,6 @@
 #ifndef DCON_NO_VE
 #include "ve.hpp"
 #endif
-#include "color_tutorial.hpp"
 
 #ifdef NDEBUG
 #ifdef _MSC_VER
@@ -30,8 +29,10 @@
 #else
 #define DCON_RELEASE_INLINE inline
 #endif
+#ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4324 )
+#endif
 
 namespace dcon {
 	struct load_record {
@@ -81,12 +82,13 @@ namespace dcon {
 namespace ve {
 	template<>
 	struct value_to_vector_type_s<dcon::colored_thing_id> {
-		using type = tagged_vector<dcon::colored_thing_id>;
+		using type = ::ve::tagged_vector<dcon::colored_thing_id>;
 	};
 	
 }
 
 #endif
+#include "color_tutorial.hpp"
 namespace dcon {
 	namespace detail {
 	}
@@ -117,6 +119,8 @@ namespace dcon {
 
 
 			public:
+			colored_thing_class() {
+			}
 			friend data_container;
 		};
 
@@ -357,6 +361,9 @@ namespace dcon {
 			return colored_thing.m_color.vptr()[id.index()];
 		}
 		DCON_RELEASE_INLINE void colored_thing_set_color(colored_thing_id id, rgb_color const& value) noexcept {
+			#ifdef DCON_TRAP_INVALID_STORE
+			assert(id.index() >= 0);
+			#endif
 			colored_thing.m_color.vptr()[id.index()] = value;
 		}
 		DCON_RELEASE_INLINE bool colored_thing_is_valid(colored_thing_id id) const noexcept {
@@ -512,18 +519,25 @@ namespace dcon {
 				dcon::record_header header;
 				header.deserialize(input_buffer, end);
 				if(input_buffer + header.record_size <= end) {
-					if(header.is_object("colored_thing")) {
-						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-							colored_thing_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-							serialize_selection.colored_thing = true;
+					do {
+						if(header.is_object("colored_thing")) {
+							do {
+								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+									colored_thing_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+									serialize_selection.colored_thing = true;
+									break;
+								}
+								if(header.is_property("color")) {
+									if(header.is_type("rgb_color")) {
+										std::memcpy(colored_thing.m_color.vptr(), reinterpret_cast<rgb_color const*>(input_buffer), std::min(size_t(colored_thing.size_used) * sizeof(rgb_color), header.record_size));
+										serialize_selection.colored_thing_color = true;
+									}
+									break;
+								}
+							} while(false);
+							break;
 						}
-						else if(header.is_property("color")) {
-							if(header.is_type("rgb_color")) {
-								std::memcpy(colored_thing.m_color.vptr(), reinterpret_cast<rgb_color const*>(input_buffer), std::min(size_t(colored_thing.size_used) * sizeof(rgb_color), header.record_size));
-								serialize_selection.colored_thing_color = true;
-							}
-						}
-					}
+					} while(false);
 				}
 				input_buffer += header.record_size;
 			}
@@ -537,18 +551,25 @@ namespace dcon {
 				dcon::record_header header;
 				header.deserialize(input_buffer, end);
 				if(input_buffer + header.record_size <= end) {
-					if(header.is_object("colored_thing") && mask.colored_thing) {
-						if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-							colored_thing_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-							serialize_selection.colored_thing = true;
+					do {
+						if(header.is_object("colored_thing") && mask.colored_thing) {
+							do {
+								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+									colored_thing_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+									serialize_selection.colored_thing = true;
+									break;
+								}
+								if(header.is_property("color") && mask.colored_thing_color) {
+									if(header.is_type("rgb_color")) {
+										std::memcpy(colored_thing.m_color.vptr(), reinterpret_cast<rgb_color const*>(input_buffer), std::min(size_t(colored_thing.size_used) * sizeof(rgb_color), header.record_size));
+										serialize_selection.colored_thing_color = true;
+									}
+									break;
+								}
+							} while(false);
+							break;
 						}
-						else if(header.is_property("color") && mask.colored_thing_color) {
-							if(header.is_type("rgb_color")) {
-								std::memcpy(colored_thing.m_color.vptr(), reinterpret_cast<rgb_color const*>(input_buffer), std::min(size_t(colored_thing.size_used) * sizeof(rgb_color), header.record_size));
-								serialize_selection.colored_thing_color = true;
-							}
-						}
-					}
+					} while(false);
 				}
 				input_buffer += header.record_size;
 			}
@@ -613,5 +634,7 @@ namespace dcon {
 }
 
 #undef DCON_RELEASE_INLINE
+#ifdef _MSC_VER
 #pragma warning( pop )
+#endif
 

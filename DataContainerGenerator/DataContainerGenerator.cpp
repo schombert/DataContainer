@@ -553,8 +553,10 @@ int main(int argc, char *argv[]) {
 				output += "\t\t\t" + ob.name + "_id first_free = " + ob.name + "_id();\n";
 			}
 
-			output += "\t\t\tuint32_t size_used = 0;\n";
-			output += "\n";
+			if (!ob.primary_key.points_to) {
+				output += "\t\t\tuint32_t size_used = 0;\n";
+				output += "\n";
+			}
 
 			// make composite key functions and hashmaps
 			for(auto& cc : ob.composite_indexes) {
@@ -627,7 +629,11 @@ int main(int argc, char *argv[]) {
 				output += "\t\tvoid on_move_" + ob.name + "(" + ob.name + "_id new_id," + ob.name + "_id old_id);\n";
 			}
 
-			output += "\t\tuint32_t " + ob.name + "_size() const noexcept { return " + ob.name + ".size_used; }\n\n";
+			if (!ob.primary_key.points_to) {
+				output += "\t\tuint32_t " + ob.name + "_size() const noexcept { return " + ob.name + ".size_used; }\n\n";
+			} else {
+				output += "\t\tuint32_t " + ob.name + "_size() const noexcept { return " + ob.primary_key.points_to->name + ".size_used; }\n\n";
+			}
 		} // end getters / setters creation loop over relationships / objects
 
 
@@ -756,31 +762,50 @@ int main(int argc, char *argv[]) {
 		output += "\t\t#ifndef DCON_NO_VE\n";
 		for(auto& ob : parsed_file.relationship_objects) {
 			output += "\t\tve::vectorizable_buffer<float, " + ob.name + "_id> " + ob.name + "_make_vectorizable_float_buffer() const noexcept {\n";
-			output += "\t\t\treturn ve::vectorizable_buffer<float, " + ob.name + "_id>(" + ob.name + ".size_used);\n";
+			if(!ob.primary_key.points_to)
+				output += "\t\t\treturn ve::vectorizable_buffer<float, " + ob.name + "_id>(" + ob.name + ".size_used);\n";
+			else
+				output += "\t\t\treturn ve::vectorizable_buffer<float, " + ob.name + "_id>(" + ob.primary_key.points_to->name + ".size_used);\n";
 			output += "\t\t}\n";
 			output += "\t\tve::vectorizable_buffer<int32_t, " + ob.name + "_id> " + ob.name + "_make_vectorizable_int_buffer() const noexcept {\n";
-			output += "\t\t\treturn ve::vectorizable_buffer<int32_t, " + ob.name + "_id>(" + ob.name + ".size_used);\n";
+			if (!ob.primary_key.points_to)
+				output += "\t\t\treturn ve::vectorizable_buffer<int32_t, " + ob.name + "_id>(" + ob.name + ".size_used);\n";
+			else
+				output += "\t\t\treturn ve::vectorizable_buffer<int32_t, " + ob.name + "_id>(" + ob.primary_key.points_to->name + ".size_used);\n";
+
 			output += "\t\t}\n";
 			if(!ob.is_expandable) {
 				output += "\t\ttemplate<typename F>\n";
 				output += "\t\tDCON_RELEASE_INLINE void execute_serial_over_" + ob.name + "(F&& functor) {\n";
-				output += "\t\t\tve::execute_serial<" + ob.name + "_id>(" + ob.name + ".size_used, functor);\n";
+				if (!ob.primary_key.points_to)
+					output += "\t\t\tve::execute_serial<" + ob.name + "_id>(" + ob.name + ".size_used, functor);\n";
+				else
+					output += "\t\t\tve::execute_serial<" + ob.name + "_id>(" + ob.primary_key.points_to->name + ".size_used, functor);\n";
 				output += "\t\t}\n";
 				output += "#ifndef VE_NO_TBB\n";
 				output += "\t\ttemplate<typename F>\n";
 				output += "\t\tDCON_RELEASE_INLINE void execute_parallel_over_" + ob.name + "(F&& functor) {\n";
-				output += "\t\t\tve::execute_parallel_exact<" + ob.name + "_id>(" + ob.name + ".size_used, functor);\n";
+				if (!ob.primary_key.points_to)
+					output += "\t\t\tve::execute_parallel_exact<" + ob.name + "_id>(" + ob.name + ".size_used, functor);\n";
+				else
+					output += "\t\t\tve::execute_parallel_exact<" + ob.name + "_id>(" + ob.primary_key.points_to->name + ".size_used, functor);\n";
 				output += "\t\t}\n";
 				output += "#endif\n";
 			} else {
 				output += "\t\ttemplate<typename F>\n";
 				output += "\t\tDCON_RELEASE_INLINE void execute_serial_over_" + ob.name + "(F&& functor) {\n";
-				output += "\t\t\tve::execute_serial_unaligned<" + ob.name + "_id>(" + ob.name + ".size_used, functor);\n";
+				if (!ob.primary_key.points_to)
+					output += "\t\t\tve::execute_serial_unaligned<" + ob.name + "_id>(" + ob.name + ".size_used, functor);\n";
+				else
+					output += "\t\t\tve::execute_serial_unaligned<" + ob.name + "_id>(" + ob.primary_key.points_to->name + ".size_used, functor);\n";
 				output += "\t\t}\n";
 				output += "#ifndef VE_NO_TBB\n";
 				output += "\t\ttemplate<typename F>\n";
 				output += "\t\tDCON_RELEASE_INLINE void execute_parallel_over_" + ob.name + "(F&& functor) {\n";
-				output += "\t\t\tve::execute_parallel_unaligned<" + ob.name + "_id>(" + ob.name + ".size_used, functor);\n";
+				if (!ob.primary_key.points_to)
+					output += "\t\t\tve::execute_parallel_unaligned<" + ob.name + "_id>(" + ob.name + ".size_used, functor);\n";
+				else
+					output += "\t\t\tve::execute_parallel_unaligned<" + ob.name + "_id>(" + ob.primary_key.points_to->name + ".size_used, functor);\n";
 				output += "\t\t}\n";
 				output += "#endif\n";
 			}

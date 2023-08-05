@@ -318,8 +318,6 @@ namespace ns {
 			}
 			m_array_left;
 			
-			uint32_t size_used = 0;
-
 			ankerl::unordered_dense::map<uint32_t, dummy_rel_id, ankerl::unordered_dense::hash<uint32_t>> hashm_joint;
 			uint32_t to_joint_keydata(thingy_id left_p, thingy2_id right_p) {
 				uint32_t result = 0;
@@ -1343,7 +1341,7 @@ namespace ns {
 		}
 		#endif
 		DCON_RELEASE_INLINE dummy_rel_id thingy2_get_dummy_rel_as_right(thingy2_id id) const noexcept {
-			return (id.value <= dummy_rel.size_used) ? dummy_rel_id(dummy_rel_id::value_base_t(id.index())) : dummy_rel_id();
+			return (id.value <= thingy2.size_used) ? dummy_rel_id(dummy_rel_id::value_base_t(id.index())) : dummy_rel_id();
 		}
 		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::contiguous_tags<dummy_rel_id> thingy2_get_dummy_rel_as_right(ve::contiguous_tags<thingy2_id> id) const noexcept {
@@ -1362,7 +1360,7 @@ namespace ns {
 			}
 		}
 		DCON_RELEASE_INLINE dummy_rel_id thingy2_get_dummy_rel(thingy2_id id) const noexcept {
-			return (id.value <= dummy_rel.size_used) ? dummy_rel_id(dummy_rel_id::value_base_t(id.index())) : dummy_rel_id();
+			return (id.value <= thingy2.size_used) ? dummy_rel_id(dummy_rel_id::value_base_t(id.index())) : dummy_rel_id();
 		}
 		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::contiguous_tags<dummy_rel_id> thingy2_get_dummy_rel(ve::contiguous_tags<thingy2_id> id) const noexcept {
@@ -1496,10 +1494,10 @@ namespace ns {
 			}
 		}
 		DCON_RELEASE_INLINE bool dummy_rel_is_valid(dummy_rel_id id) const noexcept {
-			return bool(id) && uint32_t(id.index()) < dummy_rel.size_used && thingy2_is_valid(thingy2_id(thingy2_id::value_base_t(id.index()))) && (bool(dummy_rel.m_left.vptr()[id.index()]) || false);
+			return bool(id) && uint32_t(id.index()) < thingy2.size_used && thingy2_is_valid(thingy2_id(thingy2_id::value_base_t(id.index()))) && (bool(dummy_rel.m_left.vptr()[id.index()]) || false);
 		}
 		
-		uint32_t dummy_rel_size() const noexcept { return dummy_rel.size_used; }
+		uint32_t dummy_rel_size() const noexcept { return thingy2.size_used; }
 
 
 		//
@@ -1587,7 +1585,6 @@ namespace ns {
 			if(thingy2.size_used == 0) return;
 			thingy2_id id_removed(thingy2_id::value_base_t(thingy2.size_used - 1));
 			delete_dummy_rel(dummy_rel_id(dummy_rel_id::value_base_t(id_removed.index())));
-			dummy_rel.size_used = thingy2.size_used - 1;
 			thingy2.m_some_value.vptr()[id_removed.index()] = int32_t{};
 			--thingy2.size_used;
 		}
@@ -1604,7 +1601,7 @@ namespace ns {
 			const uint32_t old_size = thingy2.size_used;
 			if(new_size < old_size) {
 				std::fill_n(thingy2.m_some_value.vptr() + new_size, old_size - new_size, int32_t{});
-				dummy_rel_resize(std::min(new_size, dummy_rel.size_used));
+				dummy_rel_resize(std::min(new_size, thingy2.size_used));
 			} else if(new_size > old_size) {
 			}
 			thingy2.size_used = new_size;
@@ -1620,7 +1617,6 @@ namespace ns {
 			#else
 			if(thingy2.size_used >= 300) throw dcon::out_of_space{};
 			#endif
-			dummy_rel.size_used = thingy2.size_used + 1;
 			++thingy2.size_used;
 			return new_id;
 		}
@@ -1637,7 +1633,6 @@ namespace ns {
 			#endif
 			delete_dummy_rel(dummy_rel_id(dummy_rel_id::value_base_t(id_removed.index())));
 			internal_move_relationship_dummy_rel(dummy_rel_id(dummy_rel_id::value_base_t(last_id.index())), dummy_rel_id(dummy_rel_id::value_base_t(id_removed.index())));
-			dummy_rel.size_used = thingy2.size_used - 1;
 			thingy2.m_some_value.vptr()[id_removed.index()] = std::move(thingy2.m_some_value.vptr()[last_id.index()]);
 			thingy2.m_some_value.vptr()[last_id.index()] = int32_t{};
 			--thingy2.size_used;
@@ -1652,14 +1647,13 @@ namespace ns {
 			#else
 			if(new_size > 300) throw dcon::out_of_space{};
 			#endif
-			const uint32_t old_size = dummy_rel.size_used;
+			const uint32_t old_size = thingy2.size_used;
 			if(new_size < old_size) {
 				dummy_rel.hashm_joint.clear();
 				std::fill_n(dummy_rel.m_left.vptr() + 0, old_size, thingy_id{});
 				std::fill_n(dummy_rel.m_array_left.vptr() + 0, thingy.size_used, std::vector<dummy_rel_id>{});
 			} else if(new_size > old_size) {
 			}
-			dummy_rel.size_used = new_size;
 		}
 		
 		//
@@ -1677,11 +1671,10 @@ namespace ns {
 		// container pop_back for dummy_rel
 		//
 		void pop_back_dummy_rel() {
-			if(dummy_rel.size_used == 0) return;
-			dummy_rel_id id_removed(dummy_rel_id::value_base_t(dummy_rel.size_used - 1));
+			if(thingy2.size_used == 0) return;
+			dummy_rel_id id_removed(dummy_rel_id::value_base_t(thingy2.size_used - 1));
 			dummy_rel.hashm_joint.erase( dummy_rel.to_joint_keydata(dummy_rel.m_left.vptr()[id_removed.index()], thingy2_id(thingy2_id::value_base_t(id_removed.index()))) );
 			internal_dummy_rel_set_left(id_removed, thingy_id());
-			--dummy_rel.size_used;
 		}
 		
 		private:
@@ -1712,7 +1705,7 @@ namespace ns {
 			if(!bool(right_p)) return dummy_rel_id();
 			if(dummy_rel_is_valid(dummy_rel_id(dummy_rel_id::value_base_t(right_p.index())))) return dummy_rel_id();
 			dummy_rel_id new_id(dummy_rel_id::value_base_t(right_p.index()));
-			if(dummy_rel.size_used < uint32_t(right_p.value)) dummy_rel_resize(uint32_t(right_p.value));
+			if(thingy2.size_used < uint32_t(right_p.value)) thingy2_resize(uint32_t(right_p.value));
 			internal_dummy_rel_set_left(new_id, left_p);
 			dummy_rel.hashm_joint.insert_or_assign(dummy_rel.to_joint_keydata(left_p, right_p), new_id);
 			return new_id;
@@ -1729,7 +1722,7 @@ namespace ns {
 				}
 			}
 			dummy_rel_id new_id(dummy_rel_id::value_base_t(right_p.index()));
-			if(dummy_rel.size_used < uint32_t(right_p.value)) dummy_rel_resize(uint32_t(right_p.value));
+			if(thingy2.size_used < uint32_t(right_p.value)) thingy2_resize(uint32_t(right_p.value));
 			 {
 				auto key_dat = dummy_rel.to_joint_keydata(left_p, right_p);
 				dummy_rel.hashm_joint.insert_or_assign(key_dat, new_id);
@@ -1796,7 +1789,7 @@ namespace ns {
 		
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_dummy_rel(T&& func) {
-			for(uint32_t i = 0; i < dummy_rel.size_used; ++i) {
+			for(uint32_t i = 0; i < thingy2.size_used; ++i) {
 				dummy_rel_id tmp = dummy_rel_id(dummy_rel_id::value_base_t(i));
 				func(tmp);
 			}
@@ -1833,8 +1826,8 @@ namespace ns {
 			thingy2_resize(0);
 		}
 		dummy_rel_id get_dummy_rel_by_joint(thingy_id left_p, thingy2_id right_p) {
-			if(auto it = dummy_rel.hashm_joint.find(dummy_rel.to_joint_keydata(left_p, right_p)); it != dummy_rel.hashm_joint.end()) {
-				return it->second;
+			if(auto it = dummy_rel.hashm_joint.atomic_find(dummy_rel.to_joint_keydata(left_p, right_p)); it) {
+				return *it;
 			}
 			return dummy_rel_id();
 		}
@@ -1873,19 +1866,19 @@ namespace ns {
 		}
 #endif
 		ve::vectorizable_buffer<float, dummy_rel_id> dummy_rel_make_vectorizable_float_buffer() const noexcept {
-			return ve::vectorizable_buffer<float, dummy_rel_id>(dummy_rel.size_used);
+			return ve::vectorizable_buffer<float, dummy_rel_id>(thingy2.size_used);
 		}
 		ve::vectorizable_buffer<int32_t, dummy_rel_id> dummy_rel_make_vectorizable_int_buffer() const noexcept {
-			return ve::vectorizable_buffer<int32_t, dummy_rel_id>(dummy_rel.size_used);
+			return ve::vectorizable_buffer<int32_t, dummy_rel_id>(thingy2.size_used);
 		}
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_serial_over_dummy_rel(F&& functor) {
-			ve::execute_serial<dummy_rel_id>(dummy_rel.size_used, functor);
+			ve::execute_serial<dummy_rel_id>(thingy2.size_used, functor);
 		}
 #ifndef VE_NO_TBB
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_parallel_over_dummy_rel(F&& functor) {
-			ve::execute_parallel_exact<dummy_rel_id>(dummy_rel.size_used, functor);
+			ve::execute_parallel_exact<dummy_rel_id>(thingy2.size_used, functor);
 		}
 #endif
 		#endif
@@ -1982,7 +1975,7 @@ namespace ns {
 				if(serialize_selection.dummy_rel_left) {
 					dcon::record_header iheader(0, "uint16_t", "dummy_rel", "left");
 					total_size += iheader.serialize_size();
-					total_size += sizeof(thingy_id) * dummy_rel.size_used;
+					total_size += sizeof(thingy_id) * thingy2.size_used;
 				}
 				dcon::record_header headerb(0, "$", "dummy_rel", "$index_end");
 				total_size += headerb.serialize_size();
@@ -2039,13 +2032,13 @@ namespace ns {
 			if(serialize_selection.dummy_rel) {
 				dcon::record_header header(sizeof(uint32_t), "uint32_t", "dummy_rel", "$size");
 				header.serialize(output_buffer);
-				*(reinterpret_cast<uint32_t*>(output_buffer)) = dummy_rel.size_used;
+				*(reinterpret_cast<uint32_t*>(output_buffer)) = thingy2.size_used;
 				output_buffer += sizeof(uint32_t);
 				 {
-					dcon::record_header iheader(sizeof(thingy_id) * dummy_rel.size_used, "uint16_t", "dummy_rel", "left");
+					dcon::record_header iheader(sizeof(thingy_id) * thingy2.size_used, "uint16_t", "dummy_rel", "left");
 					iheader.serialize(output_buffer);
-					std::memcpy(reinterpret_cast<thingy_id*>(output_buffer), dummy_rel.m_left.vptr(), sizeof(thingy_id) * dummy_rel.size_used);
-					output_buffer += sizeof(thingy_id) *  dummy_rel.size_used;
+					std::memcpy(reinterpret_cast<thingy_id*>(output_buffer), dummy_rel.m_left.vptr(), sizeof(thingy_id) * thingy2.size_used);
+					output_buffer += sizeof(thingy_id) *  thingy2.size_used;
 				}
 				dcon::record_header headerb(0, "$", "dummy_rel", "$index_end");
 				headerb.serialize(output_buffer);
@@ -2293,7 +2286,7 @@ namespace ns {
 						if(header.is_object("dummy_rel")) {
 							do {
 								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= dummy_rel.size_used) {
+									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= thingy2.size_used) {
 										dummy_rel_resize(0);
 									}
 									dummy_rel_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
@@ -2302,17 +2295,17 @@ namespace ns {
 								}
 								if(header.is_property("left")) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(dummy_rel.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(dummy_rel.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(dummy_rel.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingy2.size_used) * sizeof(uint16_t), header.record_size));
 										serialize_selection.dummy_rel_left = true;
 									}
 									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(dummy_rel.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(thingy2.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
 											dummy_rel.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
 										}
 										serialize_selection.dummy_rel_left = true;
 									}
 									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(dummy_rel.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(thingy2.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
 											dummy_rel.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
 										}
 										serialize_selection.dummy_rel_left = true;
@@ -2321,14 +2314,14 @@ namespace ns {
 								}
 								if(header.is_property("$index_end")) {
 									if(serialize_selection.dummy_rel_left == true) {
-										for(uint32_t i = 0; i < dummy_rel.size_used; ++i) {
+										for(uint32_t i = 0; i < thingy2.size_used; ++i) {
 											auto tmp = dummy_rel.m_left.vptr()[i];
 											dummy_rel.m_left.vptr()[i] = thingy_id();
 											internal_dummy_rel_set_left(dummy_rel_id(dummy_rel_id::value_base_t(i)), tmp);
 										}
 									}
 									dummy_rel.hashm_joint.clear();
-									for(uint32_t idx = 0; idx < dummy_rel.size_used; ++idx) {
+									for(uint32_t idx = 0; idx < thingy2.size_used; ++idx) {
 										auto this_key = dummy_rel_id(dummy_rel_id::value_base_t(idx));
 										if(dummy_rel_is_valid(dummy_rel_id(dummy_rel_id::value_base_t(idx)))) {
 											auto key_dat = dummy_rel.to_joint_keydata(dummy_rel.m_left.vptr()[idx], thingy2_id(thingy2_id::value_base_t(idx)));
@@ -2587,7 +2580,7 @@ namespace ns {
 						if(header.is_object("dummy_rel") && mask.dummy_rel) {
 							do {
 								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= dummy_rel.size_used) {
+									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= thingy2.size_used) {
 										dummy_rel_resize(0);
 									}
 									dummy_rel_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
@@ -2596,17 +2589,17 @@ namespace ns {
 								}
 								if(header.is_property("left") && mask.dummy_rel_left) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(dummy_rel.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(dummy_rel.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(dummy_rel.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingy2.size_used) * sizeof(uint16_t), header.record_size));
 										serialize_selection.dummy_rel_left = true;
 									}
 									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(dummy_rel.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(thingy2.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
 											dummy_rel.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
 										}
 										serialize_selection.dummy_rel_left = true;
 									}
 									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(dummy_rel.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(thingy2.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
 											dummy_rel.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
 										}
 										serialize_selection.dummy_rel_left = true;
@@ -2615,14 +2608,14 @@ namespace ns {
 								}
 								if(header.is_property("$index_end") && mask.dummy_rel) {
 									if(serialize_selection.dummy_rel_left == true) {
-										for(uint32_t i = 0; i < dummy_rel.size_used; ++i) {
+										for(uint32_t i = 0; i < thingy2.size_used; ++i) {
 											auto tmp = dummy_rel.m_left.vptr()[i];
 											dummy_rel.m_left.vptr()[i] = thingy_id();
 											internal_dummy_rel_set_left(dummy_rel_id(dummy_rel_id::value_base_t(i)), tmp);
 										}
 									}
 									dummy_rel.hashm_joint.clear();
-									for(uint32_t idx = 0; idx < dummy_rel.size_used; ++idx) {
+									for(uint32_t idx = 0; idx < thingy2.size_used; ++idx) {
 										auto this_key = dummy_rel_id(dummy_rel_id::value_base_t(idx));
 										if(dummy_rel_is_valid(dummy_rel_id(dummy_rel_id::value_base_t(idx)))) {
 											auto key_dat = dummy_rel.to_joint_keydata(dummy_rel.m_left.vptr()[idx], thingy2_id(thingy2_id::value_base_t(idx)));

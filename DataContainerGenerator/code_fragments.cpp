@@ -320,9 +320,9 @@ basic_builder& clear_value(basic_builder& o, std::string const& object_name, std
 }
 
 basic_builder& pop_value(basic_builder& o, std::string const& object_name, std::string const& property_name,
-	property_type type, std::string const& at, bool array_name = false) {
+	property_type type, std::string const& at, std::string const& pk_name, bool array_name = false) {
 
-	o + substitute{ "t_obj", object_name } +substitute{ "t_prop", property_name } +substitute{ "t_at", at };
+	o + substitute{ "t_obj", object_name } +substitute{ "t_prop", property_name } +substitute{ "t_at", at } + substitute{ "t_pk_obj", pk_name };
 
 	if(type == property_type::special_vector) {
 		if(array_name) {
@@ -334,9 +334,9 @@ basic_builder& pop_value(basic_builder& o, std::string const& object_name, std::
 		}
 	} else if(type == property_type::bitfield) {
 		o + "dcon::bit_vector_set(@t_obj@.m_@t_prop@.vptr(), @t_at@.index(), false);";
-		o + "@t_obj@.m_@t_prop@.values.resize(1 + (@t_obj@.size_used + 6) / 8);";
+		o + "@t_obj@.m_@t_prop@.values.resize(1 + (@t_pk_obj@.size_used + 6) / 8);";
 	} else if(type == property_type::array_other || type == property_type::array_vectorizable || type == property_type::array_bitfield) {
-		o + "@t_obj@.m_@t_prop@.pop_back_all(@t_obj@.size_used);";
+		o + "@t_obj@.m_@t_prop@.pop_back_all(@t_pk_obj@.size_used);";
 	} else {
 		o + "@t_obj@.m_@t_prop@.values.pop_back();";
 	}
@@ -345,13 +345,13 @@ basic_builder& pop_value(basic_builder& o, std::string const& object_name, std::
 }
 
 basic_builder& make_pop_back(basic_builder& o, relationship_object_def const& cob) {
-	o + substitute{ "obj", cob.name };
+	o + substitute{ "obj", cob.name } + substitute{ "pk_obj", cob.primary_key.points_to ? cob.primary_key.points_to->name : cob.name };
 
 	o + heading{ "container pop_back for @obj@" };
 
 	o + "void pop_back_@obj@()" + block{
-		o + "if(@obj@.size_used == 0) return;";
-		o + "@obj@_id id_removed(@obj@_id::value_base_t(@obj@.size_used - 1));";
+		o + "if(@pk_obj@.size_used == 0) return;";
+		o + "@obj@_id id_removed(@obj@_id::value_base_t(@pk_obj@.size_used - 1));";
 
 		if(cob.hook_delete)
 			o + "on_delete_@obj@(id_removed);";
@@ -402,26 +402,25 @@ basic_builder& make_pop_back(basic_builder& o, relationship_object_def const& co
 					o + "pop_back_@rel_name@();";
 				} else {
 					o + "delete_@rel_name@(@rel_name@_id(@rel_name@_id::value_base_t(id_removed.index())));";
-					o + "@rel_name@.size_used = @obj@.size_used - 1;";
 				}
 			} else if(cr.linked_as->index == index_type::at_most_one) {
 				o + "@obj@_remove_@rel_name@_as_@rel_prop_name@(id_removed);";
 				if(cob.is_expandable) {
 					pop_value(o, cr.relation_name, std::string("link_back_") + cr.linked_as->property_name,
-						property_type::other, "id_removed");
+						property_type::other, "id_removed", cr.rel_ptr->primary_key.points_to ? cr.rel_ptr->primary_key.points_to->name : cr.relation_name);
 				}
 			} else if(cr.linked_as->index == index_type::many) {
 				o + "@obj@_remove_all_@rel_name@_as_@rel_prop_name@(id_removed);";
 				if(cob.is_expandable) {
 					if(cr.linked_as->ltype == list_type::list) {
 						pop_value(o, cr.relation_name, std::string("head_back_") + cr.linked_as->property_name,
-							property_type::other, "id_removed");
+							property_type::other, "id_removed", cr.rel_ptr->primary_key.points_to ? cr.rel_ptr->primary_key.points_to->name : cr.relation_name);
 					} else if(cr.linked_as->ltype == list_type::array) {
 						pop_value(o, cr.relation_name, cr.linked_as->property_name,
-							property_type::special_vector, "id_removed", true);
+							property_type::special_vector, "id_removed", cr.rel_ptr->primary_key.points_to ? cr.rel_ptr->primary_key.points_to->name : cr.relation_name, true);
 					} else if(cr.linked_as->ltype == list_type::std_vector) {
 						pop_value(o, cr.relation_name, std::string("array_") + cr.linked_as->property_name,
-							property_type::other, "id_removed");
+							property_type::other, "id_removed", cr.rel_ptr->primary_key.points_to ? cr.rel_ptr->primary_key.points_to->name : cr.relation_name);
 					}
 				}
 			}
@@ -429,7 +428,7 @@ basic_builder& make_pop_back(basic_builder& o, relationship_object_def const& co
 		if(cob.is_expandable) {
 			for(auto& cp : cob.properties) {
 				if(!cp.is_derived) {
-					pop_value(o, cob.name, cp.name, cp.type, "id_removed");
+					pop_value(o, cob.name, cp.name, cp.type, "id_removed", cob.primary_key.points_to ? cob.primary_key.points_to->name : cob.name);
 				}
 			}
 		} else {
@@ -439,7 +438,8 @@ basic_builder& make_pop_back(basic_builder& o, relationship_object_def const& co
 				}
 			}
 		}
-		o + "--@obj@.size_used;";
+		if(!(cob.primary_key.points_to))
+			o + "--@obj@.size_used;";
 	};
 
 
@@ -552,7 +552,7 @@ basic_builder& grow_value_range(basic_builder& o, std::string const& object_name
 }
 
 basic_builder& make_object_resize(basic_builder& o, relationship_object_def const& cob) {
-	o + substitute{ "obj", cob.name } +substitute{ "obj_sz", std::to_string(cob.size) };
+	o + substitute{ "obj", cob.name } +substitute{ "obj_sz", std::to_string(cob.size) } + substitute{ "pk_obj", cob.primary_key.points_to ? cob.primary_key.points_to->name : cob.name};
 	o + heading{ "container resize for @obj@" };
 
 	o + "void @obj@_resize(uint32_t new_size)" + block{
@@ -563,7 +563,7 @@ basic_builder& make_object_resize(basic_builder& o, relationship_object_def cons
 			o + "if(new_size > @obj_sz@) throw dcon::out_of_space{};";
 			o + "#endif";
 		}
-		o + "const uint32_t old_size = @obj@.size_used;";
+		o + "const uint32_t old_size = @pk_obj@.size_used;";
 		o + "if(new_size < old_size)" + block{ // contracting
 			if(cob.store_type == storage_type::erasable) {
 				o + "@obj@.first_free = @obj@_id();";
@@ -610,9 +610,10 @@ basic_builder& make_object_resize(basic_builder& o, relationship_object_def cons
 						}
 					}
 
+					auto io_pk_name = io.related_to->primary_key.points_to ? io.related_to->primary_key.points_to->name : io.type_name;
 					if(io.index == index_type::at_most_one) {
 						clear_value_range(o, cob.name, std::string("link_back_") + io.property_name, cob.name + "_id",
-							property_type::other, "0", io.type_name + ".size_used");
+							property_type::other, "0", io_pk_name + ".size_used");
 					} else if(io.index == index_type::many) {
 						if(io.ltype == list_type::list) {
 							if(!cob.is_expandable) {
@@ -625,13 +626,13 @@ basic_builder& make_object_resize(basic_builder& o, relationship_object_def cons
 									cob.name + "_id_pair", property_type::other, "0", "new_size");
 							}
 							clear_value_range(o, cob.name, std::string("head_back_") + io.property_name, cob.name + "_id",
-								property_type::other, "0", io.type_name + ".size_used");
+								property_type::other, "0", io_pk_name + ".size_used");
 						} else if(io.ltype == list_type::array) {
 							clear_value_range(o, cob.name, io.property_name, "",
-								property_type::special_vector, "0", io.type_name + ".size_used", true);
+								property_type::special_vector, "0", io_pk_name + ".size_used", true);
 						} else if(io.ltype == list_type::std_vector) {
 							clear_value_range(o, cob.name, std::string("array_") + io.property_name, std::string("std::vector<") + cob.name + "_id>",
-								property_type::other, "0", io.type_name + ".size_used");
+								property_type::other, "0", io_pk_name + ".size_used");
 						}
 					}
 				}
@@ -646,7 +647,7 @@ basic_builder& make_object_resize(basic_builder& o, relationship_object_def cons
 			}
 			for(auto& cr : cob.relationships_involved_in) {
 				if(cr.linked_as->is_primary_key) {
-					o + (cr.relation_name + "_resize(std::min(new_size, " + cr.relation_name + ".size_used));");
+					o + (cr.relation_name + "_resize(std::min(new_size, @pk_obj@.size_used));");
 				} else if(cr.linked_as->index == index_type::at_most_one) {
 					o + (cr.relation_name + "_resize(0);");
 				} else if(cr.linked_as->index == index_type::many) {
@@ -712,7 +713,8 @@ basic_builder& make_object_resize(basic_builder& o, relationship_object_def cons
 			
 		}; // end expanding
 
-		o + "@obj@.size_used = new_size;";
+		if(!cob.primary_key.points_to)
+			o + "@obj@.size_used = new_size;";
 	};
 	o + line_break{};
 	return o;
@@ -751,14 +753,14 @@ basic_builder& move_value_from_back(basic_builder& o, std::string const& object_
 }
 
 basic_builder& move_array_value_from_back(basic_builder& o, std::string const& object_name, std::string const& property_name,
-	std::string const& source, std::string const& destination, bool is_expandable) {
+	std::string const& source, std::string const& destination, bool is_expandable, std::string const& pk_name) {
 
 	o + substitute{ "t_obj", object_name } +substitute{ "t_prop", property_name }
-	+substitute{ "t_source", source } +substitute{ "t_dest", destination };
+	+substitute{ "t_source", source } +substitute{ "t_dest", destination } + substitute{ "t_pk_obj", pk_name };
 
 	o + "@t_obj@.m_@t_prop@.copy_value(@t_dest@.index(), @t_source@.index());";
 	if(is_expandable) {
-		o + "@t_obj@.m_@t_prop@.pop_back_all(@t_obj@.size_used);";
+		o + "@t_obj@.m_@t_prop@.pop_back_all(@t_pk_obj@.size_used);";
 	} else {
 		o + "@t_obj@.m_@t_prop@.zero_at(@t_source@.index());";
 	}
@@ -855,12 +857,12 @@ void make_composite_key_internal_delete(basic_builder& o, relationship_object_de
 }
 
 basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def const& cob) {
-	o + substitute{ "obj", cob.name };
+	o + substitute{ "obj", cob.name } + substitute{ "obj_pk", cob.primary_key.points_to ? cob.primary_key.points_to->name : cob.name };
 	o + heading{ "container compactable delete for @obj@" };
 
 	o + "void delete_@obj@(@obj@_id id)" + block{ 
 		o + "@obj@_id id_removed = id;";
-		o + "@obj@_id last_id(@obj@_id::value_base_t(@obj@.size_used - 1));";
+		o + "@obj@_id last_id(@obj@_id::value_base_t(@obj_pk@.size_used - 1));";
 		o + "if(id_removed == last_id) { pop_back_@obj@(); return; }";
 
 		o + "#ifdef DCON_TRAP_INVALID_STORE";
@@ -985,7 +987,7 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 				if(cob.is_expandable) {
 					o + "pop_back_@rel@();";
 				} else {
-					o + "@rel@.size_used = @obj@.size_used - 1;";
+					//o + "@rel@.size_used = @obj@.size_used - 1;";
 				}
 			} else if(cr.linked_as->index == index_type::at_most_one) {
 				o + "@obj@_remove_@rel@_as_@r_prop@(id_removed);";
@@ -1054,10 +1056,10 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 					"dcon::bit_vector_test(@obj@.m_@prop@.vptr(), last_id.index()));";
 				o + "dcon::bit_vector_set(@obj@.m_@prop@.vptr(), last_id.index(), false);";
 				if(cob.is_expandable)
-					o + "@obj@.m_@prop@.values.resize(1 + (@obj@.size_used + 6) / 8);";
+					o + "@obj@.m_@prop@.values.resize(1 + (@obj_pk@.size_used + 6) / 8);";
 			} else if(cp.type == property_type::array_bitfield || cp.type == property_type::array_other || cp.type == property_type::array_vectorizable) {
 				move_array_value_from_back(o, cob.name, cp.name,
-					"last_id", "id_removed", cob.is_expandable);
+					"last_id", "id_removed", cob.is_expandable, cob.primary_key.points_to ? cob.primary_key.points_to->name : cob.name);
 			} else {
 				move_value_from_back(o, cob.name, cp.name,
 					"last_id", "id_removed", cp.data_type + "{}", cob.is_expandable, 1);
@@ -1108,7 +1110,8 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 			
 		}
 
-		o + "--@obj@.size_used;";
+		if(!cob.primary_key.points_to)
+			o + "--@obj@.size_used;";
 		if(cob.hook_move)
 			o + "on_move_@obj@(id_removed, last_id);";
 	};
@@ -1117,12 +1120,12 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 }
 
 basic_builder& expandable_push_back(basic_builder& o, relationship_object_def const& cob) {
-	o + substitute{ "obj", cob.name };
+	o + substitute{ "obj", cob.name } + substitute{ "pk_obj", cob.primary_key.points_to ? cob.primary_key.points_to->name : cob.name };
 
 	for(auto& cr : cob.relationships_involved_in) {
 		o + substitute{ "rel", cr.relation_name } +substitute{ "in_rel_as", cr.linked_as->property_name };
 		if(cr.linked_as->is_primary_key) {
-			o + "@rel@.size_used = @obj@.size_used + 1;";
+			//o + "@rel@.size_used = @obj@.size_used + 1;";
 			for(auto& rp : cr.rel_ptr->properties) {
 				o + substitute{ "r_prop", rp.name };
 				if(rp.is_derived) {
@@ -1175,16 +1178,17 @@ basic_builder& expandable_push_back(basic_builder& o, relationship_object_def co
 		o + substitute{ "prop", cp.name };
 		if(cp.is_derived) {
 		} else if(cp.type == property_type::bitfield) {
-			o + "@obj@.m_@prop@.values.resize(1 + (@obj@.size_used + 8) / 8);";
+			o + "@obj@.m_@prop@.values.resize(1 + (@pk_obj@.size_used + 8) / 8);";
 		} else if(cp.type == property_type::special_vector) {
 			o + "@obj@.m_@prop@.values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());";
 		} else if(cp.type == property_type::array_bitfield || cp.type == property_type::array_other || cp.type == property_type::array_vectorizable) {
-			o + "@obj@.m_@prop@.emplace_back_all(@obj@.size_used + 1);";
+			o + "@obj@.m_@prop@.emplace_back_all(@pk_obj@.size_used + 1);";
 		} else {
 			o + "@obj@.m_@prop@.values.emplace_back();";
 		}
 	}
-	o + "++@obj@.size_used;";
+	if(!cob.primary_key.points_to)
+		o + "++@obj@.size_used;";
 
 	return o;
 }
@@ -1195,29 +1199,30 @@ basic_builder& increase_size(basic_builder& o, relationship_object_def const& co
 	for(auto& cr : cob.relationships_involved_in) {
 		o + substitute{ "rel", cr.relation_name } +substitute{ "in_rel_as", cr.linked_as->property_name };
 		if(cr.linked_as->is_primary_key) {
-			o + "@rel@.size_used = @obj@.size_used + 1;";
+			//o + "@rel@.size_used = @obj@.size_used + 1;";
 		}
 	}
-	o + "++@obj@.size_used;";
+	if (!cob.primary_key.points_to)
+		o + "++@obj@.size_used;";
 
 	return o;
 }
 
 basic_builder& make_non_erasable_create(basic_builder& o, relationship_object_def const& cob) {
-	o + substitute{ "obj", cob.name } + substitute{ "size", std::to_string(cob.size) };
+	o + substitute{ "obj", cob.name } + substitute{ "size", std::to_string(cob.size) } + substitute{ "pk_obj", cob.primary_key.points_to ? cob.primary_key.points_to->name : cob.name };
 	o + heading{ "container create for @obj@" };
 
 	o + "@obj@_id create_@obj@()" + block{
 
-		o + "@obj@_id new_id(@obj@_id::value_base_t(@obj@.size_used));";
+		o + "@obj@_id new_id(@obj@_id::value_base_t(@pk_obj@.size_used));";
 
 		if(cob.is_expandable) {
 			expandable_push_back(o, cob);
 		} else {
 			o + "#ifndef DCON_USE_EXCEPTIONS";
-			o + "if(@obj@.size_used >= @size@) std::abort();";
+			o + "if(@pk_obj@.size_used >= @size@) std::abort();";
 			o + "#else";
-			o + "if(@obj@.size_used >= @size@) throw dcon::out_of_space{};";
+			o + "if(@pk_obj@.size_used >= @size@) throw dcon::out_of_space{};";
 			o + "#endif";
 			increase_size(o, cob);
 		}
@@ -1300,13 +1305,15 @@ basic_builder& make_erasable_delete(basic_builder& o, relationship_object_def co
 		if(cob.hook_delete)
 			o + "on_delete_@obj@(id_removed);";
 
-		o + "@obj@.m__index.vptr()[id_removed.index()] = @obj@.first_free;"; 
-		o + "@obj@.first_free = id_removed;";
-		o + "if(int32_t(@obj@.size_used) - 1 == id_removed.index())" + block{
-			o + "for( ; @obj@.size_used > 0 && "
-			"@obj@.m__index.vptr()[@obj@.size_used - 1] != @obj@_id(@obj@_id::value_base_t(@obj@.size_used - 1));  "
-			"--@obj@.size_used) ;";
-		};
+		if (!cob.primary_key.points_to) {
+			o + "@obj@.m__index.vptr()[id_removed.index()] = @obj@.first_free;";
+			o + "@obj@.first_free = id_removed;";
+			o + "if(int32_t(@obj@.size_used) - 1 == id_removed.index())" + block{
+				o + "for( ; @obj@.size_used > 0 && "
+					"@obj@.m__index.vptr()[@obj@.size_used - 1] != @obj@_id(@obj@_id::value_base_t(@obj@.size_used - 1));  "
+					"--@obj@.size_used) ;";
+			};
+		}
 
 		for(auto& ck : cob.composite_indexes) {
 			std::string params;
@@ -1339,7 +1346,7 @@ basic_builder& make_erasable_delete(basic_builder& o, relationship_object_def co
 			o + substitute{ "rel", cr.relation_name } +substitute{ "r_prop", cr.linked_as->property_name };
 			if(cr.linked_as->is_primary_key) {
 				o + "delete_@rel@(@rel@_id(@rel@_id::value_base_t(id_removed.index())));";
-				o + "@rel@.size_used = @obj@.size_used;";
+				// o + "@rel@.size_used = @obj@.size_used;";
 			} else if(cr.linked_as->index == index_type::at_most_one) {
 				o + "@obj@_remove_@rel@_as_@r_prop@(id_removed);";
 			} else if(cr.linked_as->index == index_type::many) {
@@ -1359,15 +1366,17 @@ basic_builder& make_erasable_delete(basic_builder& o, relationship_object_def co
 basic_builder& erasable_set_new_id(basic_builder& o, relationship_object_def const& cob) {
 	o + substitute{ "t_obj", cob.name };
 	if(!cob.is_expandable) {
-		o + "#ifndef DCON_USE_EXCEPTIONS";
-		o + "if(!bool(@t_obj@.first_free)) std::abort();";
-		o + "#else";
-		o + "if(!bool(@t_obj@.first_free)) throw dcon::out_of_space{};";
-		o + "#endif";
-		o + "@t_obj@_id new_id = @t_obj@.first_free;";
-		o + "@t_obj@.first_free = @t_obj@.m__index.vptr()[@t_obj@.first_free.index()];";
-		o + "@t_obj@.m__index.vptr()[new_id.index()] = new_id;";
-		o + "@t_obj@.size_used = std::max(@t_obj@.size_used, uint32_t(new_id.index() + 1));";
+		if (!cob.primary_key.points_to) {
+			o + "#ifndef DCON_USE_EXCEPTIONS";
+			o + "if(!bool(@t_obj@.first_free)) std::abort();";
+			o + "#else";
+			o + "if(!bool(@t_obj@.first_free)) throw dcon::out_of_space{};";
+			o + "#endif";
+			o + "@t_obj@_id new_id = @t_obj@.first_free;";
+			o + "@t_obj@.first_free = @t_obj@.m__index.vptr()[@t_obj@.first_free.index()];";
+			o + "@t_obj@.m__index.vptr()[new_id.index()] = new_id;";
+			o + "@t_obj@.size_used = std::max(@t_obj@.size_used, uint32_t(new_id.index() + 1));";
+		}
 	} else {
 		o + "@t_obj@_id new_id = @t_obj@.first_free;";
 		o + "bool expanded = !bool(@t_obj@.first_free );";
@@ -1382,12 +1391,14 @@ basic_builder& erasable_set_new_id(basic_builder& o, relationship_object_def con
 		};
 	}
 	
+	/*
 	for(auto& cr : cob.relationships_involved_in) {
 		if(cr.linked_as->is_primary_key) {
 			o + substitute{ "rel", cr.relation_name };
 			o + "@rel@.size_used = @t_obj@.size_used;";
 		}
 	}
+	*/
 	
 
 	return o;
@@ -1668,8 +1679,9 @@ basic_builder& make_relation_try_create(basic_builder& o, relationship_object_de
 					o + substitute{ "pkey", iob.property_name };
 				}
 			}
+			o + substitute{ "pk_obj", cob.primary_key.points_to->name };
 			o + "@obj@_id new_id(@obj@_id::value_base_t(@pkey@_p.index()));";
-			o + "if(@obj@.size_used < uint32_t(@pkey@_p.value)) @obj@_resize(uint32_t(@pkey@_p.value));";
+			o + "if(@pk_obj@.size_used < uint32_t(@pkey@_p.value)) @pk_obj@_resize(uint32_t(@pkey@_p.value));";
 		} else if(cob.store_type != storage_type::erasable) {
 			o + "@obj@_id new_id = @obj@_id(@obj@_id::value_base_t(@obj@.size_used));";
 
@@ -1773,8 +1785,9 @@ basic_builder& make_relation_force_create(basic_builder& o, relationship_object_
 					o + substitute{ "pkey", iob.property_name };
 				}
 			}
+			o + substitute{ "pk_obj", cob.primary_key.points_to->name };
 			o + "@obj@_id new_id(@obj@_id::value_base_t(@pkey@_p.index()));";
-			o + "if(@obj@.size_used < uint32_t(@pkey@_p.value)) @obj@_resize(uint32_t(@pkey@_p.value));";
+			o + "if(@pk_obj@.size_used < uint32_t(@pkey@_p.value)) @pk_obj@_resize(uint32_t(@pkey@_p.value));";
 		} else if(cob.store_type != storage_type::erasable) {
 			o + "@obj@_id new_id = @obj@_id(@obj@_id::value_base_t(@obj@.size_used));";
 
@@ -2258,18 +2271,18 @@ basic_builder& object_iterator_declaration(basic_builder& o, relationship_object
 }
 
 basic_builder& object_iterator_implementation(basic_builder& o, relationship_object_def const& obj) {
-	o + substitute{ "obj", obj.name };
+	o + substitute{ "obj", obj.name } + substitute{ "pk_obj", obj.primary_key.points_to ? obj.primary_key.points_to->name : obj.name };
 
 	o + "DCON_RELEASE_INLINE object_iterator_@obj@::object_iterator_@obj@(data_container& c, uint32_t i) noexcept : container(c), index(i)" + block{
 		if(obj.store_type == storage_type::erasable) {
-			o + "while(container.@obj@.m__index.vptr()[index] != @obj@_id(@obj@_id::value_base_t(index)) && index < container.@obj@.size_used)" + block{
+			o + "while(container.@obj@.m__index.vptr()[index] != @obj@_id(@obj@_id::value_base_t(index)) && index < container.@pk_obj@.size_used)" + block{
 				o + "++index;";
 			};
 		}
 	};
 	o + "DCON_RELEASE_INLINE const_object_iterator_@obj@::const_object_iterator_@obj@(data_container const& c, uint32_t i) noexcept : container(c), index(i)" + block{
 		if(obj.store_type == storage_type::erasable) {
-			o + "while(container.@obj@.m__index.vptr()[index] != @obj@_id(@obj@_id::value_base_t(index)) && index < container.@obj@.size_used)" + block{
+			o + "while(container.@obj@.m__index.vptr()[index] != @obj@_id(@obj@_id::value_base_t(index)) && index < container.@pk_obj@.size_used)" + block{
 				o + "++index;";
 			};
 		}
@@ -2277,7 +2290,7 @@ basic_builder& object_iterator_implementation(basic_builder& o, relationship_obj
 	o + "DCON_RELEASE_INLINE object_iterator_@obj@& object_iterator_@obj@::operator++() noexcept" + block{
 		if(obj.store_type == storage_type::erasable) {
 			o + "++index;";
-			o + "while(container.@obj@.m__index.vptr()[index] != @obj@_id(@obj@_id::value_base_t(index)) && index < container.@obj@.size_used)" + block{
+			o + "while(container.@obj@.m__index.vptr()[index] != @obj@_id(@obj@_id::value_base_t(index)) && index < container.@pk_obj@.size_used)" + block{
 				o + "++index;";
 			};
 		} else {
@@ -2288,7 +2301,7 @@ basic_builder& object_iterator_implementation(basic_builder& o, relationship_obj
 	o + "DCON_RELEASE_INLINE const_object_iterator_@obj@& const_object_iterator_@obj@::operator++() noexcept" + block{
 		if(obj.store_type == storage_type::erasable) {
 			o + "++index;";
-			o + "while(container.@obj@.m__index.vptr()[index] != @obj@_id(@obj@_id::value_base_t(index)) && index < container.@obj@.size_used)" + block{
+			o + "while(container.@obj@.m__index.vptr()[index] != @obj@_id(@obj@_id::value_base_t(index)) && index < container.@pk_obj@.size_used)" + block{
 				o + "++index;";
 			};
 		} else {
@@ -2299,7 +2312,7 @@ basic_builder& object_iterator_implementation(basic_builder& o, relationship_obj
 	o + "DCON_RELEASE_INLINE object_iterator_@obj@& object_iterator_@obj@::operator--() noexcept" + block{
 		if(obj.store_type == storage_type::erasable) {
 			o + "--index;";
-			o + "while(container.@obj@.m__index.vptr()[index] != @obj@_id(@obj@_id::value_base_t(index)) && index < container.@obj@.size_used)" + block{
+			o + "while(container.@obj@.m__index.vptr()[index] != @obj@_id(@obj@_id::value_base_t(index)) && index < container.@pk_obj@.size_used)" + block{
 				o + "--index;";
 			};
 		} else {
@@ -2310,7 +2323,7 @@ basic_builder& object_iterator_implementation(basic_builder& o, relationship_obj
 	o + "DCON_RELEASE_INLINE const_object_iterator_@obj@& const_object_iterator_@obj@::operator--() noexcept" + block{
 		if(obj.store_type == storage_type::erasable) {
 			o + "--index;";
-			o + "while(container.@obj@.m__index.vptr()[index] != @obj@_id(@obj@_id::value_base_t(index)) && index < container.@obj@.size_used)" + block{
+			o + "while(container.@obj@.m__index.vptr()[index] != @obj@_id(@obj@_id::value_base_t(index)) && index < container.@pk_obj@.size_used)" + block{
 				o + "--index;";
 			};
 		} else {
@@ -2324,11 +2337,11 @@ basic_builder& object_iterator_implementation(basic_builder& o, relationship_obj
 }
 
 basic_builder& make_iterate_over_objects(basic_builder& o, relationship_object_def const& obj) {
-	o + substitute{ "obj", obj.name };
+	o + substitute{ "obj", obj.name } + substitute{ "pk_obj", obj.primary_key.points_to ? obj.primary_key.points_to->name : obj.name };
 
 	o + "template <typename T>";
 	o + "DCON_RELEASE_INLINE void for_each_@obj@(T&& func)" + block{
-		o + "for(uint32_t i = 0; i < @obj@.size_used; ++i)" + block{
+		o + "for(uint32_t i = 0; i < @pk_obj@.size_used; ++i)" + block{
 			o + "@obj@_id tmp = @obj@_id(@obj@_id::value_base_t(i));";
 			if(obj.store_type == storage_type::erasable) {
 				o + "if(@obj@.m__index.vptr()[tmp.index()] == tmp) func(tmp);";

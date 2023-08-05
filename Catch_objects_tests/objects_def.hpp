@@ -604,8 +604,6 @@ namespace dcon {
 			}
 			m_link_back_right;
 			
-			uint32_t size_used = 0;
-
 
 			public:
 			dummy_rel_class() {
@@ -684,8 +682,6 @@ namespace dcon {
 			}
 			m_link_back_left;
 			
-			uint32_t size_used = 0;
-
 
 			public:
 			dummy_rel_B_class() {
@@ -2051,7 +2047,7 @@ namespace dcon {
 		}
 		#endif
 		DCON_RELEASE_INLINE dummy_rel_id thingy_get_dummy_rel_as_left(thingy_id id) const noexcept {
-			return (id.value <= dummy_rel.size_used) ? dummy_rel_id(dummy_rel_id::value_base_t(id.index())) : dummy_rel_id();
+			return (id.value <= thingy.size_used) ? dummy_rel_id(dummy_rel_id::value_base_t(id.index())) : dummy_rel_id();
 		}
 		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::contiguous_tags<dummy_rel_id> thingy_get_dummy_rel_as_left(ve::contiguous_tags<thingy_id> id) const noexcept {
@@ -2070,7 +2066,7 @@ namespace dcon {
 			}
 		}
 		DCON_RELEASE_INLINE dummy_rel_id thingy_get_dummy_rel(thingy_id id) const noexcept {
-			return (id.value <= dummy_rel.size_used) ? dummy_rel_id(dummy_rel_id::value_base_t(id.index())) : dummy_rel_id();
+			return (id.value <= thingy.size_used) ? dummy_rel_id(dummy_rel_id::value_base_t(id.index())) : dummy_rel_id();
 		}
 		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::contiguous_tags<dummy_rel_id> thingy_get_dummy_rel(ve::contiguous_tags<thingy_id> id) const noexcept {
@@ -2468,10 +2464,10 @@ namespace dcon {
 			return true;
 		}
 		DCON_RELEASE_INLINE bool dummy_rel_is_valid(dummy_rel_id id) const noexcept {
-			return bool(id) && uint32_t(id.index()) < dummy_rel.size_used && thingy_is_valid(thingy_id(thingy_id::value_base_t(id.index()))) && (bool(dummy_rel.m_right.vptr()[id.index()]) || false);
+			return bool(id) && uint32_t(id.index()) < thingy.size_used && thingy_is_valid(thingy_id(thingy_id::value_base_t(id.index()))) && (bool(dummy_rel.m_right.vptr()[id.index()]) || false);
 		}
 		
-		uint32_t dummy_rel_size() const noexcept { return dummy_rel.size_used; }
+		uint32_t dummy_rel_size() const noexcept { return thingy.size_used; }
 
 		//
 		// Functions for oop_thingy:
@@ -2555,7 +2551,7 @@ namespace dcon {
 			}
 		}
 		DCON_RELEASE_INLINE dummy_rel_B_id oop_thingy_get_dummy_rel_B_as_right(oop_thingy_id id) const noexcept {
-			return (id.value <= dummy_rel_B.size_used) ? dummy_rel_B_id(dummy_rel_B_id::value_base_t(id.index())) : dummy_rel_B_id();
+			return (id.value <= oop_thingy.size_used) ? dummy_rel_B_id(dummy_rel_B_id::value_base_t(id.index())) : dummy_rel_B_id();
 		}
 		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::contiguous_tags<dummy_rel_B_id> oop_thingy_get_dummy_rel_B_as_right(ve::contiguous_tags<oop_thingy_id> id) const noexcept {
@@ -2678,10 +2674,10 @@ namespace dcon {
 			}
 		}
 		DCON_RELEASE_INLINE bool dummy_rel_B_is_valid(dummy_rel_B_id id) const noexcept {
-			return bool(id) && uint32_t(id.index()) < dummy_rel_B.size_used && oop_thingy_is_valid(oop_thingy_id(oop_thingy_id::value_base_t(id.index()))) && (bool(dummy_rel_B.m_left.vptr()[id.index()]) || false);
+			return bool(id) && uint32_t(id.index()) < oop_thingy.size_used && oop_thingy_is_valid(oop_thingy_id(oop_thingy_id::value_base_t(id.index()))) && (bool(dummy_rel_B.m_left.vptr()[id.index()]) || false);
 		}
 		
-		uint32_t dummy_rel_B_size() const noexcept { return dummy_rel_B.size_used; }
+		uint32_t dummy_rel_B_size() const noexcept { return oop_thingy.size_used; }
 
 
 		//
@@ -2692,7 +2688,6 @@ namespace dcon {
 			thingy_id id_removed(thingy_id::value_base_t(thingy.size_used - 1));
 			on_delete_thingy(id_removed);
 			delete_dummy_rel(dummy_rel_id(dummy_rel_id::value_base_t(id_removed.index())));
-			dummy_rel.size_used = thingy.size_used - 1;
 			thingy.m_some_value.vptr()[id_removed.index()] = int32_t{};
 			dcon::bit_vector_set(thingy.m_bf_value.vptr(), id_removed.index(), false);
 			thingy.m_obj_value.vptr()[id_removed.index()] = std::vector<float>{};
@@ -2730,7 +2725,7 @@ namespace dcon {
 					}
 					std::fill_n(thingy.m_big_array_bf.vptr(s) + (new_size + 7) / 8, (new_size + old_size - new_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});
 				}
-				dummy_rel_resize(std::min(new_size, dummy_rel.size_used));
+				dummy_rel_resize(std::min(new_size, thingy.size_used));
 			} else if(new_size > old_size) {
 			}
 			thingy.size_used = new_size;
@@ -2746,7 +2741,6 @@ namespace dcon {
 			#else
 			if(thingy.size_used >= 1200) throw dcon::out_of_space{};
 			#endif
-			dummy_rel.size_used = thingy.size_used + 1;
 			++thingy.size_used;
 			on_create_thingy(new_id);
 			return new_id;
@@ -2765,7 +2759,6 @@ namespace dcon {
 			on_delete_thingy(id_removed);
 			delete_dummy_rel(dummy_rel_id(dummy_rel_id::value_base_t(id_removed.index())));
 			internal_move_relationship_dummy_rel(dummy_rel_id(dummy_rel_id::value_base_t(last_id.index())), dummy_rel_id(dummy_rel_id::value_base_t(id_removed.index())));
-			dummy_rel.size_used = thingy.size_used - 1;
 			thingy.m_some_value.vptr()[id_removed.index()] = std::move(thingy.m_some_value.vptr()[last_id.index()]);
 			thingy.m_some_value.vptr()[last_id.index()] = int32_t{};
 			dcon::bit_vector_set(thingy.m_bf_value.vptr(), id_removed.index(), dcon::bit_vector_test(thingy.m_bf_value.vptr(), last_id.index()));
@@ -2900,13 +2893,12 @@ namespace dcon {
 			#else
 			if(new_size > 1200) throw dcon::out_of_space{};
 			#endif
-			const uint32_t old_size = dummy_rel.size_used;
+			const uint32_t old_size = thingy.size_used;
 			if(new_size < old_size) {
 				std::fill_n(dummy_rel.m_right.vptr() + 0, old_size, thingy2_id{});
 				std::fill_n(dummy_rel.m_link_back_right.vptr() + 0, thingy2.size_used, dummy_rel_id{});
 			} else if(new_size > old_size) {
 			}
-			dummy_rel.size_used = new_size;
 		}
 		
 		//
@@ -2923,10 +2915,9 @@ namespace dcon {
 		// container pop_back for dummy_rel
 		//
 		void pop_back_dummy_rel() {
-			if(dummy_rel.size_used == 0) return;
-			dummy_rel_id id_removed(dummy_rel_id::value_base_t(dummy_rel.size_used - 1));
+			if(thingy.size_used == 0) return;
+			dummy_rel_id id_removed(dummy_rel_id::value_base_t(thingy.size_used - 1));
 			internal_dummy_rel_set_right(id_removed, thingy2_id());
-			--dummy_rel.size_used;
 		}
 		
 		private:
@@ -2952,7 +2943,7 @@ namespace dcon {
 			if(!bool(right_p)) return dummy_rel_id();
 			if(bool(right_p) && bool(dummy_rel.m_link_back_right.vptr()[right_p.index()])) return dummy_rel_id();
 			dummy_rel_id new_id(dummy_rel_id::value_base_t(left_p.index()));
-			if(dummy_rel.size_used < uint32_t(left_p.value)) dummy_rel_resize(uint32_t(left_p.value));
+			if(thingy.size_used < uint32_t(left_p.value)) thingy_resize(uint32_t(left_p.value));
 			internal_dummy_rel_set_right(new_id, right_p);
 			return new_id;
 		}
@@ -2962,7 +2953,7 @@ namespace dcon {
 		//
 		dummy_rel_id force_create_dummy_rel(thingy_id left_p, thingy2_id right_p) {
 			dummy_rel_id new_id(dummy_rel_id::value_base_t(left_p.index()));
-			if(dummy_rel.size_used < uint32_t(left_p.value)) dummy_rel_resize(uint32_t(left_p.value));
+			if(thingy.size_used < uint32_t(left_p.value)) thingy_resize(uint32_t(left_p.value));
 			internal_dummy_rel_set_right(new_id, right_p);
 			return new_id;
 		}
@@ -2975,7 +2966,6 @@ namespace dcon {
 			oop_thingy_id id_removed(oop_thingy_id::value_base_t(oop_thingy.size_used - 1));
 			oop_thingy_remove_dummy_rel_B_as_left(id_removed);
 			delete_dummy_rel_B(dummy_rel_B_id(dummy_rel_B_id::value_base_t(id_removed.index())));
-			dummy_rel_B.size_used = oop_thingy.size_used - 1;
 			oop_thingy.m_pstruct.vptr()[id_removed.index()] = my_struct{};
 			oop_thingy.m_pfloat.vptr()[id_removed.index()] = float{};
 			--oop_thingy.size_used;
@@ -2995,7 +2985,7 @@ namespace dcon {
 				std::fill_n(oop_thingy.m_pstruct.vptr() + new_size, old_size - new_size, my_struct{});
 				std::fill_n(oop_thingy.m_pfloat.vptr() + new_size, old_size - new_size, float{});
 				dummy_rel_B_resize(0);
-				dummy_rel_B_resize(std::min(new_size, dummy_rel_B.size_used));
+				dummy_rel_B_resize(std::min(new_size, oop_thingy.size_used));
 			} else if(new_size > old_size) {
 			}
 			oop_thingy.size_used = new_size;
@@ -3011,7 +3001,6 @@ namespace dcon {
 			#else
 			if(oop_thingy.size_used >= 1200) throw dcon::out_of_space{};
 			#endif
-			dummy_rel_B.size_used = oop_thingy.size_used + 1;
 			++oop_thingy.size_used;
 			return new_id;
 		}
@@ -3034,7 +3023,6 @@ namespace dcon {
 			dummy_rel_B.m_link_back_left.vptr()[last_id.index()] = dummy_rel_B_id();
 			delete_dummy_rel_B(dummy_rel_B_id(dummy_rel_B_id::value_base_t(id_removed.index())));
 			internal_move_relationship_dummy_rel_B(dummy_rel_B_id(dummy_rel_B_id::value_base_t(last_id.index())), dummy_rel_B_id(dummy_rel_B_id::value_base_t(id_removed.index())));
-			dummy_rel_B.size_used = oop_thingy.size_used - 1;
 			oop_thingy.m_pstruct.vptr()[id_removed.index()] = std::move(oop_thingy.m_pstruct.vptr()[last_id.index()]);
 			oop_thingy.m_pstruct.vptr()[last_id.index()] = my_struct{};
 			oop_thingy.m_pfloat.vptr()[id_removed.index()] = std::move(oop_thingy.m_pfloat.vptr()[last_id.index()]);
@@ -3051,13 +3039,12 @@ namespace dcon {
 			#else
 			if(new_size > 1200) throw dcon::out_of_space{};
 			#endif
-			const uint32_t old_size = dummy_rel_B.size_used;
+			const uint32_t old_size = oop_thingy.size_used;
 			if(new_size < old_size) {
 				std::fill_n(dummy_rel_B.m_left.vptr() + 0, old_size, oop_thingy_id{});
 				std::fill_n(dummy_rel_B.m_link_back_left.vptr() + 0, oop_thingy.size_used, dummy_rel_B_id{});
 			} else if(new_size > old_size) {
 			}
-			dummy_rel_B.size_used = new_size;
 		}
 		
 		//
@@ -3074,10 +3061,9 @@ namespace dcon {
 		// container pop_back for dummy_rel_B
 		//
 		void pop_back_dummy_rel_B() {
-			if(dummy_rel_B.size_used == 0) return;
-			dummy_rel_B_id id_removed(dummy_rel_B_id::value_base_t(dummy_rel_B.size_used - 1));
+			if(oop_thingy.size_used == 0) return;
+			dummy_rel_B_id id_removed(dummy_rel_B_id::value_base_t(oop_thingy.size_used - 1));
 			internal_dummy_rel_B_set_left(id_removed, oop_thingy_id());
-			--dummy_rel_B.size_used;
 		}
 		
 		private:
@@ -3103,7 +3089,7 @@ namespace dcon {
 			if(!bool(right_p)) return dummy_rel_B_id();
 			if(dummy_rel_B_is_valid(dummy_rel_B_id(dummy_rel_B_id::value_base_t(right_p.index())))) return dummy_rel_B_id();
 			dummy_rel_B_id new_id(dummy_rel_B_id::value_base_t(right_p.index()));
-			if(dummy_rel_B.size_used < uint32_t(right_p.value)) dummy_rel_B_resize(uint32_t(right_p.value));
+			if(oop_thingy.size_used < uint32_t(right_p.value)) oop_thingy_resize(uint32_t(right_p.value));
 			internal_dummy_rel_B_set_left(new_id, left_p);
 			return new_id;
 		}
@@ -3113,7 +3099,7 @@ namespace dcon {
 		//
 		dummy_rel_B_id force_create_dummy_rel_B(oop_thingy_id left_p, oop_thingy_id right_p) {
 			dummy_rel_B_id new_id(dummy_rel_B_id::value_base_t(right_p.index()));
-			if(dummy_rel_B.size_used < uint32_t(right_p.value)) dummy_rel_B_resize(uint32_t(right_p.value));
+			if(oop_thingy.size_used < uint32_t(right_p.value)) oop_thingy_resize(uint32_t(right_p.value));
 			internal_dummy_rel_B_set_left(new_id, left_p);
 			return new_id;
 		}
@@ -3176,7 +3162,7 @@ namespace dcon {
 		
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_dummy_rel(T&& func) {
-			for(uint32_t i = 0; i < dummy_rel.size_used; ++i) {
+			for(uint32_t i = 0; i < thingy.size_used; ++i) {
 				dummy_rel_id tmp = dummy_rel_id(dummy_rel_id::value_base_t(i));
 				func(tmp);
 			}
@@ -3232,7 +3218,7 @@ namespace dcon {
 		
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_dummy_rel_B(T&& func) {
-			for(uint32_t i = 0; i < dummy_rel_B.size_used; ++i) {
+			for(uint32_t i = 0; i < oop_thingy.size_used; ++i) {
 				dummy_rel_B_id tmp = dummy_rel_B_id(dummy_rel_B_id::value_base_t(i));
 				func(tmp);
 			}
@@ -3306,19 +3292,19 @@ namespace dcon {
 		}
 #endif
 		ve::vectorizable_buffer<float, dummy_rel_id> dummy_rel_make_vectorizable_float_buffer() const noexcept {
-			return ve::vectorizable_buffer<float, dummy_rel_id>(dummy_rel.size_used);
+			return ve::vectorizable_buffer<float, dummy_rel_id>(thingy.size_used);
 		}
 		ve::vectorizable_buffer<int32_t, dummy_rel_id> dummy_rel_make_vectorizable_int_buffer() const noexcept {
-			return ve::vectorizable_buffer<int32_t, dummy_rel_id>(dummy_rel.size_used);
+			return ve::vectorizable_buffer<int32_t, dummy_rel_id>(thingy.size_used);
 		}
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_serial_over_dummy_rel(F&& functor) {
-			ve::execute_serial<dummy_rel_id>(dummy_rel.size_used, functor);
+			ve::execute_serial<dummy_rel_id>(thingy.size_used, functor);
 		}
 #ifndef VE_NO_TBB
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_parallel_over_dummy_rel(F&& functor) {
-			ve::execute_parallel_exact<dummy_rel_id>(dummy_rel.size_used, functor);
+			ve::execute_parallel_exact<dummy_rel_id>(thingy.size_used, functor);
 		}
 #endif
 		ve::vectorizable_buffer<float, oop_thingy_id> oop_thingy_make_vectorizable_float_buffer() const noexcept {
@@ -3338,19 +3324,19 @@ namespace dcon {
 		}
 #endif
 		ve::vectorizable_buffer<float, dummy_rel_B_id> dummy_rel_B_make_vectorizable_float_buffer() const noexcept {
-			return ve::vectorizable_buffer<float, dummy_rel_B_id>(dummy_rel_B.size_used);
+			return ve::vectorizable_buffer<float, dummy_rel_B_id>(oop_thingy.size_used);
 		}
 		ve::vectorizable_buffer<int32_t, dummy_rel_B_id> dummy_rel_B_make_vectorizable_int_buffer() const noexcept {
-			return ve::vectorizable_buffer<int32_t, dummy_rel_B_id>(dummy_rel_B.size_used);
+			return ve::vectorizable_buffer<int32_t, dummy_rel_B_id>(oop_thingy.size_used);
 		}
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_serial_over_dummy_rel_B(F&& functor) {
-			ve::execute_serial<dummy_rel_B_id>(dummy_rel_B.size_used, functor);
+			ve::execute_serial<dummy_rel_B_id>(oop_thingy.size_used, functor);
 		}
 #ifndef VE_NO_TBB
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_parallel_over_dummy_rel_B(F&& functor) {
-			ve::execute_parallel_exact<dummy_rel_B_id>(dummy_rel_B.size_used, functor);
+			ve::execute_parallel_exact<dummy_rel_B_id>(oop_thingy.size_used, functor);
 		}
 #endif
 		#endif
@@ -3491,7 +3477,7 @@ namespace dcon {
 				if(serialize_selection.dummy_rel_right) {
 					dcon::record_header iheader(0, "uint32_t", "dummy_rel", "right");
 					total_size += iheader.serialize_size();
-					total_size += sizeof(thingy2_id) * dummy_rel.size_used;
+					total_size += sizeof(thingy2_id) * thingy.size_used;
 				}
 				dcon::record_header headerb(0, "$", "dummy_rel", "$index_end");
 				total_size += headerb.serialize_size();
@@ -3518,7 +3504,7 @@ namespace dcon {
 				if(serialize_selection.dummy_rel_B_left) {
 					dcon::record_header iheader(0, "uint16_t", "dummy_rel_B", "left");
 					total_size += iheader.serialize_size();
-					total_size += sizeof(oop_thingy_id) * dummy_rel_B.size_used;
+					total_size += sizeof(oop_thingy_id) * oop_thingy.size_used;
 				}
 				dcon::record_header headerb(0, "$", "dummy_rel_B", "$index_end");
 				total_size += headerb.serialize_size();
@@ -3691,13 +3677,13 @@ namespace dcon {
 			if(serialize_selection.dummy_rel) {
 				dcon::record_header header(sizeof(uint32_t), "uint32_t", "dummy_rel", "$size");
 				header.serialize(output_buffer);
-				*(reinterpret_cast<uint32_t*>(output_buffer)) = dummy_rel.size_used;
+				*(reinterpret_cast<uint32_t*>(output_buffer)) = thingy.size_used;
 				output_buffer += sizeof(uint32_t);
 				 {
-					dcon::record_header iheader(sizeof(thingy2_id) * dummy_rel.size_used, "uint32_t", "dummy_rel", "right");
+					dcon::record_header iheader(sizeof(thingy2_id) * thingy.size_used, "uint32_t", "dummy_rel", "right");
 					iheader.serialize(output_buffer);
-					std::memcpy(reinterpret_cast<thingy2_id*>(output_buffer), dummy_rel.m_right.vptr(), sizeof(thingy2_id) * dummy_rel.size_used);
-					output_buffer += sizeof(thingy2_id) *  dummy_rel.size_used;
+					std::memcpy(reinterpret_cast<thingy2_id*>(output_buffer), dummy_rel.m_right.vptr(), sizeof(thingy2_id) * thingy.size_used);
+					output_buffer += sizeof(thingy2_id) *  thingy.size_used;
 				}
 				dcon::record_header headerb(0, "$", "dummy_rel", "$index_end");
 				headerb.serialize(output_buffer);
@@ -3705,13 +3691,13 @@ namespace dcon {
 			if(serialize_selection.dummy_rel_B) {
 				dcon::record_header header(sizeof(uint32_t), "uint32_t", "dummy_rel_B", "$size");
 				header.serialize(output_buffer);
-				*(reinterpret_cast<uint32_t*>(output_buffer)) = dummy_rel_B.size_used;
+				*(reinterpret_cast<uint32_t*>(output_buffer)) = oop_thingy.size_used;
 				output_buffer += sizeof(uint32_t);
 				 {
-					dcon::record_header iheader(sizeof(oop_thingy_id) * dummy_rel_B.size_used, "uint16_t", "dummy_rel_B", "left");
+					dcon::record_header iheader(sizeof(oop_thingy_id) * oop_thingy.size_used, "uint16_t", "dummy_rel_B", "left");
 					iheader.serialize(output_buffer);
-					std::memcpy(reinterpret_cast<oop_thingy_id*>(output_buffer), dummy_rel_B.m_left.vptr(), sizeof(oop_thingy_id) * dummy_rel_B.size_used);
-					output_buffer += sizeof(oop_thingy_id) *  dummy_rel_B.size_used;
+					std::memcpy(reinterpret_cast<oop_thingy_id*>(output_buffer), dummy_rel_B.m_left.vptr(), sizeof(oop_thingy_id) * oop_thingy.size_used);
+					output_buffer += sizeof(oop_thingy_id) *  oop_thingy.size_used;
 				}
 				dcon::record_header headerb(0, "$", "dummy_rel_B", "$index_end");
 				headerb.serialize(output_buffer);
@@ -4596,7 +4582,7 @@ namespace dcon {
 						if(header.is_object("dummy_rel")) {
 							do {
 								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= dummy_rel.size_used) {
+									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= thingy.size_used) {
 										dummy_rel_resize(0);
 									}
 									dummy_rel_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
@@ -4605,17 +4591,17 @@ namespace dcon {
 								}
 								if(header.is_property("right")) {
 									if(header.is_type("uint32_t")) {
-										std::memcpy(dummy_rel.m_right.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(dummy_rel.size_used) * sizeof(uint32_t), header.record_size));
+										std::memcpy(dummy_rel.m_right.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(uint32_t), header.record_size));
 										serialize_selection.dummy_rel_right = true;
 									}
 									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(dummy_rel.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(thingy.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
 											dummy_rel.m_right.vptr()[i].value = uint32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
 										}
 										serialize_selection.dummy_rel_right = true;
 									}
 									else if(header.is_type("uint16_t")) {
-										for(uint32_t i = 0; i < std::min(dummy_rel.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(thingy.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
 											dummy_rel.m_right.vptr()[i].value = uint32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
 										}
 										serialize_selection.dummy_rel_right = true;
@@ -4624,7 +4610,7 @@ namespace dcon {
 								}
 								if(header.is_property("$index_end")) {
 									if(serialize_selection.dummy_rel_right == true) {
-										for(uint32_t i = 0; i < dummy_rel.size_used; ++i) {
+										for(uint32_t i = 0; i < thingy.size_used; ++i) {
 											auto tmp = dummy_rel.m_right.vptr()[i];
 											dummy_rel.m_right.vptr()[i] = thingy2_id();
 											internal_dummy_rel_set_right(dummy_rel_id(dummy_rel_id::value_base_t(i)), tmp);
@@ -4716,7 +4702,7 @@ namespace dcon {
 						if(header.is_object("dummy_rel_B")) {
 							do {
 								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= dummy_rel_B.size_used) {
+									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= oop_thingy.size_used) {
 										dummy_rel_B_resize(0);
 									}
 									dummy_rel_B_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
@@ -4725,17 +4711,17 @@ namespace dcon {
 								}
 								if(header.is_property("left")) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(dummy_rel_B.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(dummy_rel_B.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(dummy_rel_B.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(oop_thingy.size_used) * sizeof(uint16_t), header.record_size));
 										serialize_selection.dummy_rel_B_left = true;
 									}
 									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(dummy_rel_B.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(oop_thingy.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
 											dummy_rel_B.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
 										}
 										serialize_selection.dummy_rel_B_left = true;
 									}
 									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(dummy_rel_B.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(oop_thingy.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
 											dummy_rel_B.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
 										}
 										serialize_selection.dummy_rel_B_left = true;
@@ -4744,7 +4730,7 @@ namespace dcon {
 								}
 								if(header.is_property("$index_end")) {
 									if(serialize_selection.dummy_rel_B_left == true) {
-										for(uint32_t i = 0; i < dummy_rel_B.size_used; ++i) {
+										for(uint32_t i = 0; i < oop_thingy.size_used; ++i) {
 											auto tmp = dummy_rel_B.m_left.vptr()[i];
 											dummy_rel_B.m_left.vptr()[i] = oop_thingy_id();
 											internal_dummy_rel_B_set_left(dummy_rel_B_id(dummy_rel_B_id::value_base_t(i)), tmp);
@@ -5639,7 +5625,7 @@ namespace dcon {
 						if(header.is_object("dummy_rel") && mask.dummy_rel) {
 							do {
 								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= dummy_rel.size_used) {
+									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= thingy.size_used) {
 										dummy_rel_resize(0);
 									}
 									dummy_rel_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
@@ -5648,17 +5634,17 @@ namespace dcon {
 								}
 								if(header.is_property("right") && mask.dummy_rel_right) {
 									if(header.is_type("uint32_t")) {
-										std::memcpy(dummy_rel.m_right.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(dummy_rel.size_used) * sizeof(uint32_t), header.record_size));
+										std::memcpy(dummy_rel.m_right.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(uint32_t), header.record_size));
 										serialize_selection.dummy_rel_right = true;
 									}
 									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(dummy_rel.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(thingy.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
 											dummy_rel.m_right.vptr()[i].value = uint32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
 										}
 										serialize_selection.dummy_rel_right = true;
 									}
 									else if(header.is_type("uint16_t")) {
-										for(uint32_t i = 0; i < std::min(dummy_rel.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(thingy.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
 											dummy_rel.m_right.vptr()[i].value = uint32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
 										}
 										serialize_selection.dummy_rel_right = true;
@@ -5667,7 +5653,7 @@ namespace dcon {
 								}
 								if(header.is_property("$index_end") && mask.dummy_rel) {
 									if(serialize_selection.dummy_rel_right == true) {
-										for(uint32_t i = 0; i < dummy_rel.size_used; ++i) {
+										for(uint32_t i = 0; i < thingy.size_used; ++i) {
 											auto tmp = dummy_rel.m_right.vptr()[i];
 											dummy_rel.m_right.vptr()[i] = thingy2_id();
 											internal_dummy_rel_set_right(dummy_rel_id(dummy_rel_id::value_base_t(i)), tmp);
@@ -5759,7 +5745,7 @@ namespace dcon {
 						if(header.is_object("dummy_rel_B") && mask.dummy_rel_B) {
 							do {
 								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= dummy_rel_B.size_used) {
+									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= oop_thingy.size_used) {
 										dummy_rel_B_resize(0);
 									}
 									dummy_rel_B_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
@@ -5768,17 +5754,17 @@ namespace dcon {
 								}
 								if(header.is_property("left") && mask.dummy_rel_B_left) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(dummy_rel_B.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(dummy_rel_B.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(dummy_rel_B.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(oop_thingy.size_used) * sizeof(uint16_t), header.record_size));
 										serialize_selection.dummy_rel_B_left = true;
 									}
 									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(dummy_rel_B.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(oop_thingy.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
 											dummy_rel_B.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
 										}
 										serialize_selection.dummy_rel_B_left = true;
 									}
 									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(dummy_rel_B.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(oop_thingy.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
 											dummy_rel_B.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
 										}
 										serialize_selection.dummy_rel_B_left = true;
@@ -5787,7 +5773,7 @@ namespace dcon {
 								}
 								if(header.is_property("$index_end") && mask.dummy_rel_B) {
 									if(serialize_selection.dummy_rel_B_left == true) {
-										for(uint32_t i = 0; i < dummy_rel_B.size_used; ++i) {
+										for(uint32_t i = 0; i < oop_thingy.size_used; ++i) {
 											auto tmp = dummy_rel_B.m_left.vptr()[i];
 											dummy_rel_B.m_left.vptr()[i] = oop_thingy_id();
 											internal_dummy_rel_B_set_left(dummy_rel_B_id(dummy_rel_B_id::value_base_t(i)), tmp);

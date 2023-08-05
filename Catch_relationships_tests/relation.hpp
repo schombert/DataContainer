@@ -687,8 +687,6 @@ namespace dcon {
 			}
 			m_right;
 			
-			uint32_t size_used = 0;
-
 			ankerl::unordered_dense::map<uint32_t, relate_same_id, ankerl::unordered_dense::hash<uint32_t>> hashm_joint;
 			uint32_t to_joint_keydata(thingyA_id left_p, thingyA_id right_p) {
 				uint32_t result = 0;
@@ -742,9 +740,7 @@ namespace dcon {
 			}
 			m_array_right;
 			
-			dcon::stable_variable_vector_storage_mk_2<relate_in_array_id, 8, 2400 > right_storage;
-			uint32_t size_used = 0;
-
+			dcon::stable_variable_vector_storage_mk_2<relate_in_array_id, 4, 9600 > right_storage;
 
 			public:
 			relate_in_array_class() {
@@ -800,8 +796,6 @@ namespace dcon {
 			}
 			m_head_back_right;
 			
-			uint32_t size_used = 0;
-
 
 			public:
 			relate_in_list_class() {
@@ -992,7 +986,7 @@ namespace dcon {
 			}
 			m_array_left;
 			
-			dcon::stable_variable_vector_storage_mk_2<relate_as_optional_id, 8, 800 > left_storage;
+			dcon::stable_variable_vector_storage_mk_2<relate_as_optional_id, 4, 3200 > left_storage;
 			//
 			// storage space for right of type thingyB_id
 			//
@@ -1017,7 +1011,7 @@ namespace dcon {
 			}
 			m_array_right;
 			
-			dcon::stable_variable_vector_storage_mk_2<relate_as_optional_id, 8, 800 > right_storage;
+			dcon::stable_variable_vector_storage_mk_2<relate_as_optional_id, 4, 3200 > right_storage;
 			relate_as_optional_id first_free = relate_as_optional_id();
 			uint32_t size_used = 0;
 
@@ -1086,7 +1080,7 @@ namespace dcon {
 			}
 			m_array_left;
 			
-			dcon::stable_variable_vector_storage_mk_2<relate_as_non_optional_id, 8, 800 > left_storage;
+			dcon::stable_variable_vector_storage_mk_2<relate_as_non_optional_id, 4, 3200 > left_storage;
 			//
 			// storage space for right of type thingyB_id
 			//
@@ -1111,7 +1105,7 @@ namespace dcon {
 			}
 			m_array_right;
 			
-			dcon::stable_variable_vector_storage_mk_2<relate_as_non_optional_id, 8, 800 > right_storage;
+			dcon::stable_variable_vector_storage_mk_2<relate_as_non_optional_id, 4, 3200 > right_storage;
 			relate_as_non_optional_id first_free = relate_as_non_optional_id();
 			uint32_t size_used = 0;
 
@@ -1173,7 +1167,7 @@ namespace dcon {
 			}
 			m_array_left;
 			
-			dcon::stable_variable_vector_storage_mk_2<relate_as_multipleA_id, 8, 800 > left_storage;
+			dcon::stable_variable_vector_storage_mk_2<relate_as_multipleA_id, 4, 3200 > left_storage;
 			relate_as_multipleA_id first_free = relate_as_multipleA_id();
 			uint32_t size_used = 0;
 
@@ -1299,7 +1293,7 @@ namespace dcon {
 			}
 			m_array_left;
 			
-			dcon::stable_variable_vector_storage_mk_2<relate_as_multipleC_id, 8, 800 > left_storage;
+			dcon::stable_variable_vector_storage_mk_2<relate_as_multipleC_id, 4, 3200 > left_storage;
 			relate_as_multipleC_id first_free = relate_as_multipleC_id();
 			uint32_t size_used = 0;
 
@@ -4575,7 +4569,7 @@ namespace dcon {
 		}
 		#endif
 		DCON_RELEASE_INLINE relate_same_id thingyA_get_relate_same_as_left(thingyA_id id) const noexcept {
-			return (id.value <= relate_same.size_used) ? relate_same_id(relate_same_id::value_base_t(id.index())) : relate_same_id();
+			return (id.value <= thingyA.size_used) ? relate_same_id(relate_same_id::value_base_t(id.index())) : relate_same_id();
 		}
 		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::contiguous_tags<relate_same_id> thingyA_get_relate_same_as_left(ve::contiguous_tags<thingyA_id> id) const noexcept {
@@ -4594,7 +4588,7 @@ namespace dcon {
 			}
 		}
 		DCON_RELEASE_INLINE relate_in_array_id thingyA_get_relate_in_array_as_left(thingyA_id id) const noexcept {
-			return (id.value <= relate_in_array.size_used) ? relate_in_array_id(relate_in_array_id::value_base_t(id.index())) : relate_in_array_id();
+			return (id.value <= thingyA.size_used) ? relate_in_array_id(relate_in_array_id::value_base_t(id.index())) : relate_in_array_id();
 		}
 		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::contiguous_tags<relate_in_array_id> thingyA_get_relate_in_array_as_left(ve::contiguous_tags<thingyA_id> id) const noexcept {
@@ -4613,7 +4607,7 @@ namespace dcon {
 			}
 		}
 		DCON_RELEASE_INLINE relate_in_array_id thingyA_get_relate_in_array(thingyA_id id) const noexcept {
-			return (id.value <= relate_in_array.size_used) ? relate_in_array_id(relate_in_array_id::value_base_t(id.index())) : relate_in_array_id();
+			return (id.value <= thingyA.size_used) ? relate_in_array_id(relate_in_array_id::value_base_t(id.index())) : relate_in_array_id();
 		}
 		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::contiguous_tags<relate_in_array_id> thingyA_get_relate_in_array(ve::contiguous_tags<thingyA_id> id) const noexcept {
@@ -4649,7 +4643,7 @@ namespace dcon {
 			relate_in_array_set_right(relate_in_array_id(relate_in_array_id::value_base_t(ref_id.index())), val);
 		}
 		DCON_RELEASE_INLINE relate_in_list_id thingyA_get_relate_in_list_as_left(thingyA_id id) const noexcept {
-			return (id.value <= relate_in_list.size_used) ? relate_in_list_id(relate_in_list_id::value_base_t(id.index())) : relate_in_list_id();
+			return (id.value <= thingyA.size_used) ? relate_in_list_id(relate_in_list_id::value_base_t(id.index())) : relate_in_list_id();
 		}
 		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::contiguous_tags<relate_in_list_id> thingyA_get_relate_in_list_as_left(ve::contiguous_tags<thingyA_id> id) const noexcept {
@@ -4668,7 +4662,7 @@ namespace dcon {
 			}
 		}
 		DCON_RELEASE_INLINE relate_in_list_id thingyA_get_relate_in_list(thingyA_id id) const noexcept {
-			return (id.value <= relate_in_list.size_used) ? relate_in_list_id(relate_in_list_id::value_base_t(id.index())) : relate_in_list_id();
+			return (id.value <= thingyA.size_used) ? relate_in_list_id(relate_in_list_id::value_base_t(id.index())) : relate_in_list_id();
 		}
 		#ifndef DCON_NO_VE
 		DCON_RELEASE_INLINE ve::contiguous_tags<relate_in_list_id> thingyA_get_relate_in_list(ve::contiguous_tags<thingyA_id> id) const noexcept {
@@ -5276,10 +5270,10 @@ namespace dcon {
 			return true;
 		}
 		DCON_RELEASE_INLINE bool relate_same_is_valid(relate_same_id id) const noexcept {
-			return bool(id) && uint32_t(id.index()) < relate_same.size_used && thingyA_is_valid(thingyA_id(thingyA_id::value_base_t(id.index()))) && (bool(relate_same.m_right.vptr()[id.index()]) || false);
+			return bool(id) && uint32_t(id.index()) < thingyA.size_used && thingyA_is_valid(thingyA_id(thingyA_id::value_base_t(id.index()))) && (bool(relate_same.m_right.vptr()[id.index()]) || false);
 		}
 		
-		uint32_t relate_same_size() const noexcept { return relate_same.size_used; }
+		uint32_t relate_same_size() const noexcept { return thingyA.size_used; }
 
 		//
 		// Functions for relate_in_array:
@@ -5364,10 +5358,10 @@ namespace dcon {
 			return true;
 		}
 		DCON_RELEASE_INLINE bool relate_in_array_is_valid(relate_in_array_id id) const noexcept {
-			return bool(id) && uint32_t(id.index()) < relate_in_array.size_used && thingyA_is_valid(thingyA_id(thingyA_id::value_base_t(id.index()))) && (bool(relate_in_array.m_right.vptr()[id.index()]) || false);
+			return bool(id) && uint32_t(id.index()) < thingyA.size_used && thingyA_is_valid(thingyA_id(thingyA_id::value_base_t(id.index()))) && (bool(relate_in_array.m_right.vptr()[id.index()]) || false);
 		}
 		
-		uint32_t relate_in_array_size() const noexcept { return relate_in_array.size_used; }
+		uint32_t relate_in_array_size() const noexcept { return thingyA.size_used; }
 
 		//
 		// Functions for relate_in_list:
@@ -5475,10 +5469,10 @@ namespace dcon {
 			return true;
 		}
 		DCON_RELEASE_INLINE bool relate_in_list_is_valid(relate_in_list_id id) const noexcept {
-			return bool(id) && uint32_t(id.index()) < relate_in_list.size_used && thingyA_is_valid(thingyA_id(thingyA_id::value_base_t(id.index()))) && (bool(relate_in_list.m_right.vptr()[id.index()]) || false);
+			return bool(id) && uint32_t(id.index()) < thingyA.size_used && thingyA_is_valid(thingyA_id(thingyA_id::value_base_t(id.index()))) && (bool(relate_in_list.m_right.vptr()[id.index()]) || false);
 		}
 		
-		uint32_t relate_in_list_size() const noexcept { return relate_in_list.size_used; }
+		uint32_t relate_in_list_size() const noexcept { return thingyA.size_used; }
 
 		//
 		// Functions for many_many:
@@ -6213,11 +6207,8 @@ namespace dcon {
 			if(thingyA.size_used == 0) return;
 			thingyA_id id_removed(thingyA_id::value_base_t(thingyA.size_used - 1));
 			delete_relate_same(relate_same_id(relate_same_id::value_base_t(id_removed.index())));
-			relate_same.size_used = thingyA.size_used - 1;
 			delete_relate_in_array(relate_in_array_id(relate_in_array_id::value_base_t(id_removed.index())));
-			relate_in_array.size_used = thingyA.size_used - 1;
 			delete_relate_in_list(relate_in_list_id(relate_in_list_id::value_base_t(id_removed.index())));
-			relate_in_list.size_used = thingyA.size_used - 1;
 			thingyA_remove_all_relate_as_optional_as_left(id_removed);
 			thingyA_remove_all_relate_as_non_optional_as_left(id_removed);
 			thingyA_remove_all_relate_as_multipleA_as_left(id_removed);
@@ -6239,9 +6230,9 @@ namespace dcon {
 			const uint32_t old_size = thingyA.size_used;
 			if(new_size < old_size) {
 				std::fill_n(thingyA.m_some_value.vptr() + new_size, old_size - new_size, int32_t{});
-				relate_same_resize(std::min(new_size, relate_same.size_used));
-				relate_in_array_resize(std::min(new_size, relate_in_array.size_used));
-				relate_in_list_resize(std::min(new_size, relate_in_list.size_used));
+				relate_same_resize(std::min(new_size, thingyA.size_used));
+				relate_in_array_resize(std::min(new_size, thingyA.size_used));
+				relate_in_list_resize(std::min(new_size, thingyA.size_used));
 				relate_as_optional_resize(0);
 				relate_as_non_optional_resize(0);
 				relate_as_multipleA_resize(0);
@@ -6262,9 +6253,6 @@ namespace dcon {
 			#else
 			if(thingyA.size_used >= 1200) throw dcon::out_of_space{};
 			#endif
-			relate_same.size_used = thingyA.size_used + 1;
-			relate_in_array.size_used = thingyA.size_used + 1;
-			relate_in_list.size_used = thingyA.size_used + 1;
 			++thingyA.size_used;
 			return new_id;
 		}
@@ -6281,13 +6269,10 @@ namespace dcon {
 			#endif
 			delete_relate_same(relate_same_id(relate_same_id::value_base_t(id_removed.index())));
 			internal_move_relationship_relate_same(relate_same_id(relate_same_id::value_base_t(last_id.index())), relate_same_id(relate_same_id::value_base_t(id_removed.index())));
-			relate_same.size_used = thingyA.size_used - 1;
 			delete_relate_in_array(relate_in_array_id(relate_in_array_id::value_base_t(id_removed.index())));
 			internal_move_relationship_relate_in_array(relate_in_array_id(relate_in_array_id::value_base_t(last_id.index())), relate_in_array_id(relate_in_array_id::value_base_t(id_removed.index())));
-			relate_in_array.size_used = thingyA.size_used - 1;
 			delete_relate_in_list(relate_in_list_id(relate_in_list_id::value_base_t(id_removed.index())));
 			internal_move_relationship_relate_in_list(relate_in_list_id(relate_in_list_id::value_base_t(last_id.index())), relate_in_list_id(relate_in_list_id::value_base_t(id_removed.index())));
-			relate_in_list.size_used = thingyA.size_used - 1;
 			thingyA_remove_all_relate_as_optional_as_left(id_removed);
 			thingyA_for_each_relate_as_optional_as_left(last_id, [this, id_removed, last_id](relate_as_optional_id i) {
 				relate_as_optional.m_left.vptr()[i.index()] = id_removed;
@@ -6420,13 +6405,12 @@ namespace dcon {
 			#else
 			if(new_size > 1200) throw dcon::out_of_space{};
 			#endif
-			const uint32_t old_size = relate_same.size_used;
+			const uint32_t old_size = thingyA.size_used;
 			if(new_size < old_size) {
 				relate_same.hashm_joint.clear();
 				std::fill_n(relate_same.m_right.vptr() + 0, old_size, thingyA_id{});
 			} else if(new_size > old_size) {
 			}
-			relate_same.size_used = new_size;
 		}
 		
 		//
@@ -6444,11 +6428,10 @@ namespace dcon {
 		// container pop_back for relate_same
 		//
 		void pop_back_relate_same() {
-			if(relate_same.size_used == 0) return;
-			relate_same_id id_removed(relate_same_id::value_base_t(relate_same.size_used - 1));
+			if(thingyA.size_used == 0) return;
+			relate_same_id id_removed(relate_same_id::value_base_t(thingyA.size_used - 1));
 			relate_same.hashm_joint.erase( relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(id_removed.index())), relate_same.m_right.vptr()[id_removed.index()]) );
 			internal_relate_same_set_right(id_removed, thingyA_id());
-			--relate_same.size_used;
 		}
 		
 		private:
@@ -6473,7 +6456,7 @@ namespace dcon {
 			if(relate_same_is_valid(relate_same_id(relate_same_id::value_base_t(left_p.index())))) return relate_same_id();
 			if(!bool(right_p)) return relate_same_id();
 			relate_same_id new_id(relate_same_id::value_base_t(left_p.index()));
-			if(relate_same.size_used < uint32_t(left_p.value)) relate_same_resize(uint32_t(left_p.value));
+			if(thingyA.size_used < uint32_t(left_p.value)) thingyA_resize(uint32_t(left_p.value));
 			internal_relate_same_set_right(new_id, right_p);
 			relate_same.hashm_joint.insert_or_assign(relate_same.to_joint_keydata(left_p, right_p), new_id);
 			return new_id;
@@ -6490,7 +6473,7 @@ namespace dcon {
 				}
 			}
 			relate_same_id new_id(relate_same_id::value_base_t(left_p.index()));
-			if(relate_same.size_used < uint32_t(left_p.value)) relate_same_resize(uint32_t(left_p.value));
+			if(thingyA.size_used < uint32_t(left_p.value)) thingyA_resize(uint32_t(left_p.value));
 			 {
 				auto key_dat = relate_same.to_joint_keydata(left_p, right_p);
 				relate_same.hashm_joint.insert_or_assign(key_dat, new_id);
@@ -6508,13 +6491,12 @@ namespace dcon {
 			#else
 			if(new_size > 1200) throw dcon::out_of_space{};
 			#endif
-			const uint32_t old_size = relate_in_array.size_used;
+			const uint32_t old_size = thingyA.size_used;
 			if(new_size < old_size) {
 				std::fill_n(relate_in_array.m_right.vptr() + 0, old_size, thingyB_id{});
 				std::for_each(relate_in_array.m_array_right.vptr() + 0, relate_in_array.m_array_right.vptr() + 0 + thingyB.size_used, [t = this](dcon::stable_mk_2_tag& i){ t->relate_in_array.right_storage.release(i); });
 			} else if(new_size > old_size) {
 			}
-			relate_in_array.size_used = new_size;
 		}
 		
 		//
@@ -6531,10 +6513,9 @@ namespace dcon {
 		// container pop_back for relate_in_array
 		//
 		void pop_back_relate_in_array() {
-			if(relate_in_array.size_used == 0) return;
-			relate_in_array_id id_removed(relate_in_array_id::value_base_t(relate_in_array.size_used - 1));
+			if(thingyA.size_used == 0) return;
+			relate_in_array_id id_removed(relate_in_array_id::value_base_t(thingyA.size_used - 1));
 			internal_relate_in_array_set_right(id_removed, thingyB_id());
-			--relate_in_array.size_used;
 		}
 		
 		private:
@@ -6559,7 +6540,7 @@ namespace dcon {
 			if(relate_in_array_is_valid(relate_in_array_id(relate_in_array_id::value_base_t(left_p.index())))) return relate_in_array_id();
 			if(!bool(right_p)) return relate_in_array_id();
 			relate_in_array_id new_id(relate_in_array_id::value_base_t(left_p.index()));
-			if(relate_in_array.size_used < uint32_t(left_p.value)) relate_in_array_resize(uint32_t(left_p.value));
+			if(thingyA.size_used < uint32_t(left_p.value)) thingyA_resize(uint32_t(left_p.value));
 			internal_relate_in_array_set_right(new_id, right_p);
 			return new_id;
 		}
@@ -6569,7 +6550,7 @@ namespace dcon {
 		//
 		relate_in_array_id force_create_relate_in_array(thingyA_id left_p, thingyB_id right_p) {
 			relate_in_array_id new_id(relate_in_array_id::value_base_t(left_p.index()));
-			if(relate_in_array.size_used < uint32_t(left_p.value)) relate_in_array_resize(uint32_t(left_p.value));
+			if(thingyA.size_used < uint32_t(left_p.value)) thingyA_resize(uint32_t(left_p.value));
 			internal_relate_in_array_set_right(new_id, right_p);
 			return new_id;
 		}
@@ -6583,14 +6564,13 @@ namespace dcon {
 			#else
 			if(new_size > 1200) throw dcon::out_of_space{};
 			#endif
-			const uint32_t old_size = relate_in_list.size_used;
+			const uint32_t old_size = thingyA.size_used;
 			if(new_size < old_size) {
 				std::fill_n(relate_in_list.m_right.vptr() + 0, old_size, thingyB_id{});
 				std::fill_n(relate_in_list.m_link_right.vptr() + 0, old_size, relate_in_list_id_pair{});
 				std::fill_n(relate_in_list.m_head_back_right.vptr() + 0, thingyB.size_used, relate_in_list_id{});
 			} else if(new_size > old_size) {
 			}
-			relate_in_list.size_used = new_size;
 		}
 		
 		//
@@ -6607,10 +6587,9 @@ namespace dcon {
 		// container pop_back for relate_in_list
 		//
 		void pop_back_relate_in_list() {
-			if(relate_in_list.size_used == 0) return;
-			relate_in_list_id id_removed(relate_in_list_id::value_base_t(relate_in_list.size_used - 1));
+			if(thingyA.size_used == 0) return;
+			relate_in_list_id id_removed(relate_in_list_id::value_base_t(thingyA.size_used - 1));
 			internal_relate_in_list_set_right(id_removed, thingyB_id());
-			--relate_in_list.size_used;
 		}
 		
 		private:
@@ -6647,7 +6626,7 @@ namespace dcon {
 			if(relate_in_list_is_valid(relate_in_list_id(relate_in_list_id::value_base_t(left_p.index())))) return relate_in_list_id();
 			if(!bool(right_p)) return relate_in_list_id();
 			relate_in_list_id new_id(relate_in_list_id::value_base_t(left_p.index()));
-			if(relate_in_list.size_used < uint32_t(left_p.value)) relate_in_list_resize(uint32_t(left_p.value));
+			if(thingyA.size_used < uint32_t(left_p.value)) thingyA_resize(uint32_t(left_p.value));
 			internal_relate_in_list_set_right(new_id, right_p);
 			return new_id;
 		}
@@ -6657,7 +6636,7 @@ namespace dcon {
 		//
 		relate_in_list_id force_create_relate_in_list(thingyA_id left_p, thingyB_id right_p) {
 			relate_in_list_id new_id(relate_in_list_id::value_base_t(left_p.index()));
-			if(relate_in_list.size_used < uint32_t(left_p.value)) relate_in_list_resize(uint32_t(left_p.value));
+			if(thingyA.size_used < uint32_t(left_p.value)) thingyA_resize(uint32_t(left_p.value));
 			internal_relate_in_list_set_right(new_id, right_p);
 			return new_id;
 		}
@@ -7451,7 +7430,7 @@ namespace dcon {
 		
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_relate_same(T&& func) {
-			for(uint32_t i = 0; i < relate_same.size_used; ++i) {
+			for(uint32_t i = 0; i < thingyA.size_used; ++i) {
 				relate_same_id tmp = relate_same_id(relate_same_id::value_base_t(i));
 				func(tmp);
 			}
@@ -7479,7 +7458,7 @@ namespace dcon {
 		
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_relate_in_array(T&& func) {
-			for(uint32_t i = 0; i < relate_in_array.size_used; ++i) {
+			for(uint32_t i = 0; i < thingyA.size_used; ++i) {
 				relate_in_array_id tmp = relate_in_array_id(relate_in_array_id::value_base_t(i));
 				func(tmp);
 			}
@@ -7507,7 +7486,7 @@ namespace dcon {
 		
 		template <typename T>
 		DCON_RELEASE_INLINE void for_each_relate_in_list(T&& func) {
-			for(uint32_t i = 0; i < relate_in_list.size_used; ++i) {
+			for(uint32_t i = 0; i < thingyA.size_used; ++i) {
 				relate_in_list_id tmp = relate_in_list_id(relate_in_list_id::value_base_t(i));
 				func(tmp);
 			}
@@ -7804,51 +7783,51 @@ namespace dcon {
 		}
 #endif
 		ve::vectorizable_buffer<float, relate_same_id> relate_same_make_vectorizable_float_buffer() const noexcept {
-			return ve::vectorizable_buffer<float, relate_same_id>(relate_same.size_used);
+			return ve::vectorizable_buffer<float, relate_same_id>(thingyA.size_used);
 		}
 		ve::vectorizable_buffer<int32_t, relate_same_id> relate_same_make_vectorizable_int_buffer() const noexcept {
-			return ve::vectorizable_buffer<int32_t, relate_same_id>(relate_same.size_used);
+			return ve::vectorizable_buffer<int32_t, relate_same_id>(thingyA.size_used);
 		}
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_serial_over_relate_same(F&& functor) {
-			ve::execute_serial<relate_same_id>(relate_same.size_used, functor);
+			ve::execute_serial<relate_same_id>(thingyA.size_used, functor);
 		}
 #ifndef VE_NO_TBB
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_parallel_over_relate_same(F&& functor) {
-			ve::execute_parallel_exact<relate_same_id>(relate_same.size_used, functor);
+			ve::execute_parallel_exact<relate_same_id>(thingyA.size_used, functor);
 		}
 #endif
 		ve::vectorizable_buffer<float, relate_in_array_id> relate_in_array_make_vectorizable_float_buffer() const noexcept {
-			return ve::vectorizable_buffer<float, relate_in_array_id>(relate_in_array.size_used);
+			return ve::vectorizable_buffer<float, relate_in_array_id>(thingyA.size_used);
 		}
 		ve::vectorizable_buffer<int32_t, relate_in_array_id> relate_in_array_make_vectorizable_int_buffer() const noexcept {
-			return ve::vectorizable_buffer<int32_t, relate_in_array_id>(relate_in_array.size_used);
+			return ve::vectorizable_buffer<int32_t, relate_in_array_id>(thingyA.size_used);
 		}
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_serial_over_relate_in_array(F&& functor) {
-			ve::execute_serial<relate_in_array_id>(relate_in_array.size_used, functor);
+			ve::execute_serial<relate_in_array_id>(thingyA.size_used, functor);
 		}
 #ifndef VE_NO_TBB
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_parallel_over_relate_in_array(F&& functor) {
-			ve::execute_parallel_exact<relate_in_array_id>(relate_in_array.size_used, functor);
+			ve::execute_parallel_exact<relate_in_array_id>(thingyA.size_used, functor);
 		}
 #endif
 		ve::vectorizable_buffer<float, relate_in_list_id> relate_in_list_make_vectorizable_float_buffer() const noexcept {
-			return ve::vectorizable_buffer<float, relate_in_list_id>(relate_in_list.size_used);
+			return ve::vectorizable_buffer<float, relate_in_list_id>(thingyA.size_used);
 		}
 		ve::vectorizable_buffer<int32_t, relate_in_list_id> relate_in_list_make_vectorizable_int_buffer() const noexcept {
-			return ve::vectorizable_buffer<int32_t, relate_in_list_id>(relate_in_list.size_used);
+			return ve::vectorizable_buffer<int32_t, relate_in_list_id>(thingyA.size_used);
 		}
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_serial_over_relate_in_list(F&& functor) {
-			ve::execute_serial<relate_in_list_id>(relate_in_list.size_used, functor);
+			ve::execute_serial<relate_in_list_id>(thingyA.size_used, functor);
 		}
 #ifndef VE_NO_TBB
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_parallel_over_relate_in_list(F&& functor) {
-			ve::execute_parallel_exact<relate_in_list_id>(relate_in_list.size_used, functor);
+			ve::execute_parallel_exact<relate_in_list_id>(thingyA.size_used, functor);
 		}
 #endif
 		ve::vectorizable_buffer<float, many_many_id> many_many_make_vectorizable_float_buffer() const noexcept {
@@ -8050,7 +8029,7 @@ namespace dcon {
 				if(serialize_selection.relate_same_right) {
 					dcon::record_header iheader(0, "uint16_t", "relate_same", "right");
 					total_size += iheader.serialize_size();
-					total_size += sizeof(thingyA_id) * relate_same.size_used;
+					total_size += sizeof(thingyA_id) * thingyA.size_used;
 				}
 				dcon::record_header headerb(0, "$", "relate_same", "$index_end");
 				total_size += headerb.serialize_size();
@@ -8062,7 +8041,7 @@ namespace dcon {
 				if(serialize_selection.relate_in_array_right) {
 					dcon::record_header iheader(0, "uint16_t", "relate_in_array", "right");
 					total_size += iheader.serialize_size();
-					total_size += sizeof(thingyB_id) * relate_in_array.size_used;
+					total_size += sizeof(thingyB_id) * thingyA.size_used;
 				}
 				dcon::record_header headerb(0, "$", "relate_in_array", "$index_end");
 				total_size += headerb.serialize_size();
@@ -8074,7 +8053,7 @@ namespace dcon {
 				if(serialize_selection.relate_in_list_right) {
 					dcon::record_header iheader(0, "uint16_t", "relate_in_list", "right");
 					total_size += iheader.serialize_size();
-					total_size += sizeof(thingyB_id) * relate_in_list.size_used;
+					total_size += sizeof(thingyB_id) * thingyA.size_used;
 				}
 				dcon::record_header headerb(0, "$", "relate_in_list", "$index_end");
 				total_size += headerb.serialize_size();
@@ -8278,13 +8257,13 @@ namespace dcon {
 			if(serialize_selection.relate_same) {
 				dcon::record_header header(sizeof(uint32_t), "uint32_t", "relate_same", "$size");
 				header.serialize(output_buffer);
-				*(reinterpret_cast<uint32_t*>(output_buffer)) = relate_same.size_used;
+				*(reinterpret_cast<uint32_t*>(output_buffer)) = thingyA.size_used;
 				output_buffer += sizeof(uint32_t);
 				 {
-					dcon::record_header iheader(sizeof(thingyA_id) * relate_same.size_used, "uint16_t", "relate_same", "right");
+					dcon::record_header iheader(sizeof(thingyA_id) * thingyA.size_used, "uint16_t", "relate_same", "right");
 					iheader.serialize(output_buffer);
-					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), relate_same.m_right.vptr(), sizeof(thingyA_id) * relate_same.size_used);
-					output_buffer += sizeof(thingyA_id) *  relate_same.size_used;
+					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), relate_same.m_right.vptr(), sizeof(thingyA_id) * thingyA.size_used);
+					output_buffer += sizeof(thingyA_id) *  thingyA.size_used;
 				}
 				dcon::record_header headerb(0, "$", "relate_same", "$index_end");
 				headerb.serialize(output_buffer);
@@ -8292,13 +8271,13 @@ namespace dcon {
 			if(serialize_selection.relate_in_array) {
 				dcon::record_header header(sizeof(uint32_t), "uint32_t", "relate_in_array", "$size");
 				header.serialize(output_buffer);
-				*(reinterpret_cast<uint32_t*>(output_buffer)) = relate_in_array.size_used;
+				*(reinterpret_cast<uint32_t*>(output_buffer)) = thingyA.size_used;
 				output_buffer += sizeof(uint32_t);
 				 {
-					dcon::record_header iheader(sizeof(thingyB_id) * relate_in_array.size_used, "uint16_t", "relate_in_array", "right");
+					dcon::record_header iheader(sizeof(thingyB_id) * thingyA.size_used, "uint16_t", "relate_in_array", "right");
 					iheader.serialize(output_buffer);
-					std::memcpy(reinterpret_cast<thingyB_id*>(output_buffer), relate_in_array.m_right.vptr(), sizeof(thingyB_id) * relate_in_array.size_used);
-					output_buffer += sizeof(thingyB_id) *  relate_in_array.size_used;
+					std::memcpy(reinterpret_cast<thingyB_id*>(output_buffer), relate_in_array.m_right.vptr(), sizeof(thingyB_id) * thingyA.size_used);
+					output_buffer += sizeof(thingyB_id) *  thingyA.size_used;
 				}
 				dcon::record_header headerb(0, "$", "relate_in_array", "$index_end");
 				headerb.serialize(output_buffer);
@@ -8306,13 +8285,13 @@ namespace dcon {
 			if(serialize_selection.relate_in_list) {
 				dcon::record_header header(sizeof(uint32_t), "uint32_t", "relate_in_list", "$size");
 				header.serialize(output_buffer);
-				*(reinterpret_cast<uint32_t*>(output_buffer)) = relate_in_list.size_used;
+				*(reinterpret_cast<uint32_t*>(output_buffer)) = thingyA.size_used;
 				output_buffer += sizeof(uint32_t);
 				 {
-					dcon::record_header iheader(sizeof(thingyB_id) * relate_in_list.size_used, "uint16_t", "relate_in_list", "right");
+					dcon::record_header iheader(sizeof(thingyB_id) * thingyA.size_used, "uint16_t", "relate_in_list", "right");
 					iheader.serialize(output_buffer);
-					std::memcpy(reinterpret_cast<thingyB_id*>(output_buffer), relate_in_list.m_right.vptr(), sizeof(thingyB_id) * relate_in_list.size_used);
-					output_buffer += sizeof(thingyB_id) *  relate_in_list.size_used;
+					std::memcpy(reinterpret_cast<thingyB_id*>(output_buffer), relate_in_list.m_right.vptr(), sizeof(thingyB_id) * thingyA.size_used);
+					output_buffer += sizeof(thingyB_id) *  thingyA.size_used;
 				}
 				dcon::record_header headerb(0, "$", "relate_in_list", "$index_end");
 				headerb.serialize(output_buffer);
@@ -8690,7 +8669,7 @@ namespace dcon {
 						if(header.is_object("relate_same")) {
 							do {
 								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_same.size_used) {
+									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= thingyA.size_used) {
 										relate_same_resize(0);
 									}
 									relate_same_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
@@ -8699,17 +8678,17 @@ namespace dcon {
 								}
 								if(header.is_property("right")) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_same.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_same.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(relate_same.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingyA.size_used) * sizeof(uint16_t), header.record_size));
 										serialize_selection.relate_same_right = true;
 									}
 									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_same.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
 											relate_same.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
 										}
 										serialize_selection.relate_same_right = true;
 									}
 									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_same.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
 											relate_same.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
 										}
 										serialize_selection.relate_same_right = true;
@@ -8718,14 +8697,14 @@ namespace dcon {
 								}
 								if(header.is_property("$index_end")) {
 									if(serialize_selection.relate_same_right == true) {
-										for(uint32_t i = 0; i < relate_same.size_used; ++i) {
+										for(uint32_t i = 0; i < thingyA.size_used; ++i) {
 											auto tmp = relate_same.m_right.vptr()[i];
 											relate_same.m_right.vptr()[i] = thingyA_id();
 											internal_relate_same_set_right(relate_same_id(relate_same_id::value_base_t(i)), tmp);
 										}
 									}
 									relate_same.hashm_joint.clear();
-									for(uint32_t idx = 0; idx < relate_same.size_used; ++idx) {
+									for(uint32_t idx = 0; idx < thingyA.size_used; ++idx) {
 										auto this_key = relate_same_id(relate_same_id::value_base_t(idx));
 										if(relate_same_is_valid(relate_same_id(relate_same_id::value_base_t(idx)))) {
 											auto key_dat = relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(idx)), relate_same.m_right.vptr()[idx]);
@@ -8740,7 +8719,7 @@ namespace dcon {
 						if(header.is_object("relate_in_array")) {
 							do {
 								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_in_array.size_used) {
+									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= thingyA.size_used) {
 										relate_in_array_resize(0);
 									}
 									relate_in_array_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
@@ -8749,17 +8728,17 @@ namespace dcon {
 								}
 								if(header.is_property("right")) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_in_array.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_in_array.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(relate_in_array.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingyA.size_used) * sizeof(uint16_t), header.record_size));
 										serialize_selection.relate_in_array_right = true;
 									}
 									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_in_array.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
 											relate_in_array.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
 										}
 										serialize_selection.relate_in_array_right = true;
 									}
 									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_in_array.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
 											relate_in_array.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
 										}
 										serialize_selection.relate_in_array_right = true;
@@ -8768,7 +8747,7 @@ namespace dcon {
 								}
 								if(header.is_property("$index_end")) {
 									if(serialize_selection.relate_in_array_right == true) {
-										for(uint32_t i = 0; i < relate_in_array.size_used; ++i) {
+										for(uint32_t i = 0; i < thingyA.size_used; ++i) {
 											auto tmp = relate_in_array.m_right.vptr()[i];
 											relate_in_array.m_right.vptr()[i] = thingyB_id();
 											internal_relate_in_array_set_right(relate_in_array_id(relate_in_array_id::value_base_t(i)), tmp);
@@ -8782,7 +8761,7 @@ namespace dcon {
 						if(header.is_object("relate_in_list")) {
 							do {
 								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_in_list.size_used) {
+									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= thingyA.size_used) {
 										relate_in_list_resize(0);
 									}
 									relate_in_list_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
@@ -8791,17 +8770,17 @@ namespace dcon {
 								}
 								if(header.is_property("right")) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_in_list.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_in_list.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(relate_in_list.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingyA.size_used) * sizeof(uint16_t), header.record_size));
 										serialize_selection.relate_in_list_right = true;
 									}
 									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_in_list.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
 											relate_in_list.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
 										}
 										serialize_selection.relate_in_list_right = true;
 									}
 									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_in_list.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
 											relate_in_list.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
 										}
 										serialize_selection.relate_in_list_right = true;
@@ -8810,7 +8789,7 @@ namespace dcon {
 								}
 								if(header.is_property("$index_end")) {
 									if(serialize_selection.relate_in_list_right == true) {
-										for(uint32_t i = 0; i < relate_in_list.size_used; ++i) {
+										for(uint32_t i = 0; i < thingyA.size_used; ++i) {
 											auto tmp = relate_in_list.m_right.vptr()[i];
 											relate_in_list.m_right.vptr()[i] = thingyB_id();
 											internal_relate_in_list_set_right(relate_in_list_id(relate_in_list_id::value_base_t(i)), tmp);
@@ -9767,7 +9746,7 @@ namespace dcon {
 						if(header.is_object("relate_same") && mask.relate_same) {
 							do {
 								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_same.size_used) {
+									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= thingyA.size_used) {
 										relate_same_resize(0);
 									}
 									relate_same_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
@@ -9776,17 +9755,17 @@ namespace dcon {
 								}
 								if(header.is_property("right") && mask.relate_same_right) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_same.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_same.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(relate_same.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingyA.size_used) * sizeof(uint16_t), header.record_size));
 										serialize_selection.relate_same_right = true;
 									}
 									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_same.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
 											relate_same.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
 										}
 										serialize_selection.relate_same_right = true;
 									}
 									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_same.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
 											relate_same.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
 										}
 										serialize_selection.relate_same_right = true;
@@ -9795,14 +9774,14 @@ namespace dcon {
 								}
 								if(header.is_property("$index_end") && mask.relate_same) {
 									if(serialize_selection.relate_same_right == true) {
-										for(uint32_t i = 0; i < relate_same.size_used; ++i) {
+										for(uint32_t i = 0; i < thingyA.size_used; ++i) {
 											auto tmp = relate_same.m_right.vptr()[i];
 											relate_same.m_right.vptr()[i] = thingyA_id();
 											internal_relate_same_set_right(relate_same_id(relate_same_id::value_base_t(i)), tmp);
 										}
 									}
 									relate_same.hashm_joint.clear();
-									for(uint32_t idx = 0; idx < relate_same.size_used; ++idx) {
+									for(uint32_t idx = 0; idx < thingyA.size_used; ++idx) {
 										auto this_key = relate_same_id(relate_same_id::value_base_t(idx));
 										if(relate_same_is_valid(relate_same_id(relate_same_id::value_base_t(idx)))) {
 											auto key_dat = relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(idx)), relate_same.m_right.vptr()[idx]);
@@ -9817,7 +9796,7 @@ namespace dcon {
 						if(header.is_object("relate_in_array") && mask.relate_in_array) {
 							do {
 								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_in_array.size_used) {
+									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= thingyA.size_used) {
 										relate_in_array_resize(0);
 									}
 									relate_in_array_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
@@ -9826,17 +9805,17 @@ namespace dcon {
 								}
 								if(header.is_property("right") && mask.relate_in_array_right) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_in_array.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_in_array.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(relate_in_array.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingyA.size_used) * sizeof(uint16_t), header.record_size));
 										serialize_selection.relate_in_array_right = true;
 									}
 									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_in_array.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
 											relate_in_array.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
 										}
 										serialize_selection.relate_in_array_right = true;
 									}
 									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_in_array.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
 											relate_in_array.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
 										}
 										serialize_selection.relate_in_array_right = true;
@@ -9845,7 +9824,7 @@ namespace dcon {
 								}
 								if(header.is_property("$index_end") && mask.relate_in_array) {
 									if(serialize_selection.relate_in_array_right == true) {
-										for(uint32_t i = 0; i < relate_in_array.size_used; ++i) {
+										for(uint32_t i = 0; i < thingyA.size_used; ++i) {
 											auto tmp = relate_in_array.m_right.vptr()[i];
 											relate_in_array.m_right.vptr()[i] = thingyB_id();
 											internal_relate_in_array_set_right(relate_in_array_id(relate_in_array_id::value_base_t(i)), tmp);
@@ -9859,7 +9838,7 @@ namespace dcon {
 						if(header.is_object("relate_in_list") && mask.relate_in_list) {
 							do {
 								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_in_list.size_used) {
+									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= thingyA.size_used) {
 										relate_in_list_resize(0);
 									}
 									relate_in_list_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
@@ -9868,17 +9847,17 @@ namespace dcon {
 								}
 								if(header.is_property("right") && mask.relate_in_list_right) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_in_list.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_in_list.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(relate_in_list.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingyA.size_used) * sizeof(uint16_t), header.record_size));
 										serialize_selection.relate_in_list_right = true;
 									}
 									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_in_list.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
 											relate_in_list.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
 										}
 										serialize_selection.relate_in_list_right = true;
 									}
 									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_in_list.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
 											relate_in_list.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
 										}
 										serialize_selection.relate_in_list_right = true;
@@ -9887,7 +9866,7 @@ namespace dcon {
 								}
 								if(header.is_property("$index_end") && mask.relate_in_list) {
 									if(serialize_selection.relate_in_list_right == true) {
-										for(uint32_t i = 0; i < relate_in_list.size_used; ++i) {
+										for(uint32_t i = 0; i < thingyA.size_used; ++i) {
 											auto tmp = relate_in_list.m_right.vptr()[i];
 											relate_in_list.m_right.vptr()[i] = thingyB_id();
 											internal_relate_in_list_set_right(relate_in_list_id(relate_in_list_id::value_base_t(i)), tmp);
