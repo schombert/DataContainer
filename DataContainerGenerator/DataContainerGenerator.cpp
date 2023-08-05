@@ -527,7 +527,7 @@ int main(int argc, char *argv[]) {
 								struct_padding::fixed, i.related_to->is_expandable,
 								"std::numeric_limits<dcon::stable_mk_2_tag>::max()").to_string(3);
 
-							output += "\t\t\tdcon::stable_variable_vector_storage_mk_2<" + ob.name + "_id, 8, " + std::to_string(ob.size * 2) + " > "
+							output += "\t\t\tdcon::stable_variable_vector_storage_mk_2<" + ob.name + "_id, 4, " + std::to_string(ob.size * 8) + " > "
 								+ i.property_name + "_storage;\n";
 						} else {
 							err.add(row_col_pair{ 0,0 }, 1007, std::string("Unable to estimate an upper bound on storage space for ") +
