@@ -46,3 +46,23 @@ relationship{
 		type{int32_t}
 	}
 }
+
+relationship{
+	name{uniq_car_ownership}
+
+	link{
+		object{person}
+		name{owner}
+		type{unique}
+	}
+	link{
+		object{car}
+		name{owned_car}
+		type{unique}
+	}
+	
+	property{
+		name{ownership_date}
+		type{int32_t}
+	}
+}

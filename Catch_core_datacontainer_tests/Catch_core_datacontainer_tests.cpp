@@ -937,3 +937,18 @@ TEST_CASE("objects and relationships with expandable storage", "[core_datacontai
 		REQUIRE(rng.second - rng.first == 0);
 	}
 }
+
+TEST_CASE("setting from relationship", "[core_datacontainer_tests]") {
+	auto ptr = std::make_unique< car_owner_basic::data_container >();
+
+	auto car_a = ptr->create_car();
+	auto car_b = ptr->create_car();
+	auto car_c = ptr->create_car();
+
+	auto person_a = ptr->create_person();
+	auto person_b = ptr->create_person();
+	auto person_c = ptr->create_person();
+
+	ptr->car_set_owner_from_uniq_car_ownership(car_b, person_a);
+	REQUIRE(ptr->car_get_owner_from_uniq_car_ownership(car_b) == person_a);
+}
