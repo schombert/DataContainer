@@ -6262,11 +6262,13 @@ namespace dcon {
 		//
 		void delete_thingyA(thingyA_id id) {
 			thingyA_id id_removed = id;
+			#ifndef NDEBUG
+			assert(id.index() >= 0);
+			assert(uint32_t(id.index()) < thingyA.size_used );
+			assert(thingyA.size_used != 0);
+			#endif
 			thingyA_id last_id(thingyA_id::value_base_t(thingyA.size_used - 1));
 			if(id_removed == last_id) { pop_back_thingyA(); return; }
-			#ifdef DCON_TRAP_INVALID_STORE
-			assert(id.index() >= 0);
-			#endif
 			delete_relate_same(relate_same_id(relate_same_id::value_base_t(id_removed.index())));
 			internal_move_relationship_relate_same(relate_same_id(relate_same_id::value_base_t(last_id.index())), relate_same_id(relate_same_id::value_base_t(id_removed.index())));
 			delete_relate_in_array(relate_in_array_id(relate_in_array_id::value_base_t(id_removed.index())));
@@ -6322,7 +6324,10 @@ namespace dcon {
 		// container delete for thingyB
 		//
 		void delete_thingyB(thingyB_id id_removed) {
-			if(!thingyB_is_valid(id_removed)) return;
+			#ifndef NDEBUG
+			assert(id_removed.index() >= 0);
+			assert(thingyB.m__index.vptr()[id_removed.index()] == id_removed);
+			#endif
 			thingyB.m__index.vptr()[id_removed.index()] = thingyB.first_free;
 			thingyB.first_free = id_removed;
 			if(int32_t(thingyB.size_used) - 1 == id_removed.index()) {
@@ -6417,7 +6422,7 @@ namespace dcon {
 		// container delete for relate_same
 		//
 		void delete_relate_same(relate_same_id id_removed) {
-			#ifdef DCON_TRAP_INVALID_STORE
+			#ifndef NDEBUG
 			assert(id_removed.index() >= 0);
 			#endif
 			relate_same.hashm_joint.erase( relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(id_removed.index())), relate_same.m_right.vptr()[id_removed.index()]) );
@@ -6503,7 +6508,7 @@ namespace dcon {
 		// container delete for relate_in_array
 		//
 		void delete_relate_in_array(relate_in_array_id id_removed) {
-			#ifdef DCON_TRAP_INVALID_STORE
+			#ifndef NDEBUG
 			assert(id_removed.index() >= 0);
 			#endif
 			internal_relate_in_array_set_right(id_removed, thingyB_id());
@@ -6577,7 +6582,7 @@ namespace dcon {
 		// container delete for relate_in_list
 		//
 		void delete_relate_in_list(relate_in_list_id id_removed) {
-			#ifdef DCON_TRAP_INVALID_STORE
+			#ifndef NDEBUG
 			assert(id_removed.index() >= 0);
 			#endif
 			internal_relate_in_list_set_right(id_removed, thingyB_id());
@@ -6645,7 +6650,10 @@ namespace dcon {
 		// container delete for many_many
 		//
 		void delete_many_many(many_many_id id_removed) {
-			if(!many_many_is_valid(id_removed)) return;
+			#ifndef NDEBUG
+			assert(id_removed.index() >= 0);
+			assert(many_many.m__index.vptr()[id_removed.index()] == id_removed);
+			#endif
 			many_many.m__index.vptr()[id_removed.index()] = many_many.first_free;
 			many_many.first_free = id_removed;
 			if(int32_t(many_many.size_used) - 1 == id_removed.index()) {
@@ -6778,7 +6786,10 @@ namespace dcon {
 		// container delete for relate_as_optional
 		//
 		void delete_relate_as_optional(relate_as_optional_id id_removed) {
-			if(!relate_as_optional_is_valid(id_removed)) return;
+			#ifndef NDEBUG
+			assert(id_removed.index() >= 0);
+			assert(relate_as_optional.m__index.vptr()[id_removed.index()] == id_removed);
+			#endif
 			relate_as_optional.m__index.vptr()[id_removed.index()] = relate_as_optional.first_free;
 			relate_as_optional.first_free = id_removed;
 			if(int32_t(relate_as_optional.size_used) - 1 == id_removed.index()) {
@@ -6873,7 +6884,10 @@ namespace dcon {
 		// container delete for relate_as_non_optional
 		//
 		void delete_relate_as_non_optional(relate_as_non_optional_id id_removed) {
-			if(!relate_as_non_optional_is_valid(id_removed)) return;
+			#ifndef NDEBUG
+			assert(id_removed.index() >= 0);
+			assert(relate_as_non_optional.m__index.vptr()[id_removed.index()] == id_removed);
+			#endif
 			relate_as_non_optional.m__index.vptr()[id_removed.index()] = relate_as_non_optional.first_free;
 			relate_as_non_optional.first_free = id_removed;
 			if(int32_t(relate_as_non_optional.size_used) - 1 == id_removed.index()) {
@@ -6969,7 +6983,10 @@ namespace dcon {
 		// container delete for relate_as_multipleA
 		//
 		void delete_relate_as_multipleA(relate_as_multipleA_id id_removed) {
-			if(!relate_as_multipleA_is_valid(id_removed)) return;
+			#ifndef NDEBUG
+			assert(id_removed.index() >= 0);
+			assert(relate_as_multipleA.m__index.vptr()[id_removed.index()] == id_removed);
+			#endif
 			relate_as_multipleA.m__index.vptr()[id_removed.index()] = relate_as_multipleA.first_free;
 			relate_as_multipleA.first_free = id_removed;
 			if(int32_t(relate_as_multipleA.size_used) - 1 == id_removed.index()) {
@@ -7088,7 +7105,10 @@ namespace dcon {
 		// container delete for relate_as_multipleB
 		//
 		void delete_relate_as_multipleB(relate_as_multipleB_id id_removed) {
-			if(!relate_as_multipleB_is_valid(id_removed)) return;
+			#ifndef NDEBUG
+			assert(id_removed.index() >= 0);
+			assert(relate_as_multipleB.m__index.vptr()[id_removed.index()] == id_removed);
+			#endif
 			relate_as_multipleB.m__index.vptr()[id_removed.index()] = relate_as_multipleB.first_free;
 			relate_as_multipleB.first_free = id_removed;
 			if(int32_t(relate_as_multipleB.size_used) - 1 == id_removed.index()) {
@@ -7186,7 +7206,10 @@ namespace dcon {
 		// container delete for relate_as_multipleC
 		//
 		void delete_relate_as_multipleC(relate_as_multipleC_id id_removed) {
-			if(!relate_as_multipleC_is_valid(id_removed)) return;
+			#ifndef NDEBUG
+			assert(id_removed.index() >= 0);
+			assert(relate_as_multipleC.m__index.vptr()[id_removed.index()] == id_removed);
+			#endif
 			relate_as_multipleC.m__index.vptr()[id_removed.index()] = relate_as_multipleC.first_free;
 			relate_as_multipleC.first_free = id_removed;
 			if(int32_t(relate_as_multipleC.size_used) - 1 == id_removed.index()) {
@@ -7282,7 +7305,10 @@ namespace dcon {
 		// container delete for relate_as_multipleD
 		//
 		void delete_relate_as_multipleD(relate_as_multipleD_id id_removed) {
-			if(!relate_as_multipleD_is_valid(id_removed)) return;
+			#ifndef NDEBUG
+			assert(id_removed.index() >= 0);
+			assert(relate_as_multipleD.m__index.vptr()[id_removed.index()] == id_removed);
+			#endif
 			relate_as_multipleD.m__index.vptr()[id_removed.index()] = relate_as_multipleD.first_free;
 			relate_as_multipleD.first_free = id_removed;
 			if(int32_t(relate_as_multipleD.size_used) - 1 == id_removed.index()) {

@@ -1565,11 +1565,13 @@ namespace ex1 {
 		//
 		void delete_top(top_id id) {
 			top_id id_removed = id;
+			#ifndef NDEBUG
+			assert(id.index() >= 0);
+			assert(uint32_t(id.index()) < top.size_used );
+			assert(top.size_used != 0);
+			#endif
 			top_id last_id(top_id::value_base_t(top.size_used - 1));
 			if(id_removed == last_id) { pop_back_top(); return; }
-			#ifdef DCON_TRAP_INVALID_STORE
-			assert(id.index() >= 0);
-			#endif
 			top_remove_all_lr_relation_as_left(id_removed);
 			top_for_each_lr_relation_as_left(last_id, [this, id_removed, last_id](lr_relation_id i) {
 				lr_relation.m_left.vptr()[i.index()] = id_removed;
@@ -1623,7 +1625,10 @@ namespace ex1 {
 		// container delete for lr_relation
 		//
 		void delete_lr_relation(lr_relation_id id_removed) {
-			if(!lr_relation_is_valid(id_removed)) return;
+			#ifndef NDEBUG
+			assert(id_removed.index() >= 0);
+			assert(lr_relation.m__index.vptr()[id_removed.index()] == id_removed);
+			#endif
 			lr_relation.m__index.vptr()[id_removed.index()] = lr_relation.first_free;
 			lr_relation.first_free = id_removed;
 			if(int32_t(lr_relation.size_used) - 1 == id_removed.index()) {

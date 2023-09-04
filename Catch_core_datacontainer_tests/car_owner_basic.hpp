@@ -2230,7 +2230,7 @@ namespace car_owner_basic {
 		// container delete for car_ownership
 		//
 		void delete_car_ownership(car_ownership_id id_removed) {
-			#ifdef DCON_TRAP_INVALID_STORE
+			#ifndef NDEBUG
 			assert(id_removed.index() >= 0);
 			#endif
 			internal_car_ownership_set_owner(id_removed, person_id());
@@ -2311,7 +2311,7 @@ namespace car_owner_basic {
 		// container delete for uniq_car_ownership
 		//
 		void delete_uniq_car_ownership(uniq_car_ownership_id id_removed) {
-			#ifdef DCON_TRAP_INVALID_STORE
+			#ifndef NDEBUG
 			assert(id_removed.index() >= 0);
 			#endif
 			internal_uniq_car_ownership_set_owned_car(id_removed, car_id());

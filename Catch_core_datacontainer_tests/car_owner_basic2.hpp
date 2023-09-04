@@ -1538,11 +1538,13 @@ namespace cob2 {
 		//
 		void delete_car(car_id id) {
 			car_id id_removed = id;
+			#ifndef NDEBUG
+			assert(id.index() >= 0);
+			assert(uint32_t(id.index()) < car.size_used );
+			assert(car.size_used != 0);
+			#endif
 			car_id last_id(car_id::value_base_t(car.size_used - 1));
 			if(id_removed == last_id) { pop_back_car(); return; }
-			#ifdef DCON_TRAP_INVALID_STORE
-			assert(id.index() >= 0);
-			#endif
 			delete_car_ownership(car_ownership_id(car_ownership_id::value_base_t(id_removed.index())));
 			internal_move_relationship_car_ownership(car_ownership_id(car_ownership_id::value_base_t(last_id.index())), car_ownership_id(car_ownership_id::value_base_t(id_removed.index())));
 			car.m_wheels.vptr()[id_removed.index()] = std::move(car.m_wheels.vptr()[last_id.index()]);
@@ -1600,11 +1602,13 @@ namespace cob2 {
 		//
 		void delete_person(person_id id) {
 			person_id id_removed = id;
+			#ifndef NDEBUG
+			assert(id.index() >= 0);
+			assert(uint32_t(id.index()) < person.size_used );
+			assert(person.size_used != 0);
+			#endif
 			person_id last_id(person_id::value_base_t(person.size_used - 1));
 			if(id_removed == last_id) { pop_back_person(); return; }
-			#ifdef DCON_TRAP_INVALID_STORE
-			assert(id.index() >= 0);
-			#endif
 			person_remove_all_car_ownership_as_owner(id_removed);
 			person_for_each_car_ownership_as_owner(last_id, [this, id_removed, last_id](car_ownership_id i) {
 				car_ownership.m_owner.vptr()[i.index()] = id_removed;
@@ -1638,7 +1642,7 @@ namespace cob2 {
 		// container delete for car_ownership
 		//
 		void delete_car_ownership(car_ownership_id id_removed) {
-			#ifdef DCON_TRAP_INVALID_STORE
+			#ifndef NDEBUG
 			assert(id_removed.index() >= 0);
 			#endif
 			internal_car_ownership_set_owner(id_removed, person_id());

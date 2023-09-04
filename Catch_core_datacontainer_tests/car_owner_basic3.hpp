@@ -1400,7 +1400,10 @@ namespace cob3 {
 		// container delete for car
 		//
 		void delete_car(car_id id_removed) {
-			if(!car_is_valid(id_removed)) return;
+			#ifndef NDEBUG
+			assert(id_removed.index() >= 0);
+			assert(car.m__index.vptr()[id_removed.index()] == id_removed);
+			#endif
 			car.m__index.vptr()[id_removed.index()] = car.first_free;
 			car.first_free = id_removed;
 			if(int32_t(car.size_used) - 1 == id_removed.index()) {
@@ -1474,7 +1477,10 @@ namespace cob3 {
 		// container delete for person
 		//
 		void delete_person(person_id id_removed) {
-			if(!person_is_valid(id_removed)) return;
+			#ifndef NDEBUG
+			assert(id_removed.index() >= 0);
+			assert(person.m__index.vptr()[id_removed.index()] == id_removed);
+			#endif
 			person.m__index.vptr()[id_removed.index()] = person.first_free;
 			person.first_free = id_removed;
 			if(int32_t(person.size_used) - 1 == id_removed.index()) {
@@ -1564,7 +1570,7 @@ namespace cob3 {
 		// container delete for car_ownership
 		//
 		void delete_car_ownership(car_ownership_id id_removed) {
-			#ifdef DCON_TRAP_INVALID_STORE
+			#ifndef NDEBUG
 			assert(id_removed.index() >= 0);
 			#endif
 			internal_car_ownership_set_owner(id_removed, person_id());

@@ -860,14 +860,17 @@ basic_builder& make_compactable_delete(basic_builder& o, relationship_object_def
 	o + substitute{ "obj", cob.name } + substitute{ "obj_pk", cob.primary_key.points_to ? cob.primary_key.points_to->name : cob.name };
 	o + heading{ "container compactable delete for @obj@" };
 
-	o + "void delete_@obj@(@obj@_id id)" + block{ 
+	o + "void delete_@obj@(@obj@_id id)" + block{
 		o + "@obj@_id id_removed = id;";
+
+		o + "#ifndef NDEBUG";
+		o + "assert(id.index() >= 0);";
+		o + "assert(uint32_t(id.index()) < @obj_pk@.size_used );";
+		o + "assert(@obj_pk@.size_used != 0);";
+		o + "#endif";
+
 		o + "@obj@_id last_id(@obj@_id::value_base_t(@obj_pk@.size_used - 1));";
 		o + "if(id_removed == last_id) { pop_back_@obj@(); return; }";
-
-		o + "#ifdef DCON_TRAP_INVALID_STORE";
-		o + "assert(id.index() >= 0);";
-		o + "#endif";
 
 		if(cob.hook_delete)
 			o + "on_delete_@obj@(id_removed);";
@@ -1240,8 +1243,7 @@ basic_builder& make_clearing_delete(basic_builder& o, relationship_object_def co
 	o + heading{ "container delete for @obj@" };
 
 	o + "void delete_@obj@(@obj@_id id_removed)" + block{
-
-		o + "#ifdef DCON_TRAP_INVALID_STORE";
+		o + "#ifndef NDEBUG";
 		o + "assert(id_removed.index() >= 0);";
 		o + "#endif";
 
@@ -1301,7 +1303,11 @@ basic_builder& make_erasable_delete(basic_builder& o, relationship_object_def co
 	o + heading{ "container delete for @obj@" };
 
 	o + "void delete_@obj@(@obj@_id id_removed)" + block{
-		o + "if(!@obj@_is_valid(id_removed)) return;";
+		o + "#ifndef NDEBUG";
+		o + "assert(id_removed.index() >= 0);";
+		o + "assert(@obj@.m__index.vptr()[id_removed.index()] == id_removed);";
+		o + "#endif";
+
 		if(cob.hook_delete)
 			o + "on_delete_@obj@(id_removed);";
 
