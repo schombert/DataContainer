@@ -152,7 +152,7 @@ namespace dcon {
 		char const* property_name_start;
 		char const* property_name_end;
 
-		record_header() {}
+		record_header() : record_size(0), type_name_start(nullptr), type_name_end(nullptr), object_name_start(nullptr), object_name_end(nullptr), property_name_start(nullptr), property_name_end(nullptr) { }
 		record_header(uint64_t sz, char  const* type, char  const* object, char const* property) :
 			record_size(uint32_t(sz)), type_name_start(type), object_name_start(object), property_name_start(property) {
 			type_name_end = type_name_start + strlen(type_name_start);
