@@ -389,7 +389,7 @@ namespace dcon {
 			const uint32_t qword_size = uint32_t(1) + (requested_capacity + uint32_t(7)) / uint32_t(8);
 
 #ifdef _WIN64
-			auto initial_base_address = first_free.load(std::memory_order::memory_order_acquire);
+			auto initial_base_address = first_free.load(std::memory_order_acquire);
 			
 			// determine if we predict that our allocation will go to uncommitted pages
 			// if so: commit
@@ -419,7 +419,7 @@ namespace dcon {
 			new_header = (detail::mk_2_header*)(allocation + old_position);
 
 
-			if (first_free.load(std::memory_order::memory_order_acquire) >= ((static_cast<size_t>(std::numeric_limits<uint32_t>::max()) + 1) * DCON_GLOBAL_BACKING_MULTIPLIER) / 8) {
+			if (first_free.load(std::memory_order_acquire) >= ((static_cast<size_t>(std::numeric_limits<uint32_t>::max()) + 1) * DCON_GLOBAL_BACKING_MULTIPLIER) / 8) {
 #ifndef DCON_USE_EXCEPTIONS
 				std::abort();
 #else
