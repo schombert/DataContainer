@@ -4,6 +4,8 @@
 #include "common_types.hpp"
 #include "relation.hpp"
 #include <array>
+#include "common_types.cpp"
+
 TEST_CASE("double relation test", "[relationships_tests]") {
 	static_assert(std::is_trivially_copyable_v<dcon::thingyA_id>);
 	static_assert(std::is_trivially_copy_constructible_v<dcon::thingyA_id>);

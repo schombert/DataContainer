@@ -4,6 +4,7 @@
 
 #include "catch.hpp"
 #include "common_types.hpp"
+#include "common_types.cpp"
 
 struct my_struct {
 	float internal_val = 2.0f;

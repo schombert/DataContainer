@@ -5,6 +5,7 @@
 #include "color_container.hpp"
 #include "color_tutorial.hpp"
 #include "old_color_container.hpp"
+#include "common_types.cpp"
 
 TEST_CASE("test basic access", "[tutorial_tests]") {
 	auto ptr = std::make_unique< dcon::data_container >();

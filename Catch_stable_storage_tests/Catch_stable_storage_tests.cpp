@@ -2,8 +2,12 @@
 
 #include "..\CommonIncludes\catch.hpp"
 #include "..\CommonIncludes\common_types.hpp"
+#include "..\CommonIncludes\common_types.cpp"
 
 TEST_CASE("operations on invalid", "[storage_tests]") {
+	//dcon::shared_backing_storage.~stable_variable_vector3_backing();
+	//new (&dcon::shared_backing_storage) dcon::stable_variable_vector3_backing();
+
 	auto ptr = std::make_unique<dcon::stable_variable_vector_storage_mk_2<float, 8, 4000>>();
 
 	dcon::stable_mk_2_tag inv_tag = std::numeric_limits<dcon::stable_mk_2_tag>::max();
@@ -16,6 +20,9 @@ TEST_CASE("operations on invalid", "[storage_tests]") {
 }
 
 TEST_CASE("single item", "[storage_tests]") {
+	//dcon::shared_backing_storage.~stable_variable_vector3_backing();
+	//new (&dcon::shared_backing_storage) dcon::stable_variable_vector3_backing();
+
 	auto ptr = std::make_unique<dcon::stable_variable_vector_storage_mk_2<float, 8, 4000>>();
 
 	dcon::stable_mk_2_tag store = std::numeric_limits<dcon::stable_mk_2_tag>::max();
@@ -41,6 +48,9 @@ TEST_CASE("single item", "[storage_tests]") {
 }
 
 TEST_CASE("loaded_range", "[storage_tests]") {
+	//dcon::shared_backing_storage.~stable_variable_vector3_backing();
+	//new (&dcon::shared_backing_storage) dcon::stable_variable_vector3_backing();
+
 	std::vector<float> fvec = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f };
 
 	auto ptr = std::make_unique<dcon::stable_variable_vector_storage_mk_2<float, 8, 4000>>();
@@ -96,6 +106,9 @@ TEST_CASE("loaded_range", "[storage_tests]") {
 }
 
 TEST_CASE("growing storage", "[storage_tests]") {
+	//dcon::shared_backing_storage.~stable_variable_vector3_backing();
+	//new (&dcon::shared_backing_storage) dcon::stable_variable_vector3_backing();
+
 	auto ptr = std::make_unique<dcon::stable_variable_vector_storage_mk_2<float, 8, 4000>>();
 	dcon::stable_mk_2_tag store = std::numeric_limits<dcon::stable_mk_2_tag>::max();
 
@@ -135,6 +148,9 @@ TEST_CASE("growing storage", "[storage_tests]") {
 }
 
 TEST_CASE("growing multiple", "[storage_tests]") {
+	//dcon::shared_backing_storage.~stable_variable_vector3_backing();
+	//new (&dcon::shared_backing_storage) dcon::stable_variable_vector3_backing();
+
 	auto ptr = std::make_unique<dcon::stable_variable_vector_storage_mk_2<float, 8, 4000>>();
 	dcon::stable_mk_2_tag storea = std::numeric_limits<dcon::stable_mk_2_tag>::max();
 	dcon::stable_mk_2_tag storeb = std::numeric_limits<dcon::stable_mk_2_tag>::max();
@@ -152,6 +168,9 @@ TEST_CASE("growing multiple", "[storage_tests]") {
 }
 
 TEST_CASE("local vector", "[storage_tests]") {
+	//dcon::shared_backing_storage.~stable_variable_vector3_backing();
+	//new (&dcon::shared_backing_storage) dcon::stable_variable_vector3_backing();
+
 	{
 		dcon::local_vector<int> lv;
 

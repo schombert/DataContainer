@@ -4,6 +4,7 @@
 
 #include "catch.hpp"
 #include "common_types.hpp"
+#include "common_types.cpp"
 
 struct c_struct {
 	int32_t v1 = 5;

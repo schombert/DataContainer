@@ -3,6 +3,7 @@
 #include "catch.hpp"
 #include "common_types.hpp"
 #include "ecs.hpp"
+#include "common_types.cpp"
 
 void dcon::data_container::on_delete_entity(entity_id e) {
 	if (auto c = entity_get_position_component(e); bool(c)) {

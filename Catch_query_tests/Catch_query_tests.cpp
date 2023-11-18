@@ -2,6 +2,7 @@
 
 #include "catch.hpp"
 #include "common_types.hpp"
+#include "common_types.cpp"
 
 float sum(float a, float b) {
 	return a + b;

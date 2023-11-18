@@ -89,4 +89,9 @@
       <Filter>docs</Filter>
     </Image>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="common_types.cpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+  </ItemGroup>
 </Project>
