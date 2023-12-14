@@ -130,6 +130,7 @@
     <ClInclude Include="ve.hpp" />
     <ClInclude Include="ve_avx.hpp" />
     <ClInclude Include="ve_avx2.hpp" />
+    <ClInclude Include="ve_avx512.hpp" />
     <ClInclude Include="ve_sse.hpp" />
   </ItemGroup>
   <ItemGroup>
