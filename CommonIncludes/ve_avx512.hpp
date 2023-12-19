@@ -97,10 +97,6 @@ namespace ve {
 		}
 
 		RELEASE_INLINE constexpr mask_vector(__mmask16 v) : value(v) {}
-		RELEASE_INLINE constexpr operator __mmask16() const
-		{
-			return value;
-		}
 		RELEASE_INLINE bool operator[](uint32_t i) const noexcept {
 			return value & (1 << i);
 		}
@@ -1022,10 +1018,10 @@ namespace ve {
 		return _mm512_cmp_epi32_mask(a.value, b.value, _MM_CMPINT_NE);
 	}
 	RELEASE_INLINE mask_vector operator==(mask_vector a, mask_vector b) {
-		return !(a ^ b);
+		return __mmask16(~(a.value ^ b.value));
 	}
 	RELEASE_INLINE mask_vector operator!=(mask_vector a, mask_vector b) {
-		return a ^ b;
+		return __mmask16(a.value ^ b.value);
 	}
 
 	template<typename T>
@@ -1140,16 +1136,16 @@ namespace ve {
 
 
 	RELEASE_INLINE fp_vector select(mask_vector mask, fp_vector a, fp_vector b) {
-		return _mm512_mask_blend_ps(mask, b, a);
+		return _mm512_mask_blend_ps(mask.value, b, a);
 	}
 
 	RELEASE_INLINE int_vector select(mask_vector mask, int_vector a, int_vector b) {
-		return _mm512_mask_blend_epi32(mask, b.value, a.value);
+		return _mm512_mask_blend_epi32(mask.value, b.value, a.value);
 	}
 
 	template<typename T>
 	RELEASE_INLINE tagged_vector<T> select(mask_vector mask, tagged_vector<T> a, tagged_vector<typename ve_identity<T>::type> b) {
-		return tagged_vector<T>(_mm512_mask_blend_epi32(mask, b, a), std::true_type{});
+		return tagged_vector<T>(_mm512_mask_blend_epi32(mask.value, b, a), std::true_type{});
 	}
 
 	RELEASE_INLINE mask_vector is_non_zero(int_vector i) {
@@ -1465,61 +1461,61 @@ namespace ve {
 	RELEASE_INLINE mask_vector load(tagged_vector<T> indices, mask_vector mask, dcon::bitfield_type const* source) {
 		const auto byte_indices = _mm512_srai_epi32(indices.value, 3);
 		const auto bit_indices = _mm512_and_si512(indices.value, _mm512_set1_epi32(0x00000007));
-		auto const gathered = _mm512_mask_i32gather_epi32(_mm512_setzero_si512(), mask, byte_indices, (int32_t const*)(source), 1);
+		auto const gathered = _mm512_mask_i32gather_epi32(_mm512_setzero_si512(), mask.value, byte_indices, (int32_t const*)(source), 1);
 		auto const shifted = _mm512_srlv_epi32(gathered, bit_indices);
 		return _mm512_test_epi32_mask(shifted, _mm512_set1_epi32(0x00000001));
 	}
 	template<typename U>
 	RELEASE_INLINE fp_vector load(tagged_vector<U> indices, mask_vector mask, float const* source) {
-		return _mm512_mask_i32gather_ps(_mm512_setzero_ps(), mask, indices.value, source, 4);
+		return _mm512_mask_i32gather_ps(_mm512_setzero_ps(), mask.value, indices.value, source, 4);
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(tagged_vector<T> indices, mask_vector mask, U const* source) -> std::enable_if_t<std::numeric_limits<U>::is_integer && sizeof(U) == 4, value_to_vector_type<U>> {
-		return _mm512_mask_i32gather_epi32(_mm512_setzero_si512(), mask, indices.value, (int32_t const*)source, 4);
+		return _mm512_mask_i32gather_epi32(_mm512_setzero_si512(), mask.value, indices.value, (int32_t const*)source, 4);
 	}
 
 	template<typename T>
 	RELEASE_INLINE int_vector load(tagged_vector<T> indices, mask_vector mask, int16_t const* source) {
-		auto v = _mm512_mask_i32gather_epi32(_mm512_setzero_si512(), mask, _mm512_sub_epi32(indices.value, _mm512_set1_epi32(1)), (int32_t const*)source, 2);
+		auto v = _mm512_mask_i32gather_epi32(_mm512_setzero_si512(), mask.value, _mm512_sub_epi32(indices.value, _mm512_set1_epi32(1)), (int32_t const*)source, 2);
 		return _mm512_srai_epi32(v, 16);
 	}
 	template<typename T>
 	RELEASE_INLINE int_vector load(tagged_vector<T> indices, mask_vector mask, uint16_t const* source) {
-		auto v = _mm512_mask_i32gather_epi32(_mm512_setzero_si512(), mask, indices.value, (int32_t const*)source, 2);
+		auto v = _mm512_mask_i32gather_epi32(_mm512_setzero_si512(), mask.value, indices.value, (int32_t const*)source, 2);
 		return _mm512_and_si512(v, _mm512_set1_epi32(0xFFFF));
 	}
 	template<typename T>
 	RELEASE_INLINE int_vector load(tagged_vector<T> indices, mask_vector mask, int8_t const* source) {
-		auto v = _mm512_mask_i32gather_epi32(_mm512_setzero_si512(), mask, _mm512_sub_epi32(indices.value, _mm512_set1_epi32(3)), (int32_t const*)source, 1);
+		auto v = _mm512_mask_i32gather_epi32(_mm512_setzero_si512(), mask.value, _mm512_sub_epi32(indices.value, _mm512_set1_epi32(3)), (int32_t const*)source, 1);
 		return _mm512_srai_epi32(v, 24);
 	}
 	template<typename T>
 	RELEASE_INLINE int_vector load(tagged_vector<T> indices, mask_vector mask, uint8_t const* source) {
-		auto v = _mm512_mask_i32gather_epi32(_mm512_setzero_si512(), mask, indices.value, (int32_t const*)source, 1);
+		auto v = _mm512_mask_i32gather_epi32(_mm512_setzero_si512(), mask.value, indices.value, (int32_t const*)source, 1);
 		return _mm512_and_si512(v, _mm512_set1_epi32(0xFF));
 	}
 
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(tagged_vector<T> indices, mask_vector mask, U const* source)  -> std::enable_if_t<!std::numeric_limits<U>::is_integer && sizeof(U) == 4, tagged_vector<U>> {
-		return _mm512_mask_i32gather_epi32(_mm512_setzero_si512(), mask, indices.value, (int32_t const*)source, 4);
+		return _mm512_mask_i32gather_epi32(_mm512_setzero_si512(), mask.value, indices.value, (int32_t const*)source, 4);
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(tagged_vector<T> indices, mask_vector mask, U const* source)  -> std::enable_if_t<!std::numeric_limits<U>::is_integer && sizeof(U) == 2, tagged_vector<U>> {
 		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
-			auto v = _mm512_mask_i32gather_epi32(_mm512_setzero_si512(), mask, _mm512_sub_epi32(indices.value, _mm512_set1_epi32(1)), (int32_t const*)source, 2);
+			auto v = _mm512_mask_i32gather_epi32(_mm512_setzero_si512(), mask.value, _mm512_sub_epi32(indices.value, _mm512_set1_epi32(1)), (int32_t const*)source, 2);
 			return _mm512_srai_epi32(v, 16);
 		} else {
-			auto v = _mm512_mask_i32gather_epi32(_mm512_setzero_si512(), mask, indices.value, (int32_t const*)source, 2);
+			auto v = _mm512_mask_i32gather_epi32(_mm512_setzero_si512(), mask.value, indices.value, (int32_t const*)source, 2);
 			return _mm512_and_si512(v, _mm512_set1_epi32(0xFFFF));
 		}
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(tagged_vector<T> indices, mask_vector mask, U const* source)  -> std::enable_if_t<!std::numeric_limits<U>::is_integer && sizeof(U) == 1, tagged_vector<U>> {
 		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
-			auto v = _mm512_mask_i32gather_epi32(_mm512_setzero_si512(), mask, _mm512_sub_epi32(indices.value, _mm512_set1_epi32(3)), (int32_t const*)source, 1);
+			auto v = _mm512_mask_i32gather_epi32(_mm512_setzero_si512(), mask.value, _mm512_sub_epi32(indices.value, _mm512_set1_epi32(3)), (int32_t const*)source, 1);
 			return _mm512_srai_epi32(v, 24);
 		} else {
-			auto v = _mm512_mask_i32gather_epi32(_mm512_setzero_si512(), mask, indices.value, (int32_t const*)source, 1);
+			auto v = _mm512_mask_i32gather_epi32(_mm512_setzero_si512(), mask.value, indices.value, (int32_t const*)source, 1);
 			return _mm512_and_si512(v, _mm512_set1_epi32(0xFF));
 		}
 	}
