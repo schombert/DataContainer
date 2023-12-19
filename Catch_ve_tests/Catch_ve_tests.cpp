@@ -2,7 +2,6 @@
 #pragma warning(disable : 4127)
 
 #define DCON_TRAP_INVALID_STORE
-#define __AVX512BW__
 
 #include "..\CommonIncludes\catch.hpp"
 #include "..\CommonIncludes\ve.hpp"

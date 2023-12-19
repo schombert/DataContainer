@@ -1307,29 +1307,27 @@ namespace ve {
 	template<typename T>
 	RELEASE_INLINE int_vector load(partial_contiguous_tags<T> e, int16_t const* source) {
 		auto mask = __mmask16((1 << e.subcount) - 1);
-		auto v = _mm256_loadu_si256((const __m256i *)(source + e.value));
-		return _mm512_mask_blend_epi32(mask, _mm512_setzero_si512(), _mm512_cvtepi16_epi32(v));
+		auto v = _mm256_maskz_loadu_epi16(mask, source + e.value);
+		return _mm512_cvtepi16_epi32(v);
 	}
 	template<typename T>
 	RELEASE_INLINE int_vector load(partial_contiguous_tags<T> e, uint16_t const* source) {
 		auto mask = __mmask16((1 << e.subcount) - 1);
-		auto v = _mm256_loadu_si256((const __m256i *)(source + e.value));
-		return _mm512_mask_blend_epi32(mask, _mm512_setzero_si512(), _mm512_cvtepu16_epi32(v));
+		auto v = _mm256_maskz_loadu_epi16(mask, source + e.value);
+		return _mm512_cvtepu16_epi32(v);
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(partial_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 2, tagged_vector<U>> {
 		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
 			auto mask = __mmask16((1 << e.subcount) - 1);
-			auto v = _mm256_loadu_si256((const __m256i *)(source + e.value));
-			return _mm512_mask_blend_epi32(mask, _mm512_setzero_si512(), _mm512_cvtepi16_epi32(v));
+			auto v = _mm256_maskz_loadu_epi16(mask, source + e.value);
+			return _mm512_cvtepi16_epi32(v);
 		} else {
 			auto mask = __mmask16((1 << e.subcount) - 1);
-			auto v = _mm256_loadu_si256((const __m256i *)(source + e.value));
-			return _mm512_mask_blend_epi32(mask, _mm512_setzero_si512(), _mm512_cvtepu16_epi32(v));
+			auto v = _mm256_maskz_loadu_epi16(mask, source + e.value);
+			return _mm512_cvtepu16_epi32(v);
 		}
 	}
-
-	
 
 
 	template<typename T>
@@ -1376,25 +1374,25 @@ namespace ve {
 	template<typename T>
 	RELEASE_INLINE int_vector load(partial_contiguous_tags<T> e, int8_t const* source) {
 		auto mask = __mmask16((1 << e.subcount) - 1);
-		auto v = _mm_loadu_si128((const __m128i *)(source + e.value));
-		return _mm512_mask_mov_epi32(_mm512_setzero_si512(), mask, _mm512_cvtepi8_epi32(v));
+		auto v = _mm_maskz_loadu_epi8(mask, source + e.value);
+		return _mm512_cvtepi8_epi32(v);
 	}
 	template<typename T>
 	RELEASE_INLINE int_vector load(partial_contiguous_tags<T> e, uint8_t const* source) {
 		auto mask = __mmask16((1 << e.subcount) - 1);
-		auto v = _mm_loadu_si128((const __m128i *)(source + e.value));
-		return _mm512_mask_mov_epi32(_mm512_setzero_si512(), mask, _mm512_cvtepu8_epi32(v));
+		auto v = _mm_maskz_loadu_epi8(mask, source + e.value);
+		return _mm512_cvtepu8_epi32(v);
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(partial_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 1 && !std::is_same_v<U, dcon::bitfield_type>, tagged_vector<U>> {
 		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
 			auto mask = __mmask16((1 << e.subcount) - 1);
-			auto v = _mm_loadu_si128((const __m128i *)(source + e.value));
-			return _mm512_mask_mov_epi32(_mm512_setzero_si512(), mask, _mm512_cvtepi8_epi32(v));
+			auto v = _mm_maskz_loadu_epi8(mask, source + e.value);
+			return _mm512_cvtepi8_epi32(v);
 		} else {
 			auto mask = __mmask16((1 << e.subcount) - 1);
-			auto v = _mm_loadu_si128((const __m128i *)(source + e.value));
-			return _mm512_mask_mov_epi32(_mm512_setzero_si512(), mask, _mm512_cvtepu8_epi32(v));
+			auto v = _mm_maskz_loadu_epi8(mask, source + e.value);
+			return _mm512_cvtepu8_epi32(v);
 		}
 	}
 
@@ -1525,7 +1523,6 @@ namespace ve {
 			return _mm512_and_si512(v, _mm512_set1_epi32(0xFF));
 		}
 	}
-
 
 	template<typename T>
 	RELEASE_INLINE void store(contiguous_tags<T> e, float* dest, fp_vector values) {
