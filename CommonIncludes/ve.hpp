@@ -33,6 +33,9 @@ namespace concurrency = oneapi::tbb;
 #endif
 
 
+#ifdef __AVX512BW__
+#include "ve_avx512.hpp"
+#else
 #ifdef __AVX2__
 #include "ve_avx2.hpp"
 #else
@@ -40,6 +43,7 @@ namespace concurrency = oneapi::tbb;
 #include "ve_avx.hpp"
 #else // SSE
 #include "ve_sse.hpp"
+#endif
 #endif
 #endif
 

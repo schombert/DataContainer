@@ -2,6 +2,7 @@
 #pragma warning(disable : 4127)
 
 #define DCON_TRAP_INVALID_STORE
+#define __AVX512BW__
 
 #include "..\CommonIncludes\catch.hpp"
 #include "..\CommonIncludes\ve.hpp"
@@ -171,6 +172,15 @@ TEST_CASE("constructors", "[ve_tests]") {
 	}
 
 	SECTION("construct with individual values") {
+#ifdef __AVX512BW__
+		ve::fp_vector vec(1.0f, 3.0f, 4.0f, 7.0f, 10.0f, 14.5f, 16.0f, 18.0f, 20.0f, 22.0f, 24.0f, 26.f, 28.f, 30.f, 32.f, 34.f);
+		ve::int_vector ivec(4, 5, 9, 10, 15, 11, 29, 1, 30, 33, 36, 39, 42, 45, 48, 51);
+		ve::tagged_vector<dummy_id> tvec(dummy_id(8), dummy_id(), dummy_id(5), dummy_id(1), dummy_id(10), dummy_id(11), dummy_id(19), dummy_id(),
+										dummy_id(27), dummy_id(21), dummy_id(22), dummy_id(23), dummy_id(24), dummy_id(25), dummy_id(26), dummy_id(20));
+		ve::tagged_vector<int32_t> tivec(4, 5, 9, 10, 15, 11, 29, 1, 31, 30, 33, 32, 35, 34, 37, 36);
+		ve::mask_vector mvec(true, true, false, true, false, true, false, false,
+							false, true, false, false, false, true, true, false);
+#else
 #ifdef __AVX2__
 		ve::fp_vector vec(1.0f, 3.0f, 4.0f, 7.0f, 10.0f, 14.5f, 16.0f, 18.0f);
 		ve::int_vector ivec(4, 5, 9, 10, 15, 11, 29, 1);
@@ -192,6 +202,7 @@ TEST_CASE("constructors", "[ve_tests]") {
 		ve::mask_vector mvec(true, true, false, true);
 #endif
 #endif
+#endif
 
 		REQUIRE(vec[0] == 1.0f);
 		REQUIRE(vec[1] == 3.0f);
@@ -203,6 +214,16 @@ TEST_CASE("constructors", "[ve_tests]") {
 			REQUIRE(vec[5] == 14.5f);
 			REQUIRE(vec[6] == 16.0f);
 			REQUIRE(vec[7] == 18.0f);
+		}
+		if(ve::vector_size > 8) {
+			REQUIRE(vec[8] == 20.0f);
+			REQUIRE(vec[9] == 22.0f);
+			REQUIRE(vec[10] == 24.0f);
+			REQUIRE(vec[11] == 26.0f);
+			REQUIRE(vec[12] == 28.0f);
+			REQUIRE(vec[13] == 30.0f);
+			REQUIRE(vec[14] == 32.0f);
+			REQUIRE(vec[15] == 34.0f);
 		}
 
 		REQUIRE(ivec[0] == 4);
@@ -216,6 +237,16 @@ TEST_CASE("constructors", "[ve_tests]") {
 			REQUIRE(ivec[6] == 29);
 			REQUIRE(ivec[7] == 1);
 		}
+		if(ve::vector_size > 8) {
+			REQUIRE(ivec[8] == 30);
+			REQUIRE(ivec[9] == 33);
+			REQUIRE(ivec[10] == 36);
+			REQUIRE(ivec[11] == 39);
+			REQUIRE(ivec[12] == 42);
+			REQUIRE(ivec[13] == 45);
+			REQUIRE(ivec[14] == 48);
+			REQUIRE(ivec[15] == 51);
+		}
 
 		REQUIRE(tvec[0] == dummy_id(8));
 		REQUIRE(tvec[1] == dummy_id());
@@ -227,6 +258,16 @@ TEST_CASE("constructors", "[ve_tests]") {
 			REQUIRE(tvec[5] == dummy_id(11));
 			REQUIRE(tvec[6] == dummy_id(19));
 			REQUIRE(tvec[7] == dummy_id());
+		}
+		if(ve::vector_size > 8) {
+			REQUIRE(tvec[8] == dummy_id(27));
+			REQUIRE(tvec[9] == dummy_id(21));
+			REQUIRE(tvec[10] == dummy_id(22));
+			REQUIRE(tvec[11] == dummy_id(23));
+			REQUIRE(tvec[12] == dummy_id(24));
+			REQUIRE(tvec[13] == dummy_id(25));
+			REQUIRE(tvec[14] == dummy_id(26));
+			REQUIRE(tvec[15] == dummy_id(20));
 		}
 
 		REQUIRE(tivec[0] == 4);
@@ -240,6 +281,16 @@ TEST_CASE("constructors", "[ve_tests]") {
 			REQUIRE(tivec[6] == 29);
 			REQUIRE(tivec[7] == 1);
 		}
+		if(ve::vector_size > 8) {
+			REQUIRE(tivec[8] == 31);
+			REQUIRE(tivec[9] == 30);
+			REQUIRE(tivec[10] == 33);
+			REQUIRE(tivec[11] == 32);
+			REQUIRE(tivec[12] == 35);
+			REQUIRE(tivec[13] == 34);
+			REQUIRE(tivec[14] == 37);
+			REQUIRE(tivec[15] == 36);
+		}
 
 		REQUIRE(mvec[0]);
 		REQUIRE(mvec[1]);
@@ -252,10 +303,23 @@ TEST_CASE("constructors", "[ve_tests]") {
 			REQUIRE(!mvec[6]);
 			REQUIRE(!mvec[7]);
 		}
+		if(ve::vector_size > 8) {
+			REQUIRE(!mvec[8]);
+			REQUIRE(mvec[9]);
+			REQUIRE(!mvec[10]);
+			REQUIRE(!mvec[11]);
+			REQUIRE(!mvec[12]);
+			REQUIRE(mvec[13]);
+			REQUIRE(mvec[14]);
+			REQUIRE(!mvec[15]);
+		}
 	}
 }
 
 TEST_CASE("bitfield constructors", "[ve_tests]") {
+#ifdef __AVX512BW__
+	ve::mask_vector mvec(ve::vbitfield_type{ uint16_t(0x01 | 0x04 | 0x10 | 0x20 | 0x400 | 0x2000 | 0x100 | 0x8000 ) });
+#else
 #ifdef __AVX2__
 	ve::mask_vector mvec(ve::vbitfield_type{ uint8_t(0x01 | 0x04 | 0x10 | 0x20) });
 #else
@@ -263,6 +327,7 @@ TEST_CASE("bitfield constructors", "[ve_tests]") {
 	ve::mask_vector mvec(ve::vbitfield_type{ uint8_t(0x01 | 0x04 | 0x10 | 0x20) });
 #else // SSE
 	ve::mask_vector mvec(ve::vbitfield_type{uint8_t(0x01 | 0x04)});
+#endif
 #endif
 #endif
 
@@ -277,6 +342,16 @@ TEST_CASE("bitfield constructors", "[ve_tests]") {
 		REQUIRE(!mvec[6]);
 		REQUIRE(!mvec[7]);
 	}
+	if(ve::vector_size > 8) {
+		REQUIRE(mvec[8]);
+		REQUIRE(!mvec[9]);
+		REQUIRE(mvec[10]);
+		REQUIRE(!mvec[11]);
+		REQUIRE(!mvec[12]);
+		REQUIRE(mvec[13]);
+		REQUIRE(!mvec[14]);
+		REQUIRE(mvec[15]);
+	}
 	
 }
 
@@ -284,6 +359,9 @@ TEST_CASE("tagged_vector int32_t specialization", "[ve_tests]") {
 	ve::tagged_vector<int32_t> etvec;
 	ve::tagged_vector<int32_t> utvec(7);
 
+#ifdef __AVX512BW__
+	ve::tagged_vector<int32_t> tvec(0, 5, -1, 3, 8, 2, 4, 5, -9, 10, -11, 12, -13, -14, -15, 16);
+#else
 #ifdef __AVX2__
 	ve::tagged_vector<int32_t> tvec(0, 5, -1, 3, 8, 2, 4, 5);
 #else
@@ -291,6 +369,7 @@ TEST_CASE("tagged_vector int32_t specialization", "[ve_tests]") {
 	ve::tagged_vector<int32_t> tvec(0, 5, -1, 3, 8, 2, 4, 5);
 #else // SSE
 	ve::tagged_vector<int32_t> tvec(0, 5, -1, 3);
+#endif
 #endif
 #endif
 
@@ -305,6 +384,16 @@ TEST_CASE("tagged_vector int32_t specialization", "[ve_tests]") {
 		REQUIRE(tvec[6] == 4);
 		REQUIRE(tvec[7] == 5);
 	}
+	if(ve::vector_size > 8) {
+		REQUIRE(tvec[8] == -9);
+		REQUIRE(tvec[9] == 10);
+		REQUIRE(tvec[10] == -11);
+		REQUIRE(tvec[11] == 12);
+		REQUIRE(tvec[12] == -13);
+		REQUIRE(tvec[13] == -14);
+		REQUIRE(tvec[14] == -15);
+		REQUIRE(tvec[15] == 16);
+	}
 
 	REQUIRE(etvec[0] == -1);
 	REQUIRE(etvec[1] == -1);
@@ -316,6 +405,16 @@ TEST_CASE("tagged_vector int32_t specialization", "[ve_tests]") {
 		REQUIRE(etvec[5] == -1);
 		REQUIRE(etvec[6] == -1);
 		REQUIRE(etvec[7] == -1);
+	}
+	if(ve::vector_size > 8) {
+		REQUIRE(etvec[8] == -1);
+		REQUIRE(etvec[9] == -1);
+		REQUIRE(etvec[10] == -1);
+		REQUIRE(etvec[11] == -1);
+		REQUIRE(etvec[12] == -1);
+		REQUIRE(etvec[13] == -1);
+		REQUIRE(etvec[14] == -1);
+		REQUIRE(etvec[15] == -1);
 	}
 
 
@@ -330,9 +429,23 @@ TEST_CASE("tagged_vector int32_t specialization", "[ve_tests]") {
 		REQUIRE(utvec[6] == 7);
 		REQUIRE(utvec[7] == 7);
 	}
+	if(ve::vector_size > 8) {
+		REQUIRE(utvec[8] == 7);
+		REQUIRE(utvec[9] == 7);
+		REQUIRE(utvec[10] == 7);
+		REQUIRE(utvec[11] == 7);
+		REQUIRE(utvec[12] == 7);
+		REQUIRE(utvec[13] == 7);
+		REQUIRE(utvec[14] == 7);
+		REQUIRE(utvec[15] == 7);
+	}
 }
 
 TEST_CASE("tagged_vector loading from raw values", "[ve_tests]") {
+#ifdef __AVX512BW__
+	ve::tagged_vector<int32_t> tvec(_mm512_setr_epi32(0, 5, -1, 3, 8, 2, 4, 5, 7, 8, 9, 10, 4, 3, 1, 2));
+	ve::tagged_vector<dummy_id> dtvec(_mm512_setr_epi32(1, 6, 0, 4, 9, 3, 5, 6, 8, 9, 10, 11, 5, 4, 2, 3));
+#else
 #ifdef __AVX2__
 	ve::tagged_vector<int32_t> tvec(_mm256_setr_epi32(0, 5, -1, 3, 8, 2, 4, 5));
 	ve::tagged_vector<dummy_id> dtvec(_mm256_setr_epi32(1, 6, 0, 4, 9, 3, 5, 6));
@@ -343,6 +456,7 @@ TEST_CASE("tagged_vector loading from raw values", "[ve_tests]") {
 #else // SSE
 	ve::tagged_vector<int32_t> tvec(_mm_setr_epi32(0, 5, -1, 3));
 	ve::tagged_vector<dummy_id> dtvec(_mm_setr_epi32(1, 6, 0, 4));
+#endif
 #endif
 #endif
 
@@ -358,6 +472,17 @@ TEST_CASE("tagged_vector loading from raw values", "[ve_tests]") {
 		REQUIRE(dtvec[7] == dummy_id(5));
 	}
 
+	if(ve::vector_size > 8) {
+		REQUIRE(dtvec[8] == dummy_id(7));
+		REQUIRE(dtvec[9] == dummy_id(8));
+		REQUIRE(dtvec[10] == dummy_id(9));
+		REQUIRE(dtvec[11] == dummy_id(10));
+		REQUIRE(dtvec[12] == dummy_id(4));
+		REQUIRE(dtvec[13] == dummy_id(3));
+		REQUIRE(dtvec[14] == dummy_id(1));
+		REQUIRE(dtvec[15] == dummy_id(2));
+	}
+
 	REQUIRE(tvec[0] == 0);
 	REQUIRE(tvec[1] == 5);
 	REQUIRE(tvec[2] == -1);
@@ -369,9 +494,24 @@ TEST_CASE("tagged_vector loading from raw values", "[ve_tests]") {
 		REQUIRE(tvec[6] == 4);
 		REQUIRE(tvec[7] == 5);
 	}
+
+	if(ve::vector_size > 8) {
+		REQUIRE(tvec[8] == 7);
+		REQUIRE(tvec[9] == 8);
+		REQUIRE(tvec[10] == 9);
+		REQUIRE(tvec[11] == 10);
+		REQUIRE(tvec[12] == 4);
+		REQUIRE(tvec[13] == 3);
+		REQUIRE(tvec[14] == 1);
+		REQUIRE(tvec[15] == 2);
+	}
 }
 
 TEST_CASE("fp_vector reduction test", "[ve_tests]") {
+#ifdef __AVX512BW__
+	ve::fp_vector vec(1.0f, 3.0f, 4.0f, 7.0f, 10.0f, 14.5f, 16.0f, 18.0f, 19.0f, 20.0f, 21.0f, 22.0f, 20.0f, 21.0f, 22.0f, 23.0f);
+	ve::fp_vector vec2(1.0f, 7.0f, 0.0f, -2.0f, 1.5f, 3.0f, 9.0f, 2.0f, -1.0f, -2.0f, -3.0f, 7.0f, -4.0f, -5.0f, -6.0f, 7.0f);
+#else
 #ifdef __AVX2__
 	ve::fp_vector vec(1.0f, 3.0f, 4.0f, 7.0f, 10.0f, 14.5f, 16.0f, 18.0f);
 	ve::fp_vector vec2(1.0f, 7.0f, 0.0f, -2.0f, 1.5f, 3.0f, 9.0f, 2.0f);
@@ -384,7 +524,12 @@ TEST_CASE("fp_vector reduction test", "[ve_tests]") {
 	ve::fp_vector vec2(1.0f, 7.0f, 0.0f, -2.0f);
 #endif
 #endif
+#endif
 
+#ifdef __AVX512BW__
+	REQUIRE(vec.reduce() == 1.0f + 3.0f + 4.0f + 7.0f + 10.0f + 14.5f + 16.0f + 18.0f + 19.0f + 20.0f + 21.0f + 22.0f + 20.0f + 21.0f + 22.0f + 23.0f);
+	REQUIRE(vec2.reduce() == 1.0f + 7.0f + 0.0f + -2.0f + 1.5f + 3.0f + 9.0f + 2.0f + -1.0f + -2.0f + -3.0f + 7.0f + -4.0f + -5.0f + -6.0f + 7.0f);
+#else
 #ifdef __AVX2__
 	REQUIRE(vec.reduce() == 1.0f + 3.0f + 4.0f + 7.0f + 10.0f + 14.5f + 16.0f + 18.0f);
 	REQUIRE(vec2.reduce() == 1.0f + 7.0f + 0.0f + -2.0f + 1.5f + 3.0f + 9.0f + 2.0f);
@@ -395,6 +540,7 @@ TEST_CASE("fp_vector reduction test", "[ve_tests]") {
 #else // SSE
 	REQUIRE(vec.reduce() == 1.0f + 3.0f +  4.0f + 7.0f);
 	REQUIRE(vec2.reduce() == 1.0f + 7.0f + 0.0f + -2.0f);
+#endif
 #endif
 #endif
 }
@@ -419,7 +565,23 @@ TEST_CASE("vectorizable buffer", "[ve_tests]") {
 		REQUIRE(mask_result[6]);
 		REQUIRE(mask_result[7]);
 	}
+	if(ve::vector_size > 8) {
+		REQUIRE(mask_result[8]);
+		REQUIRE(mask_result[9]);
+		REQUIRE(mask_result[10]);
+		REQUIRE(mask_result[11]);
+		REQUIRE(mask_result[12]);
+		REQUIRE(mask_result[13]);
+		REQUIRE(mask_result[14]);
+		REQUIRE(mask_result[15]);
+	}
 
+#ifdef __AVX512BW__
+	ve::tagged_vector<dummy_id> tvec(dummy_id(8), dummy_id(0), dummy_id(5), dummy_id(1), dummy_id(10), dummy_id(11), dummy_id(19), dummy_id(2),
+									dummy_id(24), dummy_id(30), dummy_id(29), dummy_id(28), dummy_id(27), dummy_id(26), dummy_id(25), dummy_id(31));
+	ve::fp_vector inc1(1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.5f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.5f, 15.0f, 16.0f);
+	ve::fp_vector inc2(10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.5f, 70.0f, 80.0f, 90.0f, 100.0f, 110.0f, 120.0f, 130.0f, 140.5f, 150.0f, 160.0f);
+#else
 #ifdef __AVX2__
 	ve::tagged_vector<dummy_id> tvec(dummy_id(8), dummy_id(0), dummy_id(5), dummy_id(1), dummy_id(10), dummy_id(11), dummy_id(19), dummy_id(2));
 	ve::fp_vector inc1(1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.5f, 7.0f, 8.0f);
@@ -437,6 +599,7 @@ TEST_CASE("vectorizable buffer", "[ve_tests]") {
 	ve::fp_vector inc2b(50.0f, 60.5f, 70.0f, 80.0f);
 #endif
 #endif
+#endif
 
 	mask_result = buf.get(tvec) == ve::fp_vector();
 	REQUIRE(mask_result[0]);
@@ -449,9 +612,23 @@ TEST_CASE("vectorizable buffer", "[ve_tests]") {
 		REQUIRE(mask_result[6]);
 		REQUIRE(mask_result[7]);
 	}
+	if(ve::vector_size > 8) {
+		REQUIRE(mask_result[8]);
+		REQUIRE(mask_result[9]);
+		REQUIRE(mask_result[10]);
+		REQUIRE(mask_result[11]);
+		REQUIRE(mask_result[12]);
+		REQUIRE(mask_result[13]);
+		REQUIRE(mask_result[14]);
+		REQUIRE(mask_result[15]);
+	}
 
 	
 
+#ifdef __AVX512BW__
+	buf.set(ve::contiguous_tags<dummy_id>(0), inc1);
+	buf.set(ve::contiguous_tags<dummy_id>(16), inc2);
+#else
 #ifdef __AVX2__
 	buf.set(ve::contiguous_tags<dummy_id>(0), inc1);
 	buf.set(ve::contiguous_tags<dummy_id>(8), inc2);
@@ -466,7 +643,11 @@ TEST_CASE("vectorizable buffer", "[ve_tests]") {
 	buf.set(ve::contiguous_tags<dummy_id>(12), inc2b);
 #endif
 #endif
+#endif
 
+#ifdef __AVX512BW__
+	mask_result = buf.get(ve::contiguous_tags<dummy_id>(0)) == inc1;
+#else
 #ifdef __AVX2__
 	mask_result = buf.get(ve::contiguous_tags<dummy_id>(0)) == inc1;
 #else
@@ -476,6 +657,7 @@ TEST_CASE("vectorizable buffer", "[ve_tests]") {
 	mask_result = buf.get(ve::contiguous_tags<dummy_id>(4)) == inc1b;
 #endif
 #endif
+#endif
 	
 	REQUIRE(mask_result[0]);
 	REQUIRE(mask_result[1]);
@@ -487,8 +669,21 @@ TEST_CASE("vectorizable buffer", "[ve_tests]") {
 		REQUIRE(mask_result[6]);
 		REQUIRE(mask_result[7]);
 	}
+	if(ve::vector_size > 8) {
+		REQUIRE(mask_result[8]);
+		REQUIRE(mask_result[9]);
+		REQUIRE(mask_result[10]);
+		REQUIRE(mask_result[11]);
+		REQUIRE(mask_result[12]);
+		REQUIRE(mask_result[13]);
+		REQUIRE(mask_result[14]);
+		REQUIRE(mask_result[15]);
+	}
 
 	
+#ifdef __AVX512BW__
+	mask_result = buf.get(tvec) == ve::fp_vector(9.0f, 1.0f, 6.5f, 2.0f, 11.0f, 12.0f, 40.0f, 3.0f, 90.0f, 150.0f, 140.5f, 130.0f, 120.0f, 110.0f, 100.0f, 160.0f);
+#else
 #ifdef __AVX2__
 	mask_result = buf.get(tvec) == ve::fp_vector(10.0f, 1.0f, 6.5f, 2.0f, 30.0f, 40.0f, 0.0f, 3.0f);
 #else
@@ -498,6 +693,7 @@ TEST_CASE("vectorizable buffer", "[ve_tests]") {
 	mask_result = buf.get(tvec) == ve::fp_vector(10.0f, 1.0f, 6.5f, 2.0f);
 #endif
 #endif
+#endif
 
 	REQUIRE(mask_result[0]);
 	REQUIRE(mask_result[1]);
@@ -509,10 +705,24 @@ TEST_CASE("vectorizable buffer", "[ve_tests]") {
 		REQUIRE(mask_result[6]);
 		REQUIRE(mask_result[7]);
 	}
+	if(ve::vector_size > 8) {
+		REQUIRE(mask_result[8]);
+		REQUIRE(mask_result[9]);
+		REQUIRE(mask_result[10]);
+		REQUIRE(mask_result[11]);
+		REQUIRE(mask_result[12]);
+		REQUIRE(mask_result[13]);
+		REQUIRE(mask_result[14]);
+		REQUIRE(mask_result[15]);
+	}
 
 	REQUIRE(buf.get(dummy_id(5)) == 6.5f); 
 
 
+#ifdef __AVX512BW__
+	buf.set(tvec, inc1);
+	mask_result = buf.get(tvec) == inc1;
+#else
 #ifdef __AVX2__
 	buf.set(tvec, inc1);
 	mask_result = buf.get(tvec) == inc1;
@@ -525,6 +735,7 @@ TEST_CASE("vectorizable buffer", "[ve_tests]") {
 	mask_result = buf.get(tvec) == inc1;
 #endif
 #endif
+#endif
 
 	REQUIRE(mask_result[0]);
 	REQUIRE(mask_result[1]);
@@ -536,6 +747,16 @@ TEST_CASE("vectorizable buffer", "[ve_tests]") {
 		REQUIRE(mask_result[6]);
 		REQUIRE(mask_result[7]);
 	}
+	if(ve::vector_size > 8) {
+		REQUIRE(mask_result[8]);
+		REQUIRE(mask_result[9]);
+		REQUIRE(mask_result[10]);
+		REQUIRE(mask_result[11]);
+		REQUIRE(mask_result[12]);
+		REQUIRE(mask_result[13]);
+		REQUIRE(mask_result[14]);
+		REQUIRE(mask_result[15]);
+	}
 
 	REQUIRE(buf.get(tvec[3]) == inc1[3]);
 	REQUIRE(buf.get(dummy_id(5)) == 3.0f);
@@ -543,6 +764,19 @@ TEST_CASE("vectorizable buffer", "[ve_tests]") {
 
 TEST_CASE("mathematical operations", "[ve_tests]") {
 
+// TODO
+#ifdef __AVX512BW__
+	ve::tagged_vector<dummy_id> tveca(dummy_id(8), dummy_id(0), dummy_id(5), dummy_id(3), dummy_id(), dummy_id(11), dummy_id(9), dummy_id(2),
+									dummy_id(8), dummy_id(0), dummy_id(5), dummy_id(3), dummy_id(), dummy_id(11), dummy_id(9), dummy_id(2));
+	ve::tagged_vector<dummy_id> tvecb(dummy_id(), dummy_id(0), dummy_id(7), dummy_id(1), dummy_id(10), dummy_id(11), dummy_id(19), dummy_id(4),
+									dummy_id(), dummy_id(0), dummy_id(7), dummy_id(1), dummy_id(10), dummy_id(11), dummy_id(19), dummy_id(4));
+	ve::fp_vector fveca(1.0f, 2.0f, 0.0f, 11.0f, 5.0f, 6.5f, 7.0f, 8.0f, 1.0f, 2.0f, 0.0f, 11.0f, 5.0f, 6.5f, 7.0f, 8.0f);
+	ve::fp_vector fvecb(10.0f, 2.0f, 3.0f, 7.0f, 5.0f, 60.5f, 1.0f, 0.5f, 10.0f, 2.0f, 3.0f, 7.0f, 5.0f, 60.5f, 1.0f, 0.5f);
+	ve::int_vector iveca(1, 2, 0, -5, 10, 4, 9, -2, 1, 2, 0, -5, 10, 4, 9, -2);
+	ve::int_vector ivecb(6, 33, 6, -5, 1, 4, 2, 0, 6, 33, 6, -5, 1, 4, 2, 0);
+	ve::mask_vector mveca(true, true, false, true, false, true, false, false, false, true, true, false, false, false, true, false);
+	ve::mask_vector mvecb(true, false, false, true, false, true, true, false, true, true, false, true, false, false, true, true);
+#else
 #ifdef __AVX2__
 	ve::tagged_vector<dummy_id> tveca(dummy_id(8), dummy_id(0), dummy_id(5), dummy_id(3), dummy_id(), dummy_id(11), dummy_id(9), dummy_id(2));
 	ve::tagged_vector<dummy_id> tvecb(dummy_id(), dummy_id(0), dummy_id(7), dummy_id(1), dummy_id(10), dummy_id(11), dummy_id(19), dummy_id(4));
@@ -571,6 +805,7 @@ TEST_CASE("mathematical operations", "[ve_tests]") {
 	ve::int_vector ivecb(6, 33, 6, -5);
 	ve::mask_vector mveca(true, true, false, true);
 	ve::mask_vector mvecb(true, false, false, true);
+#endif
 #endif
 #endif
 
@@ -689,6 +924,10 @@ TEST_CASE("mathematical operations", "[ve_tests]") {
 		REQUIRE(fres[i] == std::ceil(fveca[i]));
 	}
 
+#ifdef __AVX512BW__
+	auto mvres = ve::compress_mask(mveca);
+	REQUIRE(mvres.v == uint16_t(0x01 | 0x02 | 0x08 | 0x20 | 0x200 | 0x400 | 0x4000));
+#else
 #ifdef __AVX2__
 	auto mvres = ve::compress_mask(mveca);
 	REQUIRE(mvres.v == uint8_t(0x01 | 0x02 | 0x08 | 0x20));
@@ -702,6 +941,8 @@ TEST_CASE("mathematical operations", "[ve_tests]") {
 	
 #endif
 #endif
+#endif
+
 	for (int32_t i = 0; i < ve::vector_size; ++i) {
 		REQUIRE(ve::mask_vector(mvres)[i] == mveca[i]);
 	}
@@ -1338,6 +1579,11 @@ TEST_CASE("loads and stores", "[ve_tests]") {
 	}
 
 
+#ifdef __AVX512BW__
+	ve::tagged_vector<dummy_id> tvec(dummy_id(8), dummy_id(7), dummy_id(5), dummy_id(1), dummy_id(10), dummy_id(11), dummy_id(19), dummy_id(2),
+									dummy_id(24), dummy_id(30), dummy_id(29), dummy_id(28), dummy_id(27), dummy_id(26), dummy_id(25), dummy_id(31));
+	ve::mask_vector mvec(true, true, false, true, false, true, false, false, false, true, false, false, true, true, true, false);
+#else
 #ifdef __AVX2__
 	ve::tagged_vector<dummy_id> tvec(dummy_id(8), dummy_id(7), dummy_id(5), dummy_id(1), dummy_id(10), dummy_id(11), dummy_id(19), dummy_id(2));
 	ve::mask_vector mvec(true, true, false, true, false, true, false, false);
@@ -1348,6 +1594,7 @@ TEST_CASE("loads and stores", "[ve_tests]") {
 #else // SSE
 	ve::tagged_vector<dummy_id> tvec(dummy_id(8), dummy_id(7), dummy_id(5), dummy_id(1));
 	ve::mask_vector mvec(true, true, false, true);
+#endif
 #endif
 #endif
 
@@ -1615,6 +1862,14 @@ TEST_CASE("utility", "[ve_tests]") {
 	REQUIRE(ve::vector_size * 2 == ve::to_vector_size(ve::vector_size * 2));
 	REQUIRE(ve::vector_size * 2 == ve::to_vector_size(ve::vector_size * 2 - 1));
 
+#ifdef __AVX512BW__
+	ve::fp_vector vec(1.0f, 3.0f, 4.0f, 7.0f, 10.0f, 14.5f, 16.0f, 18.0f, 4.0f, 6.0f, 8.0f, 9.0f, -2.0f, 3.5f, -4.0f, 5.0f);
+	ve::int_vector ivec(4, 5, 9, 10, 15, 11, 29, 1, 8, 9, 10, 10, 3, 4, 5, 5);
+	ve::tagged_vector<dummy_id> tvec(dummy_id(8), dummy_id(), dummy_id(5), dummy_id(1), dummy_id(10), dummy_id(11), dummy_id(19), dummy_id(),
+									dummy_id(24), dummy_id(30), dummy_id(29), dummy_id(28), dummy_id(27), dummy_id(26), dummy_id(25), dummy_id(31));
+	ve::tagged_vector<int32_t> tivec(4, 5, 9, 10, 15, 11, 29, 1, 8, 9, 10, 10, 3, 4, 5, 5);
+	ve::mask_vector mvec(true, true, false, true, false, true, false, false, true, false, true, true, true, false, false, true);
+#else
 #ifdef __AVX2__
 	ve::fp_vector vec(1.0f, 3.0f, 4.0f, 7.0f, 10.0f, 14.5f, 16.0f, 18.0f);
 	ve::int_vector ivec(4, 5, 9, 10, 15, 11, 29, 1);
@@ -1634,6 +1889,7 @@ TEST_CASE("utility", "[ve_tests]") {
 	ve::tagged_vector<dummy_id> tvec(dummy_id(8), dummy_id(), dummy_id(5), dummy_id(1));
 	ve::tagged_vector<int32_t> tivec(4, 5, 9, 10);
 	ve::mask_vector mvec(true, true, false, true);
+#endif
 #endif
 #endif
 
@@ -1831,6 +2087,25 @@ TEST_CASE("id variations", "[ve_tests]") {
 		dummy_id_s(9), dummy_id_s(7), dummy_id_s(1), dummy_id_s(20), dummy_id_s(30) };
 
 
+#ifdef __AVX512BW__
+	auto sres = ve::load(ve::contiguous_tags<int32_t>(0), sgnd);
+	REQUIRE(sres[0].index() == 0);
+	REQUIRE(sres[1].index() == -1);
+	REQUIRE(sres[2].index() == 1);
+	REQUIRE(sres[3].index() == 2);
+
+	auto ssres = ve::load(ve::contiguous_tags<int32_t>(0), sgnd_small);
+	REQUIRE(ssres[0].index() == 0);
+	REQUIRE(ssres[1].index() == -1);
+	REQUIRE(ssres[2].index() == 1);
+	REQUIRE(ssres[3].index() == 2);
+
+	auto ussres = ve::load(ve::contiguous_tags<int32_t>(0), usgnd_small);
+	REQUIRE(ussres[0].index() == 0);
+	REQUIRE(ussres[1].index() == -1);
+	REQUIRE(ussres[2].index() == 1);
+	REQUIRE(ussres[3].index() == 2);
+#else
 #ifdef __AVX2__
 	auto sres = ve::load(ve::contiguous_tags<int32_t>(0), sgnd);
 	REQUIRE(sres[0].index() == 0);
@@ -1886,6 +2161,7 @@ TEST_CASE("id variations", "[ve_tests]") {
 	REQUIRE(ussres[1].index() == -1);
 	REQUIRE(ussres[2].index() == 1);
 	REQUIRE(ussres[3].index() == 2);
+#endif
 #endif
 #endif
 
