@@ -385,6 +385,7 @@ namespace dcon {
 		inline stable_mk_2_tag return_new_memory(uint32_t requested_capacity) {
 
 			const uint32_t qword_size = uint32_t(1) + (requested_capacity + uint32_t(7)) / uint32_t(8);
+			
 
 #ifdef _WIN64
 			uint32_t initial_base_address = 0;
@@ -402,11 +403,11 @@ namespace dcon {
 				}
 
 			} while (!first_free.compare_exchange_weak(initial_base_address, initial_base_address + qword_size, std::memory_order_acq_rel));
+#else
+			uint32_t initial_base_address = first_free.fetch_add(qword_size);
 #endif
 
 			stable_mk_2_tag new_mem = initial_base_address;
-
-
 
 
 			if (initial_base_address + qword_size >= ((static_cast<size_t>(std::numeric_limits<uint32_t>::max()) + 1) * DCON_GLOBAL_BACKING_MULTIPLIER) / 8) {
