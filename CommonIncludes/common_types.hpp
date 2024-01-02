@@ -383,43 +383,33 @@ namespace dcon {
 		}
 
 		inline stable_mk_2_tag return_new_memory(uint32_t requested_capacity) {
-			detail::mk_2_header* new_header;
-			stable_mk_2_tag new_mem;
 
 			const uint32_t qword_size = uint32_t(1) + (requested_capacity + uint32_t(7)) / uint32_t(8);
 
 #ifdef _WIN64
-			auto initial_base_address = first_free.load(std::memory_order_acquire);
-			
-			// determine if we predict that our allocation will go to uncommitted pages
-			// if so: commit
+			uint32_t initial_base_address = 0;
+			do {
+				initial_base_address = first_free.load(std::memory_order_acquire);
 
-			auto page_offset = initial_base_address / qword_page_size;
-			auto end_page = (initial_base_address + qword_size) / qword_page_size;
-			if (page_offset != end_page) {
-				VirtualAlloc(allocation + (page_offset + 1) * qword_page_size, (end_page - page_offset) * qword_page_size * 8, MEM_COMMIT, PAGE_READWRITE);
-			}
+				// determine if we predict that our allocation will go to uncommitted pages
+				// if so: commit
+
+				auto page_offset = initial_base_address / qword_page_size;
+				auto end_page = (initial_base_address + qword_size) / qword_page_size;
+				if (page_offset != end_page) {
+					/*auto ret = */VirtualAlloc(allocation + (page_offset + 1) * qword_page_size, (end_page - page_offset) * qword_page_size * 8, MEM_COMMIT, PAGE_READWRITE);
+					//assert(ret);
+				}
+
+			} while (!first_free.compare_exchange_weak(initial_base_address, initial_base_address + qword_size, std::memory_order_acq_rel));
 #endif
 
-			auto old_position = first_free.fetch_add(qword_size, std::memory_order_acq_rel);
-
-#ifdef _WIN64
-			// check if out allocation is in what would have been an uncommitted page, contrary to our initial expectation
-			// or in a different uncommitted page
-			// if so: commit again to prevent racing with another allocation
-
-			auto actual_end_page = (old_position + qword_size) / qword_page_size;
-			if (end_page != actual_end_page) {
-				VirtualAlloc(allocation + (page_offset + 1) * qword_page_size, (actual_end_page - page_offset) * qword_page_size * 8, MEM_COMMIT, PAGE_READWRITE);
-			}
-#endif
-
-			new_mem = old_position;
-
-			new_header = (detail::mk_2_header*)(allocation + old_position);
+			stable_mk_2_tag new_mem = initial_base_address;
 
 
-			if (first_free.load(std::memory_order_acquire) >= ((static_cast<size_t>(std::numeric_limits<uint32_t>::max()) + 1) * DCON_GLOBAL_BACKING_MULTIPLIER) / 8) {
+
+
+			if (initial_base_address + qword_size >= ((static_cast<size_t>(std::numeric_limits<uint32_t>::max()) + 1) * DCON_GLOBAL_BACKING_MULTIPLIER) / 8) {
 #ifndef DCON_USE_EXCEPTIONS
 				std::abort();
 #else
@@ -427,6 +417,7 @@ namespace dcon {
 #endif
 			}
 
+			detail::mk_2_header* new_header = (detail::mk_2_header*)(allocation + initial_base_address);
 			new_header->capacity = uint16_t((requested_capacity + uint32_t(7)) / uint32_t(8));
 			new_header->size = uint16_t(0);
 			new_header->next_free = std::numeric_limits<stable_mk_2_tag>::max();
