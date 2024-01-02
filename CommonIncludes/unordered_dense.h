@@ -1155,6 +1155,47 @@ private:
     }
 
     template <typename K>
+    auto do_atomic_find(K const& key) const -> std::optional<T> {
+        if (ANKERL_UNORDERED_DENSE_UNLIKELY(empty())) {
+            return std::optional<T>{};
+        }
+
+        auto mh = mixed_hash(key);
+        auto dist_and_fingerprint = dist_and_fingerprint_from_hash(mh);
+        auto bucket_idx = bucket_idx_from_hash(mh);
+        auto* bucket = &at(m_buckets, bucket_idx);
+
+        // unrolled loop. *Always* check a few directly, then enter the loop. This is faster.
+        if (dist_and_fingerprint == bucket->m_dist_and_fingerprint && m_equal(key, get_key(m_values[bucket->m_value_idx]))) {
+            return std::optional<T>{ (begin() + static_cast<difference_type>(bucket->m_value_idx))->second };
+        }
+        dist_and_fingerprint = dist_inc(dist_and_fingerprint);
+        bucket_idx = next(bucket_idx);
+        bucket = &at(m_buckets, bucket_idx);
+
+        if (dist_and_fingerprint == bucket->m_dist_and_fingerprint && m_equal(key, get_key(m_values[bucket->m_value_idx]))) {
+            return std::optional<T>{ (begin() + static_cast<difference_type>(bucket->m_value_idx))->second };
+        }
+        dist_and_fingerprint = dist_inc(dist_and_fingerprint);
+        bucket_idx = next(bucket_idx);
+        bucket = &at(m_buckets, bucket_idx);
+
+        while (true) {
+            if (dist_and_fingerprint == bucket->m_dist_and_fingerprint) {
+                if (m_equal(key, get_key(m_values[bucket->m_value_idx]))) {
+                    return std::optional<T>{ (begin() + static_cast<difference_type>(bucket->m_value_idx))->second };
+                }
+            }
+            else if (dist_and_fingerprint > bucket->m_dist_and_fingerprint) {
+                return std::optional<T>{};
+            }
+            dist_and_fingerprint = dist_inc(dist_and_fingerprint);
+            bucket_idx = next(bucket_idx);
+            bucket = &at(m_buckets, bucket_idx);
+        }
+    }
+    
+    template <typename K>
     auto do_find(K const& key) const -> const_iterator {
         return const_cast<table*>(this)->do_find(key); // NOLINT(cppcoreguidelines-pro-type-const-cast)
     }
@@ -1777,6 +1818,11 @@ public:
         return do_find(key);
     }
 
+    template <typename Q = T, std::enable_if_t<is_map_v<Q>, bool> = true>
+    auto atomic_find(Key const& key) const -> std::optional<Q> {
+        return do_atomic_find(key);
+    }
+    
     template <class K, class H = Hash, class KE = KeyEqual, std::enable_if_t<is_transparent_v<H, KE>, bool> = true>
     auto find(K const& key) -> iterator {
         return do_find(key);
