@@ -1167,14 +1167,14 @@ private:
 
         // unrolled loop. *Always* check a few directly, then enter the loop. This is faster.
         if (dist_and_fingerprint == bucket->m_dist_and_fingerprint && m_equal(key, get_key(m_values[bucket->m_value_idx]))) {
-            return std::optional<T>{ (begin() + static_cast<difference_type>(bucket->m_value_idx))->second };
+            return std::optional<T>{ begin() + static_cast<difference_type>(bucket->m_value_idx) };
         }
         dist_and_fingerprint = dist_inc(dist_and_fingerprint);
         bucket_idx = next(bucket_idx);
         bucket = &at(m_buckets, bucket_idx);
 
         if (dist_and_fingerprint == bucket->m_dist_and_fingerprint && m_equal(key, get_key(m_values[bucket->m_value_idx]))) {
-            return std::optional<T>{ (begin() + static_cast<difference_type>(bucket->m_value_idx))->second };
+            return std::optional<T>{ begin() + static_cast<difference_type>(bucket->m_value_idx) };
         }
         dist_and_fingerprint = dist_inc(dist_and_fingerprint);
         bucket_idx = next(bucket_idx);
@@ -1183,10 +1183,9 @@ private:
         while (true) {
             if (dist_and_fingerprint == bucket->m_dist_and_fingerprint) {
                 if (m_equal(key, get_key(m_values[bucket->m_value_idx]))) {
-                    return std::optional<T>{ (begin() + static_cast<difference_type>(bucket->m_value_idx))->second };
+                    return std::optional<T>{ begin() + static_cast<difference_type>(bucket->m_value_idx) };
                 }
-            }
-            else if (dist_and_fingerprint > bucket->m_dist_and_fingerprint) {
+            } else if (dist_and_fingerprint > bucket->m_dist_and_fingerprint) {
                 return std::optional<T>{};
             }
             dist_and_fingerprint = dist_inc(dist_and_fingerprint);
