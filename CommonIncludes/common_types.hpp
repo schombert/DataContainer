@@ -308,19 +308,28 @@ namespace dcon {
 			constexpr explicit concurrent_key_pair_helper(uint64_t v) : value{ v } {}
 		};
 
+
 		inline uint32_t rt_log2_round_up(uint32_t n) {
+#ifdef __AVX2__
 #ifndef _MSC_VER
 			return n > uint32_t(1) ? uint32_t(32) - uint32_t(__builtin_clz(n - uint32_t(1))) : uint32_t(0);
 #else
 			return n > uint32_t(1) ? uint32_t(32) - uint32_t(__lzcnt(n - uint32_t(1))) : uint32_t(0);
 #endif
+#else
+			return n > uint32_t(1) ? uint32_t(32) - uint32_t(std::countl_zero<uint32_t>(n - uint32_t(1))) : uint32_t(0);
+#endif
 		}
 
 		inline uint32_t rt_log2(uint32_t n) {
+#ifdef __AVX2__
 #ifndef _MSC_VER
 			return uint32_t(31) - uint32_t(__builtin_clz(n | uint32_t(1)));
 #else
 			return uint32_t(31) - uint32_t(__lzcnt(n | uint32_t(1)));
+#endif
+#else
+			return uint32_t(31) - uint32_t(std::countl_zero<uint32_t>(n | uint32_t(1)));
 #endif
 		}
 
