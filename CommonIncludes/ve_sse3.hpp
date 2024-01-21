@@ -1295,7 +1295,7 @@ namespace ve {
 		auto const cl = _mm_srai_epi32(_mm_slli_epi32(vl, 24), 24);
 
 		auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + uint32_t(4) - e.subcount));
-		return _mm_blendv_epi8(_mm_setzero_si128(), cl, mask_l);
+		return _mm_andnot_si128(cl, mask_l);
 	}
 	template<typename T>
 	RELEASE_INLINE int_vector load(partial_contiguous_tags<T> e, uint8_t const* source) {
@@ -1303,7 +1303,7 @@ namespace ve {
 		auto const cl = _mm_srai_epi32(_mm_slli_epi32(vl, 24), 24);
 
 		auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + uint32_t(4) - e.subcount));
-		return _mm_blendv_epi8(_mm_setzero_si128(), cl, mask_l);
+		return _mm_andnot_si128(cl, mask_l);
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(partial_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 1 && !std::is_same_v<U, dcon::bitfield_type>, tagged_vector<U>> {
@@ -1312,13 +1312,13 @@ namespace ve {
 			auto const cl = _mm_srai_epi32(_mm_slli_epi32(vl, 24), 24);
 
 			auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + uint32_t(4) - e.subcount));
-			return _mm_blendv_epi8(_mm_setzero_si128(), cl, mask_l);
+			return _mm_andnot_si128(cl, mask_l);
 		} else {
 			auto const vl = _mm_loadu_si32(source + e.value);
 			auto const cl = _mm_srai_epi32(_mm_slli_epi32(vl, 24), 24);
 
 			auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + uint32_t(4) - e.subcount));
-			return _mm_blendv_epi8(_mm_setzero_si128(), cl, mask_l);
+			return _mm_andnot_si128(cl, mask_l);
 		}
 	}
 
