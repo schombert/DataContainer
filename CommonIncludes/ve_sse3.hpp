@@ -1027,30 +1027,30 @@ namespace ve {
 
 	template<typename T>
 	RELEASE_INLINE fp_vector load(partial_contiguous_tags<T> e, float const* source) {
-		auto const mask = _mm_loadu_ps((float const*)(load_masks)+uint32_t(4) - e.subcount);
+		auto const mask = _mm_loadu_ps((float const*)(load_masks) + uint32_t(4) - e.subcount);
 		auto const v = _mm_loadu_ps(source + e.value);
-		return _mm_andnot_ps(v, mask);
+		return _mm_and_ps(mask, v);
 	}
 
 	template<typename T>
 	RELEASE_INLINE int_vector load(partial_contiguous_tags<T> e, int32_t const* source) {
 		auto const mask = _mm_loadu_si128((__m128i const*)(load_masks + uint32_t(4) - e.subcount));
 		auto const v = _mm_loadu_si128((__m128i const*)(source + e.value));
-		return _mm_andnot_si128(v, mask);
+		return _mm_and_si128(mask, v);
 	}
 
 	template<typename T>
 	RELEASE_INLINE int_vector load(partial_contiguous_tags<T> e, uint32_t const* source) {
 		auto const mask = _mm_loadu_si128((__m128i const*)(load_masks + uint32_t(4) - e.subcount));
 		auto const v = _mm_loadu_si128((__m128i const*)(source + e.value));
-		return _mm_andnot_si128(v, mask);
+		return _mm_and_si128(mask, v);
 	}
 
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(partial_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 4, tagged_vector<U>> {
 		auto const mask = _mm_loadu_si128((__m128i const*)(load_masks + uint32_t(4) - e.subcount));
 		auto const v = _mm_loadu_si128((__m128i const*)(source + e.value));
-		return _mm_andnot_si128(v, mask);
+		return _mm_and_si128(mask, v);
 	}
 
 	template<typename U>
@@ -1174,151 +1174,359 @@ namespace ve {
 
 	template<typename T>
 	RELEASE_INLINE int_vector load(contiguous_tags<T> e, int16_t const* source) {
-		auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
-		return _mm_srai_epi32(_mm_slli_epi32(vl, 16), 16);
+		union {
+			__m128i tmp;
+			uint16_t lanes[8];
+		} u;
+		u.tmp = _mm_loadl_epi64((const __m128i *)(source + e.value));
+		union {
+			__m128i tmp;
+			uint32_t lanes[4];
+		} r;
+		r.lanes[0] = u.lanes[0];
+		r.lanes[1] = u.lanes[1];
+		r.lanes[2] = u.lanes[2];
+		r.lanes[3] = u.lanes[3];
+		return _mm_srai_epi32(_mm_slli_epi32(r.tmp, 16), 16);
 	}
 	template<typename T>
 	RELEASE_INLINE int_vector load(contiguous_tags<T> e, uint16_t const* source) {
-		auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
-		return _mm_srai_epi32(_mm_slli_epi32(vl, 16), 16);
+		union {
+			__m128i tmp;
+			uint16_t lanes[8];
+		} u;
+		u.tmp = _mm_loadl_epi64((const __m128i*)(source + e.value));
+		union {
+			__m128i tmp;
+			uint32_t lanes[4];
+		} r;
+		r.lanes[0] = u.lanes[0];
+		r.lanes[1] = u.lanes[1];
+		r.lanes[2] = u.lanes[2];
+		r.lanes[3] = u.lanes[3];
+		return _mm_srli_epi32(_mm_slli_epi32(r.tmp, 16), 16);
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 2, tagged_vector<U>> {
+		union {
+			__m128i tmp;
+			uint16_t lanes[8];
+		} u;
+		u.tmp = _mm_loadl_epi64((const __m128i*)(source + e.value));
+		union {
+			__m128i tmp;
+			uint32_t lanes[4];
+		} r;
+		r.lanes[0] = u.lanes[0];
+		r.lanes[1] = u.lanes[1];
+		r.lanes[2] = u.lanes[2];
+		r.lanes[3] = u.lanes[3];
 		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
-			auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
-			return _mm_srai_epi32(_mm_slli_epi32(vl, 16), 16);
+			return _mm_srai_epi32(_mm_slli_epi32(r.tmp, 16), 16);
 		} else {
-			auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
-			return _mm_srai_epi32(_mm_slli_epi32(vl, 16), 16);
+			return _mm_srli_epi32(_mm_slli_epi32(r.tmp, 16), 16);
 		}
 	}
 
 	template<typename T>
 	RELEASE_INLINE int_vector load(unaligned_contiguous_tags<T> e, int16_t const* source) {
-		auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
-		return _mm_srai_epi32(_mm_slli_epi32(vl, 16), 16);
+		union {
+			__m128i tmp;
+			uint16_t lanes[8];
+		} u;
+		u.tmp = _mm_loadl_epi64((const __m128i*)(source + e.value));
+		union {
+			__m128i tmp;
+			uint32_t lanes[4];
+		} r;
+		r.lanes[0] = u.lanes[0];
+		r.lanes[1] = u.lanes[1];
+		r.lanes[2] = u.lanes[2];
+		r.lanes[3] = u.lanes[3];
+		return _mm_srai_epi32(_mm_slli_epi32(r.tmp, 16), 16);
 	}
 	template<typename T>
 	RELEASE_INLINE int_vector load(unaligned_contiguous_tags<T> e, uint16_t const* source) {
-		auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
-		return _mm_srai_epi32(_mm_slli_epi32(vl, 16), 16);
+		union {
+			__m128i tmp;
+			uint16_t lanes[8];
+		} u;
+		u.tmp = _mm_loadl_epi64((const __m128i*)(source + e.value));
+		union {
+			__m128i tmp;
+			uint32_t lanes[4];
+		} r;
+		r.lanes[0] = u.lanes[0];
+		r.lanes[1] = u.lanes[1];
+		r.lanes[2] = u.lanes[2];
+		r.lanes[3] = u.lanes[3];
+		return _mm_srli_epi32(_mm_slli_epi32(r.tmp, 16), 16);
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(unaligned_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 2, tagged_vector<U>> {
+		union {
+			__m128i tmp;
+			uint16_t lanes[8];
+		} u;
+		u.tmp = _mm_loadl_epi64((const __m128i*)(source + e.value));
+		union {
+			__m128i tmp;
+			uint32_t lanes[4];
+		} r;
+		r.lanes[0] = u.lanes[0];
+		r.lanes[1] = u.lanes[1];
+		r.lanes[2] = u.lanes[2];
+		r.lanes[3] = u.lanes[3];
 		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
-			auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
-			return _mm_srai_epi32(_mm_slli_epi32(vl, 16), 16);
+			return _mm_srai_epi32(_mm_slli_epi32(r.tmp, 16), 16);
 		} else {
-			auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
-			return _mm_srai_epi32(_mm_slli_epi32(vl, 16), 16);
+			return _mm_srli_epi32(_mm_slli_epi32(r.tmp, 16), 16);
 		}
 	}
 
 	template<typename T>
 	RELEASE_INLINE int_vector load(partial_contiguous_tags<T> e, int16_t const* source) {
 		auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
-		auto const cl = _mm_srai_epi32(_mm_slli_epi32(vl, 16), 16);
+		
+		union {
+			__m128i tmp;
+			uint16_t lanes[8];
+		} u;
+		u.tmp = _mm_loadl_epi64((const __m128i*)(source + e.value));
+		union {
+			__m128i tmp;
+			uint32_t lanes[4];
+		} r;
+		r.lanes[0] = u.lanes[0];
+		r.lanes[1] = u.lanes[1];
+		r.lanes[2] = u.lanes[2];
+		r.lanes[3] = u.lanes[3];
+		auto const cl = _mm_srai_epi32(_mm_slli_epi32(r.tmp, 16), 16);
 
 		auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + uint32_t(4) - e.subcount));
-		return _mm_andnot_si128(cl, mask_l);
+		return _mm_and_si128(mask_l, cl);
 	}
 	template<typename T>
 	RELEASE_INLINE int_vector load(partial_contiguous_tags<T> e, uint16_t const* source) {
 		auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
-		auto const cl = _mm_srai_epi32(_mm_slli_epi32(vl, 16), 16);
+
+		union {
+			__m128i tmp;
+			uint16_t lanes[8];
+		} u;
+		u.tmp = _mm_loadl_epi64((const __m128i*)(source + e.value));
+		union {
+			__m128i tmp;
+			uint32_t lanes[4];
+		} r;
+		r.lanes[0] = u.lanes[0];
+		r.lanes[1] = u.lanes[1];
+		r.lanes[2] = u.lanes[2];
+		r.lanes[3] = u.lanes[3];
+		auto const cl = _mm_srli_epi32(_mm_slli_epi32(r.tmp, 16), 16);
 
 		auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + uint32_t(4) - e.subcount));
-		return _mm_andnot_si128(cl, mask_l);
+		return _mm_and_si128(mask_l, cl);
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(partial_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 2, tagged_vector<U>> {
+		auto const vl = _mm_loadl_epi64((const __m128i*)(source + e.value));
+		union {
+			__m128i tmp;
+			uint16_t lanes[8];
+		} u;
+		u.tmp = _mm_loadl_epi64((const __m128i*)(source + e.value));
+		union {
+			__m128i tmp;
+			uint32_t lanes[4];
+		} r;
+		r.lanes[0] = u.lanes[0];
+		r.lanes[1] = u.lanes[1];
+		r.lanes[2] = u.lanes[2];
+		r.lanes[3] = u.lanes[3];
 		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
-			auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
-			auto const cl = _mm_srai_epi32(_mm_slli_epi32(vl, 16), 16);
-
+			auto const cl = _mm_srai_epi32(_mm_slli_epi32(r.tmp, 16), 16);
 			auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + uint32_t(4) - e.subcount));
-			return _mm_andnot_si128(cl, mask_l);
+			return _mm_and_si128(mask_l, cl);
 		} else {
-			auto const vl = _mm_loadl_epi64((const __m128i *)(source + e.value));
-			auto const cl = _mm_srai_epi32(_mm_slli_epi32(vl, 16), 16);
-
+			auto const cl = _mm_srli_epi32(_mm_slli_epi32(r.tmp, 16), 16);
 			auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + uint32_t(4) - e.subcount));
-			return _mm_andnot_si128(cl, mask_l);
+			return _mm_and_si128(mask_l, cl);
 		}
 	}
 
 	template<typename T>
 	RELEASE_INLINE int_vector load(contiguous_tags<T> e, int8_t const* source) {
-		auto const vl = _mm_loadu_si32(source + e.value);
-		return _mm_srai_epi32(_mm_slli_epi32(vl, 24), 24);
+		union {
+			__m128i tmp;
+			uint8_t lanes[16];
+		} u;
+		u.tmp = _mm_loadu_si32(source + e.value);
+		union {
+			__m128i tmp;
+			uint32_t lanes[4];
+		} r;
+		r.lanes[0] = u.lanes[0];
+		r.lanes[1] = u.lanes[1];
+		r.lanes[2] = u.lanes[2];
+		r.lanes[3] = u.lanes[3];
+		return _mm_srai_epi32(_mm_slli_epi32(r.tmp, 24), 24);
 	}
 	template<typename T>
 	RELEASE_INLINE int_vector load(contiguous_tags<T> e, uint8_t const* source) {
-		auto const vl = _mm_loadu_si32(source + e.value);
-		return _mm_srai_epi32(_mm_slli_epi32(vl, 24), 24);
+		union {
+			__m128i tmp;
+			uint8_t lanes[16];
+		} u;
+		u.tmp = _mm_loadu_si32(source + e.value);
+		union {
+			__m128i tmp;
+			uint32_t lanes[4];
+		} r;
+		r.lanes[0] = u.lanes[0];
+		r.lanes[1] = u.lanes[1];
+		r.lanes[2] = u.lanes[2];
+		r.lanes[3] = u.lanes[3];
+		return _mm_srli_epi32(_mm_slli_epi32(r.tmp, 24), 24);
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 1 && !std::is_same_v<U, dcon::bitfield_type>, tagged_vector<U>> {
+		union {
+			__m128i tmp;
+			uint8_t lanes[16];
+		} u;
+		u.tmp = _mm_loadu_si32(source + e.value);
+		union {
+			__m128i tmp;
+			uint32_t lanes[4];
+		} r;
+		r.lanes[0] = u.lanes[0];
+		r.lanes[1] = u.lanes[1];
+		r.lanes[2] = u.lanes[2];
+		r.lanes[3] = u.lanes[3];
 		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
-			auto const vl = _mm_loadu_si32(source + e.value);
-			return _mm_srai_epi32(_mm_slli_epi32(vl, 24), 24);
+			return _mm_srai_epi32(_mm_slli_epi32(r.tmp, 24), 24);
 		} else {
-			auto const vl = _mm_loadu_si32(source + e.value);
-			return _mm_srai_epi32(_mm_slli_epi32(vl, 24), 24);
+			return _mm_srli_epi32(_mm_slli_epi32(r.tmp, 24), 24);
 		}
 	}
 
 	template<typename T>
 	RELEASE_INLINE int_vector load(unaligned_contiguous_tags<T> e, int8_t const* source) {
-		auto const vl = _mm_loadu_si32(source + e.value);
-		return _mm_srai_epi32(_mm_slli_epi32(vl, 24), 24);
+		union {
+			__m128i tmp;
+			uint8_t lanes[16];
+		} u;
+		u.tmp = _mm_loadu_si32(source + e.value);
+		union {
+			__m128i tmp;
+			uint32_t lanes[4];
+		} r;
+		r.lanes[0] = u.lanes[0];
+		r.lanes[1] = u.lanes[1];
+		r.lanes[2] = u.lanes[2];
+		r.lanes[3] = u.lanes[3];
+		return _mm_srai_epi32(_mm_slli_epi32(r.tmp, 24), 24);
 	}
 	template<typename T>
 	RELEASE_INLINE int_vector load(unaligned_contiguous_tags<T> e, uint8_t const* source) {
-		auto const vl = _mm_loadu_si32(source + e.value);
-		return _mm_srai_epi32(_mm_slli_epi32(vl, 24), 24);
+		union {
+			__m128i tmp;
+			uint8_t lanes[16];
+		} u;
+		u.tmp = _mm_loadu_si32(source + e.value);
+		union {
+			__m128i tmp;
+			uint32_t lanes[4];
+		} r;
+		r.lanes[0] = u.lanes[0];
+		r.lanes[1] = u.lanes[1];
+		r.lanes[2] = u.lanes[2];
+		r.lanes[3] = u.lanes[3];
+		return _mm_srli_epi32(_mm_slli_epi32(r.tmp, 24), 24);
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(unaligned_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 1 && !std::is_same_v<U, dcon::bitfield_type>, tagged_vector<U>> {
+		union {
+			__m128i tmp;
+			uint8_t lanes[16];
+		} u;
+		u.tmp = _mm_loadu_si32(source + e.value);
+		union {
+			__m128i tmp;
+			uint32_t lanes[4];
+		} r;
+		r.lanes[0] = u.lanes[0];
+		r.lanes[1] = u.lanes[1];
+		r.lanes[2] = u.lanes[2];
+		r.lanes[3] = u.lanes[3];
 		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
-			auto const vl = _mm_loadu_si32(source + e.value);
-			return _mm_srai_epi32(_mm_slli_epi32(vl, 24), 24);
+			return _mm_srai_epi32(_mm_slli_epi32(r.tmp, 24), 24);
 		} else {
-			auto const vl = _mm_loadu_si32(source + e.value);
-			return _mm_srai_epi32(_mm_slli_epi32(vl, 24), 24);
+			return _mm_srai_epi32(_mm_slli_epi32(r.tmp, 24), 24);
 		}
 	}
 
 	template<typename T>
 	RELEASE_INLINE int_vector load(partial_contiguous_tags<T> e, int8_t const* source) {
-		auto const vl = _mm_loadu_si32(source + e.value);
-		auto const cl = _mm_srai_epi32(_mm_slli_epi32(vl, 24), 24);
-
+		union {
+			__m128i tmp;
+			uint8_t lanes[16];
+		} u;
+		u.tmp = _mm_loadu_si32(source + e.value);
+		union {
+			__m128i tmp;
+			uint32_t lanes[4];
+		} r;
+		r.lanes[0] = u.lanes[0];
+		r.lanes[1] = u.lanes[1];
+		r.lanes[2] = u.lanes[2];
+		r.lanes[3] = u.lanes[3];
+		auto const cl = _mm_srli_epi32(_mm_slli_epi32(r.tmp, 24), 24);
 		auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + uint32_t(4) - e.subcount));
-		return _mm_andnot_si128(cl, mask_l);
+		return _mm_and_si128(mask_l, cl);
 	}
 	template<typename T>
 	RELEASE_INLINE int_vector load(partial_contiguous_tags<T> e, uint8_t const* source) {
-		auto const vl = _mm_loadu_si32(source + e.value);
-		auto const cl = _mm_srai_epi32(_mm_slli_epi32(vl, 24), 24);
-
+		union {
+			__m128i tmp;
+			uint8_t lanes[16];
+		} u;
+		u.tmp = _mm_loadu_si32(source + e.value);
+		union {
+			__m128i tmp;
+			uint32_t lanes[4];
+		} r;
+		r.lanes[0] = u.lanes[0];
+		r.lanes[1] = u.lanes[1];
+		r.lanes[2] = u.lanes[2];
+		r.lanes[3] = u.lanes[3];
+		auto const cl = _mm_srai_epi32(_mm_slli_epi32(r.tmp, 24), 24);
 		auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + uint32_t(4) - e.subcount));
-		return _mm_andnot_si128(cl, mask_l);
+		return _mm_and_si128(mask_l, cl);
 	}
 	template<typename T, typename U>
 	RELEASE_INLINE auto load(partial_contiguous_tags<T> e, U const* source) -> std::enable_if_t<sizeof(U) == 1 && !std::is_same_v<U, dcon::bitfield_type>, tagged_vector<U>> {
+		union {
+			__m128i tmp;
+			uint8_t lanes[16];
+		} u;
+		u.tmp = _mm_loadu_si32(source + e.value);
+		union {
+			__m128i tmp;
+			uint32_t lanes[4];
+		} r;
+		r.lanes[0] = u.lanes[0];
+		r.lanes[1] = u.lanes[1];
+		r.lanes[2] = u.lanes[2];
+		r.lanes[3] = u.lanes[3];
+		auto const cl = _mm_srai_epi32(_mm_slli_epi32(r.tmp, 24), 24);
 		if constexpr(!detail::zero_is_null_wrapper<U>(0)) {
-			auto const vl = _mm_loadu_si32(source + e.value);
-			auto const cl = _mm_srai_epi32(_mm_slli_epi32(vl, 24), 24);
-
 			auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + uint32_t(4) - e.subcount));
-			return _mm_andnot_si128(cl, mask_l);
+			return _mm_and_si128(mask_l, cl);
 		} else {
-			auto const vl = _mm_loadu_si32(source + e.value);
-			auto const cl = _mm_srai_epi32(_mm_slli_epi32(vl, 24), 24);
-
 			auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + uint32_t(4) - e.subcount));
-			return _mm_andnot_si128(cl, mask_l);
+			return _mm_and_si128(mask_l, cl);
 		}
 	}
 
