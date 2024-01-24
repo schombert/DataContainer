@@ -15,6 +15,7 @@
 #include <cstring>
 #include <limits>
 #include <vector>
+#include <bit>
 
 #ifdef _MSC_VER 
 #include <intrin.h>
