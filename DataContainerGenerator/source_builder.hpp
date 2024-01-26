@@ -4,6 +4,7 @@
 #include <vector>
 #include <functional>
 #include <utility>
+#include <cstdint>
 
 class raw_lines {
 public:
