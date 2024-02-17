@@ -677,7 +677,7 @@ namespace old {
 								}
 								if(header.is_property("red")) {
 									if(header.is_type("float")) {
-										std::memcpy(colored_thing.m_red.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(colored_thing.size_used) * sizeof(float), header.record_size));
+										std::memcpy(colored_thing.m_red.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(colored_thing.size_used) * sizeof(float), size_t(header.record_size)));
 										serialize_selection.colored_thing_red = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -738,7 +738,7 @@ namespace old {
 								}
 								if(header.is_property("green")) {
 									if(header.is_type("float")) {
-										std::memcpy(colored_thing.m_green.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(colored_thing.size_used) * sizeof(float), header.record_size));
+										std::memcpy(colored_thing.m_green.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(colored_thing.size_used) * sizeof(float), size_t(header.record_size)));
 										serialize_selection.colored_thing_green = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -799,7 +799,7 @@ namespace old {
 								}
 								if(header.is_property("blue")) {
 									if(header.is_type("float")) {
-										std::memcpy(colored_thing.m_blue.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(colored_thing.size_used) * sizeof(float), header.record_size));
+										std::memcpy(colored_thing.m_blue.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(colored_thing.size_used) * sizeof(float), size_t(header.record_size)));
 										serialize_selection.colored_thing_blue = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -885,7 +885,7 @@ namespace old {
 								}
 								if(header.is_property("red") && mask.colored_thing_red) {
 									if(header.is_type("float")) {
-										std::memcpy(colored_thing.m_red.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(colored_thing.size_used) * sizeof(float), header.record_size));
+										std::memcpy(colored_thing.m_red.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(colored_thing.size_used) * sizeof(float), size_t(header.record_size)));
 										serialize_selection.colored_thing_red = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -946,7 +946,7 @@ namespace old {
 								}
 								if(header.is_property("green") && mask.colored_thing_green) {
 									if(header.is_type("float")) {
-										std::memcpy(colored_thing.m_green.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(colored_thing.size_used) * sizeof(float), header.record_size));
+										std::memcpy(colored_thing.m_green.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(colored_thing.size_used) * sizeof(float), size_t(header.record_size)));
 										serialize_selection.colored_thing_green = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -1007,7 +1007,7 @@ namespace old {
 								}
 								if(header.is_property("blue") && mask.colored_thing_blue) {
 									if(header.is_type("float")) {
-										std::memcpy(colored_thing.m_blue.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(colored_thing.size_used) * sizeof(float), header.record_size));
+										std::memcpy(colored_thing.m_blue.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(colored_thing.size_used) * sizeof(float), size_t(header.record_size)));
 										serialize_selection.colored_thing_blue = true;
 									}
 									else if(header.is_type("int8_t")) {

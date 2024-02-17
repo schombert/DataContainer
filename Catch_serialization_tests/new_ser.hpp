@@ -1554,11 +1554,13 @@ namespace ns {
 		//
 		void delete_thingy(thingy_id id) {
 			thingy_id id_removed = id;
+			#ifndef NDEBUG
+			assert(id.index() >= 0);
+			assert(uint32_t(id.index()) < thingy.size_used );
+			assert(thingy.size_used != 0);
+			#endif
 			thingy_id last_id(thingy_id::value_base_t(thingy.size_used - 1));
 			if(id_removed == last_id) { pop_back_thingy(); return; }
-			#ifdef DCON_TRAP_INVALID_STORE
-			assert(id.index() >= 0);
-			#endif
 			thingy_remove_all_dummy_rel_as_left(id_removed);
 			thingy_for_each_dummy_rel_as_left(last_id, [this, id_removed, last_id](dummy_rel_id i) {
 				dummy_rel.hashm_joint.erase(dummy_rel.to_joint_keydata(dummy_rel.m_left.vptr()[i.index()], thingy2_id(thingy2_id::value_base_t(i.index()))));
@@ -1626,11 +1628,13 @@ namespace ns {
 		//
 		void delete_thingy2(thingy2_id id) {
 			thingy2_id id_removed = id;
+			#ifndef NDEBUG
+			assert(id.index() >= 0);
+			assert(uint32_t(id.index()) < thingy2.size_used );
+			assert(thingy2.size_used != 0);
+			#endif
 			thingy2_id last_id(thingy2_id::value_base_t(thingy2.size_used - 1));
 			if(id_removed == last_id) { pop_back_thingy2(); return; }
-			#ifdef DCON_TRAP_INVALID_STORE
-			assert(id.index() >= 0);
-			#endif
 			delete_dummy_rel(dummy_rel_id(dummy_rel_id::value_base_t(id_removed.index())));
 			internal_move_relationship_dummy_rel(dummy_rel_id(dummy_rel_id::value_base_t(last_id.index())), dummy_rel_id(dummy_rel_id::value_base_t(id_removed.index())));
 			thingy2.m_some_value.vptr()[id_removed.index()] = std::move(thingy2.m_some_value.vptr()[last_id.index()]);
@@ -1660,7 +1664,7 @@ namespace ns {
 		// container delete for dummy_rel
 		//
 		void delete_dummy_rel(dummy_rel_id id_removed) {
-			#ifdef DCON_TRAP_INVALID_STORE
+			#ifndef NDEBUG
 			assert(id_removed.index() >= 0);
 			#endif
 			dummy_rel.hashm_joint.erase( dummy_rel.to_joint_keydata(dummy_rel.m_left.vptr()[id_removed.index()], thingy2_id(thingy2_id::value_base_t(id_removed.index()))) );
@@ -2063,7 +2067,7 @@ namespace ns {
 								}
 								if(header.is_property("i_value")) {
 									if(header.is_type("int16_t")) {
-										std::memcpy(thingy.m_i_value.vptr(), reinterpret_cast<int16_t const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(int16_t), header.record_size));
+										std::memcpy(thingy.m_i_value.vptr(), reinterpret_cast<int16_t const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(int16_t), size_t(header.record_size)));
 										serialize_selection.thingy_i_value = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -2124,7 +2128,7 @@ namespace ns {
 								}
 								if(header.is_property("f_value")) {
 									if(header.is_type("float")) {
-										std::memcpy(thingy.m_f_value.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(float), header.record_size));
+										std::memcpy(thingy.m_f_value.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(float), size_t(header.record_size)));
 										serialize_selection.thingy_f_value = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -2188,7 +2192,7 @@ namespace ns {
 								}
 								if(header.is_property("obj_value")) {
 									if(header.is_type("c_struct_b")) {
-										std::memcpy(thingy.m_obj_value.vptr(), reinterpret_cast<c_struct_b const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(c_struct_b), header.record_size));
+										std::memcpy(thingy.m_obj_value.vptr(), reinterpret_cast<c_struct_b const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(c_struct_b), size_t(header.record_size)));
 										serialize_selection.thingy_obj_value = true;
 									}
 									else if(header.is_type("std::vector<float>")) {
@@ -2204,7 +2208,7 @@ namespace ns {
 								}
 								if(header.is_property("custom_struct")) {
 									if(header.is_type("c_struct")) {
-										std::memcpy(thingy.m_custom_struct.vptr(), reinterpret_cast<c_struct const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(c_struct), header.record_size));
+										std::memcpy(thingy.m_custom_struct.vptr(), reinterpret_cast<c_struct const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(c_struct), size_t(header.record_size)));
 										serialize_selection.thingy_custom_struct = true;
 									}
 									break;
@@ -2221,7 +2225,7 @@ namespace ns {
 								}
 								if(header.is_property("some_value")) {
 									if(header.is_type("int32_t")) {
-										std::memcpy(thingy2.m_some_value.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(thingy2.size_used) * sizeof(int32_t), header.record_size));
+										std::memcpy(thingy2.m_some_value.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(thingy2.size_used) * sizeof(int32_t), size_t(header.record_size)));
 										serialize_selection.thingy2_some_value = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -2295,7 +2299,7 @@ namespace ns {
 								}
 								if(header.is_property("left")) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(dummy_rel.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingy2.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(dummy_rel.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingy2.size_used) * sizeof(uint16_t), size_t(header.record_size)));
 										serialize_selection.dummy_rel_left = true;
 									}
 									else if(header.is_type("uint8_t")) {
@@ -2357,7 +2361,7 @@ namespace ns {
 								}
 								if(header.is_property("i_value") && mask.thingy_i_value) {
 									if(header.is_type("int16_t")) {
-										std::memcpy(thingy.m_i_value.vptr(), reinterpret_cast<int16_t const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(int16_t), header.record_size));
+										std::memcpy(thingy.m_i_value.vptr(), reinterpret_cast<int16_t const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(int16_t), size_t(header.record_size)));
 										serialize_selection.thingy_i_value = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -2418,7 +2422,7 @@ namespace ns {
 								}
 								if(header.is_property("f_value") && mask.thingy_f_value) {
 									if(header.is_type("float")) {
-										std::memcpy(thingy.m_f_value.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(float), header.record_size));
+										std::memcpy(thingy.m_f_value.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(float), size_t(header.record_size)));
 										serialize_selection.thingy_f_value = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -2482,7 +2486,7 @@ namespace ns {
 								}
 								if(header.is_property("obj_value") && mask.thingy_obj_value) {
 									if(header.is_type("c_struct_b")) {
-										std::memcpy(thingy.m_obj_value.vptr(), reinterpret_cast<c_struct_b const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(c_struct_b), header.record_size));
+										std::memcpy(thingy.m_obj_value.vptr(), reinterpret_cast<c_struct_b const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(c_struct_b), size_t(header.record_size)));
 										serialize_selection.thingy_obj_value = true;
 									}
 									else if(header.is_type("std::vector<float>")) {
@@ -2498,7 +2502,7 @@ namespace ns {
 								}
 								if(header.is_property("custom_struct") && mask.thingy_custom_struct) {
 									if(header.is_type("c_struct")) {
-										std::memcpy(thingy.m_custom_struct.vptr(), reinterpret_cast<c_struct const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(c_struct), header.record_size));
+										std::memcpy(thingy.m_custom_struct.vptr(), reinterpret_cast<c_struct const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(c_struct), size_t(header.record_size)));
 										serialize_selection.thingy_custom_struct = true;
 									}
 									break;
@@ -2515,7 +2519,7 @@ namespace ns {
 								}
 								if(header.is_property("some_value") && mask.thingy2_some_value) {
 									if(header.is_type("int32_t")) {
-										std::memcpy(thingy2.m_some_value.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(thingy2.size_used) * sizeof(int32_t), header.record_size));
+										std::memcpy(thingy2.m_some_value.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(thingy2.size_used) * sizeof(int32_t), size_t(header.record_size)));
 										serialize_selection.thingy2_some_value = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -2589,7 +2593,7 @@ namespace ns {
 								}
 								if(header.is_property("left") && mask.dummy_rel_left) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(dummy_rel.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingy2.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(dummy_rel.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingy2.size_used) * sizeof(uint16_t), size_t(header.record_size)));
 										serialize_selection.dummy_rel_left = true;
 									}
 									else if(header.is_type("uint8_t")) {

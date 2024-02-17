@@ -529,7 +529,7 @@ namespace dcon {
 								}
 								if(header.is_property("color")) {
 									if(header.is_type("rgb_color")) {
-										std::memcpy(colored_thing.m_color.vptr(), reinterpret_cast<rgb_color const*>(input_buffer), std::min(size_t(colored_thing.size_used) * sizeof(rgb_color), header.record_size));
+										std::memcpy(colored_thing.m_color.vptr(), reinterpret_cast<rgb_color const*>(input_buffer), std::min(size_t(colored_thing.size_used) * sizeof(rgb_color), size_t(header.record_size)));
 										serialize_selection.colored_thing_color = true;
 									}
 									break;
@@ -561,7 +561,7 @@ namespace dcon {
 								}
 								if(header.is_property("color") && mask.colored_thing_color) {
 									if(header.is_type("rgb_color")) {
-										std::memcpy(colored_thing.m_color.vptr(), reinterpret_cast<rgb_color const*>(input_buffer), std::min(size_t(colored_thing.size_used) * sizeof(rgb_color), header.record_size));
+										std::memcpy(colored_thing.m_color.vptr(), reinterpret_cast<rgb_color const*>(input_buffer), std::min(size_t(colored_thing.size_used) * sizeof(rgb_color), size_t(header.record_size)));
 										serialize_selection.colored_thing_color = true;
 									}
 									break;

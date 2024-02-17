@@ -134,6 +134,15 @@ basic_builder& make_array_member_container(basic_builder& o,
 	std::string const& member_name, std::string const& type_name, size_t raw_size,
 	bool is_expandable, bool is_bitfield) {
 
+	std::string leading_padding = is_bitfield ? std::string("64") : std::string("sizeof(") + type_name + ") + 64 - (sizeof(" + type_name + ") & 63)";
+	std::string trailing_padding = is_bitfield ? std::string("64 - (( (") + std::to_string(raw_size) + " + 7) / 8) & 63)" : std::string("64 - ((") + std::to_string(raw_size) + " * sizeof(" + type_name + ")) & 63)";
+	std::string row_size = std::string("(") + (
+		is_bitfield
+			? leading_padding + " + " + std::string("(") + std::to_string(raw_size) + " + 7) / 8" + " + " + trailing_padding
+			: leading_padding + " + " + std::string("sizeof(") + type_name + ") * " + std::to_string(raw_size) + " + " + trailing_padding)
+		+ std::string(")");
+
+	/*
 	std::string size = is_bitfield ?
 		std::string("( (") + std::to_string(raw_size) + " + 7) / 8" +
 		" + uint64_t(64) - (( (" + std::to_string(raw_size) + " + 7) / 8) & uint64_t(63))"
@@ -142,11 +151,12 @@ basic_builder& make_array_member_container(basic_builder& o,
 		std::string("(sizeof(") + type_name + ") * " + std::to_string(raw_size) +
 		 " + uint64_t(64) - ((sizeof(" + type_name + ") * " + std::to_string(raw_size) + ") & uint64_t(63))"
 		" + ((sizeof(" + type_name + ") + uint64_t(63)) & ~uint64_t(63)))";
+	*/
 	// = size of all values in bytes + number of bytes to get the end to a multiple of 64 + 64 * number of cachelines
 	// required to fit the type
 
-	o + substitute("type", type_name) + substitute("name", member_name) + substitute{ "size", size };
-	o + substitute{ "pad_value", std::string("((uint64_t(63) + sizeof(") + type_name + ")) & ~uint64_t(63))" };
+	o + substitute("type", type_name) + substitute("name", member_name) + substitute{ "size", row_size };
+	o + substitute{ "pad_value", leading_padding };
 
 	o + heading{ "storage space for @name@ of type array of @type@" };
 	o + "struct dtype_@name@" + block{
@@ -157,11 +167,11 @@ basic_builder& make_array_member_container(basic_builder& o,
 			o + "DCON_RELEASE_INLINE auto vptr(int32_t i) const { return values[i].data() + 1; }";
 			o + "DCON_RELEASE_INLINE auto vptr(int32_t i) { return values[i].data() + 1; }";
 			o + "DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t container_size)" + block{
-				o + "values.resize(sz);";
+				o + "values.resize(sz + 1);";
 				if(!is_bitfield)
-					o + "for(uint32_t i = size; i < sz; ++i) values[i].resize(container_size + 1);";
+					o + "for(uint32_t i = size; i < sz + 1; ++i) values[i].resize(container_size + 1);";
 				else
-					o + "for(uint32_t i = size; i < sz; ++i) values[i].resize((container_size + 7) / 8 + 1);";
+					o + "for(uint32_t i = size; i < sz + 1; ++i) values[i].resize((container_size + 7) / 8 + 1);";
 				o + "size = sz;";
 			};
 			if(!is_bitfield) {
@@ -190,7 +200,7 @@ basic_builder& make_array_member_container(basic_builder& o,
 					};
 				};
 				o + "DCON_RELEASE_INLINE void copy_value(int32_t dest, int32_t source)" + block{
-					o + "for(int32_t i = 0; i < int32_t(size); ++i)" + block{
+					o + "for(int32_t i = 1; i < int32_t(size + 1); ++i)" + block{
 						o + "dcon::bit_vector_set(vptr(i), dest, dcon::bit_vector_test(vptr(i), source));";
 					};
 				};
@@ -200,32 +210,32 @@ basic_builder& make_array_member_container(basic_builder& o,
 					};
 				};
 				o + "DCON_RELEASE_INLINE void zero_at(int32_t dest)" + block{
-					o + "for(int32_t i = 0; i < int32_t(size); ++i)" + block{
+					o + "for(int32_t i = 0; i < int32_t(size + 1); ++i)" + block{
 						o + "dcon::bit_vector_set(vptr(i), dest, false);";
 					};
 				};
 			}
-		} else {
+		} else { // not expandable
 			o + "std::byte* values = nullptr;";
 			o + "uint32_t size = 0;";
 
 			o + "DCON_RELEASE_INLINE auto vptr(int32_t i) const" + block{
-				o + "return reinterpret_cast<@type@ const*>(values + @pad_value@ + i * @size@);";
+				o + "return reinterpret_cast<@type@ const*>(values  + @pad_value@+ (i + 1) * @size@);";
 			};
 			o + "DCON_RELEASE_INLINE auto vptr(int32_t i)" + block{
-				o + "return reinterpret_cast<@type@*>(values + @pad_value@ + i * @size@);";
+				o + "return reinterpret_cast<@type@*>(values + @pad_value@ + (i + 1) * @size@);";
 			};
 			o + +"DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t)" + block{
-				o + "std::byte* temp = sz > 0 ? (std::byte*)(::operator new(@pad_value@ + sz * @size@, std::align_val_t{ 64 })) : nullptr;";
+				o + "std::byte* temp = sz > 0 ? (std::byte*)(::operator new((sz + 1) * @size@, std::align_val_t{ 64 })) : nullptr;";
 				o + "if(sz > size)" + block {
 					o + "if(values)" + block {
-						o + "std::memcpy(temp, values, @pad_value@ + size * @size@);";
-						o + "std::memset(temp + @pad_value@ + size * @size@, 0, (sz - size) * @size@);";
+						o + "std::memcpy(temp, values, (size + 1) * @size@);";
+						o + "std::memset(temp + (size + 1) * @size@, 0, (sz - size) * @size@);";
 					} +append{"else"} + block{
-						o + "std::memset(temp, 0, @pad_value@ + sz * @size@);";
+						o + "std::memset(temp, 0, (sz + 1) * @size@);";
 					};
 				} +append{ "else if(sz > 0)" } +block{
-					o + "std::memcpy(temp, values, @pad_value@ + sz * @size@);";
+					o + "std::memcpy(temp, values, (sz + 1) * @size@);";
 				};
 				o + "::operator delete(values, std::align_val_t{ 64 });";
 				o + "values = temp;";

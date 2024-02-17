@@ -2736,7 +2736,7 @@ namespace car_owner_basic {
 								}
 								if(header.is_property("wheels")) {
 									if(header.is_type("int32_t")) {
-										std::memcpy(car.m_wheels.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(car.size_used) * sizeof(int32_t), header.record_size));
+										std::memcpy(car.m_wheels.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(car.size_used) * sizeof(int32_t), size_t(header.record_size)));
 										serialize_selection.car_wheels = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -2797,7 +2797,7 @@ namespace car_owner_basic {
 								}
 								if(header.is_property("resale_value")) {
 									if(header.is_type("float")) {
-										std::memcpy(car.m_resale_value.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(car.size_used) * sizeof(float), header.record_size));
+										std::memcpy(car.m_resale_value.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(car.size_used) * sizeof(float), size_t(header.record_size)));
 										serialize_selection.car_resale_value = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -2868,7 +2868,7 @@ namespace car_owner_basic {
 								}
 								if(header.is_property("age")) {
 									if(header.is_type("int32_t")) {
-										std::memcpy(person.m_age.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(person.size_used) * sizeof(int32_t), header.record_size));
+										std::memcpy(person.m_age.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(person.size_used) * sizeof(int32_t), size_t(header.record_size)));
 										serialize_selection.person_age = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -2942,7 +2942,7 @@ namespace car_owner_basic {
 								}
 								if(header.is_property("owner")) {
 									if(header.is_type("uint8_t")) {
-										std::memcpy(car_ownership.m_owner.vptr(), reinterpret_cast<uint8_t const*>(input_buffer), std::min(size_t(car.size_used) * sizeof(uint8_t), header.record_size));
+										std::memcpy(car_ownership.m_owner.vptr(), reinterpret_cast<uint8_t const*>(input_buffer), std::min(size_t(car.size_used) * sizeof(uint8_t), size_t(header.record_size)));
 										serialize_selection.car_ownership_owner = true;
 									}
 									else if(header.is_type("uint16_t")) {
@@ -2971,7 +2971,7 @@ namespace car_owner_basic {
 								}
 								if(header.is_property("ownership_date")) {
 									if(header.is_type("int32_t")) {
-										std::memcpy(car_ownership.m_ownership_date.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(car.size_used) * sizeof(int32_t), header.record_size));
+										std::memcpy(car_ownership.m_ownership_date.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(car.size_used) * sizeof(int32_t), size_t(header.record_size)));
 										serialize_selection.car_ownership_ownership_date = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -3045,7 +3045,7 @@ namespace car_owner_basic {
 								}
 								if(header.is_property("owned_car")) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(uniq_car_ownership.m_owned_car.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(person.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(uniq_car_ownership.m_owned_car.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(person.size_used) * sizeof(uint16_t), size_t(header.record_size)));
 										serialize_selection.uniq_car_ownership_owned_car = true;
 									}
 									else if(header.is_type("uint8_t")) {
@@ -3074,7 +3074,7 @@ namespace car_owner_basic {
 								}
 								if(header.is_property("ownership_date")) {
 									if(header.is_type("int32_t")) {
-										std::memcpy(uniq_car_ownership.m_ownership_date.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(person.size_used) * sizeof(int32_t), header.record_size));
+										std::memcpy(uniq_car_ownership.m_ownership_date.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(person.size_used) * sizeof(int32_t), size_t(header.record_size)));
 										serialize_selection.uniq_car_ownership_ownership_date = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -3160,7 +3160,7 @@ namespace car_owner_basic {
 								}
 								if(header.is_property("wheels") && mask.car_wheels) {
 									if(header.is_type("int32_t")) {
-										std::memcpy(car.m_wheels.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(car.size_used) * sizeof(int32_t), header.record_size));
+										std::memcpy(car.m_wheels.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(car.size_used) * sizeof(int32_t), size_t(header.record_size)));
 										serialize_selection.car_wheels = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -3221,7 +3221,7 @@ namespace car_owner_basic {
 								}
 								if(header.is_property("resale_value") && mask.car_resale_value) {
 									if(header.is_type("float")) {
-										std::memcpy(car.m_resale_value.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(car.size_used) * sizeof(float), header.record_size));
+										std::memcpy(car.m_resale_value.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(car.size_used) * sizeof(float), size_t(header.record_size)));
 										serialize_selection.car_resale_value = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -3292,7 +3292,7 @@ namespace car_owner_basic {
 								}
 								if(header.is_property("age") && mask.person_age) {
 									if(header.is_type("int32_t")) {
-										std::memcpy(person.m_age.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(person.size_used) * sizeof(int32_t), header.record_size));
+										std::memcpy(person.m_age.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(person.size_used) * sizeof(int32_t), size_t(header.record_size)));
 										serialize_selection.person_age = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -3366,7 +3366,7 @@ namespace car_owner_basic {
 								}
 								if(header.is_property("owner") && mask.car_ownership_owner) {
 									if(header.is_type("uint8_t")) {
-										std::memcpy(car_ownership.m_owner.vptr(), reinterpret_cast<uint8_t const*>(input_buffer), std::min(size_t(car.size_used) * sizeof(uint8_t), header.record_size));
+										std::memcpy(car_ownership.m_owner.vptr(), reinterpret_cast<uint8_t const*>(input_buffer), std::min(size_t(car.size_used) * sizeof(uint8_t), size_t(header.record_size)));
 										serialize_selection.car_ownership_owner = true;
 									}
 									else if(header.is_type("uint16_t")) {
@@ -3395,7 +3395,7 @@ namespace car_owner_basic {
 								}
 								if(header.is_property("ownership_date") && mask.car_ownership_ownership_date) {
 									if(header.is_type("int32_t")) {
-										std::memcpy(car_ownership.m_ownership_date.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(car.size_used) * sizeof(int32_t), header.record_size));
+										std::memcpy(car_ownership.m_ownership_date.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(car.size_used) * sizeof(int32_t), size_t(header.record_size)));
 										serialize_selection.car_ownership_ownership_date = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -3469,7 +3469,7 @@ namespace car_owner_basic {
 								}
 								if(header.is_property("owned_car") && mask.uniq_car_ownership_owned_car) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(uniq_car_ownership.m_owned_car.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(person.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(uniq_car_ownership.m_owned_car.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(person.size_used) * sizeof(uint16_t), size_t(header.record_size)));
 										serialize_selection.uniq_car_ownership_owned_car = true;
 									}
 									else if(header.is_type("uint8_t")) {
@@ -3498,7 +3498,7 @@ namespace car_owner_basic {
 								}
 								if(header.is_property("ownership_date") && mask.uniq_car_ownership_ownership_date) {
 									if(header.is_type("int32_t")) {
-										std::memcpy(uniq_car_ownership.m_ownership_date.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(person.size_used) * sizeof(int32_t), header.record_size));
+										std::memcpy(uniq_car_ownership.m_ownership_date.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(person.size_used) * sizeof(int32_t), size_t(header.record_size)));
 										serialize_selection.uniq_car_ownership_ownership_date = true;
 									}
 									else if(header.is_type("int8_t")) {

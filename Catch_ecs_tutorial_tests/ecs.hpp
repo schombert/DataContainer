@@ -563,7 +563,6 @@ namespace dcon {
 		DCON_RELEASE_INLINE entity_fat_id get_entity() const noexcept;
 		DCON_RELEASE_INLINE void remove_entity() const noexcept;
 		DCON_RELEASE_INLINE sprite_fat_id get_sprite_component_from_entity() const noexcept;
-		DCON_RELEASE_INLINE void set_sprite_component_from_entity(sprite_id v) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 		
 	};
@@ -677,7 +676,6 @@ namespace dcon {
 		DCON_RELEASE_INLINE entity_fat_id get_entity() const noexcept;
 		DCON_RELEASE_INLINE void remove_entity() const noexcept;
 		DCON_RELEASE_INLINE position_fat_id get_position_component_from_entity() const noexcept;
-		DCON_RELEASE_INLINE void set_position_component_from_entity(position_id v) const noexcept;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 		
 	};
@@ -1159,11 +1157,6 @@ namespace dcon {
 			return entity_get_sprite_component(ref_id);
 		}
 		#endif
-		void position_set_sprite_component_from_entity(position_id id, sprite_id val) {
-			if(auto ref_id = entity.m_link_back_position_component.vptr()[id.index()]; bool(ref_id)) {
-				entity_set_sprite_component(ref_id, val);
-			}
-		}
 		DCON_RELEASE_INLINE bool position_is_valid(position_id id) const noexcept {
 			return bool(id) && uint32_t(id.index()) < position.size_used && position.m__index.vptr()[id.index()] == id;
 		}
@@ -1265,11 +1258,6 @@ namespace dcon {
 			return entity_get_position_component(ref_id);
 		}
 		#endif
-		void sprite_set_position_component_from_entity(sprite_id id, position_id val) {
-			if(auto ref_id = entity.m_link_back_sprite_component.vptr()[id.index()]; bool(ref_id)) {
-				entity_set_position_component(ref_id, val);
-			}
-		}
 		DCON_RELEASE_INLINE bool sprite_is_valid(sprite_id id) const noexcept {
 			return bool(id) && uint32_t(id.index()) < sprite.size_used && sprite.m__index.vptr()[id.index()] == id;
 		}
@@ -1281,7 +1269,10 @@ namespace dcon {
 		// container delete for entity
 		//
 		void delete_entity(entity_id id_removed) {
-			if(!entity_is_valid(id_removed)) return;
+			#ifndef NDEBUG
+			assert(id_removed.index() >= 0);
+			assert(entity.m__index.vptr()[id_removed.index()] == id_removed);
+			#endif
 			on_delete_entity(id_removed);
 			entity.m__index.vptr()[id_removed.index()] = entity.first_free;
 			entity.first_free = id_removed;
@@ -1378,7 +1369,10 @@ namespace dcon {
 		// container delete for position
 		//
 		void delete_position(position_id id_removed) {
-			if(!position_is_valid(id_removed)) return;
+			#ifndef NDEBUG
+			assert(id_removed.index() >= 0);
+			assert(position.m__index.vptr()[id_removed.index()] == id_removed);
+			#endif
 			position.m__index.vptr()[id_removed.index()] = position.first_free;
 			position.first_free = id_removed;
 			if(int32_t(position.size_used) - 1 == id_removed.index()) {
@@ -1454,7 +1448,10 @@ namespace dcon {
 		// container delete for sprite
 		//
 		void delete_sprite(sprite_id id_removed) {
-			if(!sprite_is_valid(id_removed)) return;
+			#ifndef NDEBUG
+			assert(id_removed.index() >= 0);
+			assert(sprite.m__index.vptr()[id_removed.index()] == id_removed);
+			#endif
 			sprite.m__index.vptr()[id_removed.index()] = sprite.first_free;
 			sprite.first_free = id_removed;
 			if(int32_t(sprite.size_used) - 1 == id_removed.index()) {
@@ -1858,7 +1855,7 @@ namespace dcon {
 								}
 								if(header.is_property("_index")) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(entity.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(entity.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), size_t(header.record_size)));
 										serialize_selection.entity__index = true;
 									}
 									else if(header.is_type("uint8_t")) {
@@ -1887,7 +1884,7 @@ namespace dcon {
 								}
 								if(header.is_property("position_component")) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(entity.m_position_component.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(entity.m_position_component.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), size_t(header.record_size)));
 										serialize_selection.entity_position_component = true;
 									}
 									else if(header.is_type("uint8_t")) {
@@ -1906,7 +1903,7 @@ namespace dcon {
 								}
 								if(header.is_property("sprite_component")) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(entity.m_sprite_component.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(entity.m_sprite_component.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), size_t(header.record_size)));
 										serialize_selection.entity_sprite_component = true;
 									}
 									else if(header.is_type("uint8_t")) {
@@ -1952,7 +1949,7 @@ namespace dcon {
 								}
 								if(header.is_property("_index")) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(position.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(position.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(uint16_t), size_t(header.record_size)));
 										serialize_selection.position__index = true;
 									}
 									else if(header.is_type("uint8_t")) {
@@ -1981,7 +1978,7 @@ namespace dcon {
 								}
 								if(header.is_property("x")) {
 									if(header.is_type("float")) {
-										std::memcpy(position.m_x.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), header.record_size));
+										std::memcpy(position.m_x.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), size_t(header.record_size)));
 										serialize_selection.position_x = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -2042,7 +2039,7 @@ namespace dcon {
 								}
 								if(header.is_property("y")) {
 									if(header.is_type("float")) {
-										std::memcpy(position.m_y.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), header.record_size));
+										std::memcpy(position.m_y.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), size_t(header.record_size)));
 										serialize_selection.position_y = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -2103,7 +2100,7 @@ namespace dcon {
 								}
 								if(header.is_property("rotation")) {
 									if(header.is_type("float")) {
-										std::memcpy(position.m_rotation.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), header.record_size));
+										std::memcpy(position.m_rotation.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), size_t(header.record_size)));
 										serialize_selection.position_rotation = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -2174,7 +2171,7 @@ namespace dcon {
 								}
 								if(header.is_property("_index")) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(sprite.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(sprite.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(sprite.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(sprite.size_used) * sizeof(uint16_t), size_t(header.record_size)));
 										serialize_selection.sprite__index = true;
 									}
 									else if(header.is_type("uint8_t")) {
@@ -2203,7 +2200,7 @@ namespace dcon {
 								}
 								if(header.is_property("sprite_id")) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(sprite.m_sprite_id.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(sprite.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(sprite.m_sprite_id.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(sprite.size_used) * sizeof(uint16_t), size_t(header.record_size)));
 										serialize_selection.sprite_sprite_id = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -2292,7 +2289,7 @@ namespace dcon {
 								}
 								if(header.is_property("_index") && mask.entity__index) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(entity.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(entity.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), size_t(header.record_size)));
 										serialize_selection.entity__index = true;
 									}
 									else if(header.is_type("uint8_t")) {
@@ -2321,7 +2318,7 @@ namespace dcon {
 								}
 								if(header.is_property("position_component") && mask.entity_position_component) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(entity.m_position_component.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(entity.m_position_component.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), size_t(header.record_size)));
 										serialize_selection.entity_position_component = true;
 									}
 									else if(header.is_type("uint8_t")) {
@@ -2340,7 +2337,7 @@ namespace dcon {
 								}
 								if(header.is_property("sprite_component") && mask.entity_sprite_component) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(entity.m_sprite_component.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(entity.m_sprite_component.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(entity.size_used) * sizeof(uint16_t), size_t(header.record_size)));
 										serialize_selection.entity_sprite_component = true;
 									}
 									else if(header.is_type("uint8_t")) {
@@ -2386,7 +2383,7 @@ namespace dcon {
 								}
 								if(header.is_property("_index") && mask.position__index) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(position.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(position.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(uint16_t), size_t(header.record_size)));
 										serialize_selection.position__index = true;
 									}
 									else if(header.is_type("uint8_t")) {
@@ -2415,7 +2412,7 @@ namespace dcon {
 								}
 								if(header.is_property("x") && mask.position_x) {
 									if(header.is_type("float")) {
-										std::memcpy(position.m_x.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), header.record_size));
+										std::memcpy(position.m_x.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), size_t(header.record_size)));
 										serialize_selection.position_x = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -2476,7 +2473,7 @@ namespace dcon {
 								}
 								if(header.is_property("y") && mask.position_y) {
 									if(header.is_type("float")) {
-										std::memcpy(position.m_y.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), header.record_size));
+										std::memcpy(position.m_y.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), size_t(header.record_size)));
 										serialize_selection.position_y = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -2537,7 +2534,7 @@ namespace dcon {
 								}
 								if(header.is_property("rotation") && mask.position_rotation) {
 									if(header.is_type("float")) {
-										std::memcpy(position.m_rotation.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), header.record_size));
+										std::memcpy(position.m_rotation.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(position.size_used) * sizeof(float), size_t(header.record_size)));
 										serialize_selection.position_rotation = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -2608,7 +2605,7 @@ namespace dcon {
 								}
 								if(header.is_property("_index") && mask.sprite__index) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(sprite.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(sprite.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(sprite.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(sprite.size_used) * sizeof(uint16_t), size_t(header.record_size)));
 										serialize_selection.sprite__index = true;
 									}
 									else if(header.is_type("uint8_t")) {
@@ -2637,7 +2634,7 @@ namespace dcon {
 								}
 								if(header.is_property("sprite_id") && mask.sprite_sprite_id) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(sprite.m_sprite_id.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(sprite.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(sprite.m_sprite_id.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(sprite.size_used) * sizeof(uint16_t), size_t(header.record_size)));
 										serialize_selection.sprite_sprite_id = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -2773,9 +2770,6 @@ namespace dcon {
 	DCON_RELEASE_INLINE sprite_fat_id position_fat_id::get_sprite_component_from_entity() const noexcept {
 		return sprite_fat_id(container, container.position_get_sprite_component_from_entity(id));
 	}
-	DCON_RELEASE_INLINE void position_fat_id::set_sprite_component_from_entity(sprite_id v) const noexcept {
-		container.position_set_sprite_component_from_entity(id, v);
-	}
 	DCON_RELEASE_INLINE bool position_fat_id::is_valid() const noexcept {
 		return container.position_is_valid(id);
 	}
@@ -2822,9 +2816,6 @@ namespace dcon {
 	}
 	DCON_RELEASE_INLINE position_fat_id sprite_fat_id::get_position_component_from_entity() const noexcept {
 		return position_fat_id(container, container.sprite_get_position_component_from_entity(id));
-	}
-	DCON_RELEASE_INLINE void sprite_fat_id::set_position_component_from_entity(position_id v) const noexcept {
-		container.sprite_set_position_component_from_entity(id, v);
 	}
 	DCON_RELEASE_INLINE bool sprite_fat_id::is_valid() const noexcept {
 		return container.sprite_is_valid(id);

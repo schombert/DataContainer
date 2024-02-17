@@ -359,22 +359,22 @@ namespace dcon {
 				std::byte* values = nullptr;
 				uint32_t size = 0;
 				DCON_RELEASE_INLINE auto vptr(int32_t i) const {
-					return reinterpret_cast<float const*>(values + ((uint64_t(63) + sizeof(float)) & ~uint64_t(63)) + i * (sizeof(float) * 1200 + uint64_t(64) - ((sizeof(float) * 1200) & uint64_t(63)) + ((sizeof(float) + uint64_t(63)) & ~uint64_t(63))));
+					return reinterpret_cast<float const*>(values  + sizeof(float) + 64 - (sizeof(float) & 63)+ (i + 1) * (sizeof(float) + 64 - (sizeof(float) & 63) + sizeof(float) * 1200 + 64 - ((1200 * sizeof(float)) & 63)));
 				}
 				DCON_RELEASE_INLINE auto vptr(int32_t i) {
-					return reinterpret_cast<float*>(values + ((uint64_t(63) + sizeof(float)) & ~uint64_t(63)) + i * (sizeof(float) * 1200 + uint64_t(64) - ((sizeof(float) * 1200) & uint64_t(63)) + ((sizeof(float) + uint64_t(63)) & ~uint64_t(63))));
+					return reinterpret_cast<float*>(values + sizeof(float) + 64 - (sizeof(float) & 63) + (i + 1) * (sizeof(float) + 64 - (sizeof(float) & 63) + sizeof(float) * 1200 + 64 - ((1200 * sizeof(float)) & 63)));
 				}
 				DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t) {
-					std::byte* temp = sz > 0 ? (std::byte*)(::operator new(((uint64_t(63) + sizeof(float)) & ~uint64_t(63)) + sz * (sizeof(float) * 1200 + uint64_t(64) - ((sizeof(float) * 1200) & uint64_t(63)) + ((sizeof(float) + uint64_t(63)) & ~uint64_t(63))), std::align_val_t{ 64 })) : nullptr;
+					std::byte* temp = sz > 0 ? (std::byte*)(::operator new((sz + 1) * (sizeof(float) + 64 - (sizeof(float) & 63) + sizeof(float) * 1200 + 64 - ((1200 * sizeof(float)) & 63)), std::align_val_t{ 64 })) : nullptr;
 					if(sz > size) {
 						if(values) {
-							std::memcpy(temp, values, ((uint64_t(63) + sizeof(float)) & ~uint64_t(63)) + size * (sizeof(float) * 1200 + uint64_t(64) - ((sizeof(float) * 1200) & uint64_t(63)) + ((sizeof(float) + uint64_t(63)) & ~uint64_t(63))));
-							std::memset(temp + ((uint64_t(63) + sizeof(float)) & ~uint64_t(63)) + size * (sizeof(float) * 1200 + uint64_t(64) - ((sizeof(float) * 1200) & uint64_t(63)) + ((sizeof(float) + uint64_t(63)) & ~uint64_t(63))), 0, (sz - size) * (sizeof(float) * 1200 + uint64_t(64) - ((sizeof(float) * 1200) & uint64_t(63)) + ((sizeof(float) + uint64_t(63)) & ~uint64_t(63))));
+							std::memcpy(temp, values, (size + 1) * (sizeof(float) + 64 - (sizeof(float) & 63) + sizeof(float) * 1200 + 64 - ((1200 * sizeof(float)) & 63)));
+							std::memset(temp + (size + 1) * (sizeof(float) + 64 - (sizeof(float) & 63) + sizeof(float) * 1200 + 64 - ((1200 * sizeof(float)) & 63)), 0, (sz - size) * (sizeof(float) + 64 - (sizeof(float) & 63) + sizeof(float) * 1200 + 64 - ((1200 * sizeof(float)) & 63)));
 						} else {
-							std::memset(temp, 0, ((uint64_t(63) + sizeof(float)) & ~uint64_t(63)) + sz * (sizeof(float) * 1200 + uint64_t(64) - ((sizeof(float) * 1200) & uint64_t(63)) + ((sizeof(float) + uint64_t(63)) & ~uint64_t(63))));
+							std::memset(temp, 0, (sz + 1) * (sizeof(float) + 64 - (sizeof(float) & 63) + sizeof(float) * 1200 + 64 - ((1200 * sizeof(float)) & 63)));
 						}
 					} else if(sz > 0) {
-						std::memcpy(temp, values, ((uint64_t(63) + sizeof(float)) & ~uint64_t(63)) + sz * (sizeof(float) * 1200 + uint64_t(64) - ((sizeof(float) * 1200) & uint64_t(63)) + ((sizeof(float) + uint64_t(63)) & ~uint64_t(63))));
+						std::memcpy(temp, values, (sz + 1) * (sizeof(float) + 64 - (sizeof(float) & 63) + sizeof(float) * 1200 + 64 - ((1200 * sizeof(float)) & 63)));
 					}
 					::operator delete(values, std::align_val_t{ 64 });
 					values = temp;
@@ -401,22 +401,22 @@ namespace dcon {
 				std::byte* values = nullptr;
 				uint32_t size = 0;
 				DCON_RELEASE_INLINE auto vptr(int32_t i) const {
-					return reinterpret_cast<dcon::bitfield_type const*>(values + ((uint64_t(63) + sizeof(dcon::bitfield_type)) & ~uint64_t(63)) + i * ( (1200 + 7) / 8 + uint64_t(64) - (( (1200 + 7) / 8) & uint64_t(63)) ));
+					return reinterpret_cast<dcon::bitfield_type const*>(values  + 64+ (i + 1) * (64 + (1200 + 7) / 8 + 64 - (( (1200 + 7) / 8) & 63)));
 				}
 				DCON_RELEASE_INLINE auto vptr(int32_t i) {
-					return reinterpret_cast<dcon::bitfield_type*>(values + ((uint64_t(63) + sizeof(dcon::bitfield_type)) & ~uint64_t(63)) + i * ( (1200 + 7) / 8 + uint64_t(64) - (( (1200 + 7) / 8) & uint64_t(63)) ));
+					return reinterpret_cast<dcon::bitfield_type*>(values + 64 + (i + 1) * (64 + (1200 + 7) / 8 + 64 - (( (1200 + 7) / 8) & 63)));
 				}
 				DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t) {
-					std::byte* temp = sz > 0 ? (std::byte*)(::operator new(((uint64_t(63) + sizeof(dcon::bitfield_type)) & ~uint64_t(63)) + sz * ( (1200 + 7) / 8 + uint64_t(64) - (( (1200 + 7) / 8) & uint64_t(63)) ), std::align_val_t{ 64 })) : nullptr;
+					std::byte* temp = sz > 0 ? (std::byte*)(::operator new((sz + 1) * (64 + (1200 + 7) / 8 + 64 - (( (1200 + 7) / 8) & 63)), std::align_val_t{ 64 })) : nullptr;
 					if(sz > size) {
 						if(values) {
-							std::memcpy(temp, values, ((uint64_t(63) + sizeof(dcon::bitfield_type)) & ~uint64_t(63)) + size * ( (1200 + 7) / 8 + uint64_t(64) - (( (1200 + 7) / 8) & uint64_t(63)) ));
-							std::memset(temp + ((uint64_t(63) + sizeof(dcon::bitfield_type)) & ~uint64_t(63)) + size * ( (1200 + 7) / 8 + uint64_t(64) - (( (1200 + 7) / 8) & uint64_t(63)) ), 0, (sz - size) * ( (1200 + 7) / 8 + uint64_t(64) - (( (1200 + 7) / 8) & uint64_t(63)) ));
+							std::memcpy(temp, values, (size + 1) * (64 + (1200 + 7) / 8 + 64 - (( (1200 + 7) / 8) & 63)));
+							std::memset(temp + (size + 1) * (64 + (1200 + 7) / 8 + 64 - (( (1200 + 7) / 8) & 63)), 0, (sz - size) * (64 + (1200 + 7) / 8 + 64 - (( (1200 + 7) / 8) & 63)));
 						} else {
-							std::memset(temp, 0, ((uint64_t(63) + sizeof(dcon::bitfield_type)) & ~uint64_t(63)) + sz * ( (1200 + 7) / 8 + uint64_t(64) - (( (1200 + 7) / 8) & uint64_t(63)) ));
+							std::memset(temp, 0, (sz + 1) * (64 + (1200 + 7) / 8 + 64 - (( (1200 + 7) / 8) & 63)));
 						}
 					} else if(sz > 0) {
-						std::memcpy(temp, values, ((uint64_t(63) + sizeof(dcon::bitfield_type)) & ~uint64_t(63)) + sz * ( (1200 + 7) / 8 + uint64_t(64) - (( (1200 + 7) / 8) & uint64_t(63)) ));
+						std::memcpy(temp, values, (sz + 1) * (64 + (1200 + 7) / 8 + 64 - (( (1200 + 7) / 8) & 63)));
 					}
 					::operator delete(values, std::align_val_t{ 64 });
 					values = temp;
@@ -506,8 +506,8 @@ namespace dcon {
 				DCON_RELEASE_INLINE auto vptr(int32_t i) const { return values[i].data() + 1; }
 				DCON_RELEASE_INLINE auto vptr(int32_t i) { return values[i].data() + 1; }
 				DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t container_size) {
-					values.resize(sz);
-					for(uint32_t i = size; i < sz; ++i) values[i].resize(container_size + 1);
+					values.resize(sz + 1);
+					for(uint32_t i = size; i < sz + 1; ++i) values[i].resize(container_size + 1);
 					size = sz;
 				}
 				DCON_RELEASE_INLINE void emplace_back_all(uint32_t) {
@@ -540,8 +540,8 @@ namespace dcon {
 				DCON_RELEASE_INLINE auto vptr(int32_t i) const { return values[i].data() + 1; }
 				DCON_RELEASE_INLINE auto vptr(int32_t i) { return values[i].data() + 1; }
 				DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t container_size) {
-					values.resize(sz);
-					for(uint32_t i = size; i < sz; ++i) values[i].resize((container_size + 7) / 8 + 1);
+					values.resize(sz + 1);
+					for(uint32_t i = size; i < sz + 1; ++i) values[i].resize((container_size + 7) / 8 + 1);
 					size = sz;
 				}
 				DCON_RELEASE_INLINE void emplace_back_all(uint32_t newsz) {
@@ -550,7 +550,7 @@ namespace dcon {
 					}
 				}
 				DCON_RELEASE_INLINE void copy_value(int32_t dest, int32_t source) {
-					for(int32_t i = 0; i < int32_t(size); ++i) {
+					for(int32_t i = 1; i < int32_t(size + 1); ++i) {
 						dcon::bit_vector_set(vptr(i), dest, dcon::bit_vector_test(vptr(i), source));
 					}
 				}
@@ -560,7 +560,7 @@ namespace dcon {
 					}
 				}
 				DCON_RELEASE_INLINE void zero_at(int32_t dest) {
-					for(int32_t i = 0; i < int32_t(size); ++i) {
+					for(int32_t i = 0; i < int32_t(size + 1); ++i) {
 						dcon::bit_vector_set(vptr(i), dest, false);
 					}
 				}
@@ -2355,9 +2355,7 @@ namespace dcon {
 		}
 		#endif
 		void thingy2_set_left_from_dummy_rel(thingy2_id id, thingy_id val) {
-			if(auto ref_id = dummy_rel.m_link_back_right.vptr()[id.index()]; bool(ref_id)) {
-				dummy_rel_set_left(ref_id, val);
-			}
+			dummy_rel_set_right(dummy_rel_id(dummy_rel_id::value_base_t(val.index())), id);
 		}
 		DCON_RELEASE_INLINE bool thingy2_is_valid(thingy2_id id) const noexcept {
 			return bool(id) && uint32_t(id.index()) < thingy2.size_used;
@@ -2751,11 +2749,13 @@ namespace dcon {
 		//
 		void delete_thingy(thingy_id id) {
 			thingy_id id_removed = id;
+			#ifndef NDEBUG
+			assert(id.index() >= 0);
+			assert(uint32_t(id.index()) < thingy.size_used );
+			assert(thingy.size_used != 0);
+			#endif
 			thingy_id last_id(thingy_id::value_base_t(thingy.size_used - 1));
 			if(id_removed == last_id) { pop_back_thingy(); return; }
-			#ifdef DCON_TRAP_INVALID_STORE
-			assert(id.index() >= 0);
-			#endif
 			on_delete_thingy(id_removed);
 			delete_dummy_rel(dummy_rel_id(dummy_rel_id::value_base_t(id_removed.index())));
 			internal_move_relationship_dummy_rel(dummy_rel_id(dummy_rel_id::value_base_t(last_id.index())), dummy_rel_id(dummy_rel_id::value_base_t(id_removed.index())));
@@ -2856,11 +2856,13 @@ namespace dcon {
 		//
 		void delete_thingy2(thingy2_id id) {
 			thingy2_id id_removed = id;
+			#ifndef NDEBUG
+			assert(id.index() >= 0);
+			assert(uint32_t(id.index()) < thingy2.size_used );
+			assert(thingy2.size_used != 0);
+			#endif
 			thingy2_id last_id(thingy2_id::value_base_t(thingy2.size_used - 1));
 			if(id_removed == last_id) { pop_back_thingy2(); return; }
-			#ifdef DCON_TRAP_INVALID_STORE
-			assert(id.index() >= 0);
-			#endif
 			thingy2_remove_dummy_rel_as_right(id_removed);
 			if(auto bk = dummy_rel.m_link_back_right.vptr()[last_id.index()]; bool(bk)) {
 				dummy_rel.m_right.vptr()[bk.index()] = id_removed;
@@ -2905,7 +2907,7 @@ namespace dcon {
 		// container delete for dummy_rel
 		//
 		void delete_dummy_rel(dummy_rel_id id_removed) {
-			#ifdef DCON_TRAP_INVALID_STORE
+			#ifndef NDEBUG
 			assert(id_removed.index() >= 0);
 			#endif
 			internal_dummy_rel_set_right(id_removed, thingy2_id());
@@ -3010,11 +3012,13 @@ namespace dcon {
 		//
 		void delete_oop_thingy(oop_thingy_id id) {
 			oop_thingy_id id_removed = id;
+			#ifndef NDEBUG
+			assert(id.index() >= 0);
+			assert(uint32_t(id.index()) < oop_thingy.size_used );
+			assert(oop_thingy.size_used != 0);
+			#endif
 			oop_thingy_id last_id(oop_thingy_id::value_base_t(oop_thingy.size_used - 1));
 			if(id_removed == last_id) { pop_back_oop_thingy(); return; }
-			#ifdef DCON_TRAP_INVALID_STORE
-			assert(id.index() >= 0);
-			#endif
 			oop_thingy_remove_dummy_rel_B_as_left(id_removed);
 			if(auto bk = dummy_rel_B.m_link_back_left.vptr()[last_id.index()]; bool(bk)) {
 				dummy_rel_B.m_left.vptr()[bk.index()] = id_removed;
@@ -3051,7 +3055,7 @@ namespace dcon {
 		// container delete for dummy_rel_B
 		//
 		void delete_dummy_rel_B(dummy_rel_B_id id_removed) {
-			#ifdef DCON_TRAP_INVALID_STORE
+			#ifndef NDEBUG
 			assert(id_removed.index() >= 0);
 			#endif
 			internal_dummy_rel_B_set_left(id_removed, oop_thingy_id());
@@ -3722,7 +3726,7 @@ namespace dcon {
 								}
 								if(header.is_property("some_value")) {
 									if(header.is_type("int32_t")) {
-										std::memcpy(thingy.m_some_value.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(int32_t), header.record_size));
+										std::memcpy(thingy.m_some_value.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(int32_t), size_t(header.record_size)));
 										serialize_selection.thingy_some_value = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -3783,7 +3787,7 @@ namespace dcon {
 								}
 								if(header.is_property("bf_value")) {
 									if(header.is_type("bitfield")) {
-										std::memcpy(thingy.m_bf_value.vptr(), reinterpret_cast<dcon::bitfield_type const*>(input_buffer), std::min(size_t(thingy.size_used + 7) / 8, header.record_size));
+										std::memcpy(thingy.m_bf_value.vptr(), reinterpret_cast<dcon::bitfield_type const*>(input_buffer), std::min(size_t(thingy.size_used + 7) / 8, size_t(header.record_size)));
 										serialize_selection.thingy_bf_value = true;
 									}
 									break;
@@ -4155,7 +4159,7 @@ namespace dcon {
 								}
 								if(header.is_property("some_value")) {
 									if(header.is_type("int32_t")) {
-										std::memcpy(thingy2.m_some_value.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(thingy2.size_used) * sizeof(int32_t), header.record_size));
+										std::memcpy(thingy2.m_some_value.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(thingy2.size_used) * sizeof(int32_t), size_t(header.record_size)));
 										serialize_selection.thingy2_some_value = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -4216,7 +4220,7 @@ namespace dcon {
 								}
 								if(header.is_property("bf_value")) {
 									if(header.is_type("bitfield")) {
-										std::memcpy(thingy2.m_bf_value.vptr(), reinterpret_cast<dcon::bitfield_type const*>(input_buffer), std::min(size_t(thingy2.size_used + 7) / 8, header.record_size));
+										std::memcpy(thingy2.m_bf_value.vptr(), reinterpret_cast<dcon::bitfield_type const*>(input_buffer), std::min(size_t(thingy2.size_used + 7) / 8, size_t(header.record_size)));
 										serialize_selection.thingy2_bf_value = true;
 									}
 									break;
@@ -4591,7 +4595,7 @@ namespace dcon {
 								}
 								if(header.is_property("right")) {
 									if(header.is_type("uint32_t")) {
-										std::memcpy(dummy_rel.m_right.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(uint32_t), header.record_size));
+										std::memcpy(dummy_rel.m_right.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(uint32_t), size_t(header.record_size)));
 										serialize_selection.dummy_rel_right = true;
 									}
 									else if(header.is_type("uint8_t")) {
@@ -4630,14 +4634,14 @@ namespace dcon {
 								}
 								if(header.is_property("pstruct")) {
 									if(header.is_type("my_struct")) {
-										std::memcpy(oop_thingy.m_pstruct.vptr(), reinterpret_cast<my_struct const*>(input_buffer), std::min(size_t(oop_thingy.size_used) * sizeof(my_struct), header.record_size));
+										std::memcpy(oop_thingy.m_pstruct.vptr(), reinterpret_cast<my_struct const*>(input_buffer), std::min(size_t(oop_thingy.size_used) * sizeof(my_struct), size_t(header.record_size)));
 										serialize_selection.oop_thingy_pstruct = true;
 									}
 									break;
 								}
 								if(header.is_property("pfloat")) {
 									if(header.is_type("float")) {
-										std::memcpy(oop_thingy.m_pfloat.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(oop_thingy.size_used) * sizeof(float), header.record_size));
+										std::memcpy(oop_thingy.m_pfloat.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(oop_thingy.size_used) * sizeof(float), size_t(header.record_size)));
 										serialize_selection.oop_thingy_pfloat = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -4711,7 +4715,7 @@ namespace dcon {
 								}
 								if(header.is_property("left")) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(dummy_rel_B.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(oop_thingy.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(dummy_rel_B.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(oop_thingy.size_used) * sizeof(uint16_t), size_t(header.record_size)));
 										serialize_selection.dummy_rel_B_left = true;
 									}
 									else if(header.is_type("uint8_t")) {
@@ -4765,7 +4769,7 @@ namespace dcon {
 								}
 								if(header.is_property("some_value") && mask.thingy_some_value) {
 									if(header.is_type("int32_t")) {
-										std::memcpy(thingy.m_some_value.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(int32_t), header.record_size));
+										std::memcpy(thingy.m_some_value.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(int32_t), size_t(header.record_size)));
 										serialize_selection.thingy_some_value = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -4826,7 +4830,7 @@ namespace dcon {
 								}
 								if(header.is_property("bf_value") && mask.thingy_bf_value) {
 									if(header.is_type("bitfield")) {
-										std::memcpy(thingy.m_bf_value.vptr(), reinterpret_cast<dcon::bitfield_type const*>(input_buffer), std::min(size_t(thingy.size_used + 7) / 8, header.record_size));
+										std::memcpy(thingy.m_bf_value.vptr(), reinterpret_cast<dcon::bitfield_type const*>(input_buffer), std::min(size_t(thingy.size_used + 7) / 8, size_t(header.record_size)));
 										serialize_selection.thingy_bf_value = true;
 									}
 									break;
@@ -5198,7 +5202,7 @@ namespace dcon {
 								}
 								if(header.is_property("some_value") && mask.thingy2_some_value) {
 									if(header.is_type("int32_t")) {
-										std::memcpy(thingy2.m_some_value.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(thingy2.size_used) * sizeof(int32_t), header.record_size));
+										std::memcpy(thingy2.m_some_value.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(thingy2.size_used) * sizeof(int32_t), size_t(header.record_size)));
 										serialize_selection.thingy2_some_value = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -5259,7 +5263,7 @@ namespace dcon {
 								}
 								if(header.is_property("bf_value") && mask.thingy2_bf_value) {
 									if(header.is_type("bitfield")) {
-										std::memcpy(thingy2.m_bf_value.vptr(), reinterpret_cast<dcon::bitfield_type const*>(input_buffer), std::min(size_t(thingy2.size_used + 7) / 8, header.record_size));
+										std::memcpy(thingy2.m_bf_value.vptr(), reinterpret_cast<dcon::bitfield_type const*>(input_buffer), std::min(size_t(thingy2.size_used + 7) / 8, size_t(header.record_size)));
 										serialize_selection.thingy2_bf_value = true;
 									}
 									break;
@@ -5634,7 +5638,7 @@ namespace dcon {
 								}
 								if(header.is_property("right") && mask.dummy_rel_right) {
 									if(header.is_type("uint32_t")) {
-										std::memcpy(dummy_rel.m_right.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(uint32_t), header.record_size));
+										std::memcpy(dummy_rel.m_right.vptr(), reinterpret_cast<uint32_t const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(uint32_t), size_t(header.record_size)));
 										serialize_selection.dummy_rel_right = true;
 									}
 									else if(header.is_type("uint8_t")) {
@@ -5673,14 +5677,14 @@ namespace dcon {
 								}
 								if(header.is_property("pstruct") && mask.oop_thingy_pstruct) {
 									if(header.is_type("my_struct")) {
-										std::memcpy(oop_thingy.m_pstruct.vptr(), reinterpret_cast<my_struct const*>(input_buffer), std::min(size_t(oop_thingy.size_used) * sizeof(my_struct), header.record_size));
+										std::memcpy(oop_thingy.m_pstruct.vptr(), reinterpret_cast<my_struct const*>(input_buffer), std::min(size_t(oop_thingy.size_used) * sizeof(my_struct), size_t(header.record_size)));
 										serialize_selection.oop_thingy_pstruct = true;
 									}
 									break;
 								}
 								if(header.is_property("pfloat") && mask.oop_thingy_pfloat) {
 									if(header.is_type("float")) {
-										std::memcpy(oop_thingy.m_pfloat.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(oop_thingy.size_used) * sizeof(float), header.record_size));
+										std::memcpy(oop_thingy.m_pfloat.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(oop_thingy.size_used) * sizeof(float), size_t(header.record_size)));
 										serialize_selection.oop_thingy_pfloat = true;
 									}
 									else if(header.is_type("int8_t")) {
@@ -5754,7 +5758,7 @@ namespace dcon {
 								}
 								if(header.is_property("left") && mask.dummy_rel_B_left) {
 									if(header.is_type("uint16_t")) {
-										std::memcpy(dummy_rel_B.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(oop_thingy.size_used) * sizeof(uint16_t), header.record_size));
+										std::memcpy(dummy_rel_B.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(oop_thingy.size_used) * sizeof(uint16_t), size_t(header.record_size)));
 										serialize_selection.dummy_rel_B_left = true;
 									}
 									else if(header.is_type("uint8_t")) {
