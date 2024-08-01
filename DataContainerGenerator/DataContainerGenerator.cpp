@@ -346,6 +346,8 @@ int main(int argc, char *argv[]) {
 		output += "#endif\n";
 
 		output += "\n";
+		output += "namespace fif { std::string container_interface(); }\n";
+		output += "\n";
 		output += "namespace " + parsed_file.namspace + " {\n";
 
 		//load record type
@@ -440,7 +442,7 @@ int main(int argc, char *argv[]) {
 
 			output += "\t\t\tfriend const_object_iterator_" + ob.name + ";\n";
 			output += "\t\t\tfriend object_iterator_" + ob.name + ";\n";
-
+			output += "\t\t\tfriend std::string fif::container_interface();\n";
 
 			for(auto& idx : ob.indexed_objects) {
 				if(idx.index == index_type::many) {
