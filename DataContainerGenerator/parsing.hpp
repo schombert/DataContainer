@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstring>
 #include <limits>
+#include <cstdint>
 
 struct char_range {
 	char const* start;
