@@ -12,9 +12,6 @@
 #include <set>
 
 #include "parsing.hpp"
-#include "code_fragments.hpp"
-
-
 
  void error_to_file(std::string const& file_name) {
 	std::fstream fileout;
@@ -352,7 +349,6 @@ int main(int argc, char *argv[]) {
 		std::string output;
 		std::string header_output;
 
-		basic_builder o;
 
 		output += "//\n";
 		output += "// This file was automatically generated from: " + std::string(argv[1]) + "\n";

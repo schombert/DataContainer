@@ -133,8 +133,8 @@
     <ClInclude Include="..\DataContainerGenerator\source_builder.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\DataContainerGenerator\LuaDLLGenerator.cpp" />
     <ClCompile Include="..\DataContainerGenerator\parsing.cpp" />
+    <ClCompile Include="LuaDLLGenerator.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

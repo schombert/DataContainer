@@ -23,10 +23,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\DataContainerGenerator\LuaDLLGenerator.cpp">
+    <ClCompile Include="..\DataContainerGenerator\parsing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\DataContainerGenerator\parsing.cpp">
+    <ClCompile Include="LuaDLLGenerator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
