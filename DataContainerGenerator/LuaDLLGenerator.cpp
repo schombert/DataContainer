@@ -1040,7 +1040,7 @@ int main(int argc, char *argv[]) {
 		for(auto& cob : parsed_file.relationship_objects) {
 			for(auto& cc : cob.composite_indexes) {
 				std::string params;
-				int32_t pcount;
+				int32_t pcount = 1;
 				for(auto& k : cc.component_indexes) {
 					if(params.length() > 0)
 						params += ", ";
