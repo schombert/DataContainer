@@ -44,5 +44,8 @@
     <ClInclude Include="parsing.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\CommonIncludes\common_types.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

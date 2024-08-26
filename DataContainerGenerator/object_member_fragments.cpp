@@ -2667,8 +2667,7 @@ void make_related_member_declarations(basic_builder& o, file_def const& parsed_f
 
 }
 
-basic_builder& make_object_member_declarations(basic_builder& o, file_def const& parsed_file, relationship_object_def const& obj,
-	bool add_prefix, bool declaration_mode, std::string const& namesp, bool const_mode) {
+basic_builder& make_object_member_declarations(basic_builder& o, file_def const& parsed_file, relationship_object_def const& obj, bool add_prefix, bool declaration_mode, std::string const& namesp, bool const_mode) {
 
 	o + substitute("obj", obj.name);
 	o + substitute{ "namesp", namesp };

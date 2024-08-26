@@ -1,0 +1,40 @@
+object{
+	name{thingy}
+	storage_type{compactable}
+	size{expandable}
+	
+	property{
+		name{some_value}
+		type{int32_t}
+	}
+
+	property{
+		name{bf_value}
+		type{bitfield}
+	}
+
+	property{
+		name{lua_value}
+		type{lua_reference_type}
+	}
+
+	property{
+		name{obj_value}
+		type{object{std::vector<float>}}
+	}
+
+	property{
+		name{pooled_v}
+		type{vector_pool{1000}{int16_t}}
+	}
+
+	property{
+		name{big_array}
+		type{array{thingy_id}{float}}
+	}
+
+	property{
+		name{big_array_bf}
+		type{array{int32_t}{bitfield}}
+	}
+}
