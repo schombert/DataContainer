@@ -9,9 +9,6 @@
 #include <stdint.h>
 using lua_reference_type = int32_t;
 #include "objs.hpp"
-#define LUA_LIB
-#include "lua.h"
-#include "lauxlib.h"
 #ifdef DCON_LUADLL_EXPORTS
 #define DCON_LUADLL_API __declspec(dllexport)
 #else
@@ -20,4 +17,23 @@ using lua_reference_type = int32_t;
 
 extern DCON_LUADLL_API dcon::data_container state;
 
-LUALIB_API int32_t luaopen_lua_objs(lua_State *L); 
+DCON_LUADLL_API void dcon_set_release_object_function(void (*fn)(int32_t));
+DCON_LUADLL_API bool dcon_thingy_is_valid(int32_t i);
+DCON_LUADLL_API uint32_t dcon_thingy_size();
+DCON_LUADLL_API void dcon_thingy_resize(uint32_t sz);
+DCON_LUADLL_API int32_t dcon_thingy_get_some_value(int32_t i); 
+DCON_LUADLL_API void dcon_thingy_set_some_value(int32_t i,int32_t v); 
+DCON_LUADLL_API lua_reference_type dcon_thingy_get_lua_value(int32_t i); 
+DCON_LUADLL_API void dcon_thingy_set_lua_value(int32_t i,lua_reference_type v); 
+DCON_LUADLL_API float dcon_thingy_get_big_array(int32_t i, int32_t idx); 
+DCON_LUADLL_API void dcon_thingy_set_big_array(int32_t i, int32_t idx,float v); 
+DCON_LUADLL_API uint32_t dcon_thingy_get_big_array_size(); 
+DCON_LUADLL_API void dcon_thingy_resize_big_array(uint32_t sz); 
+DCON_LUADLL_API bool dcon_thingy_get_big_array_bf(int32_t i, int32_t idx); 
+DCON_LUADLL_API void dcon_thingy_set_big_array_bf(int32_t i, int32_t idx, bool v); 
+DCON_LUADLL_API uint32_t dcon_thingy_get_big_array_bf_size(); 
+DCON_LUADLL_API void dcon_thingy_resize_big_array_bf(uint32_t sz); 
+DCON_LUADLL_API void dcon_pop_back_thingy(); 
+DCON_LUADLL_API int32_t dcon_create_thingy(); 
+DCON_LUADLL_API void dcon_delete_thingy(int32_t i); 
+DCON_LUADLL_API int32_t dcon_reset(); 

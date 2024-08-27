@@ -356,6 +356,7 @@ int main(int argc, char *argv[]) {
 		output += "// NOT SUITABLE FOR USE IN CRITICAL SOFTWARE WHERE LIVES OR LIVELIHOODS DEPEND ON THE CORRECT OPERATION\n";
 		output += "//\n";
 		output += "\n";
+		output += "#define DCON_LUADLL_EXPORTS\n";
 		output += "#include \"lua_" + base_include_name + "\"\n";
 
 
@@ -370,9 +371,6 @@ int main(int argc, char *argv[]) {
 		header_output += "#include <stdint.h>\n";
 		header_output += "using lua_reference_type = int32_t;\n";
 		header_output += "#include \"" + base_include_name + "\"\n";
-		header_output += "#define LUA_LIB\n";
-		header_output += "#include \"lua.h\"\n";
-		header_output += "#include \"lauxlib.h\"\n";
 		header_output += "#ifdef DCON_LUADLL_EXPORTS\n";
 		header_output += "#define DCON_LUADLL_API __declspec(dllexport)\n";
 		header_output += "#else\n";
@@ -386,14 +384,15 @@ int main(int argc, char *argv[]) {
 		header_output += "extern DCON_LUADLL_API " + parsed_file.namspace + "::data_container state;\n";
 		header_output += "\n";
 
-		auto fn_name = base_include_name.substr(0, base_include_name.length() - 4);
-		header_output += "LUALIB_API int32_t luaopen_lua_" + fn_name + "(lua_State *L); \n";
-
 		output += "\n";
 		output += "DCON_LUADLL_API " + parsed_file.namspace + "::data_container state;\n";
+		output += "void (*release_object_function)(int32_t) = nullptr;\n";
 		output += "\n";
 
-		std::string exports_list;
+		header_output += "DCON_LUADLL_API void dcon_set_release_object_function(void (*fn)(int32_t));\n";
+		output += "void dcon_set_release_object_function(void (*fn)(int32_t)) {\n";
+		output += "\t release_object_function = fn;\n";
+		output += "}\n";
 
 		std::set<std::string> made_types;
 
@@ -405,34 +404,23 @@ int main(int argc, char *argv[]) {
 		}
 
 		for(auto& ob : parsed_file.relationship_objects) {
-
-			//o + substitute("obj", ob.name);
-			//@obj@_is_valid
-
-			output += "int32_t " + ob.name + "_is_valid(lua_State *L) { \n";
-			output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
+			header_output += "DCON_LUADLL_API bool dcon_" + ob.name + "_is_valid(int32_t i);\n";
+			output += "bool dcon_" + ob.name + "_is_valid(int32_t i) {\n";
+			output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
 			output += "\t bool result = state." + ob.name + "_is_valid(index);\n";
-			output += "\t lua_pushboolean(L, result);\n";
-			output += "\t return 1;\n";
+			output += "\t return result;\n";
 			output += " }\n";
 
-			exports_list += "\t{\"dcon_" + ob.name + "_is_valid\" , " + ob.name + "_is_valid}, \n";
-
-			output += "int32_t " + ob.name + "_size(lua_State *L) { \n";
+			header_output += "DCON_LUADLL_API uint32_t dcon_" + ob.name + "_size();\n";
+			output += "uint32_t dcon_" + ob.name + "_size() {\n";
 			output += "\t auto result = state." + ob.name + "_size();\n";
-			output += "\t lua_pushinteger(L, lua_Integer(result));\n";
-			output += "\t return 1;\n";
+			output += "\t return result;\n";
 			output += " }\n";
 
-			exports_list += "\t{\"dcon_" + ob.name + "_size\" , " + ob.name + "_size}, \n";
-
-			output += "int32_t " + ob.name + "_resize(lua_State *L) { \n";
-			output += "\t auto sz = uint32_t(lua_tointeger(L, 1));\n";
+			header_output += "DCON_LUADLL_API void dcon_" + ob.name + "_resize(uint32_t sz);\n";
+			output += "void dcon_" + ob.name + "_resize(uint32_t sz) {\n";
 			output += "\t state." + ob.name + "_resize(sz);\n";
-			output += "\t return 0;\n";
 			output += " }\n";
-
-			exports_list += "\t{\"dcon_" + ob.name + "_resize\" , " + ob.name + "_resize}, \n";
 
 			for(auto& prop : ob.properties) {
 				auto norm_property_type = normalize_type(prop.data_type, made_types);
@@ -443,135 +431,101 @@ int main(int argc, char *argv[]) {
 					auto norm_index_type = normalize_type(prop.array_index_type, made_types);
 					std::string index_access_string;
 					if(norm_index_type == lua_type_match::handle_to_integer) {
-						index_access_string = "\t auto sub_index = " + parsed_file.namspace + "::" + prop.array_index_type + "{" + parsed_file.namspace + "::" + prop.array_index_type + "::value_base_t(lua_tointeger(L, 2))};\n";
+						index_access_string = "\t auto sub_index = " + parsed_file.namspace + "::" + prop.array_index_type + "{" + parsed_file.namspace + "::" + prop.array_index_type + "::value_base_t(idx)};\n";
 					} else {
-						index_access_string = "\t auto sub_index = " + prop.array_index_type + "(lua_tointeger(L, 2));\n";
+						index_access_string = "\t auto sub_index = " + prop.array_index_type + "(idx);\n";
 					}
 					switch(norm_property_type) {
 						case lua_type_match::integer:
 							if(prop.hook_get || !prop.is_derived) {
-								output += "int32_t " + ob.name + "_get_" + prop.name + "(lua_State *L) { \n";
-								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
+								header_output += "DCON_LUADLL_API " + prop.data_type + " dcon_" + ob.name + "_get_" + prop.name + "(int32_t i, int32_t idx); \n";
+								output += prop.data_type + " dcon_" + ob.name + "_get_" + prop.name + "(int32_t i, int32_t idx) { \n";
+								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
 								output += index_access_string;
-								output += "\t auto result = state." + ob.name + "_get_" + prop.name + "(index, sub_index);\n";
-								output += "\t lua_pushinteger(L, lua_Integer(result));\n";
-								output += "\t return 1;\n";
+								output += "\t return state." + ob.name + "_get_" + prop.name + "(index, sub_index);\n";
 								output += " }\n";
-
-								exports_list += "\t{\"dcon_" + ob.name + "_get_" + prop.name + "\" , " + ob.name + "_get_" + prop.name + "}, \n";
 							}
 							if(prop.hook_set || !prop.is_derived) {
-								output += "int32_t " + ob.name + "_set_" + prop.name + "(lua_State *L) { \n";
-								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
+								header_output += "DCON_LUADLL_API void dcon_" + ob.name + "_set_" + prop.name + "(int32_t i, int32_t idx," + prop.data_type + " v); \n";
+								output += "void dcon_" + ob.name + "_set_" + prop.name + "(int32_t i, int32_t idx," + prop.data_type + " v) { \n";
+								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
 								output += index_access_string;
-								output += "\t auto data = " + prop.data_type + "(lua_tointeger(L, 2));\n";
-								output += "\t state." + ob.name + "_set_" + prop.name + "(index, sub_index, data);\n";
-								output += "\t return 0;\n";
+								output += "\t state." + ob.name + "_set_" + prop.name + "(index, sub_index, v);\n";
 								output += " }\n";
-
-								exports_list += "\t{\"dcon_" + ob.name + "_set_" + prop.name + "\" , " + ob.name + "_set_" + prop.name + "}, \n";
 							}
 							break;
 						case lua_type_match::floating_point:
 							if(prop.hook_get || !prop.is_derived) {
-								output += "int32_t " + ob.name + "_get_" + prop.name + "(lua_State *L) { \n";
-								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
+								header_output += "DCON_LUADLL_API " + prop.data_type + " dcon_" + ob.name + "_get_" + prop.name + "(int32_t i, int32_t idx); \n";
+								output += prop.data_type + " dcon_" + ob.name + "_get_" + prop.name + "(int32_t i, int32_t idx) { \n";
+								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
 								output += index_access_string;
-								output += "\t auto result = state." + ob.name + "_get_" + prop.name + "(index, sub_index);\n";
-								output += "\t lua_pushnumber(L, lua_Number(result));\n";
-								output += "\t return 1;\n";
+								output += "\t return state." + ob.name + "_get_" + prop.name + "(index, sub_index);\n";
 								output += " }\n";
-
-								exports_list += "\t{\"dcon_" + ob.name + "_get_" + prop.name + "\" , " + ob.name + "_get_" + prop.name + "}, \n";
 							}
 							if(prop.hook_set || !prop.is_derived) {
-								output += "int32_t " + ob.name + "_set_" + prop.name + "(lua_State *L) { \n";
-								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
+								header_output += "DCON_LUADLL_API void dcon_" + ob.name + "_set_" + prop.name + "(int32_t i, int32_t idx," + prop.data_type + " v); \n";
+								output += "void dcon_" + ob.name + "_set_" + prop.name + "(int32_t i, int32_t idx," + prop.data_type + " v) { \n";
+								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
 								output += index_access_string;
-								output += "\t auto data = " + prop.data_type + "(lua_tonumber(L, 2));\n";
-								output += "\t state." + ob.name + "_set_" + prop.name + "(index, sub_index, data);\n";
-								output += "\t return 0;\n";
+								output += "\t state." + ob.name + "_set_" + prop.name + "(index, sub_index, v);\n";
 								output += " }\n";
-
-								exports_list += "\t{\"dcon_" + ob.name + "_set_" + prop.name + "\" , " + ob.name + "_set_" + prop.name + "}, \n";
 							}
 							break;
 						case lua_type_match::boolean:
 							if(prop.hook_get || !prop.is_derived) {
-								output += "int32_t " + ob.name + "_get_" + prop.name + "(lua_State *L) { \n";
-								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
+								header_output += "DCON_LUADLL_API bool dcon_" + ob.name + "_get_" + prop.name + "(int32_t i, int32_t idx); \n";
+								output += "bool dcon_" + ob.name + "_get_" + prop.name + "(int32_t i, int32_t idx) { \n";
+								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
 								output += index_access_string;
-								output += "\t auto result = state." + ob.name + "_get_" + prop.name + "(index, sub_index);\n";
-								output += "\t lua_pushboolean(L, result);\n";
-								output += "\t return 1;\n";
+								output += "\t return state." + ob.name + "_get_" + prop.name + "(index, sub_index);\n";
 								output += " }\n";
-
-								exports_list += "\t{\"dcon_" + ob.name + "_get_" + prop.name + "\" , " + ob.name + "_get_" + prop.name + "}, \n";
 							}
 							if(prop.hook_set || !prop.is_derived) {
-								output += "int32_t " + ob.name + "_set_" + prop.name + "(lua_State *L) { \n";
-								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
+								header_output += "DCON_LUADLL_API void dcon_" + ob.name + "_set_" + prop.name + "(int32_t i, int32_t idx, bool v); \n";
+								output += "void dcon_" + ob.name + "_set_" + prop.name + "(int32_t i, int32_t idx, bool v) { \n";
+								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
 								output += index_access_string;
-								output += "\t auto data = bool(lua_toboolean(L, 2));\n";
-								output += "\t state." + ob.name + "_set_" + prop.name + "(index, sub_index, data);\n";
-								output += "\t return 0;\n";
+								output += "\t state." + ob.name + "_set_" + prop.name + "(index, sub_index, v);\n";
 								output += " }\n";
-
-								exports_list += "\t{\"dcon_" + ob.name + "_set_" + prop.name + "\" , " + ob.name + "_set_" + prop.name + "}, \n";
 							}
 							break;
 						case lua_type_match::lua_object:
 							if(prop.hook_get || !prop.is_derived) {
-								output += "int32_t " + ob.name + "_get_" + prop.name + "(lua_State *L) { \n";
-								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
+								header_output += "DCON_LUADLL_API " + prop.data_type + " dcon_" + ob.name + "_get_" + prop.name + "(int32_t i, int32_t idx); \n";
+								output += prop.data_type + " dcon_" + ob.name + "_get_" + prop.name + "(int32_t i, int32_t idx) { \n";
+								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
 								output += index_access_string;
-								output += "\t auto result = state." + ob.name + "_get_" + prop.name + "(index, sub_index);\n";
-								output += "\t if(result == 0)\n";
-								output += "\t\t lua_pushnil(L);\n";
-								output += "\t else\n";
-								output += "\t\t lua_rawgeti(L, LUA_REGISTRYINDEX, result ^ LUA_REFNIL);\n";
-								output += "\t return 1;\n";
+								output += "\t return state." + ob.name + "_get_" + prop.name + "(index, sub_index);\n";
 								output += " }\n";
-
-								exports_list += "\t{\"dcon_" + ob.name + "_get_" + prop.name + "\" , " + ob.name + "_get_" + prop.name + "}, \n";
 							}
 							if(prop.hook_set || !prop.is_derived) {
-								output += "int32_t " + ob.name + "_set_" + prop.name + "(lua_State *L) { \n";
-								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
+								header_output += "DCON_LUADLL_API void dcon_" + ob.name + "_set_" + prop.name + "(int32_t i, int32_t idx," + prop.data_type + " v); \n";
+								output += "void dcon_" + ob.name + "_set_" + prop.name + "(int32_t i, int32_t idx," + prop.data_type + " v) { \n";
+								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
 								output += index_access_string;
-								output += "\t auto result = state." + ob.name + "_get_" + prop.name + "(index, sub_index);\n";
-								output += "\t if(result != 0) luaL_unref(L, LUA_REGISTRYINDEX, LUA_REFNIL ^ result);\n";
-								output += "\t auto data = LUA_REFNIL ^ lua_reference_type(luaL_ref(L, LUA_REGISTRYINDEX));\n";
-								output += "\t lua_pushnil(L);\n";
-								output += "\t state." + ob.name + "_set_" + prop.name + "(index, sub_index, data);\n";
-								output += "\t return 0;\n";
+								output += "\t auto old_val state." + ob.name + "_get_" + prop.name + "(index, sub_index);\n";
+								output += "\tif(old_val) release_object_function(old_val);\n";
+								output += "\t state." + ob.name + "_set_" + prop.name + "(index, sub_index, v);\n";
 								output += " }\n";
-
-								exports_list += "\t{\"dcon_" + ob.name + "_set_" + prop.name + "\" , " + ob.name + "_set_" + prop.name + "}, \n";
 							}
 							break;
 						case lua_type_match::handle_to_integer:
 							if(prop.hook_get || !prop.is_derived) {
-								output += "int32_t " + ob.name + "_get_" + prop.name + "(lua_State *L) { \n";
-								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
+								header_output += "DCON_LUADLL_API int32_t dcon_" + ob.name + "_get_" + prop.name + "(int32_t i, int32_t idx); \n";
+								output += "int32_t dcon_" + ob.name + "_get_" + prop.name + "(int32_t i, int32_t idx) { \n";
+								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
 								output += index_access_string;
-								output += "\t auto result = state." + ob.name + "_get_" + prop.name + "(index, sub_index).index();\n";
-								output += "\t lua_pushinteger(L, lua_Integer(result));\n";
-								output += "\t return 1;\n";
+								output += "\t return state." + ob.name + "_get_" + prop.name + "(index, sub_index).index();\n";
 								output += " }\n";
-
-								exports_list += "\t{\"dcon_" + ob.name + "_get_" + prop.name + "\" , " + ob.name + "_get_" + prop.name + "}, \n";
 							}
 							if(prop.hook_set || !prop.is_derived) {
-								output += "int32_t " + ob.name + "_set_" + prop.name + "(lua_State *L) { \n";
-								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
+								header_output += "DCON_LUADLL_API void dcon_" + ob.name + "_set_" + prop.name + "(int32_t i, int32_t idx, int32_t v); \n";
+								output += "void dcon_" + ob.name + "_set_" + prop.name + "(int32_t i, int32_t idx, int32_t v) { \n";
+								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
 								output += index_access_string;
-								output += "\t auto data = " + parsed_file.namspace + "::" + prop.data_type + "{" + parsed_file.namspace + "::" + prop.data_type + "::value_base_t(lua_tointeger(L, 2))};\n";
-								output += "\t state." + ob.name + "_set_" + prop.name + "(index, sub_index, data);\n";
-								output += "\t return 0;\n";
+								output += "\t state." + ob.name + "_set_" + prop.name + "(index, sub_index, " + parsed_file.namspace + "::" + prop.data_type + "{" + parsed_file.namspace + "::" + prop.data_type + "::value_base_t(v)});\n";
 								output += " }\n";
-
-								exports_list += "\t{\"dcon_" + ob.name + "_set_" + prop.name + "\" , " + ob.name + "_set_" + prop.name + "}, \n";
 							}
 							break;
 						case lua_type_match::opaque:
@@ -580,20 +534,15 @@ int main(int argc, char *argv[]) {
 					}
 
 					if(!prop.is_derived) {
-						output += "int32_t " + ob.name + "_get_" + prop.name + "_size(lua_State *L) { \n";
-						output += "\t bool result = state." + ob.name + "_get_" + prop.name + "_size();\n";
-						output += "\t lua_pushinteger(L, lua_Integer(result));\n";
-						output += "\t return 1;\n";
+						header_output += "DCON_LUADLL_API uint32_t dcon_" + ob.name + "_get_" + prop.name + "_size(); \n";
+						output += "uint32_t dcon_" + ob.name + "_get_" + prop.name + "_size() { \n";
+						output += "\t return state." + ob.name + "_get_" + prop.name + "_size();\n";
 						output += " }\n";
 
-						exports_list += "\t{\"dcon_" + ob.name + "_get_" + prop.name + "_size\" , " + ob.name + "_get_" + prop.name + "_size}, \n";
-
-						output += "int32_t " + ob.name + "_resize_" + prop.name + "(lua_State *L) { \n";
-						output += "\t state." + ob.name + "_resize_" + prop.name + "(uint32_t(lua_tointeger(L, 1)));\n";
-						output += "\t return 0;\n";
+						header_output += "DCON_LUADLL_API void dcon_" + ob.name + "_resize_" + prop.name + "(uint32_t sz); \n";
+						output += "void dcon_" + ob.name + "_resize_" + prop.name + "(uint32_t sz) { \n";
+						output += "\t state." + ob.name + "_resize_" + prop.name + "(sz);\n";
 						output += " }\n";
-
-						exports_list += "\t{\"dcon_" + ob.name + "_resize_" + prop.name + "\" , " + ob.name + "_resize_" + prop.name + "}, \n";
 					}
 
 				} else if(prop.type == property_type::special_vector) { // TODO on this one
@@ -602,118 +551,84 @@ int main(int argc, char *argv[]) {
 					switch(norm_property_type) {
 						case lua_type_match::integer:
 							if(prop.hook_get || !prop.is_derived) {
-								output += "int32_t " + ob.name + "_get_" + prop.name + "(lua_State *L) { \n";
-								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-								output += "\t auto result = state." + ob.name + "_get_" + prop.name + "(index);\n";
-								output += "\t lua_pushinteger(L, lua_Integer(result));\n";
-								output += "\t return 1;\n";
+								header_output += "DCON_LUADLL_API " + prop.data_type + " dcon_" + ob.name + "_get_" + prop.name + "(int32_t i); \n";
+								output += prop.data_type + " dcon_" + ob.name + "_get_" + prop.name + "(int32_t i) { \n";
+								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+								output += "\t return state." + ob.name + "_get_" + prop.name + "(index);\n";
 								output += " }\n";
-
-								exports_list += "\t{\"dcon_" + ob.name + "_get_" + prop.name + "\" , " + ob.name + "_get_" + prop.name + "}, \n";
 							}
 							if(prop.hook_set || !prop.is_derived) {
-								output += "int32_t " + ob.name + "_set_" + prop.name + "(lua_State *L) { \n";
-								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-								output += "\t auto data = " + prop.data_type + "(lua_tointeger(L, 2));\n";
-								output += "\t state." + ob.name + "_set_" + prop.name + "(index, data);\n";
-								output += "\t return 0;\n";
+								header_output += "DCON_LUADLL_API void dcon_" + ob.name + "_set_" + prop.name + "(int32_t i," + prop.data_type + " v); \n";
+								output += "void dcon_" + ob.name + "_set_" + prop.name + "(int32_t i," + prop.data_type + " v) { \n";
+								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+								output += "\t state." + ob.name + "_set_" + prop.name + "(index, v);\n";
 								output += " }\n";
-
-								exports_list += "\t{\"dcon_" + ob.name + "_set_" + prop.name + "\" , " + ob.name + "_set_" + prop.name + "}, \n";
 							}
 							break;
 						case lua_type_match::floating_point:
 							if(prop.hook_get || !prop.is_derived) {
-								output += "int32_t " + ob.name + "_get_" + prop.name + "(lua_State *L) { \n";
-								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-								output += "\t auto result = state." + ob.name + "_get_" + prop.name + "(index);\n";
-								output += "\t lua_pushnumber(L, lua_Number(result));\n";
-								output += "\t return 1;\n";
+								header_output += "DCON_LUADLL_API " + prop.data_type + " dcon_" + ob.name + "_get_" + prop.name + "(int32_t i); \n";
+								output += prop.data_type + " dcon_" + ob.name + "_get_" + prop.name + "(int32_t i) { \n";
+								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+								output += "\t return state." + ob.name + "_get_" + prop.name + "(index);\n";
 								output += " }\n";
-
-								exports_list += "\t{\"dcon_" + ob.name + "_get_" + prop.name + "\" , " + ob.name + "_get_" + prop.name + "}, \n";
 							}
 							if(prop.hook_set || !prop.is_derived) {
-								output += "int32_t " + ob.name + "_set_" + prop.name + "(lua_State *L) { \n";
-								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-								output += "\t auto data = " + prop.data_type + "(lua_tonumber(L, 2));\n";
-								output += "\t state." + ob.name + "_set_" + prop.name + "(index, data);\n";
-								output += "\t return 0;\n";
+								header_output += "DCON_LUADLL_API void dcon_" + ob.name + "_set_" + prop.name + "(int32_t i," + prop.data_type + " v); \n";
+								output += "void dcon_" + ob.name + "_set_" + prop.name + "(int32_t i," + prop.data_type + " v) { \n";
+								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+								output += "\t state." + ob.name + "_set_" + prop.name + "(index, v);\n";
 								output += " }\n";
-
-								exports_list += "\t{\"dcon_" + ob.name + "_set_" + prop.name + "\" , " + ob.name + "_set_" + prop.name + "}, \n";
 							}
 							break;
 						case lua_type_match::boolean:
 							if(prop.hook_get || !prop.is_derived) {
-								output += "int32_t " + ob.name + "_get_" + prop.name + "(lua_State *L) { \n";
-								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-								output += "\t auto result = state." + ob.name + "_get_" + prop.name + "(index);\n";
-								output += "\t lua_pushboolean(L, result);\n";
-								output += "\t return 1;\n";
+								header_output += "DCON_LUADLL_API bool dcon_" + ob.name + "_get_" + prop.name + "(int32_t i); \n";
+								output += "bool dcon_" + ob.name + "_get_" + prop.name + "(int32_t i) { \n";
+								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+								output += "\t return state." + ob.name + "_get_" + prop.name + "(index);\n";
 								output += " }\n";
-
-								exports_list += "\t{\"dcon_" + ob.name + "_get_" + prop.name + "\" , " + ob.name + "_get_" + prop.name + "}, \n";
 							}
 							if(prop.hook_set || !prop.is_derived) {
-								output += "int32_t " + ob.name + "_set_" + prop.name + "(lua_State *L) { \n";
-								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-								output += "\t auto data = bool(lua_toboolean(L, 2));\n";
-								output += "\t state." + ob.name + "_set_" + prop.name + "(index, data);\n";
-								output += "\t return 0;\n";
+								header_output += "DCON_LUADLL_API void dcon_" + ob.name + "_set_" + prop.name + "(int32_t i, bool v); \n";
+								output += "void dcon_" + ob.name + "_set_" + prop.name + "(int32_t i, bool v) { \n";
+								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+								output += "\t state." + ob.name + "_set_" + prop.name + "(index, v);\n";
 								output += " }\n";
-
-								exports_list += "\t{\"dcon_" + ob.name + "_set_" + prop.name + "\" , " + ob.name + "_set_" + prop.name + "}, \n";
 							}
 							break;
 						case lua_type_match::lua_object:
 							if(prop.hook_get || !prop.is_derived) {
-								output += "int32_t " + ob.name + "_get_" + prop.name + "(lua_State *L) { \n";
-								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-								output += "\t auto result = state." + ob.name + "_get_" + prop.name + "(index);\n";
-								output += "\t if(result == 0)\n";
-								output += "\t\t lua_pushnil(L);\n";
-								output += "\t else\n";
-								output += "\t\t lua_rawgeti(L, LUA_REGISTRYINDEX, result ^ LUA_REFNIL);\n";
-								output += "\t return 1;\n";
+								header_output += "DCON_LUADLL_API " + prop.data_type + " dcon_" + ob.name + "_get_" + prop.name + "(int32_t i); \n";
+								output += prop.data_type + " dcon_" + ob.name + "_get_" + prop.name + "(int32_t i) { \n";
+								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+								output += "\t return state." + ob.name + "_get_" + prop.name + "(index);\n";
 								output += " }\n";
-
-								exports_list += "\t{\"dcon_" + ob.name + "_get_" + prop.name + "\" , " + ob.name + "_get_" + prop.name + "}, \n";
 							}
 							if(prop.hook_set || !prop.is_derived) {
-								output += "int32_t " + ob.name + "_set_" + prop.name + "(lua_State *L) { \n";
-								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-								output += "\t auto result = state." + ob.name + "_get_" + prop.name + "(index);\n";
-								output += "\t if(result != 0) luaL_unref(L, LUA_REGISTRYINDEX, LUA_REFNIL ^ result);\n";
-								output += "\t auto data = LUA_REFNIL ^ lua_reference_type(luaL_ref(L, LUA_REGISTRYINDEX));\n";
-								output += "\t lua_pushnil(L);\n";
-								output += "\t state." + ob.name + "_set_" + prop.name + "(index, data);\n";
-								output += "\t return 0;\n";
+								header_output += "DCON_LUADLL_API void dcon_" + ob.name + "_set_" + prop.name + "(int32_t i," + prop.data_type + " v); \n";
+								output += "void dcon_" + ob.name + "_set_" + prop.name + "(int32_t i," + prop.data_type + " v) { \n";
+								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+								output += "\t auto old_val = state." + ob.name + "_get_" + prop.name + "(index);\n";
+								output += "\t if(old_val) release_object_function(old_val);\n";
+								output += "\t state." + ob.name + "_set_" + prop.name + "(index, v);\n";
 								output += " }\n";
-
-								exports_list += "\t{\"dcon_" + ob.name + "_set_" + prop.name + "\" , " + ob.name + "_set_" + prop.name + "}, \n";
 							}
 							break;
 						case lua_type_match::handle_to_integer:
 							if(prop.hook_get || !prop.is_derived) {
-								output += "int32_t " + ob.name + "_get_" + prop.name + "(lua_State *L) { \n";
-								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-								output += "\t auto result = state." + ob.name + "_get_" + prop.name + "(index).index();\n";
-								output += "\t lua_pushinteger(L, lua_Integer(result));\n";
-								output += "\t return 1;\n";
+								header_output += "DCON_LUADLL_API int32_t dcon_" + ob.name + "_get_" + prop.name + "(int32_t i); \n";
+								output += "int32_t dcon_" + ob.name + "_get_" + prop.name + "(int32_t i) { \n";
+								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+								output += "\t return state." + ob.name + "_get_" + prop.name + "(index).index();\n";
 								output += " }\n";
-
-								exports_list += "\t{\"dcon_" + ob.name + "_get_" + prop.name + "\" , " + ob.name + "_get_" + prop.name + "}, \n";
 							}
 							if(prop.hook_set || !prop.is_derived) {
-								output += "int32_t " + ob.name + "_set_" + prop.name + "(lua_State *L) { \n";
-								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-								output += "\t auto data = " + parsed_file.namspace + "::" + prop.data_type + "{" + parsed_file.namspace + "::" + prop.data_type + "::value_base_t(lua_tointeger(L, 2))};\n";
-								output += "\t state." + ob.name + "_set_" + prop.name + "(index, data);\n";
-								output += "\t return 0;\n";
+								header_output += "DCON_LUADLL_API void dcon_" + ob.name + "_set_" + prop.name + "(int32_t i, int32_t v); \n";
+								output += "void dcon_" + ob.name + "_set_" + prop.name + "(int32_t i, int32_t v) { \n";
+								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+								output += "\t state." + ob.name + "_set_" + prop.name + "(index, " + parsed_file.namspace + "::" + prop.data_type + "{" + parsed_file.namspace + "::" + prop.data_type + "::value_base_t(v)});\n";
 								output += " }\n";
-
-								exports_list += "\t{\"dcon_" + ob.name + "_set_" + prop.name + "\" , " + ob.name + "_set_" + prop.name + "}, \n";
 							}
 							break;
 						case lua_type_match::opaque:
@@ -725,113 +640,72 @@ int main(int argc, char *argv[]) {
 
 			for(auto& indexed : ob.indexed_objects) {
 				if(indexed.index == index_type::at_most_one && ob.primary_key == indexed) {
-
-					output += "int32_t " + ob.name + "_get_" + indexed.property_name + "(lua_State *L) { \n";
-					output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-					output += "\t auto result = state." + ob.name + "_get_" + indexed.property_name + "(index).index();\n";
-					output += "\t lua_pushinteger(L, lua_Integer(result));\n";
-					output += "\t return 1;\n";
+					header_output += "DCON_LUADLL_API int32_t dcon_" + ob.name + "_get_" + indexed.property_name + "(int32_t i); \n";
+					output += "int32_t dcon_" + ob.name + "_get_" + indexed.property_name + "(int32_t i) { \n";
+					output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+					output += "\t return state." + ob.name + "_get_" + indexed.property_name + "(index).index();\n";
 					output += " }\n";
 
-					exports_list += "\t{\"dcon_" + ob.name + "_get_" + indexed.property_name + "\" , " + ob.name + "_get_" + indexed.property_name + "}, \n";
-
-					output += "int32_t " + ob.name + "_set_" + indexed.property_name + "(lua_State *L) { \n";
-					output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-					output += "\t auto data = " + parsed_file.namspace + "::" + indexed.type_name + "_id{" + parsed_file.namspace + "::" + indexed.type_name + "_id::value_base_t(lua_tointeger(L, 2))};\n";
-					output += "\t state." + ob.name + "_set_" + indexed.property_name + "(index, data);\n";
-					output += "\t return 0;\n";
+					header_output += "DCON_LUADLL_API void dcon_" + ob.name + "_set_" + indexed.property_name + "(int32_t i, int32_t v); \n";
+					output += "void dcon_" + ob.name + "_set_" + indexed.property_name + "(int32_t i, int32_t v) { \n";
+					output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+					output += "\t state." + ob.name + "_set_" + indexed.property_name + "(index, " + parsed_file.namspace + "::" + indexed.type_name + "_id{" + parsed_file.namspace + "::" + indexed.type_name + "_id::value_base_t(v)});\n";
 					output += " }\n";
 
-					exports_list += "\t{\"dcon_" + ob.name + "_set_" + indexed.property_name + "\" , " + ob.name + "_set_" + indexed.property_name + "}, \n";
-
-
-					output += "int32_t " + ob.name + "_try_set_" + indexed.property_name + "(lua_State *L) { \n";
-					output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-					output += "\t auto data = " + parsed_file.namspace + "::" + indexed.type_name + "_id{" + parsed_file.namspace + "::" + indexed.type_name + "_id::value_base_t(lua_tointeger(L, 2))};\n";
-					output += "\t auto result = state." + ob.name + "_try_set_" + indexed.property_name + "(index, data);\n";
-					output += "\t lua_pushboolean(L, result);\n";
-					output += "\t return 1;\n";
+					header_output += "DCON_LUADLL_API void dcon_" + ob.name + "_try_set_" + indexed.property_name + "(int32_t i, int32_t v); \n";
+					output += "void dcon_" + ob.name + "_try_set_" + indexed.property_name + "(int32_t i, int32_t v) { \n";
+					output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+					output += "\t state." + ob.name + "_try_set_" + indexed.property_name + "(index, " + parsed_file.namspace + "::" + indexed.type_name + "_id{" + parsed_file.namspace + "::" + indexed.type_name + "_id::value_base_t(v)});\n";
 					output += " }\n";
-
-					exports_list += "\t{\"dcon_" + ob.name + "_try_set_" + indexed.property_name + "\" , " + ob.name + "_try_set_" + indexed.property_name + "}, \n";
 
 				} else { // if(indexed.index == index_type::at_most_one ||  index_type::many || unindexed 
 					if(indexed.multiplicity == 1) {
-						output += "int32_t " + ob.name + "_get_" + indexed.property_name + "(lua_State *L) { \n";
-						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-						output += "\t auto result = state." + ob.name + "_get_" + indexed.property_name + "(index).index();\n";
-						output += "\t lua_pushinteger(L, lua_Integer(result));\n";
-						output += "\t return 1;\n";
+						header_output += "DCON_LUADLL_API int32_t dcon_" + ob.name + "_get_" + indexed.property_name + "(int32_t i); \n";
+						output += "int32_t dcon_" + ob.name + "_get_" + indexed.property_name + "(int32_t i) { \n";
+						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+						output += "\t return state." + ob.name + "_get_" + indexed.property_name + "(index).index();\n";
 						output += " }\n";
 
-						exports_list += "\t{\"dcon_" + ob.name + "_get_" + indexed.property_name + "\" , " + ob.name + "_get_" + indexed.property_name + "}, \n";
-
-						output += "int32_t " + ob.name + "_set_" + indexed.property_name + "(lua_State *L) { \n";
-						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-						output += "\t auto data = " + parsed_file.namspace + "::" + indexed.type_name + "_id{" + parsed_file.namspace + "::" + indexed.type_name + "_id::value_base_t(lua_tointeger(L, 2))};\n";
-						output += "\t state." + ob.name + "_set_" + indexed.property_name + "(index, data);\n";
-						output += "\t return 0;\n";
+						header_output += "DCON_LUADLL_API void dcon_" + ob.name + "_set_" + indexed.property_name + "(int32_t i, int32_t v); \n";
+						output += "void dcon_" + ob.name + "_set_" + indexed.property_name + "(int32_t i, int32_t v) { \n";
+						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+						output += "\t state." + ob.name + "_set_" + indexed.property_name + "(index, " + parsed_file.namspace + "::" + indexed.type_name + "_id{" + parsed_file.namspace + "::" + indexed.type_name + "_id::value_base_t(v)});\n";
 						output += " }\n";
 
-						exports_list += "\t{\"dcon_" + ob.name + "_set_" + indexed.property_name + "\" , " + ob.name + "_set_" + indexed.property_name + "}, \n";
-
-
-						output += "int32_t " + ob.name + "_try_set_" + indexed.property_name + "(lua_State *L) { \n";
-						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-						output += "\t auto data = " + parsed_file.namspace + "::" + indexed.type_name + "_id{" + parsed_file.namspace + "::" + indexed.type_name + "_id::value_base_t(lua_tointeger(L, 2))};\n";
-						output += "\t auto result = state." + ob.name + "_try_set_" + indexed.property_name + "(index, data);\n";
-						output += "\t lua_pushboolean(L, result);\n";
-						output += "\t return 1;\n";
+						header_output += "DCON_LUADLL_API void dcon_" + ob.name + "_try_set_" + indexed.property_name + "(int32_t i, int32_t v); \n";
+						output += "void dcon_" + ob.name + "_try_set_" + indexed.property_name + "(int32_t i, int32_t v) { \n";
+						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+						output += "\t state." + ob.name + "_try_set_" + indexed.property_name + "(index, " + parsed_file.namspace + "::" + indexed.type_name + "_id{" + parsed_file.namspace + "::" + indexed.type_name + "_id::value_base_t(v)});\n";
 						output += " }\n";
-
-						exports_list += "\t{\"dcon_" + ob.name + "_try_set_" + indexed.property_name + "\" , " + ob.name + "_try_set_" + indexed.property_name + "}, \n";
-
 					} else {
-						output += "int32_t " + ob.name + "_get_" + indexed.property_name + "(lua_State *L) { \n";
-						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-						output += "\t auto mindex = int32_t(lua_tointeger(L, 2));\n";
-						output += "\t auto result = state." + ob.name + "_get_" + indexed.property_name + "(index, mindex).index();\n";
-						output += "\t lua_pushinteger(L, lua_Integer(result));\n";
-						output += "\t return 1;\n";
+						header_output += "DCON_LUADLL_API int32_t dcon_" + ob.name + "_get_" + indexed.property_name + "(int32_t i, int32_t m); \n";
+						output += "int32_t dcon_" + ob.name + "_get_" + indexed.property_name + "(int32_t i, int32_t m) { \n";
+						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+						output += "\t return state." + ob.name + "_get_" + indexed.property_name + "(index, m).index();\n";
 						output += " }\n";
 
-						exports_list += "\t{\"dcon_" + ob.name + "_get_" + indexed.property_name + "\" , " + ob.name + "_get_" + indexed.property_name + "}, \n";
-
-						output += "int32_t " + ob.name + "_set_" + indexed.property_name + "(lua_State *L) { \n";
-						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-						output += "\t auto mindex = int32_t(lua_tointeger(L, 2));\n";
-						output += "\t auto data = " + parsed_file.namspace + "::" + indexed.type_name + "_id{" + parsed_file.namspace + "::" + indexed.type_name + "_id::value_base_t(lua_tointeger(L, 3))};\n";
-						output += "\t state." + ob.name + "_set_" + indexed.property_name + "(index, mindex, data);\n";
-						output += "\t return 0;\n";
+						header_output += "DCON_LUADLL_API void dcon_" + ob.name + "_set_" + indexed.property_name + "(int32_t i, int32_t m, int32_t v); \n";
+						output += "void dcon_" + ob.name + "_set_" + indexed.property_name + "(int32_t i, int32_t m, int32_t v) { \n";
+						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+						output += "\t state." + ob.name + "_set_" + indexed.property_name + "(index, m, " + parsed_file.namspace + "::" + indexed.type_name + "_id{" + parsed_file.namspace + "::" + indexed.type_name + "_id::value_base_t(v)});\n";
 						output += " }\n";
 
-						exports_list += "\t{\"dcon_" + ob.name + "_set_" + indexed.property_name + "\" , " + ob.name + "_set_" + indexed.property_name + "}, \n";
-
-
-						output += "int32_t " + ob.name + "_try_set_" + indexed.property_name + "(lua_State *L) { \n";
-						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-						output += "\t auto mindex = int32_t(lua_tointeger(L, 2));\n";
-						output += "\t auto data = " + parsed_file.namspace + "::" + indexed.type_name + "_id{" + parsed_file.namspace + "::" + indexed.type_name + "_id::value_base_t(lua_tointeger(L, 3))};\n";
-						output += "\t auto result = state." + ob.name + "_try_set_" + indexed.property_name + "(index, mindex, data);\n";
-						output += "\t lua_pushboolean(L, result);\n";
-						output += "\t return 1;\n";
+						header_output += "DCON_LUADLL_API void dcon_" + ob.name + "_try_set_" + indexed.property_name + "(int32_t i, int32_t m, int32_t v); \n";
+						output += "void dcon_" + ob.name + "_try_set_" + indexed.property_name + "(int32_t i, int32_t m, int32_t v) { \n";
+						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+						output += "\t state." + ob.name + "_try_set_" + indexed.property_name + "(index, m, " + parsed_file.namspace + "::" + indexed.type_name + "_id{" + parsed_file.namspace + "::" + indexed.type_name + "_id::value_base_t(v)});\n";
 						output += " }\n";
-
-						exports_list += "\t{\"dcon_" + ob.name + "_try_set_" + indexed.property_name + "\" , " + ob.name + "_try_set_" + indexed.property_name + "}, \n";
 					}
 				}
 			} // end: loop over indexed objects
 
 			for(auto& involved_in : ob.relationships_involved_in) {
 				if(involved_in.linked_as->index == index_type::at_most_one) {
-					output += "int32_t " + ob.name + "_get_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(lua_State* L) { \n";
-					output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-					output += "\t auto result = state." + ob.name + "_get_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(index).index();\n";
-					output += "\t lua_pushinteger(L, lua_Integer(result));\n";
-					output += "\t return 1;\n";
+					header_output += "DCON_LUADLL_API int32_t dcon_" + ob.name + "_get_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(int32_t i); \n";
+					output += "int32_t dcon_" + ob.name + "_get_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(int32_t i) { \n";
+					output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+					output += "\t return state." + ob.name + "_get_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(index).index();\n";
 					output += " }\n";
-
-					exports_list += "\t{\"dcon_" + ob.name + "_get_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "\" , " + ob.name + "_get_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "}, \n";
 
 					bool is_only_of_type = true;
 					for(auto& ir : involved_in.rel_ptr->indexed_objects) {
@@ -839,36 +713,28 @@ int main(int argc, char *argv[]) {
 							is_only_of_type = false;
 					}
 					if(is_only_of_type) {
-						output += "int32_t " + ob.name + "_get_" + involved_in.relation_name + "(lua_State* L) { \n";
-						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-						output += "\t auto result = state." + ob.name + "_get_" + involved_in.relation_name + "(index).index();\n";
-						output += "\t lua_pushinteger(L, lua_Integer(result));\n";
-						output += "\t return 1;\n";
+						header_output += "DCON_LUADLL_API int32_t dcon_" + ob.name + "_get_" + involved_in.relation_name + "(int32_t i); \n";
+						output += "int32_t dcon_" + ob.name + "_get_" + involved_in.relation_name  + "(int32_t i) { \n";
+						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+						output += "\t return state." + ob.name + "_get_" + involved_in.relation_name + "(index).index();\n";
 						output += " }\n";
-
-						exports_list += "\t{\"dcon_" + ob.name + "_get_" + involved_in.relation_name + "\" , " + ob.name + "_get_" + involved_in.relation_name + "}, \n";
 					} // end: is only of type
 
 				} else if(involved_in.linked_as->index == index_type::many) {
 					if(involved_in.linked_as->ltype == list_type::array || involved_in.linked_as->ltype == list_type::std_vector) {
-						output += "int32_t " + ob.name + "_get_range_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(lua_State* L) { \n";
-						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-						output += "\t auto result = state." + ob.name + "_range_of_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(index);\n";
-						output += "\t lua_pushinteger(L, lua_Integer(result.second - result.first));\n";
-						output += "\t return 1;\n";
+						header_output += "DCON_LUADLL_API int32_t dcon_" + ob.name + "_get_range_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(int32_t i); \n";
+						output += "int32_t dcon_" + ob.name + "_get_range_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(int32_t i) { \n";
+						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+						output += "\t auto rng state." + ob.name + "_range_of_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(index).index();\n";
+						output += "\t return int32_t(rng.second - rng.first);\n";
 						output += " }\n";
 
-						exports_list += "\t{\"dcon_" + ob.name + "_get_range_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "\" , " + ob.name + "_get_range_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "}, \n";
-
-						output += "int32_t " + ob.name + "_get_index_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(lua_State* L) { \n";
-						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
-						output += "\t auto subindex = lua_tointeger(L, 2);\n";
-						output += "\t auto result = state." + ob.name + "_range_of_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(index);\n";
-						output += "\t lua_pushinteger(L, lua_Integer(result.first[subindex].index()));\n";
-						output += "\t return 1;\n";
+						header_output += "DCON_LUADLL_API int32_t dcon_" + ob.name + "_get_index_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(int32_t i, int32_t subindex); \n";
+						output += "int32_t dcon_" + ob.name + "_get_index_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(int32_t i, int32_t subindex) { \n";
+						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+						output += "\t auto rng state." + ob.name + "_range_of_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(index).index();\n";
+						output += "\t return rng.first[subindex].index();\n";
 						output += " }\n";
-
-						exports_list += "\t{\"dcon_" + ob.name + "_get_index_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "\" , " + ob.name + "_get_index_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "}, \n";
 					}
 
 
@@ -878,7 +744,19 @@ int main(int argc, char *argv[]) {
 							is_only_of_type = false;
 					}
 					if(is_only_of_type) {
+						header_output += "DCON_LUADLL_API int32_t dcon_" + ob.name + "_get_range_" + involved_in.relation_name + "(int32_t i); \n";
+						output += "int32_t dcon_" + ob.name + "_get_range_" + involved_in.relation_name  + "(int32_t i) { \n";
+						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+						output += "\t auto rng state." + ob.name + "_range_of_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(index).index();\n";
+						output += "\t return int32_t(rng.second - rng.first);\n";
+						output += " }\n";
 
+						header_output += "DCON_LUADLL_API int32_t dcon_" + ob.name + "_get_index_" + involved_in.relation_name + "(int32_t i, int32_t subindex); \n";
+						output += "int32_t dcon_" + ob.name + "_get_index_" + involved_in.relation_name + "(int32_t i, int32_t subindex) { \n";
+						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
+						output += "\t auto rng state." + ob.name + "_range_of_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(index).index();\n";
+						output += "\t return rng.first[subindex].index();\n";
+						output += " }\n";
 					}
 				}
 			} // end: loop over relationships involved in
@@ -897,7 +775,8 @@ int main(int argc, char *argv[]) {
 		for(auto& cob : parsed_file.relationship_objects) {
 			const std::string id_name = cob.name + "_id";
 			auto make_pop_back_delete = [&]() {
-				output += "int32_t pop_back_" + cob.name + "(lua_State *L) { \n";
+				header_output += "DCON_LUADLL_API void dcon_pop_back_" + cob.name + "(); \n";
+				output += "void dcon_pop_back_" + cob.name + "() { \n";
 				output += "\t if(state." + cob.name + "_size() > 0) {\n";
 				output += "\t\t auto index = " + parsed_file.namspace + "::" + cob.name + "_id{" + parsed_file.namspace + "::" + cob.name + "_id::value_base_t(state." + cob.name + "_size()) - 1};\n";
 				for(auto& p : cob.properties) {
@@ -905,91 +784,86 @@ int main(int argc, char *argv[]) {
 						if(p.type == property_type::array_vectorizable || p.type == property_type::array_other) {
 							output += "\t\t for(auto i = state." + cob.name + "_get_" + p.name + "_size(); i-->0; ) {\n";
 							if(made_types.count(p.array_index_type) > 0) {
-								output += "\t\t\t if(auto result = state." + cob.name + "_get_" + p.name + "(index, " + parsed_file.namspace + "::" + p.array_index_type + "{" + parsed_file.namspace + "::" + p.array_index_type + "::value_base_t(i)}); result != 0) luaL_unref(L, LUA_REGISTRYINDEX, LUA_REFNIL ^ result);\n";
+								output += "\t\t\t if(auto result = state." + cob.name + "_get_" + p.name + "(index, " + parsed_file.namspace + "::" + p.array_index_type + "{" + parsed_file.namspace + "::" + p.array_index_type + "::value_base_t(i)}); result != 0) release_object_function(result);\n";
 							} else {
-								output += "\t\t\t if(auto result = state." + cob.name + "_get_" + p.name + "(index, " + p.array_index_type + "(i)); result != 0) luaL_unref(L, LUA_REGISTRYINDEX, LUA_REFNIL ^ result);\n";
+								output += "\t\t\t if(auto result = state." + cob.name + "_get_" + p.name + "(index, " + p.array_index_type + "(i)); result != 0) release_object_function(result);\n";
 							}
 							output += "\t\t }\n";
 						} else {
-							output += "\t\t if(auto result = state." + cob.name + "_get_" + p.name + "(index); result != 0) luaL_unref(L, LUA_REGISTRYINDEX, LUA_REFNIL ^ result);\n";
+							output += "\t\t if(auto result = state." + cob.name + "_get_" + p.name + "(index); result != 0) release_object_function(result);\n";
 						}
 					}
 				}
 				output += "\t state.pop_back_" + cob.name + "();\n";
 				output += "\t }\n";
-				output += "\t return 0;\n";
 				output += " }\n";
-
-				exports_list += "\t{\"dcon_pop_back_" + cob.name + "\" , pop_back_" + cob.name + "}, \n";
 			};
 			auto make_simple_create = [&]() {
-				output += "int32_t create_" + cob.name + "(lua_State* L) { \n";
+				header_output += "DCON_LUADLL_API int32_t dcon_create_" + cob.name + "(); \n";
+				output += "int32_t dcon_create_" + cob.name + "() { \n";
 				output += "\t auto result = state.create_" + cob.name + "();\n";
-				output += "\t lua_pushinteger(L, lua_Integer(result.index()));\n";
-				output += "\t return 1;\n";
+				output += "\t return result.index();\n";
 				output += " }\n";
-
-				exports_list += "\t{\"dcon_create_" + cob.name + "\" , create_" + cob.name + "}, \n";
 			};
 			auto make_delete = [&]() {
-				output += "int32_t delete_" + cob.name + "(lua_State *L) { \n";
-				output += "\t auto index = " + parsed_file.namspace + "::" + cob.name + "_id{" + parsed_file.namspace + "::" + cob.name + "_id::value_base_t(lua_tointeger(L, 1))};\n";
+				header_output += "DCON_LUADLL_API void dcon_delete_" + cob.name + "(int32_t i); \n";
+				output += "void dcon_delete_" + cob.name + "(int32_t i) { \n";
+				output += "\t auto index = " + parsed_file.namspace + "::" + cob.name + "_id{" + parsed_file.namspace + "::" + cob.name + "_id::value_base_t(i)};\n";
 				for(auto& p : cob.properties) {
 					if(p.data_type == "lua_reference_type") {
 						if(p.type == property_type::array_vectorizable || p.type == property_type::array_other) {
-							output += "\t for(auto i = state." + cob.name + "_get_" + p.name + "_size(); i-->0; ) {\n";
+							output += "\t\t for(auto i = state." + cob.name + "_get_" + p.name + "_size(); i-->0; ) {\n";
 							if(made_types.count(p.array_index_type) > 0) {
-								output += "\t\t if(auto result = state." + cob.name + "_get_" + p.name + "(index, " + parsed_file.namspace + "::" + p.array_index_type + "{" + parsed_file.namspace + "::" + p.array_index_type + "::value_base_t(i)}); result != 0) luaL_unref(L, LUA_REGISTRYINDEX, LUA_REFNIL ^ result);\n";
+								output += "\t\t\t if(auto result = state." + cob.name + "_get_" + p.name + "(index, " + parsed_file.namspace + "::" + p.array_index_type + "{" + parsed_file.namspace + "::" + p.array_index_type + "::value_base_t(i)}); result != 0) release_object_function(result);\n";
 							} else {
-								output += "\t\t if(auto result = state." + cob.name + "_get_" + p.name + "(index, " + p.array_index_type + "(i)); result != 0) luaL_unref(L, LUA_REGISTRYINDEX, LUA_REFNIL ^ result);\n";
+								output += "\t\t\t if(auto result = state." + cob.name + "_get_" + p.name + "(index, " + p.array_index_type + "(i)); result != 0) release_object_function(result);\n";
 							}
-							output += "\t }\n";
+							output += "\t\t }\n";
 						} else {
-							output += "\t if(auto result = state." + cob.name + "_get_" + p.name + "(index); result != 0) luaL_unref(L, LUA_REGISTRYINDEX, LUA_REFNIL ^ result);\n";
+							output += "\t\t if(auto result = state." + cob.name + "_get_" + p.name + "(index); result != 0) release_object_function(result);\n";
 						}
 					}
 				}
 				output += "\t state.delete_" + cob.name + "(index);\n";
-				output += "\t return 0;\n";
 				output += " }\n";
-
-				exports_list += "\t{\"dcon_delete_" + cob.name + "\" , delete_" + cob.name + "}, \n";
 			};
 			auto make_relation_create = [&]() {
 				std::string params;
+				std::string pargs;
 				int32_t pcount = 1;
 				for(auto& i : cob.indexed_objects) {
-					if(params.length() != 0)
+					if(params.length() != 0) {
 						params += ", ";
+						pargs += ", ";
+					}
 					if(i.multiplicity == 1) {
 						params += parsed_file.namspace + "::" + i.type_name + "_id{" + parsed_file.namspace + "::" + i.type_name + "_id::value_base_t(lua_tointeger(L, " + std::to_string(pcount) + "))}";
+						pargs += "int32_t p" + std::to_string(pcount);
 						pcount++;
 					} else {
 						params += parsed_file.namspace + "::" + i.type_name + "_id{" + parsed_file.namspace + "::" + i.type_name + "_id::value_base_t(lua_tointeger(L, " + std::to_string(pcount) + "))}";
+						pargs += "int32_t p" + std::to_string(pcount);
 						pcount++;
 
 						for(int32_t j = 1; j < i.multiplicity; ++j) {
 							params += ", " + parsed_file.namspace + "::" + i.type_name + "_id{" + parsed_file.namspace + "::" + i.type_name + "_id::value_base_t(lua_tointeger(L, " + std::to_string(pcount) + "))}";
+							pargs += ", int32_t p" + std::to_string(pcount);
 							pcount++;
 						}
 					}
 				}
 
-				output += "int32_t try_create_" + cob.name + "(lua_State* L) { \n";
+				header_output += "DCON_LUADLL_API int32_t dcon_try_create_" + cob.name + "(" + pargs + "); \n";
+				output += "int32_t dcon_try_create_" + cob.name + "(" + pargs + ") { \n";
 				output += "\t auto result = state.try_create_" + cob.name + "(" + params + ");\n";
-				output += "\t lua_pushinteger(L, lua_Integer(result.index()));\n";
-				output += "\t return 1;\n";
+				output += "\t return result.index();\n";
 				output += " }\n";
 
-				exports_list += "\t{\"dcon_try_create_" + cob.name + "\" , try_create_" + cob.name + "}, \n";
-
-				output += "int32_t force_create_" + cob.name + "(lua_State* L) { \n";
+				header_output += "DCON_LUADLL_API int32_t dcon_force_create_" + cob.name + "(" + pargs + "); \n";
+				output += "int32_t dcon_force_create_" + cob.name + "(" + pargs + ") { \n";
 				output += "\t auto result = state.force_create_" + cob.name + "(" + params + ");\n";
-				output += "\t lua_pushinteger(L, lua_Integer(result.index()));\n";
-				output += "\t return 1;\n";
+				output += "\t return result.index();\n";
 				output += " }\n";
-
-				exports_list += "\t{\"dcon_force_create_" + cob.name + "\" , force_create_" + cob.name + "}, \n";
 			};
 
 			if(!cob.is_relationship) {
@@ -1026,53 +900,48 @@ int main(int argc, char *argv[]) {
 		output += "\n";
 		//reset function
 
-		output += "int32_t reset(lua_State* L) { \n";
+		header_output += "DCON_LUADLL_API int32_t dcon_reset(); \n";
+		output += "int32_t dcon_reset() { \n";
 		output += "\t state.reset();\n";
 		output += "\t return 0;\n";
 		output += " }\n";
 
-		exports_list += "\t{\"dcon_reset\" , reset}, \n";
 
 		for(auto& cob : parsed_file.relationship_objects) {
 			for(auto& cc : cob.composite_indexes) {
 				std::string params;
+				std::string pargs;
 				int32_t pcount = 1;
 				for(auto& k : cc.component_indexes) {
-					if(params.length() > 0)
+					if(params.length() > 0) {
 						params += ", ";
+						pargs += ", ";
+					}
 					if(k.multiplicity == 1) {
-						params += parsed_file.namspace + "::" + k.object_type + "_id{" + parsed_file.namspace + "::" + k.object_type + "_id::value_base_t(lua_tointeger(L, " + std::to_string(pcount) + "))}";
+						params += parsed_file.namspace + "::" + k.object_type + "_id{" + parsed_file.namspace + "::" + k.object_type + "_id::value_base_t(p" + std::to_string(pcount) + ")}";
+						pargs += "int32_t p" + std::to_string(pcount);
 						pcount++;
 					} else {
-						params += parsed_file.namspace + "::" + k.object_type + "_id{" + parsed_file.namspace + "::" + k.object_type + "_id::value_base_t(lua_tointeger(L, " + std::to_string(pcount) + "))}";
+						params += parsed_file.namspace + "::" + k.object_type + "_id{" + parsed_file.namspace + "::" + k.object_type + "_id::value_base_t(p" + std::to_string(pcount) + ")}";
+						pargs += "int32_t p" + std::to_string(pcount);
 						pcount++;
 
 						for(int32_t i = 1; i < k.multiplicity; ++i) {
-							params += ", " + parsed_file.namspace + "::" + k.object_type + "_id{" + parsed_file.namspace + "::" + k.object_type + "_id::value_base_t(lua_tointeger(L, " + std::to_string(pcount) + "))}";
+							params += ", " + parsed_file.namspace + "::" + k.object_type + "_id{" + parsed_file.namspace + "::" + k.object_type + "_id::value_base_t(p" + std::to_string(pcount) + ")}";
+							pargs += ", int32_t p" + std::to_string(pcount);
 							pcount++;
 						}
 					}
 				}
 
-				output += "int32_t get_" + cob.name + "_by_" + cc.name + "(lua_State* L) { \n";
+				header_output += "DCON_LUADLL_API int32_t dcon_get_" + cob.name + "_by_" + cc.name + "(" + pargs +"); \n";
+				output += "int32_t dcon_get_" + cob.name + "_by_" + cc.name + "(" + pargs + ") { \n";
 				output += "\t auto result = state.get_" + cob.name + "_by_" + cc.name + "(" + params + ");\n";
-				output += "\t lua_pushinteger(L, lua_Integer(result.index()));\n";
-				output += "\t return 1;\n";
+				output += "\t return result.index();\n";
 				output += " }\n";
-
-				exports_list += "\t{\"dcon_get_" + cob.name + "_by_" + cc.name + "\" , get_" + cob.name + "_by_" + cc.name + "}, \n";
 
 			}
 		}
-
-		output += "luaL_Reg lib_contents[] = {\n";
-		output += exports_list;
-		output += "{nullptr, nullptr} };\n";
-		output += "\n";
-		output += "LUALIB_API int32_t luaopen_lua_" + fn_name + "(lua_State *L) { \n";
-		output += "\t luaL_register(L, \"lua_" + fn_name + "\", lib_contents);\n";
-		output += "\t return 1; \n";
-		output += "}\n";
 
 		//newline at end of file
 		output += "\n";
