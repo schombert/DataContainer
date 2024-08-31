@@ -33,6 +33,14 @@ void dcon_thingy_set_some_value(int32_t i,int32_t v) {
 	 auto index = dcon::thingy_id{dcon::thingy_id::value_base_t(i)};
 	 state.thingy_set_some_value(index, v);
  }
+bool dcon_thingy_get_bf_value(int32_t i) { 
+	 auto index = dcon::thingy_id{dcon::thingy_id::value_base_t(i)};
+	 return state.thingy_get_bf_value(index);
+ }
+void dcon_thingy_set_bf_value(int32_t i, bool v) { 
+	 auto index = dcon::thingy_id{dcon::thingy_id::value_base_t(i)};
+	 state.thingy_set_bf_value(index, v);
+ }
 lua_reference_type dcon_thingy_get_lua_value(int32_t i) { 
 	 auto index = dcon::thingy_id{dcon::thingy_id::value_base_t(i)};
 	 return state.thingy_get_lua_value(index);
@@ -42,6 +50,26 @@ void dcon_thingy_set_lua_value(int32_t i,lua_reference_type v) {
 	 auto old_val = state.thingy_get_lua_value(index);
 	 if(old_val) release_object_function(old_val);
 	 state.thingy_set_lua_value(index, v);
+ }
+std::vector<float>* dcon_thingy_get_obj_value(int32_t i) { 
+	 auto index = dcon::thingy_id{dcon::thingy_id::value_base_t(i)};
+	 return &(state.thingy_get_obj_value(index));
+ }
+int16_t dcon_thingy_get_pooled_v(int32_t i, int32_t idx) { 
+	 auto index = dcon::thingy_id{dcon::thingy_id::value_base_t(i)};
+	 return state.thingy_get_pooled_v(index).at(uint32_t(idx));
+ }
+int32_t dcon_thingy_size_pooled_v(int32_t i) { 
+	 auto index = dcon::thingy_id{dcon::thingy_id::value_base_t(i)};
+	 return int32_t(state.thingy_get_pooled_v(index).size());
+ }
+void dcon_thingy_set_pooled_v(int32_t i, int32_t idx,int16_t v) { 
+	 auto index = dcon::thingy_id{dcon::thingy_id::value_base_t(i)};
+	 state.thingy_get_pooled_v(index).at(uint32_t(idx)) = v;
+ }
+void dcon_thingy_resize_pooled_v(int32_t i, int32_t sz) { 
+	 auto index = dcon::thingy_id{dcon::thingy_id::value_base_t(i)};
+	 state.thingy_get_pooled_v(index).resize(uint32_t(sz));
  }
 float dcon_thingy_get_big_array(int32_t i, int32_t idx) { 
 	 auto index = dcon::thingy_id{dcon::thingy_id::value_base_t(i)};
@@ -87,8 +115,8 @@ int32_t dcon_create_thingy() {
 	 auto result = state.create_thingy();
 	 return result.index();
  }
-void dcon_delete_thingy(int32_t i) { 
-	 auto index = dcon::thingy_id{dcon::thingy_id::value_base_t(i)};
+void dcon_delete_thingy(int32_t j) { 
+	 auto index = dcon::thingy_id{dcon::thingy_id::value_base_t(j)};
 		 if(auto result = state.thingy_get_lua_value(index); result != 0) release_object_function(result);
 	 state.delete_thingy(index);
  }
