@@ -906,7 +906,7 @@ int main(int argc, char *argv[]) {
 				header_output += "DCON_LUADLL_API void dcon_pop_back_" + cob.name + "(); \n";
 				output += "void dcon_pop_back_" + cob.name + "() { \n";
 				output += "\t if(state." + cob.name + "_size() > 0) {\n";
-				output += "\t\t auto index = " + parsed_file.namspace + "::" + cob.name + "_id{" + parsed_file.namspace + "::" + cob.name + "_id::value_base_t(state." + cob.name + "_size()) - 1};\n";
+				output += "\t\t auto index = " + parsed_file.namspace + "::" + cob.name + "_id{" + parsed_file.namspace + "::" + cob.name + "_id::value_base_t(state." + cob.name + "_size() - 1)};\n";
 				for(auto& p : cob.properties) {
 					if(p.data_type == "lua_reference_type") {
 						if(p.type == property_type::array_vectorizable || p.type == property_type::array_other) {
