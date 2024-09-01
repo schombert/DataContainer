@@ -17,6 +17,7 @@ using lua_reference_type = int32_t;
 
 extern DCON_LUADLL_API dcon::data_container state;
 
+extern "C" {
 DCON_LUADLL_API void dcon_set_release_object_function(void (*fn)(int32_t));
 DCON_LUADLL_API bool dcon_thingy_is_valid(int32_t i);
 DCON_LUADLL_API uint32_t dcon_thingy_size();
@@ -44,3 +45,4 @@ DCON_LUADLL_API void dcon_pop_back_thingy();
 DCON_LUADLL_API int32_t dcon_create_thingy(); 
 DCON_LUADLL_API void dcon_delete_thingy(int32_t j); 
 DCON_LUADLL_API int32_t dcon_reset(); 
+}

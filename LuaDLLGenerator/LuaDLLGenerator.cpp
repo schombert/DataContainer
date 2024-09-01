@@ -391,6 +391,8 @@ int main(int argc, char *argv[]) {
 		output += "void (*release_object_function)(int32_t) = nullptr;\n";
 		output += "\n";
 
+		header_output += "extern \"C\" {\n";
+
 		header_output += "DCON_LUADLL_API void dcon_set_release_object_function(void (*fn)(int32_t));\n";
 		output += "void dcon_set_release_object_function(void (*fn)(int32_t)) {\n";
 		output += "\t release_object_function = fn;\n";
@@ -1074,6 +1076,8 @@ int main(int argc, char *argv[]) {
 
 			}
 		}
+
+		header_output += "}\n"; // close extern C
 
 		//newline at end of file
 		output += "\n";

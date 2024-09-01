@@ -106,7 +106,7 @@ void dcon_thingy_resize_big_array_bf(uint32_t sz) {
 
 void dcon_pop_back_thingy() { 
 	 if(state.thingy_size() > 0) {
-		 auto index = dcon::thingy_id{dcon::thingy_id::value_base_t(state.thingy_size()) - 1};
+		 auto index = dcon::thingy_id{dcon::thingy_id::value_base_t(state.thingy_size() - 1)};
 		 if(auto result = state.thingy_get_lua_value(index); result != 0) release_object_function(result);
 	 state.pop_back_thingy();
 	 }
