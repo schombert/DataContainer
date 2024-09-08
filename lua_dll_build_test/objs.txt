@@ -2,15 +2,18 @@ object{
 	name{thingy}
 	storage_type{compactable}
 	size{expandable}
-	
+	tag{simple}
+
 	property{
 		name{some_value}
 		type{int32_t}
+		tag{simple}
 	}
 
 	property{
 		name{bf_value}
 		type{bitfield}
+		tag{simple}
 	}
 
 	property{
@@ -18,10 +21,6 @@ object{
 		type{lua_reference_type}
 	}
 
-	property{
-		name{obj_value}
-		type{object{std::vector<float>}}
-	}
 
 	property{
 		name{pooled_v}
@@ -37,4 +36,10 @@ object{
 		name{big_array_bf}
 		type{array{int32_t}{bitfield}}
 	}
+}
+
+load_save{
+	name{store_simple}
+	only_objects{simple}
+	only_properties{simple}
 }

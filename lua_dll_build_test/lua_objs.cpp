@@ -6,6 +6,9 @@
 
 #define DCON_LUADLL_EXPORTS
 #include "lua_objs.hpp"
+#include <fstream>
+#include <filesystem>
+#include <iostream>
 
 DCON_LUADLL_API dcon::data_container state;
 void (*release_object_function)(int32_t) = nullptr;
@@ -50,10 +53,6 @@ void dcon_thingy_set_lua_value(int32_t i,lua_reference_type v) {
 	 auto old_val = state.thingy_get_lua_value(index);
 	 if(old_val) release_object_function(old_val);
 	 state.thingy_set_lua_value(index, v);
- }
-std::vector<float>* dcon_thingy_get_obj_value(int32_t i) { 
-	 auto index = dcon::thingy_id{dcon::thingy_id::value_base_t(i)};
-	 return &(state.thingy_get_obj_value(index));
  }
 int16_t dcon_thingy_get_pooled_v(int32_t i, int32_t idx) { 
 	 auto index = dcon::thingy_id{dcon::thingy_id::value_base_t(i)};
@@ -124,5 +123,29 @@ void dcon_delete_thingy(int32_t j) {
 int32_t dcon_reset() { 
 	 state.reset();
 	 return 0;
+ }
+void dcon_store_simple_write_file(char const* name) { 
+	 std::ofstream file_out(name, std::ios::binary);
+	 dcon::load_record selection = state.make_serialize_record_store_simple();
+	 auto sz = state.serialize_size(selection);
+	 std::byte* temp_buffer = new std::byte[sz];
+	 auto ptr = temp_buffer;
+	 state.serialize(ptr, selection); 
+	 file_out.write((char*)temp_buffer, sz);
+	 delete[] temp_buffer;
+ }
+void dcon_store_simple_read_file(char const* name) { 
+	 std::ifstream file_in(name, std::ios::binary);
+	 file_in.unsetf(std::ios::skipws);
+	 file_in.seekg(0, std::ios::end);
+	 auto sz = file_in.tellg();
+	 file_in.seekg(0, std::ios::beg);
+	 std::vector<unsigned char> vec;
+	 vec.reserve(sz);
+	 vec.insert(vec.begin(), std::istream_iterator<unsigned char>(file_in),  std::istream_iterator<unsigned char>());
+	 std::byte const* ptr = (std::byte const*)(vec.data());
+	 dcon::load_record loaded;
+	 dcon::load_record selection = state.make_serialize_record_store_simple();
+	 state.deserialize(ptr, ptr + sz, loaded, selection); 
  }
 

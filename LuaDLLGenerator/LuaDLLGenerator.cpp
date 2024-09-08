@@ -360,6 +360,11 @@ int main(int argc, char *argv[]) {
 		output += "\n";
 		output += "#define DCON_LUADLL_EXPORTS\n";
 		output += "#include \"lua_" + base_include_name + "\"\n";
+		if(parsed_file.load_save_routines.size() > 0) {
+			output += "#include <fstream>\n";
+			output += "#include <filesystem>\n";
+			output += "#include <iostream>\n";
+		}
 
 
 		header_output += "#pragma once\n";
@@ -1075,6 +1080,36 @@ int main(int argc, char *argv[]) {
 				output += " }\n";
 
 			}
+		}
+
+		for(auto& rt : parsed_file.load_save_routines) {
+			header_output += "DCON_LUADLL_API void dcon_" + rt.name + "_write_file(char const* name); \n";
+			output += "void dcon_" + rt.name + "_write_file(char const* name) { \n";
+			output += "\t std::ofstream file_out(name, std::ios::binary);\n";
+			output += "\t "+ parsed_file.namspace + "::load_record selection = state.make_serialize_record_" + rt.name + "();\n";
+			output += "\t auto sz = state.serialize_size(selection);\n";
+			output += "\t std::byte* temp_buffer = new std::byte[sz];\n";
+			output += "\t auto ptr = temp_buffer;\n";
+			output += "\t state.serialize(ptr, selection); \n";
+			output += "\t file_out.write((char*)temp_buffer, sz);\n";
+			output += "\t delete[] temp_buffer;\n";
+			output += " }\n";
+
+			header_output += "DCON_LUADLL_API void dcon_" + rt.name + "_read_file(char const* name); \n";
+			output += "void dcon_" + rt.name + "_read_file(char const* name) { \n";
+			output += "\t std::ifstream file_in(name, std::ios::binary);\n";
+			output += "\t file_in.unsetf(std::ios::skipws);\n";
+			output += "\t file_in.seekg(0, std::ios::end);\n";
+			output += "\t auto sz = file_in.tellg();\n";
+			output += "\t file_in.seekg(0, std::ios::beg);\n";
+			output += "\t std::vector<unsigned char> vec;\n";
+			output += "\t vec.reserve(sz);\n";
+			output += "\t vec.insert(vec.begin(), std::istream_iterator<unsigned char>(file_in),  std::istream_iterator<unsigned char>());\n";
+			output += "\t std::byte const* ptr = (std::byte const*)(vec.data());\n";
+			output += "\t " + parsed_file.namspace + "::load_record loaded;\n";
+			output += "\t " + parsed_file.namspace + "::load_record selection = state.make_serialize_record_" + rt.name + "();\n";
+			output += "\t state.deserialize(ptr, ptr + sz, loaded, selection); \n";
+			output += " }\n";
 		}
 
 		header_output += "}\n"; // close extern C

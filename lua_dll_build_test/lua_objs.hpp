@@ -28,7 +28,6 @@ DCON_LUADLL_API bool dcon_thingy_get_bf_value(int32_t i);
 DCON_LUADLL_API void dcon_thingy_set_bf_value(int32_t i, bool v); 
 DCON_LUADLL_API lua_reference_type dcon_thingy_get_lua_value(int32_t i); 
 DCON_LUADLL_API void dcon_thingy_set_lua_value(int32_t i,lua_reference_type v); 
-DCON_LUADLL_API std::vector<float>* dcon_thingy_get_obj_value(int32_t i); 
 DCON_LUADLL_API int16_t dcon_thingy_get_pooled_v(int32_t i, int32_t idx); 
 DCON_LUADLL_API int32_t dcon_thingy_size_pooled_v(int32_t i); 
 DCON_LUADLL_API void dcon_thingy_set_pooled_v(int32_t i, int32_t idx,int16_t v); 
@@ -45,4 +44,6 @@ DCON_LUADLL_API void dcon_pop_back_thingy();
 DCON_LUADLL_API int32_t dcon_create_thingy(); 
 DCON_LUADLL_API void dcon_delete_thingy(int32_t j); 
 DCON_LUADLL_API int32_t dcon_reset(); 
+DCON_LUADLL_API void dcon_store_simple_write_file(char const* name); 
+DCON_LUADLL_API void dcon_store_simple_read_file(char const* name); 
 }

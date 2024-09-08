@@ -42,7 +42,6 @@ namespace dcon {
 		bool thingy_some_value : 1;
 		bool thingy_bf_value : 1;
 		bool thingy_lua_value : 1;
-		bool thingy_obj_value : 1;
 		bool thingy_pooled_v : 1;
 		bool thingy_big_array : 1;
 		bool thingy_big_array_bf : 1;
@@ -51,7 +50,6 @@ namespace dcon {
 			thingy_some_value = false;
 			thingy_bf_value = false;
 			thingy_lua_value = false;
-			thingy_obj_value = false;
 			thingy_pooled_v = false;
 			thingy_big_array = false;
 			thingy_big_array_bf = false;
@@ -149,17 +147,6 @@ namespace dcon {
 				dtype_lua_value() { values.emplace_back(); }
 			}
 			m_lua_value;
-			
-			//
-			// storage space for obj_value of type std::vector<float>
-			//
-			struct dtype_obj_value {
-				std::vector<std::vector<float>> values;
-				DCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }
-				DCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }
-				dtype_obj_value() { values.emplace_back(); }
-			}
-			m_obj_value;
 			
 			//
 			// storage space for pooled_v of type dcon::stable_mk_2_tag
@@ -292,8 +279,6 @@ namespace dcon {
 		DCON_RELEASE_INLINE void set_bf_value(bool v) const noexcept;
 		DCON_RELEASE_INLINE lua_reference_type& get_lua_value() const noexcept;
 		DCON_RELEASE_INLINE void set_lua_value(lua_reference_type const& v) const noexcept;
-		DCON_RELEASE_INLINE std::vector<float>& get_obj_value() const noexcept;
-		DCON_RELEASE_INLINE void set_obj_value(std::vector<float> const& v) const noexcept;
 		DCON_RELEASE_INLINE dcon::dcon_vv_fat_id<int16_t> get_pooled_v() const noexcept;
 		DCON_RELEASE_INLINE float& get_big_array(thingy_id i) const noexcept;
 		DCON_RELEASE_INLINE uint32_t get_big_array_size() const noexcept;
@@ -359,7 +344,6 @@ namespace dcon {
 		DCON_RELEASE_INLINE int32_t get_some_value() const noexcept;
 		DCON_RELEASE_INLINE bool get_bf_value() const noexcept;
 		DCON_RELEASE_INLINE lua_reference_type const& get_lua_value() const noexcept;
-		DCON_RELEASE_INLINE std::vector<float> const& get_obj_value() const noexcept;
 		DCON_RELEASE_INLINE dcon::dcon_vv_const_fat_id<int16_t> get_pooled_v() const noexcept;
 		DCON_RELEASE_INLINE float get_big_array(thingy_id i) const noexcept;
 		DCON_RELEASE_INLINE uint32_t get_big_array_size() const noexcept;
@@ -578,21 +562,6 @@ namespace dcon {
 			thingy.m_lua_value.vptr()[id.index()] = value;
 		}
 		//
-		// accessors for thingy: obj_value
-		//
-		DCON_RELEASE_INLINE std::vector<float> const& thingy_get_obj_value(thingy_id id) const noexcept {
-			return thingy.m_obj_value.vptr()[id.index()];
-		}
-		DCON_RELEASE_INLINE std::vector<float>& thingy_get_obj_value(thingy_id id) noexcept {
-			return thingy.m_obj_value.vptr()[id.index()];
-		}
-		DCON_RELEASE_INLINE void thingy_set_obj_value(thingy_id id, std::vector<float> const& value) noexcept {
-			#ifdef DCON_TRAP_INVALID_STORE
-			assert(id.index() >= 0);
-			#endif
-			thingy.m_obj_value.vptr()[id.index()] = value;
-		}
-		//
 		// accessors for thingy: pooled_v
 		//
 		DCON_RELEASE_INLINE dcon::dcon_vv_const_fat_id<int16_t> thingy_get_pooled_v(thingy_id id) const noexcept {
@@ -703,7 +672,6 @@ namespace dcon {
 			dcon::bit_vector_set(thingy.m_bf_value.vptr(), id_removed.index(), false);
 			thingy.m_bf_value.values.resize(1 + (thingy.size_used + 6) / 8);
 			thingy.m_lua_value.values.pop_back();
-			thingy.m_obj_value.values.pop_back();
 			thingy.pooled_v_storage.release(thingy.m_pooled_v.vptr()[id_removed.index()]);
 			thingy.m_pooled_v.values.pop_back();
 			thingy.m_big_array.pop_back_all(thingy.size_used);
@@ -723,7 +691,6 @@ namespace dcon {
 				}
 				thingy.m_bf_value.values.resize(1 + (new_size + 7) / 8);
 				thingy.m_lua_value.values.resize(1 + new_size);
-				thingy.m_obj_value.values.resize(1 + new_size);
 				std::for_each(thingy.m_pooled_v.vptr() + new_size, thingy.m_pooled_v.vptr() + new_size + old_size - new_size, [t = this](dcon::stable_mk_2_tag& i){ t->thingy.pooled_v_storage.release(i); });
 				thingy.m_pooled_v.values.resize(1 + new_size);
 				for(int32_t s = 0; s < int32_t(thingy.m_big_array.size); ++s) {
@@ -739,7 +706,6 @@ namespace dcon {
 				thingy.m_some_value.values.resize(1 + new_size);
 				thingy.m_bf_value.values.resize(1 + (new_size + 7) / 8);
 				thingy.m_lua_value.values.resize(1 + new_size);
-				thingy.m_obj_value.values.resize(1 + new_size);
 				thingy.m_pooled_v.values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());
 				for(int32_t s = 0; s < int32_t(thingy.m_big_array.size); ++s) {
 					thingy.m_big_array.values[s].resize(1 + new_size);
@@ -759,7 +725,6 @@ namespace dcon {
 			thingy.m_some_value.values.emplace_back();
 			thingy.m_bf_value.values.resize(1 + (thingy.size_used + 8) / 8);
 			thingy.m_lua_value.values.emplace_back();
-			thingy.m_obj_value.values.emplace_back();
 			thingy.m_pooled_v.values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());
 			thingy.m_big_array.emplace_back_all(thingy.size_used + 1);
 			thingy.m_big_array_bf.emplace_back_all(thingy.size_used + 1);
@@ -786,8 +751,6 @@ namespace dcon {
 			thingy.m_bf_value.values.resize(1 + (thingy.size_used + 6) / 8);
 			thingy.m_lua_value.vptr()[id_removed.index()] = std::move(thingy.m_lua_value.vptr()[last_id.index()]);
 			thingy.m_lua_value.values.pop_back();
-			thingy.m_obj_value.vptr()[id_removed.index()] = std::move(thingy.m_obj_value.vptr()[last_id.index()]);
-			thingy.m_obj_value.values.pop_back();
 			thingy.pooled_v_storage.release(thingy.m_pooled_v.vptr()[id_removed.index()]);
 			thingy.m_pooled_v.vptr()[id_removed.index()] = std::move(thingy.m_pooled_v.vptr()[last_id.index()]);
 			thingy.m_pooled_v.values.pop_back();
@@ -828,9 +791,6 @@ namespace dcon {
 		
 
 
-		uint64_t serialize_size(std::vector<float> const& obj) const;
-		void serialize(std::byte*& output_buffer, std::vector<float> const& obj) const;
-		void deserialize(std::byte const*& input_buffer, std::vector<float> & obj, std::byte const* end) const;
 
 		void reset() {
 			thingy_resize(0);
@@ -855,13 +815,20 @@ namespace dcon {
 #endif
 		#endif
 
+		load_record make_serialize_record_store_simple() const noexcept {
+			load_record result;
+			result.thingy = true;
+			result.thingy_some_value = true;
+			result.thingy_bf_value = true;
+			return result;
+		}
+		
 		load_record serialize_entire_container_record() const noexcept {
 			load_record result;
 			result.thingy = true;
 			result.thingy_some_value = true;
 			result.thingy_bf_value = true;
 			result.thingy_lua_value = true;
-			result.thingy_obj_value = true;
 			result.thingy_pooled_v = true;
 			result.thingy_big_array = true;
 			result.thingy_big_array_bf = true;
@@ -892,11 +859,6 @@ namespace dcon {
 				dcon::record_header iheader(0, "lua_reference_type", "thingy", "lua_value");
 				total_size += iheader.serialize_size();
 				total_size += sizeof(lua_reference_type) * thingy.size_used;
-			}
-			if(serialize_selection.thingy_obj_value) {
-				std::for_each(thingy.m_obj_value.vptr(), thingy.m_obj_value.vptr() + thingy.size_used, [t = this, &total_size](std::vector<float> const& obj){ total_size += t->serialize_size(obj); });
-				dcon::record_header iheader(0, "std::vector<float>", "thingy", "obj_value");
-				total_size += iheader.serialize_size();
 			}
 			if(serialize_selection.thingy_pooled_v) {
 				std::for_each(thingy.m_pooled_v.vptr(), thingy.m_pooled_v.vptr() + thingy.size_used, [t = this, &total_size](dcon::stable_mk_2_tag obj) {
@@ -954,15 +916,6 @@ namespace dcon {
 				header.serialize(output_buffer);
 				std::memcpy(reinterpret_cast<lua_reference_type*>(output_buffer), thingy.m_lua_value.vptr(), sizeof(lua_reference_type) * thingy.size_used);
 				output_buffer += sizeof(lua_reference_type) * thingy.size_used;
-			}
-			if(serialize_selection.thingy_obj_value) {
-				size_t total_size = 0;
-				std::for_each(thingy.m_obj_value.vptr(), thingy.m_obj_value.vptr() + thingy.size_used, [t = this, &total_size](std::vector<float> const& obj) {
-					total_size += t->serialize_size(obj);
-				} );
-				dcon::record_header header(total_size, "std::vector<float>", "thingy", "obj_value");
-				header.serialize(output_buffer);
-				std::for_each(thingy.m_obj_value.vptr(), thingy.m_obj_value.vptr() + thingy.size_used, [t = this, &output_buffer](std::vector<float> const& obj){ t->serialize(output_buffer, obj); });
 			}
 			if(serialize_selection.thingy_pooled_v) {
 				size_t total_size = 0;
@@ -1097,16 +1050,6 @@ namespace dcon {
 									if(header.is_type("lua_reference_type")) {
 										std::memcpy(thingy.m_lua_value.vptr(), reinterpret_cast<lua_reference_type const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(lua_reference_type), size_t(header.record_size)));
 										serialize_selection.thingy_lua_value = true;
-									}
-									break;
-								}
-								if(header.is_property("obj_value")) {
-									if(header.is_type("std::vector<float>")) {
-										std::byte const* icpy = input_buffer;
-										for(uint32_t i = 0; icpy < input_buffer + header.record_size && i < thingy.size_used; ++i) {
-											deserialize(icpy, thingy.m_obj_value.vptr()[i], input_buffer + header.record_size);
-										}
-										serialize_selection.thingy_obj_value = true;
 									}
 									break;
 								}
@@ -1549,16 +1492,6 @@ namespace dcon {
 									}
 									break;
 								}
-								if(header.is_property("obj_value") && mask.thingy_obj_value) {
-									if(header.is_type("std::vector<float>")) {
-										std::byte const* icpy = input_buffer;
-										for(uint32_t i = 0; icpy < input_buffer + header.record_size && i < thingy.size_used; ++i) {
-											deserialize(icpy, thingy.m_obj_value.vptr()[i], input_buffer + header.record_size);
-										}
-										serialize_selection.thingy_obj_value = true;
-									}
-									break;
-								}
 								if(header.is_property("pooled_v") && mask.thingy_pooled_v) {
 									if(header.is_type("stable_mk_2_tag")) {
 										uint32_t ix = 0;
@@ -1928,12 +1861,6 @@ namespace dcon {
 	DCON_RELEASE_INLINE void thingy_fat_id::set_lua_value(lua_reference_type const& v) const noexcept {
 		container.thingy_set_lua_value(id, v);
 	}
-	DCON_RELEASE_INLINE std::vector<float>& thingy_fat_id::get_obj_value() const noexcept {
-		return container.thingy_get_obj_value(id);
-	}
-	DCON_RELEASE_INLINE void thingy_fat_id::set_obj_value(std::vector<float> const& v) const noexcept {
-		container.thingy_set_obj_value(id, v);
-	}
 	DCON_RELEASE_INLINE dcon::dcon_vv_fat_id<int16_t> thingy_fat_id::get_pooled_v() const noexcept {
 		return container.thingy_get_pooled_v(id);
 	}
@@ -1973,9 +1900,6 @@ namespace dcon {
 	}
 	DCON_RELEASE_INLINE lua_reference_type const& thingy_const_fat_id::get_lua_value() const noexcept {
 		return container.thingy_get_lua_value(id);
-	}
-	DCON_RELEASE_INLINE std::vector<float> const& thingy_const_fat_id::get_obj_value() const noexcept {
-		return container.thingy_get_obj_value(id);
 	}
 	DCON_RELEASE_INLINE dcon::dcon_vv_const_fat_id<int16_t> thingy_const_fat_id::get_pooled_v() const noexcept {
 		return container.thingy_get_pooled_v(id);
