@@ -400,6 +400,11 @@ namespace ve {
 		return (i + (ve::vector_size - uint32_t(1))) & ~(ve::vector_size - uint32_t(1));
 	}
 
+	//shorthands
+	template<typename T>
+	RELEASE_INLINE T clamp(T a, T b, T c) {
+		return min(max(a, b), c);
+	}
 }
 
 #undef RELEASE_INLINE
