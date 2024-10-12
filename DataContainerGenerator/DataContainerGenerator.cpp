@@ -641,6 +641,37 @@ int main(int argc, char *argv[]) {
 
 		output += "\n";
 
+		// swappable functions
+		for(auto& ob : parsed_file.relationship_objects) {
+			for(auto& s : ob.swappable_list) {
+				// NOTE: I am well aware that this caring about the size order doesn't actually do anything currently. It exists for future work that would
+				// properly atomicize it. currently the swap has to be considered not thread safe if the properties being swapped aren't the same size
+
+				output += "\t\t inline void " + ob.name + "_swap_" + s.property_a + "_" + s.property_b + "() noexcept { \n";
+					output += "\t\t\t if(" + ob.name + ".m_" + s.property_a + ".size < " + ob.name + ".m_" + s.property_b + ".size){\n";
+						output += "\t\t\t\t auto temps = " + ob.name + ".m_" + s.property_a + ".size;\n";
+						output += "\t\t\t\t auto tempp = " + ob.name + ".m_" + s.property_a + ".values;\n";
+
+						output += "\t\t\t\t " + ob.name + ".m_" + s.property_a + ".values = " + ob.name + ".m_" + s.property_b+ ".values;\n";
+						output += "\t\t\t\t " + ob.name + ".m_" + s.property_a + ".size = " + ob.name + ".m_" + s.property_b + ".size;\n";
+
+						output += "\t\t\t\t " + ob.name + ".m_" + s.property_b + ".size = temps;\n";
+						output += "\t\t\t\t " + ob.name + ".m_" + s.property_b + ".values = tempp;\n";
+					output += "\t\t\t }else{\n";
+						output += "\t\t\t\t auto temps = " + ob.name + ".m_" + s.property_b + ".size;\n";
+						output += "\t\t\t\t auto tempp = " + ob.name + ".m_" + s.property_b + ".values;\n";
+
+						output += "\t\t\t\t " + ob.name + ".m_" + s.property_b + ".values = " + ob.name + ".m_" + s.property_a + ".values;\n";
+						output += "\t\t\t\t " + ob.name + ".m_" + s.property_b + ".size = " + ob.name + ".m_" + s.property_a + ".size;\n";
+
+						output += "\t\t\t\t " + ob.name + ".m_" + s.property_a + ".size = temps;\n";
+						output += "\t\t\t\t " + ob.name + ".m_" + s.property_a + ".values = tempp;\n";
+					output += "\t\t\t }\n";
+				output += "\t\t }\n";
+				// ob.name _swap_ propa _ propb() { ... obj.name.m_popa.values = ... obj.name . m_popa.size = ...   }
+			}
+		}
+		output += "\n";
 
 		// creation / deletion routines
 		for(auto& cob : parsed_file.relationship_objects) {

@@ -45,6 +45,13 @@ object{
 	}
 
 	property{
+		name{big_array_alt}
+		type{array{int32_t}{float}}
+	}
+
+	swappable{big_array}{big_array_alt}
+
+	property{
 		name{big_array_bf}
 		type{array{int32_t}{bitfield}}
 	}

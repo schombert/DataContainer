@@ -147,7 +147,10 @@ struct primary_key_type {
 	}
 };
 
-
+struct swappable_def {
+	std::string property_a;
+	std::string property_b;
+};
 
 struct relationship_object_def {
 	std::string name;
@@ -166,7 +169,8 @@ struct relationship_object_def {
 	std::vector<property_def> properties;
 	std::vector<in_relation_information> relationships_involved_in;
 	std::vector<composite_index_def> composite_indexes;
-	std::vector< member_function_spec> member_functions;
+	std::vector<member_function_spec> member_functions;
+	std::vector<swappable_def> swappable_list;
 
 	primary_key_type primary_key;
 };
