@@ -863,15 +863,15 @@ int main(int argc, char *argv[]) {
 						header_output += "DCON_LUADLL_API int32_t dcon_" + ob.name + "_get_range_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(int32_t i); \n";
 						output += "int32_t dcon_" + ob.name + "_get_range_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(int32_t i) { \n";
 						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
-						output += "\t auto rng = state." + ob.name + "_range_of_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(index).index();\n";
-						output += "\t return int32_t(rng.second - rng.first);\n";
+						output += "\t auto rng = state." + ob.name + "_get_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(index);\n";
+						output += "\t return int32_t(rng.end() - rng.begin());\n";
 						output += " }\n";
 
 						header_output += "DCON_LUADLL_API int32_t dcon_" + ob.name + "_get_index_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(int32_t i, int32_t subindex); \n";
 						output += "int32_t dcon_" + ob.name + "_get_index_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(int32_t i, int32_t subindex) { \n";
 						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
-						output += "\t auto rng = state." + ob.name + "_range_of_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(index).index();\n";
-						output += "\t return rng.first[subindex].index();\n";
+						output += "\t auto rng = state." + ob.name + "_get_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(index);\n";
+						output += "\t return rng.begin()[subindex].id.index();\n";
 						output += " }\n";
 					}
 
@@ -885,15 +885,15 @@ int main(int argc, char *argv[]) {
 						header_output += "DCON_LUADLL_API int32_t dcon_" + ob.name + "_get_range_" + involved_in.relation_name + "(int32_t i); \n";
 						output += "int32_t dcon_" + ob.name + "_get_range_" + involved_in.relation_name  + "(int32_t i) { \n";
 						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
-						output += "\t auto rng = state." + ob.name + "_range_of_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(index).index();\n";
-						output += "\t return int32_t(rng.second - rng.first);\n";
+						output += "\t auto rng = state." + ob.name + "_get_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(index);\n";
+						output += "\t return int32_t(rng.end() - rng.begin());\n";
 						output += " }\n";
 
 						header_output += "DCON_LUADLL_API int32_t dcon_" + ob.name + "_get_index_" + involved_in.relation_name + "(int32_t i, int32_t subindex); \n";
 						output += "int32_t dcon_" + ob.name + "_get_index_" + involved_in.relation_name + "(int32_t i, int32_t subindex) { \n";
 						output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
-						output += "\t auto rng = state." + ob.name + "_range_of_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(index).index();\n";
-						output += "\t return rng.first[subindex].index();\n";
+						output += "\t auto rng = state." + ob.name + "_get_" + involved_in.relation_name + "_as_" + involved_in.linked_as->property_name + "(index);\n";
+						output += "\t return rng.begin()[subindex].id.index();\n";
 						output += " }\n";
 					}
 				}

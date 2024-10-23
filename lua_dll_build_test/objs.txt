@@ -54,11 +54,13 @@ relationship {
         object { pop }
         name { initiator }
         type { many }
+		index_storage{array}
     }
     link {
         object { pop }
         name { target }
         type { many }
+		index_storage{array}
     }
 }
 

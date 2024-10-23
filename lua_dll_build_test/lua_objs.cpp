@@ -114,6 +114,26 @@ uint32_t dcon_pop_size() {
 void dcon_pop_resize(uint32_t sz) {
 	 state.pop_resize(sz);
  }
+int32_t dcon_pop_get_range_negotiation_as_initiator(int32_t i) { 
+	 auto index = dcon::pop_id{dcon::pop_id::value_base_t(i)};
+	 auto rng = state.pop_get_negotiation_as_initiator(index);
+	 return int32_t(rng.end() - rng.begin());
+ }
+int32_t dcon_pop_get_index_negotiation_as_initiator(int32_t i, int32_t subindex) { 
+	 auto index = dcon::pop_id{dcon::pop_id::value_base_t(i)};
+	 auto rng = state.pop_get_negotiation_as_initiator(index);
+	 return rng.begin()[subindex].id.index();
+ }
+int32_t dcon_pop_get_range_negotiation_as_target(int32_t i) { 
+	 auto index = dcon::pop_id{dcon::pop_id::value_base_t(i)};
+	 auto rng = state.pop_get_negotiation_as_target(index);
+	 return int32_t(rng.end() - rng.begin());
+ }
+int32_t dcon_pop_get_index_negotiation_as_target(int32_t i, int32_t subindex) { 
+	 auto index = dcon::pop_id{dcon::pop_id::value_base_t(i)};
+	 auto rng = state.pop_get_negotiation_as_target(index);
+	 return rng.begin()[subindex].id.index();
+ }
 bool dcon_negotiation_is_valid(int32_t i) {
 	 auto index = dcon::negotiation_id{dcon::negotiation_id::value_base_t(i)};
 	 bool result = state.negotiation_is_valid(index);

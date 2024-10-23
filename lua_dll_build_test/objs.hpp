@@ -72,13 +72,13 @@ namespace dcon {
 	//
 	class thingy_id {
 		public:
-		using value_base_t = uint32_t;
+		using value_base_t = uint16_t;
 		using zero_is_null_t = std::true_type;
 		
-		uint32_t value = 0;
+		uint16_t value = 0;
 		
 		constexpr thingy_id() noexcept = default;
-		explicit constexpr thingy_id(uint32_t v) noexcept : value(v + 1) {}
+		explicit constexpr thingy_id(uint16_t v) noexcept : value(v + 1) {}
 		constexpr thingy_id(thingy_id const& v) noexcept = default;
 		constexpr thingy_id(thingy_id&& v) noexcept = default;
 		
@@ -86,7 +86,7 @@ namespace dcon {
 		thingy_id& operator=(thingy_id&& v) noexcept = default;
 		constexpr bool operator==(thingy_id v) const noexcept { return value == v.value; }
 		constexpr bool operator!=(thingy_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint32_t(0); }
+		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
 		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
 			return int32_t(value) - 1;
 		}
@@ -207,10 +207,11 @@ namespace dcon {
 			// storage space for some_value of type int32_t
 			//
 			struct alignas(64) dtype_some_value {
-				std::vector<int32_t> values;
-				DCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }
-				DCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }
-				dtype_some_value() { values.emplace_back(); }
+				uint8_t padding[(63 + sizeof(int32_t)) & ~uint64_t(63)];
+				int32_t values[(sizeof(int32_t) <= 64 ? (uint32_t(2500) + (uint32_t(64) / uint32_t(sizeof(int32_t))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(int32_t)) - uint32_t(1)) : uint32_t(2500))];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_some_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(int32_t) <= 64 ? (uint32_t(2500) + (uint32_t(64) / uint32_t(sizeof(int32_t))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(int32_t)) - uint32_t(1)) : uint32_t(2500))); }
 			}
 			m_some_value;
 			
@@ -218,10 +219,11 @@ namespace dcon {
 			// storage space for bf_value of type dcon::bitfield_type
 			//
 			struct alignas(64) dtype_bf_value {
-				std::vector<dcon::bitfield_type> values;
-				DCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }
-				DCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }
-				dtype_bf_value() { values.emplace_back(); }
+				uint8_t padding[(63 + sizeof(dcon::bitfield_type)) & ~uint64_t(63)];
+				dcon::bitfield_type values[((uint32_t(2500 + 7)) / uint32_t(8) + uint32_t(63)) & ~uint32_t(63)];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_bf_value() { std::uninitialized_value_construct_n(values - 1, 1 + ((uint32_t(2500 + 7)) / uint32_t(8) + uint32_t(63)) & ~uint32_t(63)); }
 			}
 			m_bf_value;
 			
@@ -229,10 +231,11 @@ namespace dcon {
 			// storage space for lua_value of type lua_reference_type
 			//
 			struct alignas(64) dtype_lua_value {
-				std::vector<lua_reference_type> values;
-				DCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }
-				DCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }
-				dtype_lua_value() { values.emplace_back(); }
+				uint8_t padding[(63 + sizeof(lua_reference_type)) & ~uint64_t(63)];
+				lua_reference_type values[(sizeof(lua_reference_type) <= 64 ? (uint32_t(2500) + (uint32_t(64) / uint32_t(sizeof(lua_reference_type))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(lua_reference_type)) - uint32_t(1)) : uint32_t(2500))];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_lua_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(lua_reference_type) <= 64 ? (uint32_t(2500) + (uint32_t(64) / uint32_t(sizeof(lua_reference_type))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(lua_reference_type)) - uint32_t(1)) : uint32_t(2500))); }
 			}
 			m_lua_value;
 			
@@ -240,10 +243,11 @@ namespace dcon {
 			// storage space for pooled_v of type dcon::stable_mk_2_tag
 			//
 			struct alignas(64) dtype_pooled_v {
-				std::vector<dcon::stable_mk_2_tag> values;
-				DCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }
-				DCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }
-				dtype_pooled_v() { values.push_back( std::numeric_limits<dcon::stable_mk_2_tag>::max() ); }
+				uint8_t padding[(63 + sizeof(dcon::stable_mk_2_tag)) & ~uint64_t(63)];
+				dcon::stable_mk_2_tag values[2500];
+				DCON_RELEASE_INLINE auto vptr() const { return values; }
+				DCON_RELEASE_INLINE auto vptr() { return values; }
+				dtype_pooled_v() { std::uninitialized_fill_n(values - 1, 1 + 2500, std::numeric_limits<dcon::stable_mk_2_tag>::max()); }
 			}
 			m_pooled_v;
 			
@@ -252,31 +256,39 @@ namespace dcon {
 			// storage space for big_array of type array of float
 			//
 			struct dtype_big_array {
-				std::vector<std::vector<float>> values;
+				std::byte* values = nullptr;
 				uint32_t size = 0;
-				DCON_RELEASE_INLINE auto vptr(int32_t i) const { return values[i].data() + 1; }
-				DCON_RELEASE_INLINE auto vptr(int32_t i) { return values[i].data() + 1; }
-				DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t container_size) {
-					values.resize(sz + 1);
-					for(uint32_t i = size; i < sz + 1; ++i) values[i].resize(container_size + 1);
+				DCON_RELEASE_INLINE auto vptr(int32_t i) const {
+					return reinterpret_cast<float const*>(values  + sizeof(float) + 64 - (sizeof(float) & 63)+ (i + 1) * (sizeof(float) + 64 - (sizeof(float) & 63) + sizeof(float) * 2500 + 64 - ((2500 * sizeof(float)) & 63)));
+				}
+				DCON_RELEASE_INLINE auto vptr(int32_t i) {
+					return reinterpret_cast<float*>(values + sizeof(float) + 64 - (sizeof(float) & 63) + (i + 1) * (sizeof(float) + 64 - (sizeof(float) & 63) + sizeof(float) * 2500 + 64 - ((2500 * sizeof(float)) & 63)));
+				}
+				DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t) {
+					std::byte* temp = sz > 0 ? (std::byte*)(::operator new((sz + 1) * (sizeof(float) + 64 - (sizeof(float) & 63) + sizeof(float) * 2500 + 64 - ((2500 * sizeof(float)) & 63)), std::align_val_t{ 64 })) : nullptr;
+					if(sz > size) {
+						if(values) {
+							std::memcpy(temp, values, (size + 1) * (sizeof(float) + 64 - (sizeof(float) & 63) + sizeof(float) * 2500 + 64 - ((2500 * sizeof(float)) & 63)));
+							std::memset(temp + (size + 1) * (sizeof(float) + 64 - (sizeof(float) & 63) + sizeof(float) * 2500 + 64 - ((2500 * sizeof(float)) & 63)), 0, (sz - size) * (sizeof(float) + 64 - (sizeof(float) & 63) + sizeof(float) * 2500 + 64 - ((2500 * sizeof(float)) & 63)));
+						} else {
+							std::memset(temp, 0, (sz + 1) * (sizeof(float) + 64 - (sizeof(float) & 63) + sizeof(float) * 2500 + 64 - ((2500 * sizeof(float)) & 63)));
+						}
+					} else if(sz > 0) {
+						std::memcpy(temp, values, (sz + 1) * (sizeof(float) + 64 - (sizeof(float) & 63) + sizeof(float) * 2500 + 64 - ((2500 * sizeof(float)) & 63)));
+					}
+					::operator delete(values, std::align_val_t{ 64 });
+					values = temp;
 					size = sz;
 				}
-				DCON_RELEASE_INLINE void emplace_back_all(uint32_t) {
-					for(auto& v : values) v.emplace_back();
-				}
+				~dtype_big_array() { ::operator delete(values, std::align_val_t{ 64 }); }
 				DCON_RELEASE_INLINE void copy_value(int32_t dest, int32_t source) {
-					for(auto& v : values) {
-						v[1 + dest] = v[1 + source];
-					}
-				}
-				DCON_RELEASE_INLINE void pop_back_all(uint32_t) {
-					for(auto& v : values) {
-						v.pop_back();
+					for(int32_t bi = 0; bi < int32_t(size); ++bi) {
+						vptr(bi)[dest] = vptr(bi)[source];
 					}
 				}
 				DCON_RELEASE_INLINE void zero_at(int32_t dest) {
-					for(auto& v : values) {
-						v[1 + dest] = float{};
+					for(int32_t ci = 0; ci < int32_t(size); ++ci) {
+						vptr(ci)[dest] = float{};
 					}
 				}
 			}
@@ -286,33 +298,39 @@ namespace dcon {
 			// storage space for big_array_bf of type array of dcon::bitfield_type
 			//
 			struct dtype_big_array_bf {
-				std::vector<std::vector<dcon::bitfield_type>> values;
+				std::byte* values = nullptr;
 				uint32_t size = 0;
-				DCON_RELEASE_INLINE auto vptr(int32_t i) const { return values[i].data() + 1; }
-				DCON_RELEASE_INLINE auto vptr(int32_t i) { return values[i].data() + 1; }
-				DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t container_size) {
-					values.resize(sz + 1);
-					for(uint32_t i = size; i < sz + 1; ++i) values[i].resize((container_size + 7) / 8 + 1);
+				DCON_RELEASE_INLINE auto vptr(int32_t i) const {
+					return reinterpret_cast<dcon::bitfield_type const*>(values  + 64+ (i + 1) * (64 + (2500 + 7) / 8 + 64 - (( (2500 + 7) / 8) & 63)));
+				}
+				DCON_RELEASE_INLINE auto vptr(int32_t i) {
+					return reinterpret_cast<dcon::bitfield_type*>(values + 64 + (i + 1) * (64 + (2500 + 7) / 8 + 64 - (( (2500 + 7) / 8) & 63)));
+				}
+				DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t) {
+					std::byte* temp = sz > 0 ? (std::byte*)(::operator new((sz + 1) * (64 + (2500 + 7) / 8 + 64 - (( (2500 + 7) / 8) & 63)), std::align_val_t{ 64 })) : nullptr;
+					if(sz > size) {
+						if(values) {
+							std::memcpy(temp, values, (size + 1) * (64 + (2500 + 7) / 8 + 64 - (( (2500 + 7) / 8) & 63)));
+							std::memset(temp + (size + 1) * (64 + (2500 + 7) / 8 + 64 - (( (2500 + 7) / 8) & 63)), 0, (sz - size) * (64 + (2500 + 7) / 8 + 64 - (( (2500 + 7) / 8) & 63)));
+						} else {
+							std::memset(temp, 0, (sz + 1) * (64 + (2500 + 7) / 8 + 64 - (( (2500 + 7) / 8) & 63)));
+						}
+					} else if(sz > 0) {
+						std::memcpy(temp, values, (sz + 1) * (64 + (2500 + 7) / 8 + 64 - (( (2500 + 7) / 8) & 63)));
+					}
+					::operator delete(values, std::align_val_t{ 64 });
+					values = temp;
 					size = sz;
 				}
-				DCON_RELEASE_INLINE void emplace_back_all(uint32_t newsz) {
-					for(auto& v : values) {
-						v.resize(1 + (newsz + 7) / 8);
-					}
-				}
+				~dtype_big_array_bf() { ::operator delete(values, std::align_val_t{ 64 }); }
 				DCON_RELEASE_INLINE void copy_value(int32_t dest, int32_t source) {
-					for(int32_t i = 1; i < int32_t(size + 1); ++i) {
-						dcon::bit_vector_set(vptr(i), dest, dcon::bit_vector_test(vptr(i), source));
-					}
-				}
-				DCON_RELEASE_INLINE void pop_back_all(uint32_t vsize) {
-					for(auto& v : values) {
-						v.resize(1 + (vsize + 6) / 8);
+					for(int32_t bi = 0; bi < int32_t(size); ++bi) {
+						dcon::bit_vector_set(vptr(bi), dest, dcon::bit_vector_test(vptr(bi), source));
 					}
 				}
 				DCON_RELEASE_INLINE void zero_at(int32_t dest) {
-					for(int32_t i = 0; i < int32_t(size + 1); ++i) {
-						dcon::bit_vector_set(vptr(i), dest, false);
+					for(int32_t ci = 0; ci < int32_t(size); ++ci) {
+						dcon::bit_vector_set(vptr(ci), dest, false);
 					}
 				}
 			}
@@ -322,6 +340,8 @@ namespace dcon {
 
 
 			public:
+			thingy_class() {
+			}
 			friend data_container;
 		};
 
@@ -402,28 +422,18 @@ namespace dcon {
 			m_initiator;
 			
 			//
-			// storage space for link_initiator of type negotiation_id_pair
+			// storage space for array_initiator of type dcon::stable_mk_2_tag
 			//
-			struct dtype_link_initiator {
-				negotiation_id_pair values[2500];
+			struct alignas(64) dtype_array_initiator {
+				uint8_t padding[(63 + sizeof(dcon::stable_mk_2_tag)) & ~uint64_t(63)];
+				dcon::stable_mk_2_tag values[300000];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_link_initiator() { std::uninitialized_value_construct_n(values, 2500); }
+				dtype_array_initiator() { std::uninitialized_fill_n(values - 1, 1 + 300000, std::numeric_limits<dcon::stable_mk_2_tag>::max()); }
 			}
-			m_link_initiator;
+			m_array_initiator;
 			
-			//
-			// storage space for head_back_initiator of type negotiation_id
-			//
-			struct alignas(64) dtype_head_back_initiator {
-				uint8_t padding[(63 + sizeof(negotiation_id)) & ~uint64_t(63)];
-				negotiation_id values[(sizeof(negotiation_id) <= 64 ? (uint32_t(300000) + (uint32_t(64) / uint32_t(sizeof(negotiation_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(negotiation_id)) - uint32_t(1)) : uint32_t(300000))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_head_back_initiator() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(negotiation_id) <= 64 ? (uint32_t(300000) + (uint32_t(64) / uint32_t(sizeof(negotiation_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(negotiation_id)) - uint32_t(1)) : uint32_t(300000))); }
-			}
-			m_head_back_initiator;
-			
+			dcon::stable_variable_vector_storage_mk_2<negotiation_id, 4, 20000 > initiator_storage;
 			//
 			// storage space for target of type pop_id
 			//
@@ -437,28 +447,18 @@ namespace dcon {
 			m_target;
 			
 			//
-			// storage space for link_target of type negotiation_id_pair
+			// storage space for array_target of type dcon::stable_mk_2_tag
 			//
-			struct dtype_link_target {
-				negotiation_id_pair values[2500];
+			struct alignas(64) dtype_array_target {
+				uint8_t padding[(63 + sizeof(dcon::stable_mk_2_tag)) & ~uint64_t(63)];
+				dcon::stable_mk_2_tag values[300000];
 				DCON_RELEASE_INLINE auto vptr() const { return values; }
 				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_link_target() { std::uninitialized_value_construct_n(values, 2500); }
+				dtype_array_target() { std::uninitialized_fill_n(values - 1, 1 + 300000, std::numeric_limits<dcon::stable_mk_2_tag>::max()); }
 			}
-			m_link_target;
+			m_array_target;
 			
-			//
-			// storage space for head_back_target of type negotiation_id
-			//
-			struct alignas(64) dtype_head_back_target {
-				uint8_t padding[(63 + sizeof(negotiation_id)) & ~uint64_t(63)];
-				negotiation_id values[(sizeof(negotiation_id) <= 64 ? (uint32_t(300000) + (uint32_t(64) / uint32_t(sizeof(negotiation_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(negotiation_id)) - uint32_t(1)) : uint32_t(300000))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
-				dtype_head_back_target() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(negotiation_id) <= 64 ? (uint32_t(300000) + (uint32_t(64) / uint32_t(sizeof(negotiation_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(negotiation_id)) - uint32_t(1)) : uint32_t(300000))); }
-			}
-			m_head_back_target;
-			
+			dcon::stable_variable_vector_storage_mk_2<negotiation_id, 4, 20000 > target_storage;
 			negotiation_id first_free = negotiation_id();
 			uint32_t size_used = 0;
 
@@ -638,10 +638,12 @@ namespace dcon {
 		explicit operator bool() const noexcept { return bool(id); }
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_negotiation_as_initiator(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<negotiation_id const*, negotiation_id const*> range_of_negotiation_as_initiator() const;
 		DCON_RELEASE_INLINE void remove_all_negotiation_as_initiator() const noexcept;
 		DCON_RELEASE_INLINE internal::iterator_pop_foreach_negotiation_as_initiator_generator get_negotiation_as_initiator() const;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_negotiation_as_target(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<negotiation_id const*, negotiation_id const*> range_of_negotiation_as_target() const;
 		DCON_RELEASE_INLINE void remove_all_negotiation_as_target() const noexcept;
 		DCON_RELEASE_INLINE internal::iterator_pop_foreach_negotiation_as_target_generator get_negotiation_as_target() const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
@@ -699,9 +701,11 @@ namespace dcon {
 		DCON_RELEASE_INLINE explicit operator bool() const noexcept { return bool(id); }
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_negotiation_as_initiator(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<negotiation_id const*, negotiation_id const*> range_of_negotiation_as_initiator() const;
 		DCON_RELEASE_INLINE internal::const_iterator_pop_foreach_negotiation_as_initiator_generator get_negotiation_as_initiator() const;
 		template<typename T>
 		DCON_RELEASE_INLINE void for_each_negotiation_as_target(T&& func) const;
+		DCON_RELEASE_INLINE std::pair<negotiation_id const*, negotiation_id const*> range_of_negotiation_as_target() const;
 		DCON_RELEASE_INLINE internal::const_iterator_pop_foreach_negotiation_as_target_generator get_negotiation_as_target() const;
 		DCON_RELEASE_INLINE bool is_valid() const noexcept;
 		
@@ -968,41 +972,105 @@ namespace dcon {
 		class iterator_pop_foreach_negotiation_as_initiator {
 			private:
 			data_container& container;
-			negotiation_id list_pos;
+			negotiation_id const* ptr = nullptr;
 			public:
 			iterator_pop_foreach_negotiation_as_initiator(data_container& c, pop_id fr) noexcept;
-			iterator_pop_foreach_negotiation_as_initiator(data_container& c, negotiation_id r) noexcept : container(c), list_pos(r) {}
-			iterator_pop_foreach_negotiation_as_initiator(data_container& c) noexcept : container(c) {}
+			iterator_pop_foreach_negotiation_as_initiator(data_container& c, negotiation_id const* r) noexcept : container(c), ptr(r) {}
+			iterator_pop_foreach_negotiation_as_initiator(data_container& c, pop_id fr, int) noexcept;
 			DCON_RELEASE_INLINE iterator_pop_foreach_negotiation_as_initiator& operator++() noexcept;
 			DCON_RELEASE_INLINE iterator_pop_foreach_negotiation_as_initiator& operator--() noexcept;
 			DCON_RELEASE_INLINE bool operator==(iterator_pop_foreach_negotiation_as_initiator const& o) const noexcept {
-				return list_pos == o.list_pos;
+				return ptr == o.ptr;
 			}
 			DCON_RELEASE_INLINE bool operator!=(iterator_pop_foreach_negotiation_as_initiator const& o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE negotiation_fat_id operator*() const noexcept {
-				return negotiation_fat_id(container, list_pos);
+				return negotiation_fat_id(container, *ptr);
+			}
+			DCON_RELEASE_INLINE iterator_pop_foreach_negotiation_as_initiator& operator+=(ptrdiff_t n) noexcept {
+				ptr += n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE iterator_pop_foreach_negotiation_as_initiator& operator-=(ptrdiff_t n) noexcept {
+				ptr -= n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE iterator_pop_foreach_negotiation_as_initiator operator+(ptrdiff_t n) const noexcept {
+				return iterator_pop_foreach_negotiation_as_initiator(container, ptr + n);
+			}
+			DCON_RELEASE_INLINE iterator_pop_foreach_negotiation_as_initiator operator-(ptrdiff_t n) const noexcept {
+				return iterator_pop_foreach_negotiation_as_initiator(container, ptr - n);
+			}
+			DCON_RELEASE_INLINE ptrdiff_t operator-(iterator_pop_foreach_negotiation_as_initiator const& o) const noexcept {
+				return ptr - o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>(iterator_pop_foreach_negotiation_as_initiator const& o) const noexcept {
+				return ptr > o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>=(iterator_pop_foreach_negotiation_as_initiator const& o) const noexcept {
+				return ptr >= o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<(iterator_pop_foreach_negotiation_as_initiator const& o) const noexcept {
+				return ptr < o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<=(iterator_pop_foreach_negotiation_as_initiator const& o) const noexcept {
+				return ptr <= o.ptr;
+			}
+			DCON_RELEASE_INLINE negotiation_fat_id operator[](ptrdiff_t n) const noexcept {
+				return negotiation_fat_id(container, *(ptr + n));
 			}
 		};
 		class const_iterator_pop_foreach_negotiation_as_initiator {
 			private:
 			data_container const& container;
-			negotiation_id list_pos;
+			negotiation_id const* ptr = nullptr;
 			public:
 			const_iterator_pop_foreach_negotiation_as_initiator(data_container const& c, pop_id fr) noexcept;
-			const_iterator_pop_foreach_negotiation_as_initiator(data_container const& c, negotiation_id r) noexcept : container(c), list_pos(r) {}
-			const_iterator_pop_foreach_negotiation_as_initiator(data_container const& c) noexcept : container(c) {}
+			const_iterator_pop_foreach_negotiation_as_initiator(data_container const& c, negotiation_id const* r) noexcept : container(c), ptr(r) {}
+			const_iterator_pop_foreach_negotiation_as_initiator(data_container const& c, pop_id fr, int) noexcept;
 			DCON_RELEASE_INLINE const_iterator_pop_foreach_negotiation_as_initiator& operator++() noexcept;
 			DCON_RELEASE_INLINE const_iterator_pop_foreach_negotiation_as_initiator& operator--() noexcept;
 			DCON_RELEASE_INLINE bool operator==(const_iterator_pop_foreach_negotiation_as_initiator const& o) const noexcept {
-				return list_pos == o.list_pos;
+				return ptr == o.ptr;
 			}
 			DCON_RELEASE_INLINE bool operator!=(const_iterator_pop_foreach_negotiation_as_initiator const& o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE negotiation_const_fat_id operator*() const noexcept {
-				return negotiation_const_fat_id(container, list_pos);
+				return negotiation_const_fat_id(container, *ptr);
+			}
+			DCON_RELEASE_INLINE const_iterator_pop_foreach_negotiation_as_initiator& operator+=(ptrdiff_t n) noexcept {
+				ptr += n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_iterator_pop_foreach_negotiation_as_initiator& operator-=(ptrdiff_t n) noexcept {
+				ptr -= n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_iterator_pop_foreach_negotiation_as_initiator operator+(ptrdiff_t n) const noexcept {
+				return const_iterator_pop_foreach_negotiation_as_initiator(container, ptr + n);
+			}
+			DCON_RELEASE_INLINE const_iterator_pop_foreach_negotiation_as_initiator operator-(ptrdiff_t n) const noexcept {
+				return const_iterator_pop_foreach_negotiation_as_initiator(container, ptr - n);
+			}
+			DCON_RELEASE_INLINE ptrdiff_t operator-(const_iterator_pop_foreach_negotiation_as_initiator const& o) const noexcept {
+				return ptr - o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>(const_iterator_pop_foreach_negotiation_as_initiator const& o) const noexcept {
+				return ptr > o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>=(const_iterator_pop_foreach_negotiation_as_initiator const& o) const noexcept {
+				return ptr >= o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<(const_iterator_pop_foreach_negotiation_as_initiator const& o) const noexcept {
+				return ptr < o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<=(const_iterator_pop_foreach_negotiation_as_initiator const& o) const noexcept {
+				return ptr <= o.ptr;
+			}
+			DCON_RELEASE_INLINE negotiation_const_fat_id operator[](ptrdiff_t n) const noexcept {
+				return negotiation_const_fat_id(container, *(ptr + n));
 			}
 		};
 		
@@ -1014,7 +1082,7 @@ namespace dcon {
 				return iterator_pop_foreach_negotiation_as_initiator(container, ob);
 			}
 			DCON_RELEASE_INLINE iterator_pop_foreach_negotiation_as_initiator end() const noexcept {
-				return iterator_pop_foreach_negotiation_as_initiator(container);
+				return iterator_pop_foreach_negotiation_as_initiator(container, ob, 0);
 			}
 		};
 		struct const_iterator_pop_foreach_negotiation_as_initiator_generator {
@@ -1025,48 +1093,112 @@ namespace dcon {
 				return const_iterator_pop_foreach_negotiation_as_initiator(container, ob);
 			}
 			DCON_RELEASE_INLINE const_iterator_pop_foreach_negotiation_as_initiator end() const noexcept {
-				return const_iterator_pop_foreach_negotiation_as_initiator(container);
+				return const_iterator_pop_foreach_negotiation_as_initiator(container, ob, 0);
 			}
 		};
 		
 		class iterator_pop_foreach_negotiation_as_target {
 			private:
 			data_container& container;
-			negotiation_id list_pos;
+			negotiation_id const* ptr = nullptr;
 			public:
 			iterator_pop_foreach_negotiation_as_target(data_container& c, pop_id fr) noexcept;
-			iterator_pop_foreach_negotiation_as_target(data_container& c, negotiation_id r) noexcept : container(c), list_pos(r) {}
-			iterator_pop_foreach_negotiation_as_target(data_container& c) noexcept : container(c) {}
+			iterator_pop_foreach_negotiation_as_target(data_container& c, negotiation_id const* r) noexcept : container(c), ptr(r) {}
+			iterator_pop_foreach_negotiation_as_target(data_container& c, pop_id fr, int) noexcept;
 			DCON_RELEASE_INLINE iterator_pop_foreach_negotiation_as_target& operator++() noexcept;
 			DCON_RELEASE_INLINE iterator_pop_foreach_negotiation_as_target& operator--() noexcept;
 			DCON_RELEASE_INLINE bool operator==(iterator_pop_foreach_negotiation_as_target const& o) const noexcept {
-				return list_pos == o.list_pos;
+				return ptr == o.ptr;
 			}
 			DCON_RELEASE_INLINE bool operator!=(iterator_pop_foreach_negotiation_as_target const& o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE negotiation_fat_id operator*() const noexcept {
-				return negotiation_fat_id(container, list_pos);
+				return negotiation_fat_id(container, *ptr);
+			}
+			DCON_RELEASE_INLINE iterator_pop_foreach_negotiation_as_target& operator+=(ptrdiff_t n) noexcept {
+				ptr += n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE iterator_pop_foreach_negotiation_as_target& operator-=(ptrdiff_t n) noexcept {
+				ptr -= n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE iterator_pop_foreach_negotiation_as_target operator+(ptrdiff_t n) const noexcept {
+				return iterator_pop_foreach_negotiation_as_target(container, ptr + n);
+			}
+			DCON_RELEASE_INLINE iterator_pop_foreach_negotiation_as_target operator-(ptrdiff_t n) const noexcept {
+				return iterator_pop_foreach_negotiation_as_target(container, ptr - n);
+			}
+			DCON_RELEASE_INLINE ptrdiff_t operator-(iterator_pop_foreach_negotiation_as_target const& o) const noexcept {
+				return ptr - o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>(iterator_pop_foreach_negotiation_as_target const& o) const noexcept {
+				return ptr > o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>=(iterator_pop_foreach_negotiation_as_target const& o) const noexcept {
+				return ptr >= o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<(iterator_pop_foreach_negotiation_as_target const& o) const noexcept {
+				return ptr < o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<=(iterator_pop_foreach_negotiation_as_target const& o) const noexcept {
+				return ptr <= o.ptr;
+			}
+			DCON_RELEASE_INLINE negotiation_fat_id operator[](ptrdiff_t n) const noexcept {
+				return negotiation_fat_id(container, *(ptr + n));
 			}
 		};
 		class const_iterator_pop_foreach_negotiation_as_target {
 			private:
 			data_container const& container;
-			negotiation_id list_pos;
+			negotiation_id const* ptr = nullptr;
 			public:
 			const_iterator_pop_foreach_negotiation_as_target(data_container const& c, pop_id fr) noexcept;
-			const_iterator_pop_foreach_negotiation_as_target(data_container const& c, negotiation_id r) noexcept : container(c), list_pos(r) {}
-			const_iterator_pop_foreach_negotiation_as_target(data_container const& c) noexcept : container(c) {}
+			const_iterator_pop_foreach_negotiation_as_target(data_container const& c, negotiation_id const* r) noexcept : container(c), ptr(r) {}
+			const_iterator_pop_foreach_negotiation_as_target(data_container const& c, pop_id fr, int) noexcept;
 			DCON_RELEASE_INLINE const_iterator_pop_foreach_negotiation_as_target& operator++() noexcept;
 			DCON_RELEASE_INLINE const_iterator_pop_foreach_negotiation_as_target& operator--() noexcept;
 			DCON_RELEASE_INLINE bool operator==(const_iterator_pop_foreach_negotiation_as_target const& o) const noexcept {
-				return list_pos == o.list_pos;
+				return ptr == o.ptr;
 			}
 			DCON_RELEASE_INLINE bool operator!=(const_iterator_pop_foreach_negotiation_as_target const& o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE negotiation_const_fat_id operator*() const noexcept {
-				return negotiation_const_fat_id(container, list_pos);
+				return negotiation_const_fat_id(container, *ptr);
+			}
+			DCON_RELEASE_INLINE const_iterator_pop_foreach_negotiation_as_target& operator+=(ptrdiff_t n) noexcept {
+				ptr += n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_iterator_pop_foreach_negotiation_as_target& operator-=(ptrdiff_t n) noexcept {
+				ptr -= n;
+				return *this;
+			}
+			DCON_RELEASE_INLINE const_iterator_pop_foreach_negotiation_as_target operator+(ptrdiff_t n) const noexcept {
+				return const_iterator_pop_foreach_negotiation_as_target(container, ptr + n);
+			}
+			DCON_RELEASE_INLINE const_iterator_pop_foreach_negotiation_as_target operator-(ptrdiff_t n) const noexcept {
+				return const_iterator_pop_foreach_negotiation_as_target(container, ptr - n);
+			}
+			DCON_RELEASE_INLINE ptrdiff_t operator-(const_iterator_pop_foreach_negotiation_as_target const& o) const noexcept {
+				return ptr - o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>(const_iterator_pop_foreach_negotiation_as_target const& o) const noexcept {
+				return ptr > o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator>=(const_iterator_pop_foreach_negotiation_as_target const& o) const noexcept {
+				return ptr >= o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<(const_iterator_pop_foreach_negotiation_as_target const& o) const noexcept {
+				return ptr < o.ptr;
+			}
+			DCON_RELEASE_INLINE bool operator<=(const_iterator_pop_foreach_negotiation_as_target const& o) const noexcept {
+				return ptr <= o.ptr;
+			}
+			DCON_RELEASE_INLINE negotiation_const_fat_id operator[](ptrdiff_t n) const noexcept {
+				return negotiation_const_fat_id(container, *(ptr + n));
 			}
 		};
 		
@@ -1078,7 +1210,7 @@ namespace dcon {
 				return iterator_pop_foreach_negotiation_as_target(container, ob);
 			}
 			DCON_RELEASE_INLINE iterator_pop_foreach_negotiation_as_target end() const noexcept {
-				return iterator_pop_foreach_negotiation_as_target(container);
+				return iterator_pop_foreach_negotiation_as_target(container, ob, 0);
 			}
 		};
 		struct const_iterator_pop_foreach_negotiation_as_target_generator {
@@ -1089,7 +1221,7 @@ namespace dcon {
 				return const_iterator_pop_foreach_negotiation_as_target(container, ob);
 			}
 			DCON_RELEASE_INLINE const_iterator_pop_foreach_negotiation_as_target end() const noexcept {
-				return const_iterator_pop_foreach_negotiation_as_target(container);
+				return const_iterator_pop_foreach_negotiation_as_target(container, ob, 0);
 			}
 		};
 		
@@ -1151,7 +1283,7 @@ namespace dcon {
 			return thingy.m_some_value.vptr()[id.index()];
 		}
 		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE ve::value_to_vector_type<int32_t> thingy_get_some_value(ve::unaligned_contiguous_tags<thingy_id> id) const noexcept {
+		DCON_RELEASE_INLINE ve::value_to_vector_type<int32_t> thingy_get_some_value(ve::contiguous_tags<thingy_id> id) const noexcept {
 			return ve::load(id, thingy.m_some_value.vptr());
 		}
 		DCON_RELEASE_INLINE ve::value_to_vector_type<int32_t> thingy_get_some_value(ve::partial_contiguous_tags<thingy_id> id) const noexcept {
@@ -1168,7 +1300,7 @@ namespace dcon {
 			thingy.m_some_value.vptr()[id.index()] = value;
 		}
 		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE void thingy_set_some_value(ve::unaligned_contiguous_tags<thingy_id> id, ve::value_to_vector_type<int32_t> values) noexcept {
+		DCON_RELEASE_INLINE void thingy_set_some_value(ve::contiguous_tags<thingy_id> id, ve::value_to_vector_type<int32_t> values) noexcept {
 			ve::store(id, thingy.m_some_value.vptr(), values);
 		}
 		DCON_RELEASE_INLINE void thingy_set_some_value(ve::partial_contiguous_tags<thingy_id> id, ve::value_to_vector_type<int32_t> values) noexcept {
@@ -1185,7 +1317,7 @@ namespace dcon {
 			return dcon::bit_vector_test(thingy.m_bf_value.vptr(), id.index());
 		}
 		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE ve::vbitfield_type thingy_get_bf_value(ve::unaligned_contiguous_tags<thingy_id> id) const noexcept {
+		DCON_RELEASE_INLINE ve::vbitfield_type thingy_get_bf_value(ve::contiguous_tags<thingy_id> id) const noexcept {
 			return ve::load(id, thingy.m_bf_value.vptr());
 		}
 		DCON_RELEASE_INLINE ve::vbitfield_type thingy_get_bf_value(ve::partial_contiguous_tags<thingy_id> id) const noexcept {
@@ -1202,7 +1334,7 @@ namespace dcon {
 			dcon::bit_vector_set(thingy.m_bf_value.vptr(), id.index(), value);
 		}
 		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE void thingy_set_bf_value(ve::unaligned_contiguous_tags<thingy_id> id, ve::vbitfield_type values) noexcept {
+		DCON_RELEASE_INLINE void thingy_set_bf_value(ve::contiguous_tags<thingy_id> id, ve::vbitfield_type values) noexcept {
 			ve::store(id, thingy.m_bf_value.vptr(), values);
 		}
 		DCON_RELEASE_INLINE void thingy_set_bf_value(ve::partial_contiguous_tags<thingy_id> id, ve::vbitfield_type values) noexcept {
@@ -1249,7 +1381,7 @@ namespace dcon {
 			return thingy.m_big_array.size;
 		}
 		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE ve::value_to_vector_type<float> thingy_get_big_array(ve::unaligned_contiguous_tags<thingy_id> id, thingy_id n) const noexcept {
+		DCON_RELEASE_INLINE ve::value_to_vector_type<float> thingy_get_big_array(ve::contiguous_tags<thingy_id> id, thingy_id n) const noexcept {
 			return ve::load(id, thingy.m_big_array.vptr(dcon::get_index(n)));
 		}
 		DCON_RELEASE_INLINE ve::value_to_vector_type<float> thingy_get_big_array(ve::partial_contiguous_tags<thingy_id> id, thingy_id n) const noexcept {
@@ -1270,7 +1402,7 @@ namespace dcon {
 			return thingy.m_big_array.resize(size, thingy.size_used);
 		}
 		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE void thingy_set_big_array(ve::unaligned_contiguous_tags<thingy_id> id, thingy_id n, ve::value_to_vector_type<float> values) noexcept {
+		DCON_RELEASE_INLINE void thingy_set_big_array(ve::contiguous_tags<thingy_id> id, thingy_id n, ve::value_to_vector_type<float> values) noexcept {
 			ve::store(id, thingy.m_big_array.vptr(dcon::get_index(n)), values);
 		}
 		DCON_RELEASE_INLINE void thingy_set_big_array(ve::partial_contiguous_tags<thingy_id> id, thingy_id n, ve::value_to_vector_type<float> values) noexcept {
@@ -1290,7 +1422,7 @@ namespace dcon {
 			return thingy.m_big_array_bf.size;
 		}
 		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE ve::vbitfield_type thingy_get_big_array_bf(ve::unaligned_contiguous_tags<thingy_id> id, int32_t n) const noexcept {
+		DCON_RELEASE_INLINE ve::vbitfield_type thingy_get_big_array_bf(ve::contiguous_tags<thingy_id> id, int32_t n) const noexcept {
 			return ve::load(id, thingy.m_big_array_bf.vptr(dcon::get_index(n)));
 		}
 		DCON_RELEASE_INLINE ve::vbitfield_type thingy_get_big_array_bf(ve::partial_contiguous_tags<thingy_id> id, int32_t n) const noexcept {
@@ -1311,7 +1443,7 @@ namespace dcon {
 			thingy.m_big_array_bf.resize(size, thingy.size_used);
 		}
 		#ifndef DCON_NO_VE
-		DCON_RELEASE_INLINE void thingy_set_big_array_bf(ve::unaligned_contiguous_tags<thingy_id> id, int32_t n, ve::vbitfield_type values) noexcept {
+		DCON_RELEASE_INLINE void thingy_set_big_array_bf(ve::contiguous_tags<thingy_id> id, int32_t n, ve::vbitfield_type values) noexcept {
 			ve::store(id, thingy.m_big_array_bf.vptr(dcon::get_index(n)), values);
 		}
 		DCON_RELEASE_INLINE void thingy_set_big_array_bf(ve::partial_contiguous_tags<thingy_id> id, int32_t n, ve::vbitfield_type values) noexcept {
@@ -1339,14 +1471,21 @@ namespace dcon {
 		template<typename T>
 		DCON_RELEASE_INLINE void pop_for_each_negotiation_as_initiator(pop_id id, T&& func) const {
 			if(bool(id)) {
-				for(auto list_pos = negotiation.m_head_back_initiator.vptr()[id.index()]; bool(list_pos); list_pos = negotiation.m_link_initiator.vptr()[list_pos.index()].right) {
-					func(list_pos);
-				}
+				auto vrange = dcon::get_range(negotiation.initiator_storage, negotiation.m_array_initiator.vptr()[id.index()]);
+				std::for_each(vrange.first, vrange.second, func);
+			}
+		}
+		DCON_RELEASE_INLINE std::pair<negotiation_id const*, negotiation_id const*> pop_range_of_negotiation_as_initiator(pop_id id) const {
+			if(bool(id)) {
+				auto vrange = dcon::get_range(negotiation.initiator_storage, negotiation.m_array_initiator.vptr()[id.index()]);
+				return std::pair<negotiation_id const*, negotiation_id const*>(vrange.first, vrange.second);
+			} else {
+				return std::pair<negotiation_id const*, negotiation_id const*>(nullptr, nullptr);
 			}
 		}
 		void pop_remove_all_negotiation_as_initiator(pop_id id) noexcept {
-			dcon::local_vector<negotiation_id> temp;
-			pop_for_each_negotiation_as_initiator(id, [&](negotiation_id j) { temp.push_back(j); });
+			auto rng = pop_range_of_negotiation_as_initiator(id);
+			dcon::local_vector<negotiation_id> temp(rng.first, rng.second);
 			std::for_each(temp.begin(), temp.end(), [t = this](negotiation_id i) { t->negotiation_set_initiator(i, pop_id()); });
 		}
 		DCON_RELEASE_INLINE internal::const_iterator_pop_foreach_negotiation_as_target_generator pop_get_negotiation_as_target(pop_id id) const {
@@ -1358,14 +1497,21 @@ namespace dcon {
 		template<typename T>
 		DCON_RELEASE_INLINE void pop_for_each_negotiation_as_target(pop_id id, T&& func) const {
 			if(bool(id)) {
-				for(auto list_pos = negotiation.m_head_back_target.vptr()[id.index()]; bool(list_pos); list_pos = negotiation.m_link_target.vptr()[list_pos.index()].right) {
-					func(list_pos);
-				}
+				auto vrange = dcon::get_range(negotiation.target_storage, negotiation.m_array_target.vptr()[id.index()]);
+				std::for_each(vrange.first, vrange.second, func);
+			}
+		}
+		DCON_RELEASE_INLINE std::pair<negotiation_id const*, negotiation_id const*> pop_range_of_negotiation_as_target(pop_id id) const {
+			if(bool(id)) {
+				auto vrange = dcon::get_range(negotiation.target_storage, negotiation.m_array_target.vptr()[id.index()]);
+				return std::pair<negotiation_id const*, negotiation_id const*>(vrange.first, vrange.second);
+			} else {
+				return std::pair<negotiation_id const*, negotiation_id const*>(nullptr, nullptr);
 			}
 		}
 		void pop_remove_all_negotiation_as_target(pop_id id) noexcept {
-			dcon::local_vector<negotiation_id> temp;
-			pop_for_each_negotiation_as_target(id, [&](negotiation_id j) { temp.push_back(j); });
+			auto rng = pop_range_of_negotiation_as_target(id);
+			dcon::local_vector<negotiation_id> temp(rng.first, rng.second);
 			std::for_each(temp.begin(), temp.end(), [t = this](negotiation_id i) { t->negotiation_set_target(i, pop_id()); });
 		}
 		DCON_RELEASE_INLINE bool pop_is_valid(pop_id id) const noexcept {
@@ -1394,34 +1540,11 @@ namespace dcon {
 		private:
 		void internal_negotiation_set_initiator(negotiation_id id, pop_id value) noexcept {
 			if(auto old_value = negotiation.m_initiator.vptr()[id.index()]; bool(old_value)) {
-				if(auto old_left = negotiation.m_link_initiator.vptr()[id.index()].left; bool(old_left)) {
-					negotiation.m_link_initiator.vptr()[old_left.index()].right = negotiation.m_link_initiator.vptr()[id.index()].right;
-				} else {
-					negotiation.m_head_back_initiator.vptr()[old_value.index()] = negotiation.m_link_initiator.vptr()[id.index()].right;
-				}
-				if(auto old_right = negotiation.m_link_initiator.vptr()[id.index()].right; bool(old_right)) {
-					negotiation.m_link_initiator.vptr()[old_right.index()].left = negotiation.m_link_initiator.vptr()[id.index()].left;
-				}
+				auto& vref = negotiation.m_array_initiator.vptr()[old_value.index()];
+				dcon::remove_unique_item(negotiation.initiator_storage, vref, id);
 			}
 			if(bool(value)) {
-				if(auto existing_list = negotiation.m_head_back_initiator.vptr()[value.index()]; bool(existing_list)) {
-					negotiation.m_link_initiator.vptr()[id.index()].left = existing_list;
-					if(auto r = negotiation.m_link_initiator.vptr()[existing_list.index()].right; bool(r)) {
-						negotiation.m_link_initiator.vptr()[id.index()].right = r;
-						negotiation.m_link_initiator.vptr()[r.index()].left = id;
-					} else {
-						negotiation.m_link_initiator.vptr()[id.index()].right = negotiation_id();
-					}
-					negotiation.m_link_initiator.vptr()[existing_list.index()].right = id;
-					negotiation.m_head_back_initiator.vptr()[value.index()] = existing_list;
-				} else {
-					negotiation.m_head_back_initiator.vptr()[value.index()] = id;
-					negotiation.m_link_initiator.vptr()[id.index()].right = negotiation_id();
-					negotiation.m_link_initiator.vptr()[id.index()].left = negotiation_id();
-				}
-			} else {
-				negotiation.m_link_initiator.vptr()[id.index()].right = negotiation_id();
-				negotiation.m_link_initiator.vptr()[id.index()].left = negotiation_id();
+				dcon::push_back(negotiation.initiator_storage, negotiation.m_array_initiator.vptr()[value.index()], id);
 			}
 			negotiation.m_initiator.vptr()[id.index()] = value;
 		}
@@ -1457,34 +1580,11 @@ namespace dcon {
 		private:
 		void internal_negotiation_set_target(negotiation_id id, pop_id value) noexcept {
 			if(auto old_value = negotiation.m_target.vptr()[id.index()]; bool(old_value)) {
-				if(auto old_left = negotiation.m_link_target.vptr()[id.index()].left; bool(old_left)) {
-					negotiation.m_link_target.vptr()[old_left.index()].right = negotiation.m_link_target.vptr()[id.index()].right;
-				} else {
-					negotiation.m_head_back_target.vptr()[old_value.index()] = negotiation.m_link_target.vptr()[id.index()].right;
-				}
-				if(auto old_right = negotiation.m_link_target.vptr()[id.index()].right; bool(old_right)) {
-					negotiation.m_link_target.vptr()[old_right.index()].left = negotiation.m_link_target.vptr()[id.index()].left;
-				}
+				auto& vref = negotiation.m_array_target.vptr()[old_value.index()];
+				dcon::remove_unique_item(negotiation.target_storage, vref, id);
 			}
 			if(bool(value)) {
-				if(auto existing_list = negotiation.m_head_back_target.vptr()[value.index()]; bool(existing_list)) {
-					negotiation.m_link_target.vptr()[id.index()].left = existing_list;
-					if(auto r = negotiation.m_link_target.vptr()[existing_list.index()].right; bool(r)) {
-						negotiation.m_link_target.vptr()[id.index()].right = r;
-						negotiation.m_link_target.vptr()[r.index()].left = id;
-					} else {
-						negotiation.m_link_target.vptr()[id.index()].right = negotiation_id();
-					}
-					negotiation.m_link_target.vptr()[existing_list.index()].right = id;
-					negotiation.m_head_back_target.vptr()[value.index()] = existing_list;
-				} else {
-					negotiation.m_head_back_target.vptr()[value.index()] = id;
-					negotiation.m_link_target.vptr()[id.index()].right = negotiation_id();
-					negotiation.m_link_target.vptr()[id.index()].left = negotiation_id();
-				}
-			} else {
-				negotiation.m_link_target.vptr()[id.index()].right = negotiation_id();
-				negotiation.m_link_target.vptr()[id.index()].left = negotiation_id();
+				dcon::push_back(negotiation.target_storage, negotiation.m_array_target.vptr()[value.index()], id);
 			}
 			negotiation.m_target.vptr()[id.index()] = value;
 		}
@@ -1516,14 +1616,12 @@ namespace dcon {
 		void pop_back_thingy() {
 			if(thingy.size_used == 0) return;
 			thingy_id id_removed(thingy_id::value_base_t(thingy.size_used - 1));
-			thingy.m_some_value.values.pop_back();
+			thingy.m_some_value.vptr()[id_removed.index()] = int32_t{};
 			dcon::bit_vector_set(thingy.m_bf_value.vptr(), id_removed.index(), false);
-			thingy.m_bf_value.values.resize(1 + (thingy.size_used + 6) / 8);
-			thingy.m_lua_value.values.pop_back();
+			thingy.m_lua_value.vptr()[id_removed.index()] = lua_reference_type{};
 			thingy.pooled_v_storage.release(thingy.m_pooled_v.vptr()[id_removed.index()]);
-			thingy.m_pooled_v.values.pop_back();
-			thingy.m_big_array.pop_back_all(thingy.size_used);
-			thingy.m_big_array_bf.pop_back_all(thingy.size_used);
+			thingy.m_big_array.zero_at(id_removed.index());
+			thingy.m_big_array_bf.zero_at(id_removed.index());
 			--thingy.size_used;
 		}
 		
@@ -1531,36 +1629,30 @@ namespace dcon {
 		// container resize for thingy
 		//
 		void thingy_resize(uint32_t new_size) {
+			#ifndef DCON_USE_EXCEPTIONS
+			if(new_size > 2500) std::abort();
+			#else
+			if(new_size > 2500) throw dcon::out_of_space{};
+			#endif
 			const uint32_t old_size = thingy.size_used;
 			if(new_size < old_size) {
-				thingy.m_some_value.values.resize(1 + new_size);
+				std::fill_n(thingy.m_some_value.vptr() + new_size, old_size - new_size, int32_t{});
 				for(uint32_t s = new_size; s < 8 * (((new_size + 7) / 8)); ++s) {
 					dcon::bit_vector_set(thingy.m_bf_value.vptr(), s, false);
 				}
-				thingy.m_bf_value.values.resize(1 + (new_size + 7) / 8);
-				thingy.m_lua_value.values.resize(1 + new_size);
+				std::fill_n(thingy.m_bf_value.vptr() + (new_size + 7) / 8, (new_size + old_size - new_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});
+				std::fill_n(thingy.m_lua_value.vptr() + new_size, old_size - new_size, lua_reference_type{});
 				std::for_each(thingy.m_pooled_v.vptr() + new_size, thingy.m_pooled_v.vptr() + new_size + old_size - new_size, [t = this](dcon::stable_mk_2_tag& i){ t->thingy.pooled_v_storage.release(i); });
-				thingy.m_pooled_v.values.resize(1 + new_size);
 				for(int32_t s = 0; s < int32_t(thingy.m_big_array.size); ++s) {
-					thingy.m_big_array.values[s].resize(1 + new_size);
+					std::fill_n(thingy.m_big_array.vptr(s) + new_size, old_size - new_size, float{});
 				}
 				for(int32_t s = 0; s < int32_t(thingy.m_big_array_bf.size); ++s) {
 					for(uint32_t t = new_size; t < 8 * (((new_size + 7) / 8)); ++t) {
 						dcon::bit_vector_set(thingy.m_big_array_bf.vptr(s), t, false);
 					}
-					thingy.m_big_array_bf.values[s].resize(1 + (new_size + 7) / 8);
+					std::fill_n(thingy.m_big_array_bf.vptr(s) + (new_size + 7) / 8, (new_size + old_size - new_size + 7) / 8 - (new_size + 7) / 8, dcon::bitfield_type{0});
 				}
 			} else if(new_size > old_size) {
-				thingy.m_some_value.values.resize(1 + new_size);
-				thingy.m_bf_value.values.resize(1 + (new_size + 7) / 8);
-				thingy.m_lua_value.values.resize(1 + new_size);
-				thingy.m_pooled_v.values.resize(1 + new_size, std::numeric_limits<dcon::stable_mk_2_tag>::max());
-				for(int32_t s = 0; s < int32_t(thingy.m_big_array.size); ++s) {
-					thingy.m_big_array.values[s].resize(1 + new_size);
-				}
-				for(int32_t s = 0; s < int32_t(thingy.m_big_array_bf.size); ++s) {
-					thingy.m_big_array_bf.values[s].resize(1 + (new_size + 7) / 8);
-				}
 			}
 			thingy.size_used = new_size;
 		}
@@ -1570,12 +1662,11 @@ namespace dcon {
 		//
 		thingy_id create_thingy() {
 			thingy_id new_id(thingy_id::value_base_t(thingy.size_used));
-			thingy.m_some_value.values.emplace_back();
-			thingy.m_bf_value.values.resize(1 + (thingy.size_used + 8) / 8);
-			thingy.m_lua_value.values.emplace_back();
-			thingy.m_pooled_v.values.push_back(std::numeric_limits<dcon::stable_mk_2_tag>::max());
-			thingy.m_big_array.emplace_back_all(thingy.size_used + 1);
-			thingy.m_big_array_bf.emplace_back_all(thingy.size_used + 1);
+			#ifndef DCON_USE_EXCEPTIONS
+			if(thingy.size_used >= 2500) std::abort();
+			#else
+			if(thingy.size_used >= 2500) throw dcon::out_of_space{};
+			#endif
 			++thingy.size_used;
 			return new_id;
 		}
@@ -1593,19 +1684,18 @@ namespace dcon {
 			thingy_id last_id(thingy_id::value_base_t(thingy.size_used - 1));
 			if(id_removed == last_id) { pop_back_thingy(); return; }
 			thingy.m_some_value.vptr()[id_removed.index()] = std::move(thingy.m_some_value.vptr()[last_id.index()]);
-			thingy.m_some_value.values.pop_back();
+			thingy.m_some_value.vptr()[last_id.index()] = int32_t{};
 			dcon::bit_vector_set(thingy.m_bf_value.vptr(), id_removed.index(), dcon::bit_vector_test(thingy.m_bf_value.vptr(), last_id.index()));
 			dcon::bit_vector_set(thingy.m_bf_value.vptr(), last_id.index(), false);
-			thingy.m_bf_value.values.resize(1 + (thingy.size_used + 6) / 8);
 			thingy.m_lua_value.vptr()[id_removed.index()] = std::move(thingy.m_lua_value.vptr()[last_id.index()]);
-			thingy.m_lua_value.values.pop_back();
+			thingy.m_lua_value.vptr()[last_id.index()] = lua_reference_type{};
 			thingy.pooled_v_storage.release(thingy.m_pooled_v.vptr()[id_removed.index()]);
 			thingy.m_pooled_v.vptr()[id_removed.index()] = std::move(thingy.m_pooled_v.vptr()[last_id.index()]);
-			thingy.m_pooled_v.values.pop_back();
+			thingy.m_pooled_v.vptr()[last_id.index()] = std::numeric_limits<dcon::stable_mk_2_tag>::max();
 			thingy.m_big_array.copy_value(id_removed.index(), last_id.index());
-			thingy.m_big_array.pop_back_all(thingy.size_used);
+			thingy.m_big_array.zero_at(last_id.index());
 			thingy.m_big_array_bf.copy_value(id_removed.index(), last_id.index());
-			thingy.m_big_array_bf.pop_back_all(thingy.size_used);
+			thingy.m_big_array_bf.zero_at(last_id.index());
 			--thingy.size_used;
 		}
 		
@@ -1725,11 +1815,9 @@ namespace dcon {
 					}
 				}
 				std::fill_n(negotiation.m_initiator.vptr() + 0, old_size, pop_id{});
-				std::fill_n(negotiation.m_link_initiator.vptr() + 0, old_size, negotiation_id_pair{});
-				std::fill_n(negotiation.m_head_back_initiator.vptr() + 0, pop.size_used, negotiation_id{});
+				std::for_each(negotiation.m_array_initiator.vptr() + 0, negotiation.m_array_initiator.vptr() + 0 + pop.size_used, [t = this](dcon::stable_mk_2_tag& i){ t->negotiation.initiator_storage.release(i); });
 				std::fill_n(negotiation.m_target.vptr() + 0, old_size, pop_id{});
-				std::fill_n(negotiation.m_link_target.vptr() + 0, old_size, negotiation_id_pair{});
-				std::fill_n(negotiation.m_head_back_target.vptr() + 0, pop.size_used, negotiation_id{});
+				std::for_each(negotiation.m_array_target.vptr() + 0, negotiation.m_array_target.vptr() + 0 + pop.size_used, [t = this](dcon::stable_mk_2_tag& i){ t->negotiation.target_storage.release(i); });
 			} else if(new_size > old_size) {
 				negotiation.first_free = negotiation_id();
 				int32_t i = int32_t(2500 - 1);
@@ -1887,12 +1975,12 @@ namespace dcon {
 		}
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_serial_over_thingy(F&& functor) {
-			ve::execute_serial_unaligned<thingy_id>(thingy.size_used, functor);
+			ve::execute_serial<thingy_id>(thingy.size_used, functor);
 		}
 #ifndef VE_NO_TBB
 		template<typename F>
 		DCON_RELEASE_INLINE void execute_parallel_over_thingy(F&& functor) {
-			ve::execute_parallel_unaligned<thingy_id>(thingy.size_used, functor);
+			ve::execute_parallel_exact<thingy_id>(thingy.size_used, functor);
 		}
 #endif
 		ve::vectorizable_buffer<float, pop_id> pop_make_vectorizable_float_buffer() const noexcept {
@@ -3386,6 +3474,9 @@ namespace dcon {
 	DCON_RELEASE_INLINE void pop_fat_id::for_each_negotiation_as_initiator(T&& func) const {
 		container.pop_for_each_negotiation_as_initiator(id, [&, t = this](negotiation_id i){func(fatten(t->container, i));});
 	}
+	DCON_RELEASE_INLINE std::pair<negotiation_id const*, negotiation_id const*> pop_fat_id::range_of_negotiation_as_initiator() const {
+		return container.pop_range_of_negotiation_as_initiator(id);
+	}
 	DCON_RELEASE_INLINE void pop_fat_id::remove_all_negotiation_as_initiator() const noexcept {
 		container.pop_remove_all_negotiation_as_initiator(id);
 	}
@@ -3395,6 +3486,9 @@ namespace dcon {
 	template<typename T>
 	DCON_RELEASE_INLINE void pop_fat_id::for_each_negotiation_as_target(T&& func) const {
 		container.pop_for_each_negotiation_as_target(id, [&, t = this](negotiation_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE std::pair<negotiation_id const*, negotiation_id const*> pop_fat_id::range_of_negotiation_as_target() const {
+		return container.pop_range_of_negotiation_as_target(id);
 	}
 	DCON_RELEASE_INLINE void pop_fat_id::remove_all_negotiation_as_target() const noexcept {
 		container.pop_remove_all_negotiation_as_target(id);
@@ -3410,12 +3504,18 @@ namespace dcon {
 	DCON_RELEASE_INLINE void pop_const_fat_id::for_each_negotiation_as_initiator(T&& func) const {
 		container.pop_for_each_negotiation_as_initiator(id, [&, t = this](negotiation_id i){func(fatten(t->container, i));});
 	}
+	DCON_RELEASE_INLINE std::pair<negotiation_id const*, negotiation_id const*> pop_const_fat_id::range_of_negotiation_as_initiator() const {
+		return container.pop_range_of_negotiation_as_initiator(id);
+	}
 	DCON_RELEASE_INLINE internal::const_iterator_pop_foreach_negotiation_as_initiator_generator pop_const_fat_id::get_negotiation_as_initiator() const {
 		return internal::const_iterator_pop_foreach_negotiation_as_initiator_generator(container, id);
 	}
 	template<typename T>
 	DCON_RELEASE_INLINE void pop_const_fat_id::for_each_negotiation_as_target(T&& func) const {
 		container.pop_for_each_negotiation_as_target(id, [&, t = this](negotiation_id i){func(fatten(t->container, i));});
+	}
+	DCON_RELEASE_INLINE std::pair<negotiation_id const*, negotiation_id const*> pop_const_fat_id::range_of_negotiation_as_target() const {
+		return container.pop_range_of_negotiation_as_target(id);
 	}
 	DCON_RELEASE_INLINE internal::const_iterator_pop_foreach_negotiation_as_target_generator pop_const_fat_id::get_negotiation_as_target() const {
 		return internal::const_iterator_pop_foreach_negotiation_as_target_generator(container, id);
@@ -3519,48 +3619,60 @@ namespace dcon {
 		}
 		
 		DCON_RELEASE_INLINE iterator_pop_foreach_negotiation_as_initiator::iterator_pop_foreach_negotiation_as_initiator(data_container& c,  pop_id fr) noexcept : container(c) {
-			list_pos = container.negotiation.m_head_back_initiator.vptr()[fr.index()];
+			ptr = dcon::get_range(container.negotiation.initiator_storage, container.negotiation.m_array_initiator.vptr()[fr.index()]).first;
+		}
+		DCON_RELEASE_INLINE iterator_pop_foreach_negotiation_as_initiator::iterator_pop_foreach_negotiation_as_initiator(data_container& c, pop_id fr, int) noexcept : container(c) {
+			ptr = dcon::get_range(container.negotiation.initiator_storage, container.negotiation.m_array_initiator.vptr()[fr.index()]).second;
 		}
 		DCON_RELEASE_INLINE iterator_pop_foreach_negotiation_as_initiator& iterator_pop_foreach_negotiation_as_initiator::operator++() noexcept {
-			list_pos = container.negotiation.m_link_initiator.vptr()[list_pos.index()].right;
+			++ptr;
 			return *this;
 		}
 		DCON_RELEASE_INLINE iterator_pop_foreach_negotiation_as_initiator& iterator_pop_foreach_negotiation_as_initiator::operator--() noexcept {
-			list_pos = container.negotiation.m_link_initiator.vptr()[list_pos.index()].left;
+			--ptr;
 			return *this;
 		}
 		DCON_RELEASE_INLINE const_iterator_pop_foreach_negotiation_as_initiator::const_iterator_pop_foreach_negotiation_as_initiator(data_container const& c,  pop_id fr) noexcept : container(c) {
-			list_pos = container.negotiation.m_head_back_initiator.vptr()[fr.index()];
+			ptr = dcon::get_range(container.negotiation.initiator_storage, container.negotiation.m_array_initiator.vptr()[fr.index()]).first;
+		}
+		DCON_RELEASE_INLINE const_iterator_pop_foreach_negotiation_as_initiator::const_iterator_pop_foreach_negotiation_as_initiator(data_container const& c, pop_id fr, int) noexcept : container(c) {
+			ptr = dcon::get_range(container.negotiation.initiator_storage, container.negotiation.m_array_initiator.vptr()[fr.index()]).second;
 		}
 		DCON_RELEASE_INLINE const_iterator_pop_foreach_negotiation_as_initiator& const_iterator_pop_foreach_negotiation_as_initiator::operator++() noexcept {
-			list_pos = container.negotiation.m_link_initiator.vptr()[list_pos.index()].right;
+			++ptr;
 			return *this;
 		}
 		DCON_RELEASE_INLINE const_iterator_pop_foreach_negotiation_as_initiator& const_iterator_pop_foreach_negotiation_as_initiator::operator--() noexcept {
-			list_pos = container.negotiation.m_link_initiator.vptr()[list_pos.index()].left;
+			--ptr;
 			return *this;
 		}
 		
 		DCON_RELEASE_INLINE iterator_pop_foreach_negotiation_as_target::iterator_pop_foreach_negotiation_as_target(data_container& c,  pop_id fr) noexcept : container(c) {
-			list_pos = container.negotiation.m_head_back_target.vptr()[fr.index()];
+			ptr = dcon::get_range(container.negotiation.target_storage, container.negotiation.m_array_target.vptr()[fr.index()]).first;
+		}
+		DCON_RELEASE_INLINE iterator_pop_foreach_negotiation_as_target::iterator_pop_foreach_negotiation_as_target(data_container& c, pop_id fr, int) noexcept : container(c) {
+			ptr = dcon::get_range(container.negotiation.target_storage, container.negotiation.m_array_target.vptr()[fr.index()]).second;
 		}
 		DCON_RELEASE_INLINE iterator_pop_foreach_negotiation_as_target& iterator_pop_foreach_negotiation_as_target::operator++() noexcept {
-			list_pos = container.negotiation.m_link_target.vptr()[list_pos.index()].right;
+			++ptr;
 			return *this;
 		}
 		DCON_RELEASE_INLINE iterator_pop_foreach_negotiation_as_target& iterator_pop_foreach_negotiation_as_target::operator--() noexcept {
-			list_pos = container.negotiation.m_link_target.vptr()[list_pos.index()].left;
+			--ptr;
 			return *this;
 		}
 		DCON_RELEASE_INLINE const_iterator_pop_foreach_negotiation_as_target::const_iterator_pop_foreach_negotiation_as_target(data_container const& c,  pop_id fr) noexcept : container(c) {
-			list_pos = container.negotiation.m_head_back_target.vptr()[fr.index()];
+			ptr = dcon::get_range(container.negotiation.target_storage, container.negotiation.m_array_target.vptr()[fr.index()]).first;
+		}
+		DCON_RELEASE_INLINE const_iterator_pop_foreach_negotiation_as_target::const_iterator_pop_foreach_negotiation_as_target(data_container const& c, pop_id fr, int) noexcept : container(c) {
+			ptr = dcon::get_range(container.negotiation.target_storage, container.negotiation.m_array_target.vptr()[fr.index()]).second;
 		}
 		DCON_RELEASE_INLINE const_iterator_pop_foreach_negotiation_as_target& const_iterator_pop_foreach_negotiation_as_target::operator++() noexcept {
-			list_pos = container.negotiation.m_link_target.vptr()[list_pos.index()].right;
+			++ptr;
 			return *this;
 		}
 		DCON_RELEASE_INLINE const_iterator_pop_foreach_negotiation_as_target& const_iterator_pop_foreach_negotiation_as_target::operator--() noexcept {
-			list_pos = container.negotiation.m_link_target.vptr()[list_pos.index()].left;
+			--ptr;
 			return *this;
 		}
 		
