@@ -34,6 +34,8 @@
 #pragma warning( disable : 4324 )
 #endif
 
+namespace fif { std::string container_interface(); }
+
 namespace ex1 {
 	struct load_record {
 		bool top : 1;
@@ -191,6 +193,7 @@ namespace ex1 {
 		class alignas(64) top_class {
 			friend const_object_iterator_top;
 			friend object_iterator_top;
+			friend std::string fif::container_interface();
 			private:
 			//
 			// storage space for wheels of type int32_t
@@ -216,6 +219,7 @@ namespace ex1 {
 		class alignas(64) bottom_class {
 			friend const_object_iterator_bottom;
 			friend object_iterator_bottom;
+			friend std::string fif::container_interface();
 			private:
 			//
 			// storage space for legs of type int32_t
@@ -249,6 +253,7 @@ namespace ex1 {
 		class alignas(64) lr_relation_class {
 			friend const_object_iterator_lr_relation;
 			friend object_iterator_lr_relation;
+			friend std::string fif::container_interface();
 			friend const_iterator_top_foreach_lr_relation_as_left;
 			friend iterator_top_foreach_lr_relation_as_left;
 			friend const_iterator_bottom_foreach_lr_relation_as_right;
@@ -1520,6 +1525,7 @@ namespace ex1 {
 		}
 		
 		uint32_t lr_relation_size() const noexcept { return lr_relation.size_used; }
+
 
 
 		//

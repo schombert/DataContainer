@@ -858,6 +858,13 @@ relationship_object_def parse_relationship(char const* start, char const* end, c
 					result.composite_indexes.push_back(
 						parse_composite_key(extracted.values[0].start, extracted.values[0].end, global_start, err_out));
 				}
+			} else if(kstr == "swappable") {
+				if(extracted.values.size() != 2) {
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 49,
+						std::string("wrong number of parameters for \"swappable\""));
+				} else {
+					result.swappable_list.push_back(swappable_def{ extracted.values[0].to_string(), extracted.values[1].to_string() });
+				}
 			} else if(kstr == "function") {
 				if(extracted.values.size() != 1) {
 					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 50,
@@ -999,6 +1006,13 @@ relationship_object_def parse_object(char const* start, char const* end, char co
 				} else {
 					result.properties.push_back(
 						parse_property_def(extracted.values[0].start, extracted.values[0].end, global_start, err_out));
+				}
+			} else if(kstr == "swappable") {
+				if(extracted.values.size() != 2) {
+					err_out.add(calculate_line_from_position(global_start, extracted.key.start), 49,
+						std::string("wrong number of parameters for \"swappable\""));
+				} else {
+					result.swappable_list.push_back(swappable_def{ extracted.values[0].to_string(), extracted.values[1].to_string() });
 				}
 			} else if(kstr == "function") {
 				if(extracted.values.size() != 1) {
@@ -1253,16 +1267,16 @@ file_def parse_file(char const* start, char const* end, error_record& err_out) {
 					err_out.add(calculate_line_from_position(start, extracted.key.start), 87,
 						std::string("wrong number of parameters for \"object\""));
 				} else {
-					parsed_file.relationship_objects.push_back(
-						parse_object(extracted.values[0].start, extracted.values[0].end, start, err_out));
+					auto rval = parse_object(extracted.values[0].start, extracted.values[0].end, start, err_out);
+					parsed_file.relationship_objects.emplace_back(std::move(rval));
 				}
 			} else if(kstr == "relationship") {
 				if(extracted.values.size() != 1) {
 					err_out.add(calculate_line_from_position(start, extracted.key.start), 88,
 						std::string("wrong number of parameters for \"relationship\""));
 				} else {
-					parsed_file.relationship_objects.push_back(
-						parse_relationship(extracted.values[0].start, extracted.values[0].end, start, err_out));
+					auto rval = parse_relationship(extracted.values[0].start, extracted.values[0].end, start, err_out);
+					parsed_file.relationship_objects.emplace_back(std::move(rval));
 				}
 			} else if(kstr == "query") {
 				if(extracted.values.size() != 1) {

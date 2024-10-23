@@ -1267,16 +1267,16 @@ file_def parse_file(char const* start, char const* end, error_record& err_out) {
 					err_out.add(calculate_line_from_position(start, extracted.key.start), 87,
 						std::string("wrong number of parameters for \"object\""));
 				} else {
-					parsed_file.relationship_objects.push_back(
-						parse_object(extracted.values[0].start, extracted.values[0].end, start, err_out));
+					auto rval = parse_object(extracted.values[0].start, extracted.values[0].end, start, err_out);
+					parsed_file.relationship_objects.emplace_back(std::move(rval));
 				}
 			} else if(kstr == "relationship") {
 				if(extracted.values.size() != 1) {
 					err_out.add(calculate_line_from_position(start, extracted.key.start), 88,
 						std::string("wrong number of parameters for \"relationship\""));
 				} else {
-					parsed_file.relationship_objects.push_back(
-						parse_relationship(extracted.values[0].start, extracted.values[0].end, start, err_out));
+					auto rval = parse_relationship(extracted.values[0].start, extracted.values[0].end, start, err_out);
+					parsed_file.relationship_objects.emplace_back(std::move(rval));
 				}
 			} else if(kstr == "query") {
 				if(extracted.values.size() != 1) {

@@ -148,7 +148,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\CommonIncludes\common_types.cpp" />
-    <ClCompile Include="lua_objs.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="objs.txt">

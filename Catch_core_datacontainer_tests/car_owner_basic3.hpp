@@ -34,6 +34,8 @@
 #pragma warning( disable : 4324 )
 #endif
 
+namespace fif { std::string container_interface(); }
+
 namespace cob3 {
 	struct load_record {
 		bool car : 1;
@@ -195,6 +197,7 @@ namespace cob3 {
 		class alignas(64) car_class {
 			friend const_object_iterator_car;
 			friend object_iterator_car;
+			friend std::string fif::container_interface();
 			private:
 			//
 			// storage space for _index of type car_id
@@ -251,6 +254,7 @@ namespace cob3 {
 		class alignas(64) person_class {
 			friend const_object_iterator_person;
 			friend object_iterator_person;
+			friend std::string fif::container_interface();
 			private:
 			//
 			// storage space for _index of type person_id
@@ -299,6 +303,7 @@ namespace cob3 {
 		class alignas(64) car_ownership_class {
 			friend const_object_iterator_car_ownership;
 			friend object_iterator_car_ownership;
+			friend std::string fif::container_interface();
 			friend const_iterator_person_foreach_car_ownership_as_owner;
 			friend iterator_person_foreach_car_ownership_as_owner;
 			private:
@@ -1394,6 +1399,7 @@ namespace cob3 {
 		}
 		
 		uint32_t car_ownership_size() const noexcept { return car.size_used; }
+
 
 
 		//

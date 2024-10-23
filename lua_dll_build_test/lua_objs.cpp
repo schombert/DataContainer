@@ -102,6 +102,54 @@ uint32_t dcon_thingy_get_big_array_bf_size() {
 void dcon_thingy_resize_big_array_bf(uint32_t sz) { 
 	 state.thingy_resize_big_array_bf(sz);
  }
+bool dcon_pop_is_valid(int32_t i) {
+	 auto index = dcon::pop_id{dcon::pop_id::value_base_t(i)};
+	 bool result = state.pop_is_valid(index);
+	 return result;
+ }
+uint32_t dcon_pop_size() {
+	 auto result = state.pop_size();
+	 return result;
+ }
+void dcon_pop_resize(uint32_t sz) {
+	 state.pop_resize(sz);
+ }
+bool dcon_negotiation_is_valid(int32_t i) {
+	 auto index = dcon::negotiation_id{dcon::negotiation_id::value_base_t(i)};
+	 bool result = state.negotiation_is_valid(index);
+	 return result;
+ }
+uint32_t dcon_negotiation_size() {
+	 auto result = state.negotiation_size();
+	 return result;
+ }
+void dcon_negotiation_resize(uint32_t sz) {
+	 state.negotiation_resize(sz);
+ }
+int32_t dcon_negotiation_get_initiator(int32_t i) { 
+	 auto index = dcon::negotiation_id{dcon::negotiation_id::value_base_t(i)};
+	 return state.negotiation_get_initiator(index).index();
+ }
+void dcon_negotiation_set_initiator(int32_t i, int32_t v) { 
+	 auto index = dcon::negotiation_id{dcon::negotiation_id::value_base_t(i)};
+	 state.negotiation_set_initiator(index, dcon::pop_id{dcon::pop_id::value_base_t(v)});
+ }
+void dcon_negotiation_try_set_initiator(int32_t i, int32_t v) { 
+	 auto index = dcon::negotiation_id{dcon::negotiation_id::value_base_t(i)};
+	 state.negotiation_try_set_initiator(index, dcon::pop_id{dcon::pop_id::value_base_t(v)});
+ }
+int32_t dcon_negotiation_get_target(int32_t i) { 
+	 auto index = dcon::negotiation_id{dcon::negotiation_id::value_base_t(i)};
+	 return state.negotiation_get_target(index).index();
+ }
+void dcon_negotiation_set_target(int32_t i, int32_t v) { 
+	 auto index = dcon::negotiation_id{dcon::negotiation_id::value_base_t(i)};
+	 state.negotiation_set_target(index, dcon::pop_id{dcon::pop_id::value_base_t(v)});
+ }
+void dcon_negotiation_try_set_target(int32_t i, int32_t v) { 
+	 auto index = dcon::negotiation_id{dcon::negotiation_id::value_base_t(i)};
+	 state.negotiation_try_set_target(index, dcon::pop_id{dcon::pop_id::value_base_t(v)});
+ }
 
 void dcon_pop_back_thingy() { 
 	 if(state.thingy_size() > 0) {
@@ -118,6 +166,26 @@ void dcon_delete_thingy(int32_t j) {
 	 auto index = dcon::thingy_id{dcon::thingy_id::value_base_t(j)};
 		 if(auto result = state.thingy_get_lua_value(index); result != 0) release_object_function(result);
 	 state.delete_thingy(index);
+ }
+void dcon_delete_pop(int32_t j) { 
+	 auto index = dcon::pop_id{dcon::pop_id::value_base_t(j)};
+	 state.delete_pop(index);
+ }
+int32_t dcon_create_pop() { 
+	 auto result = state.create_pop();
+	 return result.index();
+ }
+void dcon_delete_negotiation(int32_t j) { 
+	 auto index = dcon::negotiation_id{dcon::negotiation_id::value_base_t(j)};
+	 state.delete_negotiation(index);
+ }
+int32_t dcon_try_create_negotiation(int32_t p1, int32_t p2) { 
+	 auto result = state.try_create_negotiation(dcon::pop_id{dcon::pop_id::value_base_t(p1)}, dcon::pop_id{dcon::pop_id::value_base_t(p2)});
+	 return result.index();
+ }
+int32_t dcon_force_create_negotiation(int32_t p1, int32_t p2) { 
+	 auto result = state.force_create_negotiation(dcon::pop_id{dcon::pop_id::value_base_t(p1)}, dcon::pop_id{dcon::pop_id::value_base_t(p2)});
+	 return result.index();
  }
 
 int32_t dcon_reset() { 

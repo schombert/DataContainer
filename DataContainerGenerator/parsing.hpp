@@ -172,6 +172,9 @@ struct relationship_object_def {
 	std::vector<member_function_spec> member_functions;
 	std::vector<swappable_def> swappable_list;
 
+	relationship_object_def() = default;
+	relationship_object_def(relationship_object_def const&) noexcept = default;
+	relationship_object_def(relationship_object_def&&) noexcept = default;
 	primary_key_type primary_key;
 };
 

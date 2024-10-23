@@ -1,7 +1,7 @@
 object{
 	name{thingy}
 	storage_type{compactable}
-	size{expandable}
+	size{2500}
 	tag{simple}
 
 	property{
@@ -36,6 +36,30 @@ object{
 		name{big_array_bf}
 		type{array{int32_t}{bitfield}}
 	}
+}
+
+object {
+    name { pop }
+    storage_type { erasable }
+    size { 300000 }
+    tag {scenario}
+}
+
+relationship {
+    name { negotiation }
+    storage_type { erasable }
+    size { 2500 }
+
+    link {
+        object { pop }
+        name { initiator }
+        type { many }
+    }
+    link {
+        object { pop }
+        name { target }
+        type { many }
+    }
 }
 
 load_save{

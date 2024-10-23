@@ -26,9 +26,6 @@
     <ClCompile Include="..\CommonIncludes\common_types.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="lua_objs.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="objs.txt" />

@@ -168,31 +168,32 @@ int main(int argc, char *argv[]) {
 
 		for(auto& r : parsed_file.relationship_objects) {
 			if(r.is_relationship) {
-				for(auto& l : r.indexed_objects) {
-					if(auto linked_object = find_by_name(parsed_file, l.type_name); linked_object) {
-						l.related_to = linked_object;
+				for(size_t j = 0; j < r.indexed_objects.size(); ++j) {
+					related_object& relobj = r.indexed_objects[j];
+					if(auto linked_object = find_by_name(parsed_file, relobj.type_name); linked_object) {
+						relobj.related_to = linked_object;
 					} else {
-						err.add(row_col_pair{ 0, 0 }, 1001, std::string("Could not find object named: ") + l.type_name + " in relationship: " + r.name);
+						err.add(row_col_pair{ 0, 0 }, 1001, std::string("Could not find object named: ") + relobj.type_name + " in relationship: " + r.name);
 						error_to_file(dll_header_name);
 						std::cout << err.accumulated;
 						return -1;
 					}
-					if(l.index == index_type::at_most_one && !l.is_optional && l.multiplicity == 1) {
-						r.primary_key.points_to = better_primary_key(r.primary_key.points_to, l.related_to);
-						if(r.primary_key.points_to == l.related_to)
-							r.primary_key.property_name = l.property_name;
+					if(relobj.index == index_type::at_most_one && !relobj.is_optional && relobj.multiplicity == 1) {
+						r.primary_key.points_to = better_primary_key(r.primary_key.points_to, relobj.related_to);
+						if(r.primary_key.points_to == relobj.related_to)
+							r.primary_key.property_name = relobj.property_name;
 					}
 
-					if(l.multiplicity > 1 && l.index == index_type::many && l.ltype == list_type::list) {
+					if(relobj.multiplicity > 1 && relobj.index == index_type::many && relobj.ltype == list_type::list) {
 						err.add(row_col_pair{ 0, 0 }, 1002, std::string("Unsupported combination of list type storage with multiplicity > 1 in link ")
-							+ l.property_name + " in relationship: " + r.name);
+							+ relobj.property_name + " in relationship: " + r.name);
 						error_to_file(dll_header_name);
 						std::cout << err.accumulated;
 						return -1;
 					}
 
-					if(l.multiplicity > 1 && l.index == index_type::at_most_one) {
-						l.is_distinct = true;
+					if(relobj.multiplicity > 1 && relobj.index == index_type::at_most_one) {
+						relobj.is_distinct = true;
 					}
 				}
 
@@ -976,16 +977,16 @@ int main(int argc, char *argv[]) {
 						pargs += ", ";
 					}
 					if(i.multiplicity == 1) {
-						params += parsed_file.namspace + "::" + i.type_name + "_id{" + parsed_file.namspace + "::" + i.type_name + "_id::value_base_t(lua_tointeger(L, " + std::to_string(pcount) + "))}";
+						params += parsed_file.namspace + "::" + i.type_name + "_id{" + parsed_file.namspace + "::" + i.type_name + "_id::value_base_t(p" + std::to_string(pcount) + ")}";
 						pargs += "int32_t p" + std::to_string(pcount);
 						pcount++;
 					} else {
-						params += parsed_file.namspace + "::" + i.type_name + "_id{" + parsed_file.namspace + "::" + i.type_name + "_id::value_base_t(lua_tointeger(L, " + std::to_string(pcount) + "))}";
+						params += parsed_file.namspace + "::" + i.type_name + "_id{" + parsed_file.namspace + "::" + i.type_name + "_id::value_base_t(p" + std::to_string(pcount) + ")}";
 						pargs += "int32_t p" + std::to_string(pcount);
 						pcount++;
 
 						for(int32_t j = 1; j < i.multiplicity; ++j) {
-							params += ", " + parsed_file.namspace + "::" + i.type_name + "_id{" + parsed_file.namspace + "::" + i.type_name + "_id::value_base_t(lua_tointeger(L, " + std::to_string(pcount) + "))}";
+							params += ", " + parsed_file.namspace + "::" + i.type_name + "_id{" + parsed_file.namspace + "::" + i.type_name + "_id::value_base_t(p" + std::to_string(pcount) + ")}";
 							pargs += ", int32_t p" + std::to_string(pcount);
 							pcount++;
 						}
