@@ -1,3 +1,33 @@
+object {
+    name { pop }
+    storage_type { erasable }
+    size { 1 }
+    tag {scenario}
+}
+
+relationship {
+    name { employment }
+    storage_type { erasable }
+    size { 1 }
+    tag {scenario}
+    link {
+        object { pop }
+        name { worker }
+        type { unique }
+    }
+    property{
+        name { job }
+        type { job_id }
+        tag { scenario }
+    }
+}
+object {
+    name { job }
+    storage_type { contiguous }
+    size { 1 }
+    tag {scenario}
+}
+
 object{
 	name{thingyA}
 	storage_type{compactable}

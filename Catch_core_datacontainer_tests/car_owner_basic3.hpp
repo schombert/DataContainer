@@ -1154,6 +1154,9 @@ namespace cob3 {
 		void car_set_ownership_date_from_car_ownership(car_id ref_id, int32_t val) {
 			car_ownership_set_ownership_date(car_ownership_id(car_ownership_id::value_base_t(ref_id.index())), val);
 		}
+		int32_t car_get_ownership_date_from_car_ownership(car_id ref_id)  {
+			return car_ownership_get_ownership_date(car_ownership_id(car_ownership_id::value_base_t(ref_id.index())));
+		}
 		int32_t car_get_ownership_date_from_car_ownership(car_id ref_id) const {
 			return car_ownership_get_ownership_date(car_ownership_id(car_ownership_id::value_base_t(ref_id.index())));
 		}

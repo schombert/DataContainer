@@ -2131,35 +2131,40 @@ void join_getter_text(basic_builder& o, property_def const& ip, bool add_prefix,
 		case property_type::vectorizable:
 			if(add_prefix) {
 				if(as_primary_key) {
-					o + "@type@ @obj@_get_@prop@_from_@rel@(@obj@_id ref_id) const" + block{
+					o + "@type@ @obj@_get_@prop@_from_@rel@(@obj@_id ref_id) " + block{
+						o + "return @rel@_get_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())));";
+					};
+					o + "@const_up_type@ @obj@_get_@prop@_from_@rel@(@obj@_id ref_id) const" + block{
 						o + "return @rel@_get_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())));";
 					};
 					o + "#ifndef DCON_NO_VE";
-					o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> ref_id) const" + block{
+					o + "ve::value_to_vector_type<@base_type@> @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> ref_id) const" + block{
 						o + "return @rel@_get_@prop@(@vector_position@<@rel@_id>(ref_id.value));";
 					};
-					o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> ref_id) const" + block{
+					o + "ve::value_to_vector_type<@base_type@> @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> ref_id) const" + block{
 						o + "return @rel@_get_@prop@(ve::partial_contiguous_tags<@rel@_id>(ref_id.value, ref_id.subcount));";
 					};
-					o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> ref_id) const" + block{
+					o + "ve::value_to_vector_type<@base_type@> @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> ref_id) const" + block{
 						o + "return @rel@_get_@prop@(ve::tagged_vector<@rel@_id>(ref_id, std::true_type{}));";
 					};
 					o + "#endif";
 				} else {
-					o + "@type@ @obj@_get_@prop@_from_@rel@(@obj@_id id) const" + block{
+					o + "@type@ @obj@_get_@prop@_from_@rel@(@obj@_id id) " + block{
 						o + "return @rel@_get_@prop@(@rel@.m_link_back_@as_name@.vptr()[id.index()]);";
 					};
-
+					o + "@const_up_type@ @obj@_get_@prop@_from_@rel@(@obj@_id id) const" + block{
+						o + "return @rel@_get_@prop@(@rel@.m_link_back_@as_name@.vptr()[id.index()]);";
+					};
 					o + "#ifndef DCON_NO_VE";
-					o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> id) const" + block{
+					o + "ve::value_to_vector_type<@base_type@> @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> id) const" + block{
 						o + "auto ref_id = ve::load(id, @rel@.m_link_back_@as_name@.vptr());";
 						o + "return @rel@_get_@prop@(ref_id);";
 					};
-					o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> id) const" + block{
+					o + "ve::value_to_vector_type<@base_type@> @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> id) const" + block{
 						o + "auto ref_id = ve::load(id, @rel@.m_link_back_@as_name@.vptr());";
 						o + "return @rel@_get_@prop@(ref_id);";
 					};
-					o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> id) const" + block{
+					o + "ve::value_to_vector_type<@base_type@> @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> id) const" + block{
 						o + "auto ref_id = ve::load(id, @rel@.m_link_back_@as_name@.vptr());";
 						o + "return @rel@_get_@prop@(ref_id);";
 					};
@@ -2226,35 +2231,40 @@ void join_getter_text(basic_builder& o, property_def const& ip, bool add_prefix,
 		case property_type::array_vectorizable:
 			if(add_prefix) {
 				if(as_primary_key) {
-					o + "@type@ @obj@_get_@prop@_from_@rel@(@obj@_id ref_id, @i_type@ i) const" + block{
+					o + "@type@ @obj@_get_@prop@_from_@rel@(@obj@_id ref_id, @i_type@ i) " + block{
+						o + "return @rel@_get_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())), i);";
+					};
+					o + "@const_up_type@ @obj@_get_@prop@_from_@rel@(@obj@_id ref_id, @i_type@ i) const" + block{
 						o + "return @rel@_get_@prop@(@rel@_id(@rel@_id::value_base_t(ref_id.index())), i);";
 					};
 					o + "#ifndef DCON_NO_VE";
-					o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> ref_id, @i_type@ i) const" + block{
+					o + "ve::value_to_vector_type<@base_type@> @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> ref_id, @i_type@ i) const" + block{
 						o + "return @rel@_get_@prop@(@vector_position@<@rel@_id>(ref_id.value), i);";
 					};
-					o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> ref_id, @i_type@ i) const" + block{
+					o + "ve::value_to_vector_type<@base_type@> @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> ref_id, @i_type@ i) const" + block{
 						o + "return @rel@_get_@prop@(ve::partial_contiguous_tags<@rel@_id>(ref_id.value, ref_id.subcount), i);";
 					};
-					o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> ref_id, @i_type@ i) const" + block{
+					o + "ve::value_to_vector_type<@base_type@> @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> ref_id, @i_type@ i) const" + block{
 						o + "return @rel@_get_@prop@(ve::tagged_vector<@rel@_id>(ref_id, std::true_type{}), i);";
 					};
 					o + "#endif";
 				} else {
-					o + "@type@ @obj@_get_@prop@_from_@rel@(@obj@_id id, @i_type@ i) const" + block{
+					o + "@type@ @obj@_get_@prop@_from_@rel@(@obj@_id id, @i_type@ i) " + block{
 						o + "return @rel@_get_@prop@(@rel@.m_link_back_@as_name@.vptr()[id.index()], i);";
 					};
-
+					o + "@const_up_type@ @obj@_get_@prop@_from_@rel@(@obj@_id ref_id, @i_type@ i) const" + block{
+						o + "return @rel@_get_@prop@(@rel@.m_link_back_@as_name@.vptr()[id.index()], i);";
+					};
 					o + "#ifndef DCON_NO_VE";
-					o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> id, @i_type@ i) const" + block{
+					o + "ve::value_to_vector_type<@base_type@> @obj@_get_@prop@_from_@rel@(@vector_position@<@obj@_id> id, @i_type@ i) const" + block{
 						o + "auto ref_id = ve::load(id, @rel@.m_link_back_@as_name@.vptr());";
 						o + "return @rel@_get_@prop@(ref_id, i);";
 					};
-					o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> id, @i_type@ i) const" + block{
+					o + "ve::value_to_vector_type<@base_type@> @obj@_get_@prop@_from_@rel@(ve::partial_contiguous_tags<@obj@_id> id, @i_type@ i) const" + block{
 						o + "auto ref_id = ve::load(id, @rel@.m_link_back_@as_name@.vptr());";
 						o + "return @rel@_get_@prop@(ref_id, i);";
 					};
-					o + "ve::value_to_vector_type<@type@> @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> id, @i_type@ i) const" + block{
+					o + "ve::value_to_vector_type<@base_type@> @obj@_get_@prop@_from_@rel@(ve::tagged_vector<@obj@_id> id, @i_type@ i) const" + block{
 						o + "auto ref_id = ve::load(id, @rel@.m_link_back_@as_name@.vptr());";
 						o + "return @rel@_get_@prop@(ref_id, i);";
 					};
@@ -2523,7 +2533,10 @@ void make_related_member_declarations(basic_builder& o, file_def const& parsed_f
 			}
 			for(auto& ip : in_rel.rel_ptr->properties) {
 				auto upresult = to_fat_index_type(parsed_file, ip.data_type, const_mode);
+				auto cupresult = to_fat_index_type(parsed_file, ip.data_type, true);
 				o + substitute{ "type", upresult.has_value() ? *upresult : ip.data_type } +substitute{ "prop", ip.name };
+				o + substitute{ "const_up_type", cupresult.has_value() ? *cupresult : ip.data_type };
+				o + substitute{ "base_type", normalize_type(ip.data_type) };
 				o + substitute{ "i_type", ip.array_index_type };
 
 				
