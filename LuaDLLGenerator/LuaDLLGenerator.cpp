@@ -528,7 +528,7 @@ int main(int argc, char *argv[]) {
 								output += "int32_t dcon_" + ob.name + "_get_" + prop.name + "(int32_t i, int32_t idx) { \n";
 								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
 								output += index_access_string;
-								output += "\t return state." + ob.name + "_get_" + prop.name + "(index, sub_index).index();\n";
+								output += "\t return state." + ob.name + "_get_" + prop.name + "(index, sub_index).id.index();\n";
 								output += " }\n";
 							}
 							if(prop.hook_set || !prop.is_derived) {
@@ -602,7 +602,7 @@ int main(int argc, char *argv[]) {
 								header_output += "DCON_LUADLL_API int32_t dcon_" + ob.name + "_get_" + prop.name + "(int32_t i, int32_t idx); \n";
 								output += "int32_t dcon_" + ob.name + "_get_" + prop.name + "(int32_t i, int32_t idx) { \n";
 								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
-								output += "\t return state." + ob.name + "_get_" + prop.name + "(index).at(uint32_t(idx)).index();\n";
+								output += "\t return state." + ob.name + "_get_" + prop.name + "(index).at(uint32_t(idx)).id.index();\n";
 								output += " }\n";
 
 								header_output += "DCON_LUADLL_API int32_t dcon_" + ob.name + "_size_" + prop.name + "(int32_t i); \n";
@@ -751,7 +751,7 @@ int main(int argc, char *argv[]) {
 								header_output += "DCON_LUADLL_API int32_t dcon_" + ob.name + "_get_" + prop.name + "(int32_t i); \n";
 								output += "int32_t dcon_" + ob.name + "_get_" + prop.name + "(int32_t i) { \n";
 								output += "\t auto index = " + parsed_file.namspace + "::" + ob.name + "_id{" + parsed_file.namspace + "::" + ob.name + "_id::value_base_t(i)};\n";
-								output += "\t return state." + ob.name + "_get_" + prop.name + "(index).index();\n";
+								output += "\t return state." + ob.name + "_get_" + prop.name + "(index).id.index();\n";
 								output += " }\n";
 							}
 							if(prop.hook_set || !prop.is_derived) {
