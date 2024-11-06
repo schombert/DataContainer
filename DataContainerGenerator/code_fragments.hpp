@@ -38,6 +38,7 @@ basic_builder& make_serialize_size(basic_builder& o, file_def const& parsed_file
 void make_serialize_singe_object(basic_builder & o, const relationship_object_def & ob);
 basic_builder& make_serialize(basic_builder& o, file_def const& parsed_file);
 void deserialize_size_fragment(basic_builder& o);
+basic_builder& make_deserialize_helper(basic_builder& o, file_def const& parsed_file);
 basic_builder& make_deserialize(basic_builder& o, file_def const& parsed_file, bool with_mask);
 basic_builder& make_serialize_all_generator(basic_builder& o, file_def const& parsed_file);
 basic_builder& make_iterate_over_objects(basic_builder& o, relationship_object_def const& obj);

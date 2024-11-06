@@ -856,6 +856,7 @@ int main(int argc, char *argv[]) {
 
 		output += make_serialize_size(o, parsed_file).to_string(2);
 		output += make_serialize(o, parsed_file).to_string(2);
+		output += make_deserialize_helper(o, parsed_file).to_string(2);
 		output += make_deserialize(o, parsed_file, false).to_string(2);
 		output += make_deserialize(o, parsed_file, true).to_string(2);
 
