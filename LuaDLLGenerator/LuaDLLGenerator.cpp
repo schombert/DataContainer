@@ -380,10 +380,19 @@ int main(int argc, char *argv[]) {
 		header_output += "using lua_reference_type = int32_t;\n";
 		header_output += "#include \"" + base_include_name + "\"\n";
 		header_output += "#ifdef DCON_LUADLL_EXPORTS\n";
-		header_output += "#define DCON_LUADLL_API __declspec(dllexport)\n";
-		header_output += "#else\n";
-		header_output += "#define DCON_LUADLL_API __declspec(dllimport)\n";
-		header_output += "#endif\n";
+                header_output += "#ifdef _MSC_VER\n";
+                header_output += "#define DCON_LUADLL_API __declspec(dllexport)\n";
+                header_output += "#else\n";
+                header_output += "#define DCON_LUADLL_API __attribute__((visibility(\"default\")))\n";
+                header_output += "#endif\n";
+                header_output += "#else\n";
+                header_output += "#ifdef _MSC_VER\n";
+                header_output += "#define DCON_LUADLL_API __declspec(dllimport)\n";
+                header_output += "#else\n";
+                header_output += "#define DCON_LUADLL_API\n";
+                header_output += "#endif\n";
+                header_output += "#endif\n";
+
 
 		//extern "C" DCON_LUADLL_API void 
 
