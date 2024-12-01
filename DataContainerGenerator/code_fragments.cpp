@@ -2169,6 +2169,12 @@ basic_builder& relation_iterator_prop_from_declaration(basic_builder& o, relatio
 
 basic_builder& object_iterator_declaration(basic_builder& o, relationship_object_def const& obj) {
 	o + substitute{ "obj", obj.name };
+	o + "class object_term_iterator_@obj@" + class_block{
+		o + "public:";
+		o + "const uint32_t index = 0;";
+
+		o + "object_term_iterator_@obj@(uint32_t i) noexcept;";
+	};
 	o + "class object_iterator_@obj@" + class_block{
 		o + "private:";
 		o + "data_container& container;";
@@ -2184,6 +2190,12 @@ basic_builder& object_iterator_declaration(basic_builder& o, relationship_object
 			o + "return &container == &o.container && index == o.index;";
 		};
 		o + "DCON_RELEASE_INLINE bool operator!=(object_iterator_@obj@ const& o) const noexcept" + block{
+			o + "return !(*this == o);";
+		};
+		o + "DCON_RELEASE_INLINE bool operator==(object_term_iterator_@obj@ o) const noexcept" + block{
+			o + "return index >= o.index;";
+		};
+		o + "DCON_RELEASE_INLINE bool operator!=(object_term_iterator_@obj@ o) const noexcept" + block{
 			o + "return !(*this == o);";
 		};
 		o + "DCON_RELEASE_INLINE @obj@_fat_id operator*() const noexcept" + block{
@@ -2242,6 +2254,12 @@ basic_builder& object_iterator_declaration(basic_builder& o, relationship_object
 		o + "DCON_RELEASE_INLINE bool operator!=(const_object_iterator_@obj@ const& o) const noexcept" + block{
 			o + "return !(*this == o);";
 		};
+		o + "DCON_RELEASE_INLINE bool operator==(object_term_iterator_@obj@ o) const noexcept" + block{
+			o + "return index >= o.index;";
+		};
+		o + "DCON_RELEASE_INLINE bool operator!=(object_term_iterator_@obj@ o) const noexcept" + block{
+			o + "return !(*this == o);";
+		};
 		o + "DCON_RELEASE_INLINE @obj@_const_fat_id operator*() const noexcept" + block{
 			o + "return @obj@_const_fat_id(container, @obj@_id(@obj@_id::value_base_t(index)));";
 		};
@@ -2289,6 +2307,8 @@ basic_builder& object_iterator_declaration(basic_builder& o, relationship_object
 basic_builder& object_iterator_implementation(basic_builder& o, relationship_object_def const& obj) {
 	o + substitute{ "obj", obj.name } + substitute{ "pk_obj", obj.primary_key.points_to ? obj.primary_key.points_to->name : obj.name };
 
+	o + "DCON_RELEASE_INLINE object_term_iterator_@obj@::object_term_iterator_@obj@(uint32_t i) noexcept : index(i)" + block{
+	};
 	o + "DCON_RELEASE_INLINE object_iterator_@obj@::object_iterator_@obj@(data_container& c, uint32_t i) noexcept : container(c), index(i)" + block{
 		if(obj.store_type == storage_type::erasable) {
 			o + "while(container.@obj@.m__index.vptr()[index] != @obj@_id(@obj@_id::value_base_t(index)) && index < container.@pk_obj@.size_used)" + block{
@@ -2377,17 +2397,13 @@ basic_builder& make_iterate_over_objects(basic_builder& o, relationship_object_d
 			o + "data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_@obj@));";
 			o + "return internal::object_iterator_@obj@(*container, uint32_t(0));";
 		};
-		o + "internal::object_iterator_@obj@ end()" + block{
-			o + "data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_@obj@));";
-			o + "return internal::object_iterator_@obj@(*container, container->@obj@_size());";
+		o + "internal::object_term_iterator_@obj@ end() const" + block{
+			o + "data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_@obj@));";
+			o + "return internal::object_term_iterator_@obj@(container->@obj@_size());";
 		};
 		o + "internal::const_object_iterator_@obj@ begin() const" + block{
 			o + "data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_@obj@));";
 			o + "return internal::const_object_iterator_@obj@(*container, uint32_t(0));";
-		};
-		o + "internal::const_object_iterator_@obj@ end() const" + block{
-			o + "data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_@obj@));";
-			o + "return internal::const_object_iterator_@obj@(*container, container->@obj@_size());";
 		};
 	} + append{ appstr.c_str() };
 	o + line_break{};
