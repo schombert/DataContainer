@@ -2164,7 +2164,17 @@ TEST_CASE("id variations", "[ve_tests]") {
 #endif
 #endif
 
-	
+// Inspired by this amazing blog post:
+// https://randomascii.wordpress.com/2014/01/27/theres-only-four-billion-floatsso-test-them-all/
+TEST_CASE("ceil_and_floor", "[ve_tests]") {
+	for(uint32_t i = 1; i != 0; ++i) {
+		auto const f = *reinterpret_cast<float const*>(&i);
+		ve::fp_vector vp(f);
+		REQUIRE(ve::ceil(vp)[0] == std::ceil(f));
+		REQUIRE(ve::floor(vp)[0] == std::floor(f));
+	}
+}
+
 }
 
 #undef RELEASE_INLINE
