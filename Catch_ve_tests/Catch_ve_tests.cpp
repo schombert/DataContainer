@@ -2164,6 +2164,9 @@ TEST_CASE("id variations", "[ve_tests]") {
 #endif
 #endif
 
+}
+
+
 // Inspired by this amazing blog post:
 // https://randomascii.wordpress.com/2014/01/27/theres-only-four-billion-floatsso-test-them-all/
 TEST_CASE("ceil_and_floor", "[ve_tests]") {
@@ -2173,8 +2176,6 @@ TEST_CASE("ceil_and_floor", "[ve_tests]") {
 		REQUIRE(ve::ceil(vp)[0] == std::ceil(f));
 		REQUIRE(ve::floor(vp)[0] == std::floor(f));
 	}
-}
-
 }
 
 #undef RELEASE_INLINE
