@@ -1245,7 +1245,11 @@ file_def parse_file(char const* start, char const* end, error_record& err_out) {
 					err_out.add(calculate_line_from_position(start, extracted.key.start), 84,
 						std::string("wrong number of parameters for \"global\""));
 				} else {
-					parsed_file.globals.push_back(extracted.values[0].to_string());
+					auto val = extracted.values[0].to_string();
+					if(val == "no-conversions")
+						parsed_file.emit_type_conversions = false;
+					else
+						parsed_file.globals.push_back(val);
 				}
 			} else if(kstr == "make_index") {
 				if(extracted.values.size() != 2) {

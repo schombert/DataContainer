@@ -364,6 +364,8 @@ struct file_def {
 
 	std::vector< query_definition> unprepared_queries;
 	std::vector< prepared_query_definition> prepared_queries;
+
+	bool emit_type_conversions = true;
 };
 
 prepared_query_definition make_prepared_definition(file_def const& parsed_file, query_definition const& def, error_record & err);
