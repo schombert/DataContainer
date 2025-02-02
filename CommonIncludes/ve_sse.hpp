@@ -87,9 +87,9 @@ namespace ve {
 			auto tmp = _mm_castps_si128(value);
 			switch(i) {
 				case 0: value = _mm_castsi128_ps(_mm_insert_epi32(tmp, -int32_t(v), 0)); break;
-				case 1: value = _mm_castsi128_ps(_mm_insert_epi32(tmp, -int32_t(v), 0)); break;
-				case 2: value = _mm_castsi128_ps(_mm_insert_epi32(tmp, -int32_t(v), 0)); break;
-				case 3: value = _mm_castsi128_ps(_mm_insert_epi32(tmp, -int32_t(v), 0)); break;
+				case 1: value = _mm_castsi128_ps(_mm_insert_epi32(tmp, -int32_t(v), 1)); break;
+				case 2: value = _mm_castsi128_ps(_mm_insert_epi32(tmp, -int32_t(v), 2)); break;
+				case 3: value = _mm_castsi128_ps(_mm_insert_epi32(tmp, -int32_t(v), 3)); break;
 			}
 			
 		}
