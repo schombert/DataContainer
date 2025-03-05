@@ -456,7 +456,7 @@ void deserialize_size_fragment(basic_builder& o, relationship_object_def const& 
 	};
 }
 
-void deserialize_erasable_index_fragment(basic_builder& o, relationship_object_def const& ob, bool with_mask) {
+void deserialize_erasable_index_fragment(basic_builder& o, relationship_object_def const& ob, bool with_mask, bool with_conversions) {
 	o + substitute{ "u_type" , size_to_tag_type(ob.size) };
 	o + substitute{ "mcon", with_mask ? std::string(" && mask.") + ob.name + "__index" : std::string() };
 	o + "if(header.is_property(\"_index\")@mcon@)" + block{ //fix
@@ -465,15 +465,17 @@ void deserialize_erasable_index_fragment(basic_builder& o, relationship_object_d
 				"std::min(size_t(@pk_obj@.size_used) * sizeof(@u_type@), size_t(header.record_size)));";
 			o + "serialize_selection.@obj@__index = true;";
 		};
-		// if(size_to_tag_type(ob.size) != "uint8_t") {
-		// 	wrong_type_cast(o, "uint8_t", "_index", size_to_tag_type(ob.size), true);
-		// }
-		// if(size_to_tag_type(ob.size) != "uint16_t") {
-		// 	wrong_type_cast(o, "uint16_t", "_index", size_to_tag_type(ob.size), true);
-		// }
-		// if(size_to_tag_type(ob.size) != "uint32_t") {
-		// 	wrong_type_cast(o, "uint32_t", "_index", size_to_tag_type(ob.size), true);
-		// }
+		if(with_conversions) {
+			if(size_to_tag_type(ob.size) != "uint8_t") {
+				wrong_type_cast(o, "uint8_t", "_index", size_to_tag_type(ob.size), true);
+			}
+			if(size_to_tag_type(ob.size) != "uint16_t") {
+				wrong_type_cast(o, "uint16_t", "_index", size_to_tag_type(ob.size), true);
+			}
+			if(size_to_tag_type(ob.size) != "uint32_t") {
+				wrong_type_cast(o, "uint32_t", "_index", size_to_tag_type(ob.size), true);
+			}
+		}
 
 		//redo free list
 		o + "if(serialize_selection.@obj@__index == true)" + block{
@@ -495,7 +497,7 @@ void deserialize_erasable_index_fragment(basic_builder& o, relationship_object_d
 }
 
 void deserialize_individual_link_fragment(basic_builder& o, relationship_object_def const& ob,
-	related_object const& iob, bool with_mask) {
+	related_object const& iob, bool with_mask, bool with_conversions) {
 
 	if(ob.primary_key != iob) {
 		o + substitute{ "prop", iob.property_name } + substitute{ "ob_u_type", size_to_tag_type(ob.size) };
@@ -512,15 +514,17 @@ void deserialize_individual_link_fragment(basic_builder& o, relationship_object_
 						"std::min(size_t(@pk_obj@.size_used) * sizeof(@u_type@), size_t(header.record_size)));";
 					o + "serialize_selection.@obj@_@prop@ = true;";
 				};
-				// if(size_to_tag_type(iob.related_to->size) != "uint8_t") {
-				// 	wrong_type_cast(o, "uint8_t", iob.property_name, size_to_tag_type(iob.related_to->size), true);
-				// }
-				// if(size_to_tag_type(iob.related_to->size) != "uint16_t") {
-				// 	wrong_type_cast(o, "uint16_t", iob.property_name, size_to_tag_type(iob.related_to->size), true);
-				// }
-				// if(size_to_tag_type(iob.related_to->size) != "uint32_t") {
-				// 	wrong_type_cast(o, "uint32_t", iob.property_name, size_to_tag_type(iob.related_to->size), true);
-				// }
+				if(with_conversions) {
+					if(size_to_tag_type(iob.related_to->size) != "uint8_t") {
+						wrong_type_cast(o, "uint8_t", iob.property_name, size_to_tag_type(iob.related_to->size), true);
+					}
+					if(size_to_tag_type(iob.related_to->size) != "uint16_t") {
+						wrong_type_cast(o, "uint16_t", iob.property_name, size_to_tag_type(iob.related_to->size), true);
+					}
+					if(size_to_tag_type(iob.related_to->size) != "uint32_t") {
+						wrong_type_cast(o, "uint32_t", iob.property_name, size_to_tag_type(iob.related_to->size), true);
+					}
+				}
 				o + "return;";
 			};
 		} else {
@@ -530,15 +534,17 @@ void deserialize_individual_link_fragment(basic_builder& o, relationship_object_
 					"std::min(size_t(@pk_obj@.size_used) * sizeof(std::array<@u_type@, @mult@>), size_t(header.record_size)));";
 					o + "serialize_selection.@obj@_@prop@ = true;";
 				};
-				// if(size_to_tag_type(iob.related_to->size) != "uint8_t") {
-				// 	wrong_type_cast_with_multiplicity(o, "uint8_t", iob.property_name, size_to_tag_type(iob.related_to->size), iob.multiplicity);
-				// }
-				// if(size_to_tag_type(iob.related_to->size) != "uint16_t") {
-				// 	wrong_type_cast_with_multiplicity(o, "uint16_t", iob.property_name, size_to_tag_type(iob.related_to->size), iob.multiplicity);
-				// }
-				// if(size_to_tag_type(iob.related_to->size) != "uint32_t") {
-				// 	wrong_type_cast_with_multiplicity(o, "uint32_t", iob.property_name, size_to_tag_type(iob.related_to->size), iob.multiplicity);
-				// }
+				if(with_conversions) {
+					if(size_to_tag_type(iob.related_to->size) != "uint8_t") {
+						wrong_type_cast_with_multiplicity(o, "uint8_t", iob.property_name, size_to_tag_type(iob.related_to->size), iob.multiplicity);
+					}
+					if(size_to_tag_type(iob.related_to->size) != "uint16_t") {
+						wrong_type_cast_with_multiplicity(o, "uint16_t", iob.property_name, size_to_tag_type(iob.related_to->size), iob.multiplicity);
+					}
+					if(size_to_tag_type(iob.related_to->size) != "uint32_t") {
+						wrong_type_cast_with_multiplicity(o, "uint32_t", iob.property_name, size_to_tag_type(iob.related_to->size), iob.multiplicity);
+					}
+				}
 				o + "return;";
 			};
 		}
@@ -658,25 +664,25 @@ void deserialize_special_vector_property_fragment(basic_builder& o, file_def con
 		// 					o + "icpy += sizeof(uint16_t);";
 		// 				};
 
-		// 				o + "dcon::resize(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[ix], sz);";
-		// 				o + "for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii)" + block{
-		// 					make_single_deserialize_from_icpy(o,
-		// 						"dcon::get(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[ix], ii)",
-		// 						con.from, prop.data_type, as_object, false);
-		// 				};
-		// 				o + "++ix;";
-		// 			};
-		// 			o + "serialize_selection.@obj@_@prop@ = true;";
-		// 		};
-		// 	}
-		// } // end for each in conversion list
-		// if(is_common_type(normalize_type(prop.data_type))) {
-		// 	const auto normed_type = normalize_type(prop.data_type);
-		// 	for(auto& basic_type : common_types) {
-		// 		if(basic_type != normed_type) {
-		// 			o + substitute{"b_type", basic_type };
-		// 			o + "else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), "
-		// 				"reinterpret_cast<char const*>(zero_pos), \"@b_type@\"))" + block{
+						o + "dcon::resize(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[ix], sz);";
+						o + "for(uint32_t ii = 0; ii < sz && icpy < input_buffer + header.record_size; ++ii)" + block{
+							make_single_deserialize_from_icpy(o,
+								"dcon::get(@obj@.@prop@_storage, @obj@.m_@prop@.vptr()[ix], ii)",
+								con.from, prop.data_type, as_object, false);
+						};
+						o + "++ix;";
+					};
+					o + "serialize_selection.@obj@_@prop@ = true;";
+				};
+			}
+		} // end for each in conversion list
+		if(is_common_type(normalize_type(prop.data_type)) && parsed_file.emit_type_conversions) {
+			const auto normed_type = normalize_type(prop.data_type);
+			for(auto& basic_type : common_types) {
+				if(basic_type != normed_type) {
+					o + substitute{"b_type", basic_type };
+					o + "else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), "
+						"reinterpret_cast<char const*>(zero_pos), \"@b_type@\"))" + block{
 
 		// 				o + "for(std::byte const* icpy = zero_pos + 1; ix < @pk_obj@.size_used && icpy < input_buffer + header.record_size; )" + block{
 		// 					o + "uint16_t sz = 0;";
@@ -794,30 +800,30 @@ void deserialize_a_other_property_fragment(basic_builder& o, file_def const& par
 		// 		o + "else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), "
 		// 			"reinterpret_cast<char const*>(zero_pos), \"@f_type@\"))" + block{
 
-		// 			o + "if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size)" + block{
-		// 				o + "@obj@.m_@prop@.resize(*(reinterpret_cast<uint16_t const*>(icpy)), @pk_obj@.size_used);";
-		// 				o + "icpy += sizeof(uint16_t);";
-		// 			} + append{ "else" } + block{
-		// 				o + "@obj@.m_@prop@.resize(0, @pk_obj@.size_used);";
-		// 			};
-		// 			o + "for(int32_t s = 0; s < int32_t(@obj@.m_@prop@.size) && icpy < input_buffer + header.record_size; ++s)" + block{
-		// 				o + "for(uint32_t j = 0; j < @pk_obj@.size_used && icpy < input_buffer + header.record_size; ++j)" + block{
-		// 					make_single_deserialize_from_icpy(o,
-		// 						"@obj@.m_@prop@.vptr(s)[j]",
-		// 						con.from, prop.data_type, as_object, false);
-		// 				};
-		// 			};
-		// 			o + "serialize_selection.@obj@_@prop@ = true;";
-		// 		};
-		// 	}
-		// } // end for each in conversion list
-		// if(is_common_type(normalize_type(prop.data_type))) {
-		// 	const auto normed_type = normalize_type(prop.data_type);
-		// 	for(auto& basic_type : common_types) {
-		// 		if(basic_type != normed_type) {
-		// 			o + substitute{ "b_type", basic_type };
-		// 			o + "else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), "
-		// 				"reinterpret_cast<char const*>(zero_pos), \"@b_type@\"))" + block{
+					o + "if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size)" + block{
+						o + "@obj@.m_@prop@.resize(*(reinterpret_cast<uint16_t const*>(icpy)), @pk_obj@.size_used);";
+						o + "icpy += sizeof(uint16_t);";
+					} + append{ "else" } + block{
+						o + "@obj@.m_@prop@.resize(0, @pk_obj@.size_used);";
+					};
+					o + "for(int32_t s = 0; s < int32_t(@obj@.m_@prop@.size) && icpy < input_buffer + header.record_size; ++s)" + block{
+						o + "for(uint32_t j = 0; j < @pk_obj@.size_used && icpy < input_buffer + header.record_size; ++j)" + block{
+							make_single_deserialize_from_icpy(o,
+								"@obj@.m_@prop@.vptr(s)[j]",
+								con.from, prop.data_type, as_object, false);
+						};
+					};
+					o + "serialize_selection.@obj@_@prop@ = true;";
+				};
+			}
+		} // end for each in conversion list
+		if(is_common_type(normalize_type(prop.data_type)) && parsed_file.emit_type_conversions) {
+			const auto normed_type = normalize_type(prop.data_type);
+			for(auto& basic_type : common_types) {
+				if(basic_type != normed_type) {
+					o + substitute{ "b_type", basic_type };
+					o + "else if(dcon::char_span_equals_str(reinterpret_cast<char const*>(input_buffer), "
+						"reinterpret_cast<char const*>(zero_pos), \"@b_type@\"))" + block{
 
 		// 				o + "if(icpy + sizeof(uint16_t) <= input_buffer + header.record_size)" + block{
 		// 					o + "@obj@.m_@prop@.resize(*(reinterpret_cast<uint16_t const*>(icpy)), @pk_obj@.size_used);";
@@ -848,7 +854,7 @@ void deserialize_basic_property_fragment(basic_builder& o, file_def const& parse
 		o + "serialize_selection.@obj@_@prop@ = true;";
 	};
 	conversion_attempt(o, parsed_file, prop.data_type, false);
-	if(is_common_type(normalize_type(prop.data_type))) {
+	if(is_common_type(normalize_type(prop.data_type)) && parsed_file.emit_type_conversions) {
 		const auto normed_type = normalize_type(prop.data_type);
 		// for(auto& basic_type : common_types) {
 		// 	if(basic_type != normed_type) {
@@ -900,11 +906,11 @@ basic_builder& make_deserialize_helper(basic_builder& o, file_def const& parsed_
 					deserialize_size_fragment(o, ob);
 
 					if(ob.store_type == storage_type::erasable) {
-						deserialize_erasable_index_fragment(o, ob, true);
+						deserialize_erasable_index_fragment(o, ob, true, parsed_file.emit_type_conversions);
 					} // end: load index handling for erasable
 
 					for(auto& iob : ob.indexed_objects) {
-						deserialize_individual_link_fragment(o, ob, iob, true);
+						deserialize_individual_link_fragment(o, ob, iob, true, parsed_file.emit_type_conversions);
 					} // end index properties
 
 					if(ob.is_relationship) {

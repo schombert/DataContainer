@@ -698,6 +698,11 @@ namespace ns {
 	}
 	
 	namespace internal {
+		class object_term_iterator_thingy {
+			public:
+			const uint32_t index = 0;
+			object_term_iterator_thingy(uint32_t i) noexcept;
+		};
 		class object_iterator_thingy {
 			private:
 			data_container& container;
@@ -710,6 +715,12 @@ namespace ns {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(object_iterator_thingy const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_thingy o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_thingy o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE thingy_fat_id operator*() const noexcept {
@@ -760,6 +771,12 @@ namespace ns {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_thingy const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_thingy o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_thingy o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE thingy_const_fat_id operator*() const noexcept {
@@ -927,6 +944,11 @@ namespace ns {
 			}
 		};
 		
+		class object_term_iterator_thingy2 {
+			public:
+			const uint32_t index = 0;
+			object_term_iterator_thingy2(uint32_t i) noexcept;
+		};
 		class object_iterator_thingy2 {
 			private:
 			data_container& container;
@@ -939,6 +961,12 @@ namespace ns {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(object_iterator_thingy2 const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_thingy2 o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_thingy2 o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE thingy2_fat_id operator*() const noexcept {
@@ -991,6 +1019,12 @@ namespace ns {
 			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_thingy2 const& o) const noexcept {
 				return !(*this == o);
 			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_thingy2 o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_thingy2 o) const noexcept {
+				return !(*this == o);
+			}
 			DCON_RELEASE_INLINE thingy2_const_fat_id operator*() const noexcept {
 				return thingy2_const_fat_id(container, thingy2_id(thingy2_id::value_base_t(index)));
 			}
@@ -1028,6 +1062,11 @@ namespace ns {
 			}
 		};
 		
+		class object_term_iterator_dummy_rel {
+			public:
+			const uint32_t index = 0;
+			object_term_iterator_dummy_rel(uint32_t i) noexcept;
+		};
 		class object_iterator_dummy_rel {
 			private:
 			data_container& container;
@@ -1040,6 +1079,12 @@ namespace ns {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(object_iterator_dummy_rel const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_dummy_rel o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_dummy_rel o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE dummy_rel_fat_id operator*() const noexcept {
@@ -1090,6 +1135,12 @@ namespace ns {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_dummy_rel const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_dummy_rel o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_dummy_rel o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE dummy_rel_const_fat_id operator*() const noexcept {
@@ -1755,17 +1806,13 @@ namespace ns {
 				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_thingy));
 				return internal::object_iterator_thingy(*container, uint32_t(0));
 			}
-			internal::object_iterator_thingy end() {
-				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_thingy));
-				return internal::object_iterator_thingy(*container, container->thingy_size());
+			internal::object_term_iterator_thingy end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_thingy));
+				return internal::object_term_iterator_thingy(container->thingy_size());
 			}
 			internal::const_object_iterator_thingy begin() const {
 				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_thingy));
 				return internal::const_object_iterator_thingy(*container, uint32_t(0));
-			}
-			internal::const_object_iterator_thingy end() const {
-				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_thingy));
-				return internal::const_object_iterator_thingy(*container, container->thingy_size());
 			}
 		}  in_thingy ;
 		
@@ -1783,17 +1830,13 @@ namespace ns {
 				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_thingy2));
 				return internal::object_iterator_thingy2(*container, uint32_t(0));
 			}
-			internal::object_iterator_thingy2 end() {
-				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_thingy2));
-				return internal::object_iterator_thingy2(*container, container->thingy2_size());
+			internal::object_term_iterator_thingy2 end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_thingy2));
+				return internal::object_term_iterator_thingy2(container->thingy2_size());
 			}
 			internal::const_object_iterator_thingy2 begin() const {
 				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_thingy2));
 				return internal::const_object_iterator_thingy2(*container, uint32_t(0));
-			}
-			internal::const_object_iterator_thingy2 end() const {
-				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_thingy2));
-				return internal::const_object_iterator_thingy2(*container, container->thingy2_size());
 			}
 		}  in_thingy2 ;
 		
@@ -1811,17 +1854,13 @@ namespace ns {
 				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_dummy_rel));
 				return internal::object_iterator_dummy_rel(*container, uint32_t(0));
 			}
-			internal::object_iterator_dummy_rel end() {
-				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_dummy_rel));
-				return internal::object_iterator_dummy_rel(*container, container->dummy_rel_size());
+			internal::object_term_iterator_dummy_rel end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_dummy_rel));
+				return internal::object_term_iterator_dummy_rel(container->dummy_rel_size());
 			}
 			internal::const_object_iterator_dummy_rel begin() const {
 				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_dummy_rel));
 				return internal::const_object_iterator_dummy_rel(*container, uint32_t(0));
-			}
-			internal::const_object_iterator_dummy_rel end() const {
-				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_dummy_rel));
-				return internal::const_object_iterator_dummy_rel(*container, container->dummy_rel_size());
 			}
 		}  in_dummy_rel ;
 		
@@ -2530,6 +2569,8 @@ namespace ns {
 	
 
 	namespace internal {
+		DCON_RELEASE_INLINE object_term_iterator_thingy::object_term_iterator_thingy(uint32_t i) noexcept : index(i) {
+		}
 		DCON_RELEASE_INLINE object_iterator_thingy::object_iterator_thingy(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 		}
 		DCON_RELEASE_INLINE const_object_iterator_thingy::const_object_iterator_thingy(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
@@ -2582,6 +2623,8 @@ namespace ns {
 			return *this;
 		}
 		
+		DCON_RELEASE_INLINE object_term_iterator_thingy2::object_term_iterator_thingy2(uint32_t i) noexcept : index(i) {
+		}
 		DCON_RELEASE_INLINE object_iterator_thingy2::object_iterator_thingy2(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 		}
 		DCON_RELEASE_INLINE const_object_iterator_thingy2::const_object_iterator_thingy2(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
@@ -2603,6 +2646,8 @@ namespace ns {
 			return *this;
 		}
 		
+		DCON_RELEASE_INLINE object_term_iterator_dummy_rel::object_term_iterator_dummy_rel(uint32_t i) noexcept : index(i) {
+		}
 		DCON_RELEASE_INLINE object_iterator_dummy_rel::object_iterator_dummy_rel(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 		}
 		DCON_RELEASE_INLINE const_object_iterator_dummy_rel::const_object_iterator_dummy_rel(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
