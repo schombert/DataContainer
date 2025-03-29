@@ -26,8 +26,6 @@
 #ifdef _WIN64
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
-#pragma comment(lib, "onecore.lib")
-#pragma comment(lib, "User32.lib")
 #include "Windows.h"
 #include "Memoryapi.h"
 #endif
