@@ -410,7 +410,7 @@ void make_single_deserialize_from_icpy(basic_builder& o, std::string const& dest
 		}
 	} else {
 		if(to_bitfield) {
-			o + (std::string("dcon::bit_vector_set(") + destination_expression + 
+			o + (std::string("dcon::bit_vector_set(") + destination_expression +
 				", convert_type(*(reinterpret_cast<@convert_from@ const*>(input_buffer) + i), (@convert_to@*)nullptr));");
 		} else {
 			o + destination_expression + " = std::move(convert_type(*(reinterpret_cast<@convert_from@ const*>(input_buffer) + i), (@convert_to@*)nullptr));";
@@ -425,7 +425,7 @@ basic_builder& conversion_attempt(basic_builder& o, file_def const& parsed_file,
 			bool to_is_object = std::find(parsed_file.object_types.begin(), parsed_file.object_types.end(), con.from) != parsed_file.object_types.end()
 				|| std::find(parsed_file.legacy_types.begin(), parsed_file.legacy_types.end(), con.from) != parsed_file.legacy_types.end();
 
-				
+
 			o + substitute{ "f_type", con.from };
 			o + "else if(header.is_type(\"@f_type@\"))" + block{
 				o + "std::byte const* icpy = input_buffer;";
@@ -722,7 +722,7 @@ void deserialize_object_property_fragment(basic_builder& o, file_def const& pars
 
 void deserialize_a_bitfield_property_fragment(basic_builder& o, file_def const& parsed_file,
 	relationship_object_def const& ob, property_def const& prop, bool with_mask) {
-	
+
 	o + "if(header.is_type(\"$array\"))" + block{
 		o + "std::byte const* zero_pos = std::find(input_buffer, input_buffer + header.record_size, std::byte(0));";
 		o + "std::byte const* icpy = zero_pos + 1;";
@@ -886,7 +886,7 @@ void deserialize_individual_property_fragment(basic_builder& o, file_def const& 
 			deserialize_basic_property_fragment(o, parsed_file, ob, prop, with_mask);
 		} // end prop type cases
 		o + "return;";
-	}; // end header property == property type" in output 
+	}; // end header property == property type" in output
 }
 
 basic_builder& make_deserialize_helper(basic_builder& o, file_def const& parsed_file) {
@@ -902,7 +902,7 @@ basic_builder& make_deserialize_helper(basic_builder& o, file_def const& parsed_
 				+ substitute{ "pk_obj", ob.primary_key.points_to ? ob.primary_key.points_to->name : ob.name };
 
 				o + "if(header.is_object(\"@obj@\")@mcon@)" + block{ //has matched object
-				
+
 					deserialize_size_fragment(o, ob);
 
 					if(ob.store_type == storage_type::erasable) {
