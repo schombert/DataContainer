@@ -16,6 +16,7 @@
 #include <limits>
 #include <vector>
 #include <bit>
+#include <atomic>
 
 #ifdef _MSC_VER 
 #include <intrin.h>
@@ -54,9 +55,9 @@ namespace dcon {
 		const int32_t real_index = index >> 3;
 		const uint32_t sub_index = uint32_t(index) & uint32_t(7);
 		if(value)
-			v[real_index].v |= uint8_t(uint32_t(1) << sub_index);
+			std::atomic_ref(v[real_index].v).fetch_or(uint8_t(uint32_t(1) << sub_index));
 		else
-			v[real_index].v &= uint8_t(~(uint32_t(1) << sub_index));
+			std::atomic_ref(v[real_index].v).fetch_and(uint8_t(~(uint32_t(1) << sub_index)));
 	}
 
 	inline bool bit_vector_test(bitfield_type const* v, int32_t index) {
