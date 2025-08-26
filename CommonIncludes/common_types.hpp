@@ -29,6 +29,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include "Windows.h"
 #include "Memoryapi.h"
+#else
+#include <sys/mman.h>
 #endif
 
 #ifdef NDEBUG 
@@ -378,8 +380,10 @@ namespace dcon {
 				abort();
 			}
 			VirtualAlloc(allocation, qword_page_size * 8, MEM_COMMIT, PAGE_READWRITE);
-#else
+#elif defined(__linux__)
 			allocation = (uint64_t*)mmap(nullptr, allocation_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE | MAP_HUGETLB, -1, 0);
+#else /* AIX and SVR4 */
+			allocation = (uint64_t*)mmap(nullptr, allocation_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 #endif
 		}
 
