@@ -362,11 +362,10 @@ namespace dcon {
 	public:
 		uint64_t*  allocation = nullptr;
 		uint64_t qword_page_size = 0;
-
 		std::atomic<uint32_t> first_free = uint32_t(0);
-	
+
+        static constexpr auto allocation_size = ((static_cast<size_t>(std::numeric_limits<uint32_t>::max()) + 1) * DCON_GLOBAL_BACKING_MULTIPLIER);
 		stable_variable_vector3_backing() {
-			constexpr auto allocation_size = ((static_cast<size_t>(std::numeric_limits<uint32_t>::max()) + 1) * DCON_GLOBAL_BACKING_MULTIPLIER);
 #ifdef _WIN64
 
 			SYSTEM_INFO sSysInfo;
@@ -380,7 +379,7 @@ namespace dcon {
 			}
 			VirtualAlloc(allocation, qword_page_size * 8, MEM_COMMIT, PAGE_READWRITE);
 #else
-			allocation = (uint64_t*)malloc(allocation_size);
+			allocation = (uint64_t*)mmap(nullptr, allocation_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE | MAP_HUGETLB, -1, 0);
 #endif
 		}
 
@@ -388,7 +387,7 @@ namespace dcon {
 #ifdef _WIN64
 			VirtualFree(allocation, 0, MEM_RELEASE);
 #else
-			free(allocation);
+			munmap(allocation, allocation_size);
 #endif
 		}
 
