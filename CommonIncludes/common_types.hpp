@@ -381,7 +381,7 @@ namespace dcon {
 			}
 			VirtualAlloc(allocation, qword_page_size * 8, MEM_COMMIT, PAGE_READWRITE);
 #elif defined(__linux__)
-			allocation = (uint64_t*)mmap(nullptr, allocation_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE | MAP_HUGETLB, -1, 0);
+			allocation = (uint64_t*)mmap(nullptr, allocation_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0);
 #else /* AIX and SVR4 */
 			allocation = (uint64_t*)mmap(nullptr, allocation_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 #endif
