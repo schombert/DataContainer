@@ -300,7 +300,7 @@ namespace ve {
 				case 5: value = _mm512_insert_epi32(value, v.index(), 5); break;
 				case 6: value = _mm512_insert_epi32(value, v.index(), 6); break;
 				case 7: value = _mm512_insert_epi32(value, v.index(), 7); break;
-				case 8: value = _mm512_insert_epi32(value, v.index(), 0); break;
+				case 8: value = _mm512_insert_epi32(value, v.index(), 8); break;
 				case 9: value = _mm512_insert_epi32(value, v.index(), 9); break;
 				case 10: value = _mm512_insert_epi32(value, v.index(), 10); break;
 				case 11: value = _mm512_insert_epi32(value, v.index(), 11); break;
