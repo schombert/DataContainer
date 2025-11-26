@@ -375,7 +375,7 @@ int main(int argc, char *argv[]) {
 			ids_output += make_id_definition(o, mi.name, mi.base_type).to_string(1);
 		}
 
-		ids_output += "}";
+		ids_output += "}\n\n";
 
 		// close namespace briefly
 		output += "}\n\n";
