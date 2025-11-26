@@ -364,7 +364,6 @@ int main(int argc, char *argv[]) {
 		//load record type
 		output += make_load_record(o, parsed_file).to_string(1);
 
-		output += "#include \"" + ids_filename.string() + "\"\n";
 
 		//id types definitions
 		for(auto& ob : parsed_file.relationship_objects) {
@@ -376,20 +375,24 @@ int main(int argc, char *argv[]) {
 			ids_output += make_id_definition(o, mi.name, mi.base_type).to_string(1);
 		}
 
+		ids_output += "}";
+
 		// close namespace briefly
 		output += "}\n\n";
 
+		output += "#include \"" + ids_filename.string() + "\"\n";
+
 		//mark each id as going into a tagged vector
-		output += "#ifndef DCON_NO_VE\n";
-		output += "namespace ve {\n";
+		ids_output += "#ifndef DCON_NO_VE\n";
+		ids_output += "namespace ve {\n";
 		for(auto& ob : parsed_file.relationship_objects) {
-			output += make_value_to_vector_type(o, parsed_file.namspace + "::" + ob.name + "_id").to_string(1);
+			ids_output += make_value_to_vector_type(o, parsed_file.namspace + "::" + ob.name + "_id").to_string(1);
 		}
 		for(auto& mi : parsed_file.extra_ids) {
-			output += make_value_to_vector_type(o, parsed_file.namspace + "::" + mi.name).to_string(1);
+			ids_output += make_value_to_vector_type(o, parsed_file.namspace + "::" + mi.name).to_string(1);
 		}
-		output += "}\n\n";
-		output += "#endif\n";
+		ids_output += "}\n\n";
+		ids_output += "#endif\n";
 
 		//
 		// other includes go here, so they can see ids
@@ -913,8 +916,6 @@ int main(int argc, char *argv[]) {
 
 		//close new namespace
 		output += "}\n";
-
-		ids_output += "}\n";
 
 		output += "\n";
 
