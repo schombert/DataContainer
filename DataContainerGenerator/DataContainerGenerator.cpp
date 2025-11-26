@@ -90,7 +90,11 @@ int main(int argc, char *argv[]) {
 			return otemp + ".hpp";
 		}();
 
-		const std::string ids_output_file_name = "ids_" + output_file_name;
+		std::string ids_output_file_name = output_file_name;
+		ids_output_file_name.erase(ids_output_file_name.length() - 4);
+		ids_output_file_name += "_ids.hpp";
+		auto path = std::filesystem::path { ids_output_file_name };
+		auto ids_filename = path.filename();
 
 		error_record err(input_file_name);
 
@@ -360,7 +364,7 @@ int main(int argc, char *argv[]) {
 		//load record type
 		output += make_load_record(o, parsed_file).to_string(1);
 
-		output += "#include \"" + ids_output_file_name + "\"\n";
+		output += "#include \"" + ids_filename.string() + "\"\n";
 
 		//id types definitions
 		for(auto& ob : parsed_file.relationship_objects) {
