@@ -331,6 +331,29 @@ int main(int argc, char *argv[]) {
 		output += "#ifndef DCON_NO_VE\n";
 		output += "#include \"ve.hpp\"\n";
 		output += "#endif\n";
+
+		ids_output += "#pragma once\n";
+		ids_output += "\n";
+		ids_output += "//\n";
+		ids_output += "// This file was automatically generated from: " + std::string(argv[1]) + "\n";
+		ids_output += "// EDIT AT YOUR OWN RISK; all changes will be lost upon regeneration\n";
+		ids_output += "// NOT SUITABLE FOR USE IN CRITICAL SOFTWARE WHERE LIVES OR LIVELIHOODS DEPEND ON THE CORRECT OPERATION\n";
+		ids_output += "//\n";
+		ids_output += "\n";
+		ids_output += "#include <cstdint>\n";
+		ids_output += "#include <cstddef>\n";
+		ids_output += "#include <utility>\n";
+		ids_output += "#include <vector>\n";
+		ids_output += "#include <algorithm>\n";
+		ids_output += "#include <array>\n";
+		ids_output += "#include <memory>\n";
+		ids_output += "#include <assert.h>\n";
+		ids_output += "#include <cstring>\n";
+		ids_output += "#include \"common_types.hpp\"\n";
+		ids_output += "#ifndef DCON_NO_VE\n";
+		ids_output += "#include \"ve.hpp\"\n";
+		ids_output += "#endif\n\n";
+
 		if(needs_hash_include) {
 			output += "#include \"unordered_dense.h\"\n";
 		}
@@ -358,7 +381,6 @@ int main(int argc, char *argv[]) {
 		output += "\n";
 		output += "namespace " + parsed_file.namspace + " {\n";
 
-		ids_output += "#pragma once\n";
 		ids_output += "namespace " + parsed_file.namspace + " {\n";
 
 		//load record type
