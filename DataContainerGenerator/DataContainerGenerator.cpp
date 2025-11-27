@@ -385,6 +385,10 @@ int main(int argc, char *argv[]) {
 		ids_output += "#else\n";
 		ids_output += "#define DCON_RELEASE_INLINE inline\n";
 		ids_output += "#endif\n";
+		ids_output += "#ifdef _MSC_VER\n";
+		ids_output += "#pragma warning( push )\n";
+		ids_output += "#pragma warning( disable : 4324 )\n";
+		ids_output += "#endif\n";
 		ids_output += "#endif\n";
 
 		output += "#ifdef _MSC_VER\n";
@@ -392,10 +396,6 @@ int main(int argc, char *argv[]) {
 		output += "#pragma warning( disable : 4324 )\n";
 		output += "#endif\n";
 
-		ids_output += "#ifdef _MSC_VER\n";
-		ids_output += "#pragma warning( push )\n";
-		ids_output += "#pragma warning( disable : 4324 )\n";
-		ids_output += "#endif\n";
 
 		output += "\n";
 		output += "namespace fif { std::string container_interface(); }\n";
