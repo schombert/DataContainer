@@ -371,6 +371,11 @@ int main(int argc, char *argv[]) {
 		output += "#define DCON_RELEASE_INLINE inline\n";
 		output += "#endif\n";
 
+		ids_output += "#ifdef DCON_RELEASE_INLINE\n";
+		ids_output += "#define DCON_RELEASE_INLINE_DEFINED\n";
+		ids_output += "#endif\n";
+
+		ids_output += "#ifndef DCON_RELEASE_INLINE_DEFINED\n";
 		ids_output += "#ifdef NDEBUG\n";
 		ids_output += "#ifdef _MSC_VER\n";
 		ids_output += "#define DCON_RELEASE_INLINE __forceinline\n";
@@ -379,6 +384,7 @@ int main(int argc, char *argv[]) {
 		ids_output += "#endif\n";
 		ids_output += "#else\n";
 		ids_output += "#define DCON_RELEASE_INLINE inline\n";
+		ids_output += "#endif\n";
 		ids_output += "#endif\n";
 
 		output += "#ifdef _MSC_VER\n";
@@ -959,15 +965,19 @@ int main(int argc, char *argv[]) {
 
 		output += "#undef DCON_RELEASE_INLINE\n";
 
+		ids_output += "#ifndef DCON_RELEASE_INLINE_DEFINED\n";
 		ids_output += "#undef DCON_RELEASE_INLINE\n";
+		ids_output += "#ifdef _MSC_VER\n";
+		ids_output += "#pragma warning( pop )\n";
+		ids_output += "#endif\n";
+		ids_output += "#else\n";
+		ids_output += "#undef DCON_RELEASE_INLINE_DEFINED\n";
+		ids_output += "#endif\n";
 
 		output += "#ifdef _MSC_VER\n";
 		output += "#pragma warning( pop )\n";
 		output += "#endif\n";
 
-		ids_output += "#ifdef _MSC_VER\n";
-		ids_output += "#pragma warning( pop )\n";
-		ids_output += "#endif\n";
 
 		//newline at end of file
 		output += "\n";
