@@ -5,8 +5,8 @@
 #include <string>
 #include <vector>
 #include <fstream>
-#include <filesystem> 
-#include <iostream> 
+#include <filesystem>
+#include <iostream>
 #include <algorithm>
 #include <cstring>
 
@@ -90,6 +90,12 @@ int main(int argc, char *argv[]) {
 			return otemp + ".hpp";
 		}();
 
+		std::string ids_output_file_name = output_file_name;
+		ids_output_file_name.erase(ids_output_file_name.length() - 4);
+		ids_output_file_name += "_ids.hpp";
+		auto path = std::filesystem::path { ids_output_file_name };
+		auto ids_filename = path.filename();
+
 		error_record err(input_file_name);
 
 		if(!input_file.is_open()) {
@@ -99,11 +105,11 @@ int main(int argc, char *argv[]) {
 			return -1;
 		}
 
-		
-		
-		
+
+
+
 		std::string file_contents((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
-		
+
 		file_def parsed_file = parse_file(file_contents.c_str(), file_contents.c_str() + file_contents.length(), err);
 
 		input_file.close();
@@ -146,7 +152,7 @@ int main(int argc, char *argv[]) {
 					}
 				}
 
-				
+
 
 				if(r.indexed_objects.size() == 0) {
 					err.add(row_col_pair{ 0,0 }, 1003, std::string("Relationship: ") + r.name + " is between too few objects");
@@ -155,7 +161,7 @@ int main(int argc, char *argv[]) {
 					return -1;
 				}
 
-				
+
 				if(r.force_pk.length() > 0) {
 					bool pk_forced = false;
 					for(auto& link : r.indexed_objects) {
@@ -300,6 +306,8 @@ int main(int argc, char *argv[]) {
 		// compose contents of generated file
 		std::string output;
 
+		std::string ids_output;
+
 		basic_builder o;
 		//includes
 		output += "#pragma once\n";
@@ -323,6 +331,29 @@ int main(int argc, char *argv[]) {
 		output += "#ifndef DCON_NO_VE\n";
 		output += "#include \"ve.hpp\"\n";
 		output += "#endif\n";
+
+		ids_output += "#pragma once\n";
+		ids_output += "\n";
+		ids_output += "//\n";
+		ids_output += "// This file was automatically generated from: " + std::string(argv[1]) + "\n";
+		ids_output += "// EDIT AT YOUR OWN RISK; all changes will be lost upon regeneration\n";
+		ids_output += "// NOT SUITABLE FOR USE IN CRITICAL SOFTWARE WHERE LIVES OR LIVELIHOODS DEPEND ON THE CORRECT OPERATION\n";
+		ids_output += "//\n";
+		ids_output += "\n";
+		ids_output += "#include <cstdint>\n";
+		ids_output += "#include <cstddef>\n";
+		ids_output += "#include <utility>\n";
+		ids_output += "#include <vector>\n";
+		ids_output += "#include <algorithm>\n";
+		ids_output += "#include <array>\n";
+		ids_output += "#include <memory>\n";
+		ids_output += "#include <assert.h>\n";
+		ids_output += "#include <cstring>\n";
+		ids_output += "#include \"common_types.hpp\"\n";
+		ids_output += "#ifndef DCON_NO_VE\n";
+		ids_output += "#include \"ve.hpp\"\n";
+		ids_output += "#endif\n\n";
+
 		if(needs_hash_include) {
 			output += "#include \"unordered_dense.h\"\n";
 		}
@@ -340,44 +371,65 @@ int main(int argc, char *argv[]) {
 		output += "#define DCON_RELEASE_INLINE inline\n";
 		output += "#endif\n";
 
+		ids_output += "#ifdef NDEBUG\n";
+		ids_output += "#ifdef _MSC_VER\n";
+		ids_output += "#define DCON_RELEASE_INLINE __forceinline\n";
+		ids_output += "#else\n";
+		ids_output += "#define DCON_RELEASE_INLINE inline __attribute__((always_inline))\n";
+		ids_output += "#endif\n";
+		ids_output += "#else\n";
+		ids_output += "#define DCON_RELEASE_INLINE inline\n";
+		ids_output += "#endif\n";
+
 		output += "#ifdef _MSC_VER\n";
 		output += "#pragma warning( push )\n";
 		output += "#pragma warning( disable : 4324 )\n";
 		output += "#endif\n";
+
+		ids_output += "#ifdef _MSC_VER\n";
+		ids_output += "#pragma warning( push )\n";
+		ids_output += "#pragma warning( disable : 4324 )\n";
+		ids_output += "#endif\n";
 
 		output += "\n";
 		output += "namespace fif { std::string container_interface(); }\n";
 		output += "\n";
 		output += "namespace " + parsed_file.namspace + " {\n";
 
+		ids_output += "namespace " + parsed_file.namspace + " {\n";
+
 		//load record type
 		output += make_load_record(o, parsed_file).to_string(1);
-		
+
 
 		//id types definitions
 		for(auto& ob : parsed_file.relationship_objects) {
 			const auto underlying_type = ob.is_expandable ? std::string("uint32_t") : size_to_tag_type(ob.size);
 			//id class begin
-			output += make_id_definition(o, ob.name + "_id", underlying_type).to_string(1);
+			ids_output += make_id_definition(o, ob.name + "_id", underlying_type).to_string(1);
 		}
 		for(auto& mi : parsed_file.extra_ids) {
-			output += make_id_definition(o, mi.name, mi.base_type).to_string(1);
+			ids_output += make_id_definition(o, mi.name, mi.base_type).to_string(1);
 		}
+
+		ids_output += "}\n\n";
 
 		// close namespace briefly
 		output += "}\n\n";
 
+		output += "#include \"" + ids_filename.string() + "\"\n";
+
 		//mark each id as going into a tagged vector
-		output += "#ifndef DCON_NO_VE\n";
-		output += "namespace ve {\n";
+		ids_output += "#ifndef DCON_NO_VE\n";
+		ids_output += "namespace ve {\n";
 		for(auto& ob : parsed_file.relationship_objects) {
-			output += make_value_to_vector_type(o, parsed_file.namspace + "::" + ob.name + "_id").to_string(1);
+			ids_output += make_value_to_vector_type(o, parsed_file.namspace + "::" + ob.name + "_id").to_string(1);
 		}
 		for(auto& mi : parsed_file.extra_ids) {
-			output += make_value_to_vector_type(o, parsed_file.namspace + "::" + mi.name).to_string(1);
+			ids_output += make_value_to_vector_type(o, parsed_file.namspace + "::" + mi.name).to_string(1);
 		}
-		output += "}\n\n";
-		output += "#endif\n";
+		ids_output += "}\n\n";
+		ids_output += "#endif\n";
 
 		//
 		// other includes go here, so they can see ids
@@ -417,7 +469,7 @@ int main(int argc, char *argv[]) {
 
 		for(auto& pq : parsed_file.prepared_queries) {
 			output += make_query_instance_types(o, pq).to_string(2);
-			
+
 		}
 
 		for(auto& ob : parsed_file.relationship_objects) {
@@ -475,7 +527,7 @@ int main(int argc, char *argv[]) {
 					output += make_member_container(o, p.name, "dcon::stable_mk_2_tag",
 						std::to_string(ob.size),
 						struct_padding::fixed, ob.is_expandable, "std::numeric_limits<dcon::stable_mk_2_tag>::max()").to_string(3);
-					
+
 					output += "\t\t\tdcon::stable_variable_vector_storage_mk_2<" + p.data_type + ", 16, " + std::to_string(p.special_pool_size) + " > " + p.name + "_storage;\n";
 				} else if(p.type == property_type::array_bitfield) {
 					output += make_array_member_container(o,
@@ -748,7 +800,7 @@ int main(int argc, char *argv[]) {
 			output += "\t\tfriend internal::query_" + pq.name + "_iterator;\n";
 			output += "\t\tinternal::query_" + pq.name + "_instance query_" + pq.name + "(" + param_list
 				+ ") { return internal::query_" + pq.name + "_instance(*this" + arg_list + "); }\n";
-			output += "\t\tinternal::query_" + pq.name + "_const_instance query_" + pq.name + "(" + param_list 
+			output += "\t\tinternal::query_" + pq.name + "_const_instance query_" + pq.name + "(" + param_list
 				+ ") const { return internal::query_" + pq.name + "_const_instance(*this" + arg_list + "); }\n";
 		}
 
@@ -845,10 +897,10 @@ int main(int argc, char *argv[]) {
 		}
 		output += "\t\t#endif\n";
 
-		
+
 
 		output += "\n";
-		
+
 		for(auto& rt : parsed_file.load_save_routines) {
 			output += make_serialize_plan_generator(o, parsed_file, rt).to_string(2);
 		}
@@ -869,7 +921,7 @@ int main(int argc, char *argv[]) {
 		//class data_container end
 		output += "\t};\n\n";
 
-		
+
 		for(auto& obj : parsed_file.relationship_objects) {
 			output += make_fat_id_impl(o, obj, parsed_file).to_string(1);
 			output += make_const_fat_id_impl(o, obj, parsed_file).to_string(1);
@@ -906,10 +958,16 @@ int main(int argc, char *argv[]) {
 
 
 		output += "#undef DCON_RELEASE_INLINE\n";
-		
+
+		ids_output += "#undef DCON_RELEASE_INLINE\n";
+
 		output += "#ifdef _MSC_VER\n";
 		output += "#pragma warning( pop )\n";
 		output += "#endif\n";
+
+		ids_output += "#ifdef _MSC_VER\n";
+		ids_output += "#pragma warning( pop )\n";
+		ids_output += "#endif\n";
 
 		//newline at end of file
 		output += "\n";
@@ -919,6 +977,15 @@ int main(int argc, char *argv[]) {
 		if(fileout.is_open()) {
 			fileout << output;
 			fileout.close();
+		} else {
+			std::abort();
+		}
+
+		std::fstream ids_fileout;
+		ids_fileout.open(ids_output_file_name, std::ios::out);
+		if(ids_fileout.is_open()) {
+			ids_fileout << ids_output;
+			ids_fileout.close();
 		} else {
 			std::abort();
 		}
