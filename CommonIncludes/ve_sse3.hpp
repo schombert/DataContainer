@@ -1482,7 +1482,7 @@ namespace ve {
 		r.lanes[1] = u.lanes[1];
 		r.lanes[2] = u.lanes[2];
 		r.lanes[3] = u.lanes[3];
-		auto const cl = _mm_srli_epi32(_mm_slli_epi32(r.tmp, 24), 24);
+		auto const cl = _mm_srai_epi32(_mm_slli_epi32(r.tmp, 24), 24);
 		auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + uint32_t(4) - e.subcount));
 		return _mm_and_si128(mask_l, cl);
 	}
@@ -1501,7 +1501,7 @@ namespace ve {
 		r.lanes[1] = u.lanes[1];
 		r.lanes[2] = u.lanes[2];
 		r.lanes[3] = u.lanes[3];
-		auto const cl = _mm_srai_epi32(_mm_slli_epi32(r.tmp, 24), 24);
+		auto const cl = _mm_srli_epi32(_mm_slli_epi32(r.tmp, 24), 24);
 		auto const mask_l = _mm_loadu_si128((const __m128i *)(load_masks + uint32_t(4) - e.subcount));
 		return _mm_and_si128(mask_l, cl);
 	}

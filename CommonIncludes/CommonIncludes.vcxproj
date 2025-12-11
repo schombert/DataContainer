@@ -132,6 +132,7 @@
     <ClInclude Include="ve_avx2.hpp" />
     <ClInclude Include="ve_avx512.hpp" />
     <ClInclude Include="ve_sse.hpp" />
+    <ClInclude Include="ve_sse3.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\changes.md" />
