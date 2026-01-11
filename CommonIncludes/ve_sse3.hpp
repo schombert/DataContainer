@@ -862,16 +862,16 @@ namespace ve {
 		return (a > b) | (b > a);
 	}
 	RELEASE_INLINE mask_vector operator<=(int_vector a, int_vector b) {
-		return (a < b) | (a == b);
+		return _mm_andnot_si128(a > b, mask_vector(true));
 	}
 	RELEASE_INLINE mask_vector operator>=(int_vector a, int_vector b) {
-		return (a > b) | (a == b);
-	}
-	RELEASE_INLINE mask_vector operator==(mask_vector a, mask_vector b) {
-		return !(a ^ b);
+		return _mm_andnot_si128(a < b, mask_vector(true));
 	}
 	RELEASE_INLINE mask_vector operator!=(mask_vector a, mask_vector b) {
 		return (a ^ b);
+	}
+	RELEASE_INLINE mask_vector operator==(mask_vector a, mask_vector b) {
+		return _mm_andnot_si128(a != b, mask_vector(true));
 	}
 
 	template<typename T>
