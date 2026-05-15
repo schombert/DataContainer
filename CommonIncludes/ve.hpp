@@ -42,10 +42,10 @@ namespace concurrency = oneapi::tbb;
 #ifdef __AVX__
 #include "ve_avx.hpp"
 #else
-#ifdef __SSE3__ //MSVC won't define it by default
-#include "ve_sse3.hpp"
-#else
+#ifdef __SSE4_2__ 
 #include "ve_sse.hpp"
+#else // Worst case, fallback to SSE3
+#include "ve_sse3.hpp"
 #endif
 #endif
 #endif
