@@ -214,6 +214,7 @@ void make_serialize_single_object(basic_builder& o, const relationship_object_de
 					o + inline_block{
 						o + "dcon::record_header iheader(sizeof(@type@_id) * @pk_obj@.size_used, \"@u_type@\", \"@obj@\", \"@prop@\");";
 						o + "iheader.serialize(output_buffer);";
+						o + "if(@pk_obj@.size_used > 0)";
 						o + "std::memcpy(reinterpret_cast<@type@_id*>(output_buffer), @obj@.m_@prop@.vptr(), sizeof(@type@_id) * @pk_obj@.size_used);";
 						o + "output_buffer += sizeof(@type@_id) *  @pk_obj@.size_used;";
 					};
@@ -221,6 +222,7 @@ void make_serialize_single_object(basic_builder& o, const relationship_object_de
 					o + inline_block{
 						o + "dcon::record_header iheader(sizeof(std::array<@type@_id, @mult@>) * @pk_obj@.size_used, \"std::array<@u_type@,@mult@>\", \"@obj@\", \"@prop@\");";
 						o + "iheader.serialize(output_buffer);";
+						o + "if(@pk_obj@.size_used > 0)";
 						o + "std::memcpy(reinterpret_cast<std::array<@type@_id, @mult@>*>(output_buffer), @obj@.m_@prop@.vptr(), sizeof(std::array<@type@_id, @mult@>) * @pk_obj@.size_used);";
 						o + "output_buffer += sizeof(std::array<@type@_id, @mult@>) *  @pk_obj@.size_used;";
 					};
@@ -239,6 +241,7 @@ void make_serialize_single_object(basic_builder& o, const relationship_object_de
 		o + "if(serialize_selection.@obj@__index)" + block{
 			o + "dcon::record_header header(sizeof(@obj@_id) * @pk_obj@.size_used, \"@u_type@\", \"@obj@\", \"_index\");";
 			o + "header.serialize(output_buffer);";
+			o + "if(@pk_obj@.size_used > 0)";
 			o + "std::memcpy(reinterpret_cast<@obj@_id*>(output_buffer), @obj@.m__index.vptr(), sizeof(@obj@_id) * @pk_obj@.size_used);";
 			o + "output_buffer += sizeof(@obj@_id) * @pk_obj@.size_used;";
 		};
@@ -252,6 +255,7 @@ void make_serialize_single_object(basic_builder& o, const relationship_object_de
 			o + "if(serialize_selection.@obj@_@prop@)" + block{
 				o + "dcon::record_header header((@pk_obj@.size_used + 7) / 8, \"bitfield\", \"@obj@\", \"@prop@\");";
 				o + "header.serialize(output_buffer);";
+				o + "if(@pk_obj@.size_used > 0)";
 				o + "std::memcpy(reinterpret_cast<dcon::bitfield_type*>(output_buffer), @obj@.m_@prop@.vptr(), (@pk_obj@.size_used + 7) / 8);";
 				o + "output_buffer += (@pk_obj@.size_used + 7) / 8;";
 			};
@@ -269,6 +273,7 @@ void make_serialize_single_object(basic_builder& o, const relationship_object_de
 				o + "dcon::record_header header(total_size, \"stable_mk_2_tag\", \"@obj@\", \"@prop@\");";
 				o + "header.serialize(output_buffer);";
 
+				o + "if(@vname_sz@ > 0)";
 				o + "std::memcpy(reinterpret_cast<char*>(output_buffer), \"@type@\", @vname_sz@);";
 				o + "output_buffer += @vname_sz@;";
 
@@ -276,6 +281,7 @@ void make_serialize_single_object(basic_builder& o, const relationship_object_de
 					o + "auto rng = dcon::get_range(t->@obj@.@prop@_storage, obj);";
 					o + "*(reinterpret_cast<uint16_t*>(output_buffer)) = uint16_t(rng.second - rng.first);";
 					o + "output_buffer += sizeof(uint16_t);";
+					o + "if((rng.second - rng.first) > 0)";
 					o + "std::memcpy(reinterpret_cast<@type@*>(output_buffer), rng.first, sizeof(@type@) * (rng.second - rng.first));";
 					o + "output_buffer += sizeof(@type@) * (rng.second - rng.first);";
 				} + append{ ");" };
@@ -298,6 +304,7 @@ void make_serialize_single_object(basic_builder& o, const relationship_object_de
 				o + "dcon::record_header header(@vname_sz@ + sizeof(uint16_t) + @obj@.m_@prop@.size * ((@pk_obj@.size_used + 7) / 8), \"$array\", \"@obj@\", \"@prop@\");";
 				o + "header.serialize(output_buffer);";
 
+				o + "if(@vname_sz@ > 0)";
 				o + "std::memcpy(reinterpret_cast<char*>(output_buffer), \"bitfield\", @vname_sz@);";
 				o + "output_buffer += @vname_sz@;";
 
@@ -305,6 +312,7 @@ void make_serialize_single_object(basic_builder& o, const relationship_object_de
 				o + "output_buffer += sizeof(uint16_t);";
 
 				o + "for(int32_t s = 0; s < int32_t(@obj@.m_@prop@.size); ++s)" + block{
+					o + "if(@pk_obj@.size_used > 0)";
 					o + "std::memcpy(reinterpret_cast<dcon::bitfield_type*>(output_buffer), @obj@.m_@prop@.vptr(s), (@pk_obj@.size_used + 7) / 8);";
 					o + "output_buffer += (@pk_obj@.size_used + 7) / 8;";
 				};
@@ -316,6 +324,7 @@ void make_serialize_single_object(basic_builder& o, const relationship_object_de
 				o + "dcon::record_header header(@vname_sz@ + sizeof(uint16_t) + sizeof(@type@) * @obj@.m_@prop@.size * @pk_obj@.size_used, \"$array\", \"@obj@\", \"@prop@\");";
 				o + "header.serialize(output_buffer);";
 
+				o + "if(@vname_sz@ > 0)";
 				o + "std::memcpy(reinterpret_cast<char*>(output_buffer), \"@type@\", @vname_sz@);";
 				o + "output_buffer += @vname_sz@;";
 
@@ -323,6 +332,7 @@ void make_serialize_single_object(basic_builder& o, const relationship_object_de
 				o + "output_buffer += sizeof(uint16_t);";
 
 				o + "for(int32_t s = 0; s < int32_t(@obj@.m_@prop@.size); ++s)" + block{
+					o + "if(@pk_obj@.size_used > 0)";
 					o + "std::memcpy(reinterpret_cast<@type@*>(output_buffer), @obj@.m_@prop@.vptr(s), sizeof(@type@) * @pk_obj@.size_used);";
 					o + "output_buffer +=  sizeof(@type@) * @pk_obj@.size_used;";
 				};
@@ -331,6 +341,7 @@ void make_serialize_single_object(basic_builder& o, const relationship_object_de
 			o + "if(serialize_selection.@obj@_@prop@)" + block{
 				o + "dcon::record_header header(sizeof(@type@) * @pk_obj@.size_used, \"@type@\", \"@obj@\", \"@prop@\");";
 				o + "header.serialize(output_buffer);";
+				o + "if(@pk_obj@.size_used > 0)";
 				o + "std::memcpy(reinterpret_cast<@type@*>(output_buffer), @obj@.m_@prop@.vptr(), sizeof(@type@) * @pk_obj@.size_used);";
 				o + "output_buffer += sizeof(@type@) * @pk_obj@.size_used;";
 			};
@@ -612,6 +623,7 @@ void deserialize_bitfield_property_fragment(basic_builder& o, file_def const& pa
 	relationship_object_def const& ob, property_def const& prop, bool with_mask) {
 
 	o + "if(header.is_type(\"bitfield\"))" + block{
+		o + "if(@pk_obj@.size_used > 0)";
 		o + "std::memcpy(@obj@.m_@prop@.vptr(), reinterpret_cast<dcon::bitfield_type const*>(input_buffer)"
 			", std::min(size_t(@pk_obj@.size_used + 7) / 8, size_t(header.record_size)));";
 		o + "serialize_selection.@obj@_@prop@ = true;";
@@ -735,6 +747,7 @@ void deserialize_a_bitfield_property_fragment(basic_builder& o, file_def const& 
 				o + "@obj@.m_@prop@.resize(0, @pk_obj@.size_used);";
 			};
 			o + "for(int32_t s = 0; s < int32_t(@obj@.m_@prop@.size) && icpy < input_buffer + header.record_size; ++s)" + block{
+				o + "if(@pk_obj@.size_used > 0)";
 				o + "std::memcpy(@obj@.m_@prop@.vptr(s), reinterpret_cast<dcon::bitfield_type const*>(icpy)"
 				", std::min(size_t(@pk_obj@.size_used + 7) / 8, size_t(input_buffer + header.record_size - icpy)));";
 				o + "icpy += (@pk_obj@.size_used + 7) / 8;";
@@ -785,6 +798,7 @@ void deserialize_a_other_property_fragment(basic_builder& o, file_def const& par
 				o + "@obj@.m_@prop@.resize(0, @pk_obj@.size_used);";
 			};
 			o + "for(int32_t s = 0; s < int32_t(@obj@.m_@prop@.size) && icpy < input_buffer + header.record_size; ++s)" + block{
+				o + "if(@pk_obj@.size_used > 0)";
 				o + "std::memcpy(@obj@.m_@prop@.vptr(s), reinterpret_cast<@type@ const*>(icpy)"
 					", std::min(sizeof(@type@) * @pk_obj@.size_used, size_t(input_buffer + header.record_size - icpy)));";
 				o + "icpy += sizeof(@type@) * @pk_obj@.size_used;";
@@ -849,6 +863,7 @@ void deserialize_basic_property_fragment(basic_builder& o, file_def const& parse
 	relationship_object_def const& ob, property_def const& prop, bool with_mask) {
 
 	o + "if(header.is_type(\"@type@\"))" + block{
+		o + "if(@pk_obj@.size_used > 0)";
 		o + "std::memcpy(@obj@.m_@prop@.vptr(), reinterpret_cast<@type@ const*>(input_buffer)"
 			", std::min(size_t(@pk_obj@.size_used) * sizeof(@type@), size_t(header.record_size)));";
 		o + "serialize_selection.@obj@_@prop@ = true;";

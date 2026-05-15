@@ -72,127 +72,9 @@ namespace os {
 			dummy_rel_right = false;
 		}
 	};
-	//
-	// definition of strongly typed index for thingy_id
-	//
-	class thingy_id {
-		public:
-		using value_base_t = uint16_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint16_t value = 0;
-		
-		constexpr thingy_id() noexcept = default;
-		explicit constexpr thingy_id(uint16_t v) noexcept : value(v + 1) {}
-		constexpr thingy_id(thingy_id const& v) noexcept = default;
-		constexpr thingy_id(thingy_id&& v) noexcept = default;
-		
-		thingy_id& operator=(thingy_id const& v) noexcept = default;
-		thingy_id& operator=(thingy_id&& v) noexcept = default;
-		constexpr bool operator==(thingy_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(thingy_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class thingy_id_pair {
-		public:
-		thingy_id left;
-		thingy_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(thingy_id id) { return bool(id); }
-	
-	//
-	// definition of strongly typed index for thingy2_id
-	//
-	class thingy2_id {
-		public:
-		using value_base_t = uint16_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint16_t value = 0;
-		
-		constexpr thingy2_id() noexcept = default;
-		explicit constexpr thingy2_id(uint16_t v) noexcept : value(v + 1) {}
-		constexpr thingy2_id(thingy2_id const& v) noexcept = default;
-		constexpr thingy2_id(thingy2_id&& v) noexcept = default;
-		
-		thingy2_id& operator=(thingy2_id const& v) noexcept = default;
-		thingy2_id& operator=(thingy2_id&& v) noexcept = default;
-		constexpr bool operator==(thingy2_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(thingy2_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class thingy2_id_pair {
-		public:
-		thingy2_id left;
-		thingy2_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(thingy2_id id) { return bool(id); }
-	
-	//
-	// definition of strongly typed index for dummy_rel_id
-	//
-	class dummy_rel_id {
-		public:
-		using value_base_t = uint16_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint16_t value = 0;
-		
-		constexpr dummy_rel_id() noexcept = default;
-		explicit constexpr dummy_rel_id(uint16_t v) noexcept : value(v + 1) {}
-		constexpr dummy_rel_id(dummy_rel_id const& v) noexcept = default;
-		constexpr dummy_rel_id(dummy_rel_id&& v) noexcept = default;
-		
-		dummy_rel_id& operator=(dummy_rel_id const& v) noexcept = default;
-		dummy_rel_id& operator=(dummy_rel_id&& v) noexcept = default;
-		constexpr bool operator==(dummy_rel_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(dummy_rel_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class dummy_rel_id_pair {
-		public:
-		dummy_rel_id left;
-		dummy_rel_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(dummy_rel_id id) { return bool(id); }
-	
 }
 
-#ifndef DCON_NO_VE
-namespace ve {
-	template<>
-	struct value_to_vector_type_s<os::thingy_id> {
-		using type = ::ve::tagged_vector<os::thingy_id>;
-	};
-	
-	template<>
-	struct value_to_vector_type_s<os::thingy2_id> {
-		using type = ::ve::tagged_vector<os::thingy2_id>;
-	};
-	
-	template<>
-	struct value_to_vector_type_s<os::dummy_rel_id> {
-		using type = ::ve::tagged_vector<os::dummy_rel_id>;
-	};
-	
-}
-
-#endif
+#include "old_ser_ids.hpp"
 namespace os {
 	namespace detail {
 	}
@@ -2375,18 +2257,21 @@ namespace os {
 			if(serialize_selection.thingy_i_value) {
 				dcon::record_header header(sizeof(int16_t) * thingy.size_used, "int16_t", "thingy", "i_value");
 				header.serialize(output_buffer);
+				if(thingy.size_used > 0)
 				std::memcpy(reinterpret_cast<int16_t*>(output_buffer), thingy.m_i_value.vptr(), sizeof(int16_t) * thingy.size_used);
 				output_buffer += sizeof(int16_t) * thingy.size_used;
 			}
 			if(serialize_selection.thingy_f_value) {
 				dcon::record_header header(sizeof(float) * thingy.size_used, "float", "thingy", "f_value");
 				header.serialize(output_buffer);
+				if(thingy.size_used > 0)
 				std::memcpy(reinterpret_cast<float*>(output_buffer), thingy.m_f_value.vptr(), sizeof(float) * thingy.size_used);
 				output_buffer += sizeof(float) * thingy.size_used;
 			}
 			if(serialize_selection.thingy_bf_value) {
 				dcon::record_header header((thingy.size_used + 7) / 8, "bitfield", "thingy", "bf_value");
 				header.serialize(output_buffer);
+				if(thingy.size_used > 0)
 				std::memcpy(reinterpret_cast<dcon::bitfield_type*>(output_buffer), thingy.m_bf_value.vptr(), (thingy.size_used + 7) / 8);
 				output_buffer += (thingy.size_used + 7) / 8;
 			}
@@ -2408,12 +2293,14 @@ namespace os {
 				total_size += 8;
 				dcon::record_header header(total_size, "stable_mk_2_tag", "thingy", "pooled_v");
 				header.serialize(output_buffer);
+				if(8 > 0)
 				std::memcpy(reinterpret_cast<char*>(output_buffer), "int16_t", 8);
 				output_buffer += 8;
 				std::for_each(thingy.m_pooled_v.vptr(), thingy.m_pooled_v.vptr() + thingy.size_used, [t = this, &output_buffer](dcon::stable_mk_2_tag obj) {
 					auto rng = dcon::get_range(t->thingy.pooled_v_storage, obj);
 					*(reinterpret_cast<uint16_t*>(output_buffer)) = uint16_t(rng.second - rng.first);
 					output_buffer += sizeof(uint16_t);
+					if((rng.second - rng.first) > 0)
 					std::memcpy(reinterpret_cast<int16_t*>(output_buffer), rng.first, sizeof(int16_t) * (rng.second - rng.first));
 					output_buffer += sizeof(int16_t) * (rng.second - rng.first);
 				} );
@@ -2421,11 +2308,13 @@ namespace os {
 			if(serialize_selection.thingy_big_array) {
 				dcon::record_header header(6 + sizeof(uint16_t) + sizeof(float) * thingy.m_big_array.size * thingy.size_used, "$array", "thingy", "big_array");
 				header.serialize(output_buffer);
+				if(6 > 0)
 				std::memcpy(reinterpret_cast<char*>(output_buffer), "float", 6);
 				output_buffer += 6;
 				*(reinterpret_cast<uint16_t*>(output_buffer)) = uint16_t(thingy.m_big_array.size);
 				output_buffer += sizeof(uint16_t);
 				for(int32_t s = 0; s < int32_t(thingy.m_big_array.size); ++s) {
+					if(thingy.size_used > 0)
 					std::memcpy(reinterpret_cast<float*>(output_buffer), thingy.m_big_array.vptr(s), sizeof(float) * thingy.size_used);
 					output_buffer +=  sizeof(float) * thingy.size_used;
 				}
@@ -2433,11 +2322,13 @@ namespace os {
 			if(serialize_selection.thingy_big_array_bf) {
 				dcon::record_header header(9 + sizeof(uint16_t) + thingy.m_big_array_bf.size * ((thingy.size_used + 7) / 8), "$array", "thingy", "big_array_bf");
 				header.serialize(output_buffer);
+				if(9 > 0)
 				std::memcpy(reinterpret_cast<char*>(output_buffer), "bitfield", 9);
 				output_buffer += 9;
 				*(reinterpret_cast<uint16_t*>(output_buffer)) = uint16_t(thingy.m_big_array_bf.size);
 				output_buffer += sizeof(uint16_t);
 				for(int32_t s = 0; s < int32_t(thingy.m_big_array_bf.size); ++s) {
+					if(thingy.size_used > 0)
 					std::memcpy(reinterpret_cast<dcon::bitfield_type*>(output_buffer), thingy.m_big_array_bf.vptr(s), (thingy.size_used + 7) / 8);
 					output_buffer += (thingy.size_used + 7) / 8;
 				}
@@ -2445,6 +2336,7 @@ namespace os {
 			if(serialize_selection.thingy_custom_struct) {
 				dcon::record_header header(sizeof(c_struct) * thingy.size_used, "c_struct", "thingy", "custom_struct");
 				header.serialize(output_buffer);
+				if(thingy.size_used > 0)
 				std::memcpy(reinterpret_cast<c_struct*>(output_buffer), thingy.m_custom_struct.vptr(), sizeof(c_struct) * thingy.size_used);
 				output_buffer += sizeof(c_struct) * thingy.size_used;
 			}
@@ -2457,6 +2349,7 @@ namespace os {
 			if(serialize_selection.thingy2_some_value) {
 				dcon::record_header header(sizeof(int32_t) * thingy2.size_used, "int32_t", "thingy2", "some_value");
 				header.serialize(output_buffer);
+				if(thingy2.size_used > 0)
 				std::memcpy(reinterpret_cast<int32_t*>(output_buffer), thingy2.m_some_value.vptr(), sizeof(int32_t) * thingy2.size_used);
 				output_buffer += sizeof(int32_t) * thingy2.size_used;
 			}
@@ -2468,6 +2361,7 @@ namespace os {
 				 {
 					dcon::record_header iheader(sizeof(thingy_id) * thingy2.size_used, "uint16_t", "dummy_rel", "left");
 					iheader.serialize(output_buffer);
+					if(thingy2.size_used > 0)
 					std::memcpy(reinterpret_cast<thingy_id*>(output_buffer), dummy_rel.m_left.vptr(), sizeof(thingy_id) * thingy2.size_used);
 					output_buffer += sizeof(thingy_id) *  thingy2.size_used;
 				}
@@ -2487,6 +2381,7 @@ namespace os {
 					}
 					if(header.is_property("i_value") && mask.thingy_i_value) {
 						if(header.is_type("int16_t")) {
+							if(thingy.size_used > 0)
 							std::memcpy(thingy.m_i_value.vptr(), reinterpret_cast<int16_t const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(int16_t), size_t(header.record_size)));
 							serialize_selection.thingy_i_value = true;
 						}
@@ -2548,6 +2443,7 @@ namespace os {
 					}
 					if(header.is_property("f_value") && mask.thingy_f_value) {
 						if(header.is_type("float")) {
+							if(thingy.size_used > 0)
 							std::memcpy(thingy.m_f_value.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(float), size_t(header.record_size)));
 							serialize_selection.thingy_f_value = true;
 						}
@@ -2609,6 +2505,7 @@ namespace os {
 					}
 					if(header.is_property("bf_value") && mask.thingy_bf_value) {
 						if(header.is_type("bitfield")) {
+							if(thingy.size_used > 0)
 							std::memcpy(thingy.m_bf_value.vptr(), reinterpret_cast<dcon::bitfield_type const*>(input_buffer), std::min(size_t(thingy.size_used + 7) / 8, size_t(header.record_size)));
 							serialize_selection.thingy_bf_value = true;
 						}
@@ -2803,6 +2700,7 @@ namespace os {
 									thingy.m_big_array.resize(0, thingy.size_used);
 								}
 								for(int32_t s = 0; s < int32_t(thingy.m_big_array.size) && icpy < input_buffer + header.record_size; ++s) {
+									if(thingy.size_used > 0)
 									std::memcpy(thingy.m_big_array.vptr(s), reinterpret_cast<float const*>(icpy), std::min(sizeof(float) * thingy.size_used, size_t(input_buffer + header.record_size - icpy)));
 									icpy += sizeof(float) * thingy.size_used;
 								}
@@ -2958,6 +2856,7 @@ namespace os {
 									thingy.m_big_array_bf.resize(0, thingy.size_used);
 								}
 								for(int32_t s = 0; s < int32_t(thingy.m_big_array_bf.size) && icpy < input_buffer + header.record_size; ++s) {
+									if(thingy.size_used > 0)
 									std::memcpy(thingy.m_big_array_bf.vptr(s), reinterpret_cast<dcon::bitfield_type const*>(icpy), std::min(size_t(thingy.size_used + 7) / 8, size_t(input_buffer + header.record_size - icpy)));
 									icpy += (thingy.size_used + 7) / 8;
 								}
@@ -2968,6 +2867,7 @@ namespace os {
 					}
 					if(header.is_property("custom_struct") && mask.thingy_custom_struct) {
 						if(header.is_type("c_struct")) {
+							if(thingy.size_used > 0)
 							std::memcpy(thingy.m_custom_struct.vptr(), reinterpret_cast<c_struct const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(c_struct), size_t(header.record_size)));
 							serialize_selection.thingy_custom_struct = true;
 						}
@@ -2983,6 +2883,7 @@ namespace os {
 					}
 					if(header.is_property("some_value") && mask.thingy2_some_value) {
 						if(header.is_type("int32_t")) {
+							if(thingy2.size_used > 0)
 							std::memcpy(thingy2.m_some_value.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(thingy2.size_used) * sizeof(int32_t), size_t(header.record_size)));
 							serialize_selection.thingy2_some_value = true;
 						}
