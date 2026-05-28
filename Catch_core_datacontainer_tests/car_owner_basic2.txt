@@ -26,6 +26,7 @@ object{
 	}
 }
 
+
 relationship{
 	name{car_ownership}
 

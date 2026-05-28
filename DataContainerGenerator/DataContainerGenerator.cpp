@@ -364,11 +364,18 @@ int main(int argc, char *argv[]) {
 		output += "#ifdef NDEBUG\n";
 		output += "#ifdef _MSC_VER\n";
 		output += "#define DCON_RELEASE_INLINE __forceinline\n";
+		output += "#define DCON_RESTRICT __restrict\n";
 		output += "#else\n";
 		output += "#define DCON_RELEASE_INLINE inline __attribute__((always_inline))\n";
+		output += "#define DCON_RESTRICT __restrict__\n";
 		output += "#endif\n";
 		output += "#else\n";
 		output += "#define DCON_RELEASE_INLINE inline\n";
+		output += "#ifdef _MSC_VER\n";
+		output += "#define DCON_RESTRICT __restrict\n";
+		output += "#else\n";
+		output += "#define DCON_RESTRICT __restrict__\n";
+		output += "#endif\n";
 		output += "#endif\n";
 
 		ids_output += "#ifdef DCON_RELEASE_INLINE\n";
@@ -964,6 +971,7 @@ int main(int argc, char *argv[]) {
 
 
 		output += "#undef DCON_RELEASE_INLINE\n";
+		output += "#undef DCON_RESTRICT\n";
 
 		ids_output += "#ifndef DCON_RELEASE_INLINE_DEFINED\n";
 		ids_output += "#undef DCON_RELEASE_INLINE\n";

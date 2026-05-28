@@ -24,11 +24,18 @@
 #ifdef NDEBUG
 #ifdef _MSC_VER
 #define DCON_RELEASE_INLINE __forceinline
+#define DCON_RESTRICT __restrict
 #else
 #define DCON_RELEASE_INLINE inline __attribute__((always_inline))
+#define DCON_RESTRICT __restrict__
 #endif
 #else
 #define DCON_RELEASE_INLINE inline
+#ifdef _MSC_VER
+#define DCON_RESTRICT __restrict
+#else
+#define DCON_RESTRICT __restrict__
+#endif
 #endif
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -140,583 +147,9 @@ namespace dcon {
 			relate_as_multipleD_left = false;
 		}
 	};
-	//
-	// definition of strongly typed index for pop_id
-	//
-	class pop_id {
-		public:
-		using value_base_t = uint8_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint8_t value = 0;
-		
-		constexpr pop_id() noexcept = default;
-		explicit constexpr pop_id(uint8_t v) noexcept : value(v + 1) {}
-		constexpr pop_id(pop_id const& v) noexcept = default;
-		constexpr pop_id(pop_id&& v) noexcept = default;
-		
-		pop_id& operator=(pop_id const& v) noexcept = default;
-		pop_id& operator=(pop_id&& v) noexcept = default;
-		constexpr bool operator==(pop_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(pop_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint8_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class pop_id_pair {
-		public:
-		pop_id left;
-		pop_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(pop_id id) { return bool(id); }
-	
-	//
-	// definition of strongly typed index for employment_id
-	//
-	class employment_id {
-		public:
-		using value_base_t = uint8_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint8_t value = 0;
-		
-		constexpr employment_id() noexcept = default;
-		explicit constexpr employment_id(uint8_t v) noexcept : value(v + 1) {}
-		constexpr employment_id(employment_id const& v) noexcept = default;
-		constexpr employment_id(employment_id&& v) noexcept = default;
-		
-		employment_id& operator=(employment_id const& v) noexcept = default;
-		employment_id& operator=(employment_id&& v) noexcept = default;
-		constexpr bool operator==(employment_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(employment_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint8_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class employment_id_pair {
-		public:
-		employment_id left;
-		employment_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(employment_id id) { return bool(id); }
-	
-	//
-	// definition of strongly typed index for job_id
-	//
-	class job_id {
-		public:
-		using value_base_t = uint8_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint8_t value = 0;
-		
-		constexpr job_id() noexcept = default;
-		explicit constexpr job_id(uint8_t v) noexcept : value(v + 1) {}
-		constexpr job_id(job_id const& v) noexcept = default;
-		constexpr job_id(job_id&& v) noexcept = default;
-		
-		job_id& operator=(job_id const& v) noexcept = default;
-		job_id& operator=(job_id&& v) noexcept = default;
-		constexpr bool operator==(job_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(job_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint8_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class job_id_pair {
-		public:
-		job_id left;
-		job_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(job_id id) { return bool(id); }
-	
-	//
-	// definition of strongly typed index for thingyA_id
-	//
-	class thingyA_id {
-		public:
-		using value_base_t = uint16_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint16_t value = 0;
-		
-		constexpr thingyA_id() noexcept = default;
-		explicit constexpr thingyA_id(uint16_t v) noexcept : value(v + 1) {}
-		constexpr thingyA_id(thingyA_id const& v) noexcept = default;
-		constexpr thingyA_id(thingyA_id&& v) noexcept = default;
-		
-		thingyA_id& operator=(thingyA_id const& v) noexcept = default;
-		thingyA_id& operator=(thingyA_id&& v) noexcept = default;
-		constexpr bool operator==(thingyA_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(thingyA_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class thingyA_id_pair {
-		public:
-		thingyA_id left;
-		thingyA_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(thingyA_id id) { return bool(id); }
-	
-	//
-	// definition of strongly typed index for thingyB_id
-	//
-	class thingyB_id {
-		public:
-		using value_base_t = uint16_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint16_t value = 0;
-		
-		constexpr thingyB_id() noexcept = default;
-		explicit constexpr thingyB_id(uint16_t v) noexcept : value(v + 1) {}
-		constexpr thingyB_id(thingyB_id const& v) noexcept = default;
-		constexpr thingyB_id(thingyB_id&& v) noexcept = default;
-		
-		thingyB_id& operator=(thingyB_id const& v) noexcept = default;
-		thingyB_id& operator=(thingyB_id&& v) noexcept = default;
-		constexpr bool operator==(thingyB_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(thingyB_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class thingyB_id_pair {
-		public:
-		thingyB_id left;
-		thingyB_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(thingyB_id id) { return bool(id); }
-	
-	//
-	// definition of strongly typed index for relate_same_id
-	//
-	class relate_same_id {
-		public:
-		using value_base_t = uint16_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint16_t value = 0;
-		
-		constexpr relate_same_id() noexcept = default;
-		explicit constexpr relate_same_id(uint16_t v) noexcept : value(v + 1) {}
-		constexpr relate_same_id(relate_same_id const& v) noexcept = default;
-		constexpr relate_same_id(relate_same_id&& v) noexcept = default;
-		
-		relate_same_id& operator=(relate_same_id const& v) noexcept = default;
-		relate_same_id& operator=(relate_same_id&& v) noexcept = default;
-		constexpr bool operator==(relate_same_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(relate_same_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class relate_same_id_pair {
-		public:
-		relate_same_id left;
-		relate_same_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(relate_same_id id) { return bool(id); }
-	
-	//
-	// definition of strongly typed index for relate_in_array_id
-	//
-	class relate_in_array_id {
-		public:
-		using value_base_t = uint16_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint16_t value = 0;
-		
-		constexpr relate_in_array_id() noexcept = default;
-		explicit constexpr relate_in_array_id(uint16_t v) noexcept : value(v + 1) {}
-		constexpr relate_in_array_id(relate_in_array_id const& v) noexcept = default;
-		constexpr relate_in_array_id(relate_in_array_id&& v) noexcept = default;
-		
-		relate_in_array_id& operator=(relate_in_array_id const& v) noexcept = default;
-		relate_in_array_id& operator=(relate_in_array_id&& v) noexcept = default;
-		constexpr bool operator==(relate_in_array_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(relate_in_array_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class relate_in_array_id_pair {
-		public:
-		relate_in_array_id left;
-		relate_in_array_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(relate_in_array_id id) { return bool(id); }
-	
-	//
-	// definition of strongly typed index for relate_in_list_id
-	//
-	class relate_in_list_id {
-		public:
-		using value_base_t = uint16_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint16_t value = 0;
-		
-		constexpr relate_in_list_id() noexcept = default;
-		explicit constexpr relate_in_list_id(uint16_t v) noexcept : value(v + 1) {}
-		constexpr relate_in_list_id(relate_in_list_id const& v) noexcept = default;
-		constexpr relate_in_list_id(relate_in_list_id&& v) noexcept = default;
-		
-		relate_in_list_id& operator=(relate_in_list_id const& v) noexcept = default;
-		relate_in_list_id& operator=(relate_in_list_id&& v) noexcept = default;
-		constexpr bool operator==(relate_in_list_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(relate_in_list_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class relate_in_list_id_pair {
-		public:
-		relate_in_list_id left;
-		relate_in_list_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(relate_in_list_id id) { return bool(id); }
-	
-	//
-	// definition of strongly typed index for many_many_id
-	//
-	class many_many_id {
-		public:
-		using value_base_t = uint16_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint16_t value = 0;
-		
-		constexpr many_many_id() noexcept = default;
-		explicit constexpr many_many_id(uint16_t v) noexcept : value(v + 1) {}
-		constexpr many_many_id(many_many_id const& v) noexcept = default;
-		constexpr many_many_id(many_many_id&& v) noexcept = default;
-		
-		many_many_id& operator=(many_many_id const& v) noexcept = default;
-		many_many_id& operator=(many_many_id&& v) noexcept = default;
-		constexpr bool operator==(many_many_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(many_many_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class many_many_id_pair {
-		public:
-		many_many_id left;
-		many_many_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(many_many_id id) { return bool(id); }
-	
-	//
-	// definition of strongly typed index for relate_as_optional_id
-	//
-	class relate_as_optional_id {
-		public:
-		using value_base_t = uint16_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint16_t value = 0;
-		
-		constexpr relate_as_optional_id() noexcept = default;
-		explicit constexpr relate_as_optional_id(uint16_t v) noexcept : value(v + 1) {}
-		constexpr relate_as_optional_id(relate_as_optional_id const& v) noexcept = default;
-		constexpr relate_as_optional_id(relate_as_optional_id&& v) noexcept = default;
-		
-		relate_as_optional_id& operator=(relate_as_optional_id const& v) noexcept = default;
-		relate_as_optional_id& operator=(relate_as_optional_id&& v) noexcept = default;
-		constexpr bool operator==(relate_as_optional_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(relate_as_optional_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class relate_as_optional_id_pair {
-		public:
-		relate_as_optional_id left;
-		relate_as_optional_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(relate_as_optional_id id) { return bool(id); }
-	
-	//
-	// definition of strongly typed index for relate_as_non_optional_id
-	//
-	class relate_as_non_optional_id {
-		public:
-		using value_base_t = uint16_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint16_t value = 0;
-		
-		constexpr relate_as_non_optional_id() noexcept = default;
-		explicit constexpr relate_as_non_optional_id(uint16_t v) noexcept : value(v + 1) {}
-		constexpr relate_as_non_optional_id(relate_as_non_optional_id const& v) noexcept = default;
-		constexpr relate_as_non_optional_id(relate_as_non_optional_id&& v) noexcept = default;
-		
-		relate_as_non_optional_id& operator=(relate_as_non_optional_id const& v) noexcept = default;
-		relate_as_non_optional_id& operator=(relate_as_non_optional_id&& v) noexcept = default;
-		constexpr bool operator==(relate_as_non_optional_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(relate_as_non_optional_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class relate_as_non_optional_id_pair {
-		public:
-		relate_as_non_optional_id left;
-		relate_as_non_optional_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(relate_as_non_optional_id id) { return bool(id); }
-	
-	//
-	// definition of strongly typed index for relate_as_multipleA_id
-	//
-	class relate_as_multipleA_id {
-		public:
-		using value_base_t = uint16_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint16_t value = 0;
-		
-		constexpr relate_as_multipleA_id() noexcept = default;
-		explicit constexpr relate_as_multipleA_id(uint16_t v) noexcept : value(v + 1) {}
-		constexpr relate_as_multipleA_id(relate_as_multipleA_id const& v) noexcept = default;
-		constexpr relate_as_multipleA_id(relate_as_multipleA_id&& v) noexcept = default;
-		
-		relate_as_multipleA_id& operator=(relate_as_multipleA_id const& v) noexcept = default;
-		relate_as_multipleA_id& operator=(relate_as_multipleA_id&& v) noexcept = default;
-		constexpr bool operator==(relate_as_multipleA_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(relate_as_multipleA_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class relate_as_multipleA_id_pair {
-		public:
-		relate_as_multipleA_id left;
-		relate_as_multipleA_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(relate_as_multipleA_id id) { return bool(id); }
-	
-	//
-	// definition of strongly typed index for relate_as_multipleB_id
-	//
-	class relate_as_multipleB_id {
-		public:
-		using value_base_t = uint16_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint16_t value = 0;
-		
-		constexpr relate_as_multipleB_id() noexcept = default;
-		explicit constexpr relate_as_multipleB_id(uint16_t v) noexcept : value(v + 1) {}
-		constexpr relate_as_multipleB_id(relate_as_multipleB_id const& v) noexcept = default;
-		constexpr relate_as_multipleB_id(relate_as_multipleB_id&& v) noexcept = default;
-		
-		relate_as_multipleB_id& operator=(relate_as_multipleB_id const& v) noexcept = default;
-		relate_as_multipleB_id& operator=(relate_as_multipleB_id&& v) noexcept = default;
-		constexpr bool operator==(relate_as_multipleB_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(relate_as_multipleB_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class relate_as_multipleB_id_pair {
-		public:
-		relate_as_multipleB_id left;
-		relate_as_multipleB_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(relate_as_multipleB_id id) { return bool(id); }
-	
-	//
-	// definition of strongly typed index for relate_as_multipleC_id
-	//
-	class relate_as_multipleC_id {
-		public:
-		using value_base_t = uint16_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint16_t value = 0;
-		
-		constexpr relate_as_multipleC_id() noexcept = default;
-		explicit constexpr relate_as_multipleC_id(uint16_t v) noexcept : value(v + 1) {}
-		constexpr relate_as_multipleC_id(relate_as_multipleC_id const& v) noexcept = default;
-		constexpr relate_as_multipleC_id(relate_as_multipleC_id&& v) noexcept = default;
-		
-		relate_as_multipleC_id& operator=(relate_as_multipleC_id const& v) noexcept = default;
-		relate_as_multipleC_id& operator=(relate_as_multipleC_id&& v) noexcept = default;
-		constexpr bool operator==(relate_as_multipleC_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(relate_as_multipleC_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class relate_as_multipleC_id_pair {
-		public:
-		relate_as_multipleC_id left;
-		relate_as_multipleC_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(relate_as_multipleC_id id) { return bool(id); }
-	
-	//
-	// definition of strongly typed index for relate_as_multipleD_id
-	//
-	class relate_as_multipleD_id {
-		public:
-		using value_base_t = uint16_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint16_t value = 0;
-		
-		constexpr relate_as_multipleD_id() noexcept = default;
-		explicit constexpr relate_as_multipleD_id(uint16_t v) noexcept : value(v + 1) {}
-		constexpr relate_as_multipleD_id(relate_as_multipleD_id const& v) noexcept = default;
-		constexpr relate_as_multipleD_id(relate_as_multipleD_id&& v) noexcept = default;
-		
-		relate_as_multipleD_id& operator=(relate_as_multipleD_id const& v) noexcept = default;
-		relate_as_multipleD_id& operator=(relate_as_multipleD_id&& v) noexcept = default;
-		constexpr bool operator==(relate_as_multipleD_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(relate_as_multipleD_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class relate_as_multipleD_id_pair {
-		public:
-		relate_as_multipleD_id left;
-		relate_as_multipleD_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(relate_as_multipleD_id id) { return bool(id); }
-	
 }
 
-#ifndef DCON_NO_VE
-namespace ve {
-	template<>
-	struct value_to_vector_type_s<dcon::pop_id> {
-		using type = ::ve::tagged_vector<dcon::pop_id>;
-	};
-	
-	template<>
-	struct value_to_vector_type_s<dcon::employment_id> {
-		using type = ::ve::tagged_vector<dcon::employment_id>;
-	};
-	
-	template<>
-	struct value_to_vector_type_s<dcon::job_id> {
-		using type = ::ve::tagged_vector<dcon::job_id>;
-	};
-	
-	template<>
-	struct value_to_vector_type_s<dcon::thingyA_id> {
-		using type = ::ve::tagged_vector<dcon::thingyA_id>;
-	};
-	
-	template<>
-	struct value_to_vector_type_s<dcon::thingyB_id> {
-		using type = ::ve::tagged_vector<dcon::thingyB_id>;
-	};
-	
-	template<>
-	struct value_to_vector_type_s<dcon::relate_same_id> {
-		using type = ::ve::tagged_vector<dcon::relate_same_id>;
-	};
-	
-	template<>
-	struct value_to_vector_type_s<dcon::relate_in_array_id> {
-		using type = ::ve::tagged_vector<dcon::relate_in_array_id>;
-	};
-	
-	template<>
-	struct value_to_vector_type_s<dcon::relate_in_list_id> {
-		using type = ::ve::tagged_vector<dcon::relate_in_list_id>;
-	};
-	
-	template<>
-	struct value_to_vector_type_s<dcon::many_many_id> {
-		using type = ::ve::tagged_vector<dcon::many_many_id>;
-	};
-	
-	template<>
-	struct value_to_vector_type_s<dcon::relate_as_optional_id> {
-		using type = ::ve::tagged_vector<dcon::relate_as_optional_id>;
-	};
-	
-	template<>
-	struct value_to_vector_type_s<dcon::relate_as_non_optional_id> {
-		using type = ::ve::tagged_vector<dcon::relate_as_non_optional_id>;
-	};
-	
-	template<>
-	struct value_to_vector_type_s<dcon::relate_as_multipleA_id> {
-		using type = ::ve::tagged_vector<dcon::relate_as_multipleA_id>;
-	};
-	
-	template<>
-	struct value_to_vector_type_s<dcon::relate_as_multipleB_id> {
-		using type = ::ve::tagged_vector<dcon::relate_as_multipleB_id>;
-	};
-	
-	template<>
-	struct value_to_vector_type_s<dcon::relate_as_multipleC_id> {
-		using type = ::ve::tagged_vector<dcon::relate_as_multipleC_id>;
-	};
-	
-	template<>
-	struct value_to_vector_type_s<dcon::relate_as_multipleD_id> {
-		using type = ::ve::tagged_vector<dcon::relate_as_multipleD_id>;
-	};
-	
-}
-
-#endif
+#include "relation_ids.hpp"
 namespace dcon {
 	namespace detail {
 	}
@@ -737,8 +170,8 @@ namespace dcon {
 			//
 			struct dtype__index {
 				pop_id values[1];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE pop_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE pop_id* DCON_RESTRICT vptr() { return values; }
 				dtype__index() { std::uninitialized_value_construct_n(values, 1); }
 			}
 			m__index;
@@ -771,8 +204,8 @@ namespace dcon {
 			struct alignas(64) dtype_job {
 				uint8_t padding[(63 + sizeof(job_id)) & ~uint64_t(63)];
 				job_id values[(sizeof(job_id) <= 64 ? (uint32_t(1) + (uint32_t(64) / uint32_t(sizeof(job_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(job_id)) - uint32_t(1)) : uint32_t(1))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE job_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE job_id* DCON_RESTRICT vptr() { return values; }
 				dtype_job() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(job_id) <= 64 ? (uint32_t(1) + (uint32_t(64) / uint32_t(sizeof(job_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(job_id)) - uint32_t(1)) : uint32_t(1))); }
 			}
 			m_job;
@@ -815,8 +248,8 @@ namespace dcon {
 			struct alignas(64) dtype_some_value {
 				uint8_t padding[(63 + sizeof(int32_t)) & ~uint64_t(63)];
 				int32_t values[(sizeof(int32_t) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(int32_t))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(int32_t)) - uint32_t(1)) : uint32_t(1200))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE int32_t const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE int32_t* DCON_RESTRICT vptr() { return values; }
 				dtype_some_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(int32_t) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(int32_t))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(int32_t)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_some_value;
@@ -843,8 +276,8 @@ namespace dcon {
 			//
 			struct dtype__index {
 				thingyB_id values[1200];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE thingyB_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE thingyB_id* DCON_RESTRICT vptr() { return values; }
 				dtype__index() { std::uninitialized_value_construct_n(values, 1200); }
 			}
 			m__index;
@@ -855,8 +288,8 @@ namespace dcon {
 			struct alignas(64) dtype_some_value {
 				uint8_t padding[(63 + sizeof(int32_t)) & ~uint64_t(63)];
 				int32_t values[(sizeof(int32_t) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(int32_t))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(int32_t)) - uint32_t(1)) : uint32_t(1200))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE int32_t const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE int32_t* DCON_RESTRICT vptr() { return values; }
 				dtype_some_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(int32_t) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(int32_t))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(int32_t)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_some_value;
@@ -889,8 +322,8 @@ namespace dcon {
 			struct alignas(64) dtype_right {
 				uint8_t padding[(63 + sizeof(thingyA_id)) & ~uint64_t(63)];
 				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(1200))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE thingyA_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE thingyA_id* DCON_RESTRICT vptr() { return values; }
 				dtype_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_right;
@@ -931,8 +364,8 @@ namespace dcon {
 			struct alignas(64) dtype_right {
 				uint8_t padding[(63 + sizeof(thingyB_id)) & ~uint64_t(63)];
 				thingyB_id values[(sizeof(thingyB_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(thingyB_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyB_id)) - uint32_t(1)) : uint32_t(1200))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE thingyB_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE thingyB_id* DCON_RESTRICT vptr() { return values; }
 				dtype_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyB_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(thingyB_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyB_id)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_right;
@@ -943,8 +376,8 @@ namespace dcon {
 			struct alignas(64) dtype_array_right {
 				uint8_t padding[(63 + sizeof(dcon::stable_mk_2_tag)) & ~uint64_t(63)];
 				dcon::stable_mk_2_tag values[1200];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE dcon::stable_mk_2_tag const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE dcon::stable_mk_2_tag* DCON_RESTRICT vptr() { return values; }
 				dtype_array_right() { std::uninitialized_fill_n(values - 1, 1 + 1200, std::numeric_limits<dcon::stable_mk_2_tag>::max()); }
 			}
 			m_array_right;
@@ -977,8 +410,8 @@ namespace dcon {
 			struct alignas(64) dtype_right {
 				uint8_t padding[(63 + sizeof(thingyB_id)) & ~uint64_t(63)];
 				thingyB_id values[(sizeof(thingyB_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(thingyB_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyB_id)) - uint32_t(1)) : uint32_t(1200))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE thingyB_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE thingyB_id* DCON_RESTRICT vptr() { return values; }
 				dtype_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyB_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(thingyB_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyB_id)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_right;
@@ -988,8 +421,8 @@ namespace dcon {
 			//
 			struct dtype_link_right {
 				relate_in_list_id_pair values[1200];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE relate_in_list_id_pair const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE relate_in_list_id_pair* DCON_RESTRICT vptr() { return values; }
 				dtype_link_right() { std::uninitialized_value_construct_n(values, 1200); }
 			}
 			m_link_right;
@@ -1000,8 +433,8 @@ namespace dcon {
 			struct alignas(64) dtype_head_back_right {
 				uint8_t padding[(63 + sizeof(relate_in_list_id)) & ~uint64_t(63)];
 				relate_in_list_id values[(sizeof(relate_in_list_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(relate_in_list_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(relate_in_list_id)) - uint32_t(1)) : uint32_t(1200))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE relate_in_list_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE relate_in_list_id* DCON_RESTRICT vptr() { return values; }
 				dtype_head_back_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(relate_in_list_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(relate_in_list_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(relate_in_list_id)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_head_back_right;
@@ -1026,8 +459,8 @@ namespace dcon {
 			//
 			struct dtype__index {
 				many_many_id values[200];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE many_many_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE many_many_id* DCON_RESTRICT vptr() { return values; }
 				dtype__index() { std::uninitialized_value_construct_n(values, 200); }
 			}
 			m__index;
@@ -1038,8 +471,8 @@ namespace dcon {
 			struct alignas(64) dtype_A {
 				uint8_t padding[(63 + sizeof(thingyA_id)) & ~uint64_t(63)];
 				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE thingyA_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE thingyA_id* DCON_RESTRICT vptr() { return values; }
 				dtype_A() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))); }
 			}
 			m_A;
@@ -1050,8 +483,8 @@ namespace dcon {
 			struct alignas(64) dtype_B {
 				uint8_t padding[(63 + sizeof(thingyA_id)) & ~uint64_t(63)];
 				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE thingyA_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE thingyA_id* DCON_RESTRICT vptr() { return values; }
 				dtype_B() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))); }
 			}
 			m_B;
@@ -1062,8 +495,8 @@ namespace dcon {
 			struct alignas(64) dtype_C {
 				uint8_t padding[(63 + sizeof(thingyA_id)) & ~uint64_t(63)];
 				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE thingyA_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE thingyA_id* DCON_RESTRICT vptr() { return values; }
 				dtype_C() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))); }
 			}
 			m_C;
@@ -1074,8 +507,8 @@ namespace dcon {
 			struct alignas(64) dtype_D {
 				uint8_t padding[(63 + sizeof(thingyA_id)) & ~uint64_t(63)];
 				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE thingyA_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE thingyA_id* DCON_RESTRICT vptr() { return values; }
 				dtype_D() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))); }
 			}
 			m_D;
@@ -1086,8 +519,8 @@ namespace dcon {
 			struct alignas(64) dtype_E {
 				uint8_t padding[(63 + sizeof(thingyA_id)) & ~uint64_t(63)];
 				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE thingyA_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE thingyA_id* DCON_RESTRICT vptr() { return values; }
 				dtype_E() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))); }
 			}
 			m_E;
@@ -1098,8 +531,8 @@ namespace dcon {
 			struct alignas(64) dtype_F {
 				uint8_t padding[(63 + sizeof(thingyA_id)) & ~uint64_t(63)];
 				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE thingyA_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE thingyA_id* DCON_RESTRICT vptr() { return values; }
 				dtype_F() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))); }
 			}
 			m_F;
@@ -1110,8 +543,8 @@ namespace dcon {
 			struct alignas(64) dtype_ignore {
 				uint8_t padding[(63 + sizeof(thingyA_id)) & ~uint64_t(63)];
 				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE thingyA_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE thingyA_id* DCON_RESTRICT vptr() { return values; }
 				dtype_ignore() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(200) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(200))); }
 			}
 			m_ignore;
@@ -1168,8 +601,8 @@ namespace dcon {
 			//
 			struct dtype__index {
 				relate_as_optional_id values[400];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE relate_as_optional_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE relate_as_optional_id* DCON_RESTRICT vptr() { return values; }
 				dtype__index() { std::uninitialized_value_construct_n(values, 400); }
 			}
 			m__index;
@@ -1180,8 +613,8 @@ namespace dcon {
 			struct alignas(64) dtype_left {
 				uint8_t padding[(63 + sizeof(thingyA_id)) & ~uint64_t(63)];
 				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(400) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(400))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE thingyA_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE thingyA_id* DCON_RESTRICT vptr() { return values; }
 				dtype_left() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(400) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(400))); }
 			}
 			m_left;
@@ -1192,8 +625,8 @@ namespace dcon {
 			struct alignas(64) dtype_array_left {
 				uint8_t padding[(63 + sizeof(dcon::stable_mk_2_tag)) & ~uint64_t(63)];
 				dcon::stable_mk_2_tag values[1200];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE dcon::stable_mk_2_tag const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE dcon::stable_mk_2_tag* DCON_RESTRICT vptr() { return values; }
 				dtype_array_left() { std::uninitialized_fill_n(values - 1, 1 + 1200, std::numeric_limits<dcon::stable_mk_2_tag>::max()); }
 			}
 			m_array_left;
@@ -1205,8 +638,8 @@ namespace dcon {
 			struct alignas(64) dtype_right {
 				uint8_t padding[(63 + sizeof(thingyB_id)) & ~uint64_t(63)];
 				thingyB_id values[(sizeof(thingyB_id) <= 64 ? (uint32_t(400) + (uint32_t(64) / uint32_t(sizeof(thingyB_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyB_id)) - uint32_t(1)) : uint32_t(400))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE thingyB_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE thingyB_id* DCON_RESTRICT vptr() { return values; }
 				dtype_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyB_id) <= 64 ? (uint32_t(400) + (uint32_t(64) / uint32_t(sizeof(thingyB_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyB_id)) - uint32_t(1)) : uint32_t(400))); }
 			}
 			m_right;
@@ -1217,8 +650,8 @@ namespace dcon {
 			struct alignas(64) dtype_array_right {
 				uint8_t padding[(63 + sizeof(dcon::stable_mk_2_tag)) & ~uint64_t(63)];
 				dcon::stable_mk_2_tag values[1200];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE dcon::stable_mk_2_tag const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE dcon::stable_mk_2_tag* DCON_RESTRICT vptr() { return values; }
 				dtype_array_right() { std::uninitialized_fill_n(values - 1, 1 + 1200, std::numeric_limits<dcon::stable_mk_2_tag>::max()); }
 			}
 			m_array_right;
@@ -1263,8 +696,8 @@ namespace dcon {
 			//
 			struct dtype__index {
 				relate_as_non_optional_id values[400];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE relate_as_non_optional_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE relate_as_non_optional_id* DCON_RESTRICT vptr() { return values; }
 				dtype__index() { std::uninitialized_value_construct_n(values, 400); }
 			}
 			m__index;
@@ -1275,8 +708,8 @@ namespace dcon {
 			struct alignas(64) dtype_left {
 				uint8_t padding[(63 + sizeof(thingyA_id)) & ~uint64_t(63)];
 				thingyA_id values[(sizeof(thingyA_id) <= 64 ? (uint32_t(400) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(400))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE thingyA_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE thingyA_id* DCON_RESTRICT vptr() { return values; }
 				dtype_left() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyA_id) <= 64 ? (uint32_t(400) + (uint32_t(64) / uint32_t(sizeof(thingyA_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyA_id)) - uint32_t(1)) : uint32_t(400))); }
 			}
 			m_left;
@@ -1287,8 +720,8 @@ namespace dcon {
 			struct alignas(64) dtype_array_left {
 				uint8_t padding[(63 + sizeof(dcon::stable_mk_2_tag)) & ~uint64_t(63)];
 				dcon::stable_mk_2_tag values[1200];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE dcon::stable_mk_2_tag const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE dcon::stable_mk_2_tag* DCON_RESTRICT vptr() { return values; }
 				dtype_array_left() { std::uninitialized_fill_n(values - 1, 1 + 1200, std::numeric_limits<dcon::stable_mk_2_tag>::max()); }
 			}
 			m_array_left;
@@ -1300,8 +733,8 @@ namespace dcon {
 			struct alignas(64) dtype_right {
 				uint8_t padding[(63 + sizeof(thingyB_id)) & ~uint64_t(63)];
 				thingyB_id values[(sizeof(thingyB_id) <= 64 ? (uint32_t(400) + (uint32_t(64) / uint32_t(sizeof(thingyB_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyB_id)) - uint32_t(1)) : uint32_t(400))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE thingyB_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE thingyB_id* DCON_RESTRICT vptr() { return values; }
 				dtype_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingyB_id) <= 64 ? (uint32_t(400) + (uint32_t(64) / uint32_t(sizeof(thingyB_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingyB_id)) - uint32_t(1)) : uint32_t(400))); }
 			}
 			m_right;
@@ -1312,8 +745,8 @@ namespace dcon {
 			struct alignas(64) dtype_array_right {
 				uint8_t padding[(63 + sizeof(dcon::stable_mk_2_tag)) & ~uint64_t(63)];
 				dcon::stable_mk_2_tag values[1200];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE dcon::stable_mk_2_tag const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE dcon::stable_mk_2_tag* DCON_RESTRICT vptr() { return values; }
 				dtype_array_right() { std::uninitialized_fill_n(values - 1, 1 + 1200, std::numeric_limits<dcon::stable_mk_2_tag>::max()); }
 			}
 			m_array_right;
@@ -1352,8 +785,8 @@ namespace dcon {
 			//
 			struct dtype__index {
 				relate_as_multipleA_id values[400];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE relate_as_multipleA_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE relate_as_multipleA_id* DCON_RESTRICT vptr() { return values; }
 				dtype__index() { std::uninitialized_value_construct_n(values, 400); }
 			}
 			m__index;
@@ -1363,8 +796,8 @@ namespace dcon {
 			//
 			struct dtype_left {
 				std::array<thingyA_id, 2> values[400];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE std::array<thingyA_id, 2> const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE std::array<thingyA_id, 2>* DCON_RESTRICT vptr() { return values; }
 				dtype_left() { std::uninitialized_value_construct_n(values, 400); }
 			}
 			m_left;
@@ -1375,8 +808,8 @@ namespace dcon {
 			struct alignas(64) dtype_array_left {
 				uint8_t padding[(63 + sizeof(dcon::stable_mk_2_tag)) & ~uint64_t(63)];
 				dcon::stable_mk_2_tag values[1200];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE dcon::stable_mk_2_tag const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE dcon::stable_mk_2_tag* DCON_RESTRICT vptr() { return values; }
 				dtype_array_left() { std::uninitialized_fill_n(values - 1, 1 + 1200, std::numeric_limits<dcon::stable_mk_2_tag>::max()); }
 			}
 			m_array_left;
@@ -1418,8 +851,8 @@ namespace dcon {
 			//
 			struct dtype__index {
 				relate_as_multipleB_id values[400];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE relate_as_multipleB_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE relate_as_multipleB_id* DCON_RESTRICT vptr() { return values; }
 				dtype__index() { std::uninitialized_value_construct_n(values, 400); }
 			}
 			m__index;
@@ -1429,8 +862,8 @@ namespace dcon {
 			//
 			struct dtype_left {
 				std::array<thingyA_id, 2> values[400];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE std::array<thingyA_id, 2> const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE std::array<thingyA_id, 2>* DCON_RESTRICT vptr() { return values; }
 				dtype_left() { std::uninitialized_value_construct_n(values, 400); }
 			}
 			m_left;
@@ -1441,8 +874,8 @@ namespace dcon {
 			struct alignas(64) dtype_link_back_left {
 				uint8_t padding[(63 + sizeof(relate_as_multipleB_id)) & ~uint64_t(63)];
 				relate_as_multipleB_id values[(sizeof(relate_as_multipleB_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(relate_as_multipleB_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(relate_as_multipleB_id)) - uint32_t(1)) : uint32_t(1200))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE relate_as_multipleB_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE relate_as_multipleB_id* DCON_RESTRICT vptr() { return values; }
 				dtype_link_back_left() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(relate_as_multipleB_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(relate_as_multipleB_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(relate_as_multipleB_id)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_link_back_left;
@@ -1480,8 +913,8 @@ namespace dcon {
 			//
 			struct dtype__index {
 				relate_as_multipleC_id values[400];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE relate_as_multipleC_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE relate_as_multipleC_id* DCON_RESTRICT vptr() { return values; }
 				dtype__index() { std::uninitialized_value_construct_n(values, 400); }
 			}
 			m__index;
@@ -1491,8 +924,8 @@ namespace dcon {
 			//
 			struct dtype_left {
 				std::array<thingyA_id, 2> values[400];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE std::array<thingyA_id, 2> const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE std::array<thingyA_id, 2>* DCON_RESTRICT vptr() { return values; }
 				dtype_left() { std::uninitialized_value_construct_n(values, 400); }
 			}
 			m_left;
@@ -1503,8 +936,8 @@ namespace dcon {
 			struct alignas(64) dtype_array_left {
 				uint8_t padding[(63 + sizeof(dcon::stable_mk_2_tag)) & ~uint64_t(63)];
 				dcon::stable_mk_2_tag values[1200];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE dcon::stable_mk_2_tag const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE dcon::stable_mk_2_tag* DCON_RESTRICT vptr() { return values; }
 				dtype_array_left() { std::uninitialized_fill_n(values - 1, 1 + 1200, std::numeric_limits<dcon::stable_mk_2_tag>::max()); }
 			}
 			m_array_left;
@@ -1537,8 +970,8 @@ namespace dcon {
 			//
 			struct dtype__index {
 				relate_as_multipleD_id values[400];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE relate_as_multipleD_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE relate_as_multipleD_id* DCON_RESTRICT vptr() { return values; }
 				dtype__index() { std::uninitialized_value_construct_n(values, 400); }
 			}
 			m__index;
@@ -1548,8 +981,8 @@ namespace dcon {
 			//
 			struct dtype_left {
 				std::array<thingyA_id, 2> values[400];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE std::array<thingyA_id, 2> const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE std::array<thingyA_id, 2>* DCON_RESTRICT vptr() { return values; }
 				dtype_left() { std::uninitialized_value_construct_n(values, 400); }
 			}
 			m_left;
@@ -3390,6 +2823,11 @@ namespace dcon {
 	}
 	
 	namespace internal {
+		class object_term_iterator_pop {
+			public:
+			const uint32_t index = 0;
+			object_term_iterator_pop(uint32_t i) noexcept;
+		};
 		class object_iterator_pop {
 			private:
 			data_container& container;
@@ -3402,6 +2840,12 @@ namespace dcon {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(object_iterator_pop const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_pop o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_pop o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE pop_fat_id operator*() const noexcept {
@@ -3422,11 +2866,22 @@ namespace dcon {
 			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_pop const& o) const noexcept {
 				return !(*this == o);
 			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_pop o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_pop o) const noexcept {
+				return !(*this == o);
+			}
 			DCON_RELEASE_INLINE pop_const_fat_id operator*() const noexcept {
 				return pop_const_fat_id(container, pop_id(pop_id::value_base_t(index)));
 			}
 		};
 		
+		class object_term_iterator_employment {
+			public:
+			const uint32_t index = 0;
+			object_term_iterator_employment(uint32_t i) noexcept;
+		};
 		class object_iterator_employment {
 			private:
 			data_container& container;
@@ -3439,6 +2894,12 @@ namespace dcon {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(object_iterator_employment const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_employment o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_employment o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE employment_fat_id operator*() const noexcept {
@@ -3491,6 +2952,12 @@ namespace dcon {
 			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_employment const& o) const noexcept {
 				return !(*this == o);
 			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_employment o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_employment o) const noexcept {
+				return !(*this == o);
+			}
 			DCON_RELEASE_INLINE employment_const_fat_id operator*() const noexcept {
 				return employment_const_fat_id(container, employment_id(employment_id::value_base_t(index)));
 			}
@@ -3528,6 +2995,11 @@ namespace dcon {
 			}
 		};
 		
+		class object_term_iterator_job {
+			public:
+			const uint32_t index = 0;
+			object_term_iterator_job(uint32_t i) noexcept;
+		};
 		class object_iterator_job {
 			private:
 			data_container& container;
@@ -3540,6 +3012,12 @@ namespace dcon {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(object_iterator_job const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_job o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_job o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE job_fat_id operator*() const noexcept {
@@ -3592,6 +3070,12 @@ namespace dcon {
 			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_job const& o) const noexcept {
 				return !(*this == o);
 			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_job o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_job o) const noexcept {
+				return !(*this == o);
+			}
 			DCON_RELEASE_INLINE job_const_fat_id operator*() const noexcept {
 				return job_const_fat_id(container, job_id(job_id::value_base_t(index)));
 			}
@@ -3629,6 +3113,11 @@ namespace dcon {
 			}
 		};
 		
+		class object_term_iterator_thingyA {
+			public:
+			const uint32_t index = 0;
+			object_term_iterator_thingyA(uint32_t i) noexcept;
+		};
 		class object_iterator_thingyA {
 			private:
 			data_container& container;
@@ -3641,6 +3130,12 @@ namespace dcon {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(object_iterator_thingyA const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_thingyA o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_thingyA o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE thingyA_fat_id operator*() const noexcept {
@@ -3691,6 +3186,12 @@ namespace dcon {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_thingyA const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_thingyA o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_thingyA o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE thingyA_const_fat_id operator*() const noexcept {
@@ -4242,6 +3743,11 @@ namespace dcon {
 			}
 		};
 		
+		class object_term_iterator_thingyB {
+			public:
+			const uint32_t index = 0;
+			object_term_iterator_thingyB(uint32_t i) noexcept;
+		};
 		class object_iterator_thingyB {
 			private:
 			data_container& container;
@@ -4254,6 +3760,12 @@ namespace dcon {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(object_iterator_thingyB const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_thingyB o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_thingyB o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE thingyB_fat_id operator*() const noexcept {
@@ -4272,6 +3784,12 @@ namespace dcon {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_thingyB const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_thingyB o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_thingyB o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE thingyB_const_fat_id operator*() const noexcept {
@@ -4727,6 +4245,11 @@ namespace dcon {
 			}
 		};
 		
+		class object_term_iterator_relate_same {
+			public:
+			const uint32_t index = 0;
+			object_term_iterator_relate_same(uint32_t i) noexcept;
+		};
 		class object_iterator_relate_same {
 			private:
 			data_container& container;
@@ -4739,6 +4262,12 @@ namespace dcon {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(object_iterator_relate_same const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_relate_same o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_relate_same o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE relate_same_fat_id operator*() const noexcept {
@@ -4791,6 +4320,12 @@ namespace dcon {
 			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_relate_same const& o) const noexcept {
 				return !(*this == o);
 			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_relate_same o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_relate_same o) const noexcept {
+				return !(*this == o);
+			}
 			DCON_RELEASE_INLINE relate_same_const_fat_id operator*() const noexcept {
 				return relate_same_const_fat_id(container, relate_same_id(relate_same_id::value_base_t(index)));
 			}
@@ -4828,6 +4363,11 @@ namespace dcon {
 			}
 		};
 		
+		class object_term_iterator_relate_in_array {
+			public:
+			const uint32_t index = 0;
+			object_term_iterator_relate_in_array(uint32_t i) noexcept;
+		};
 		class object_iterator_relate_in_array {
 			private:
 			data_container& container;
@@ -4840,6 +4380,12 @@ namespace dcon {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(object_iterator_relate_in_array const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_relate_in_array o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_relate_in_array o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE relate_in_array_fat_id operator*() const noexcept {
@@ -4892,6 +4438,12 @@ namespace dcon {
 			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_relate_in_array const& o) const noexcept {
 				return !(*this == o);
 			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_relate_in_array o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_relate_in_array o) const noexcept {
+				return !(*this == o);
+			}
 			DCON_RELEASE_INLINE relate_in_array_const_fat_id operator*() const noexcept {
 				return relate_in_array_const_fat_id(container, relate_in_array_id(relate_in_array_id::value_base_t(index)));
 			}
@@ -4929,6 +4481,11 @@ namespace dcon {
 			}
 		};
 		
+		class object_term_iterator_relate_in_list {
+			public:
+			const uint32_t index = 0;
+			object_term_iterator_relate_in_list(uint32_t i) noexcept;
+		};
 		class object_iterator_relate_in_list {
 			private:
 			data_container& container;
@@ -4941,6 +4498,12 @@ namespace dcon {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(object_iterator_relate_in_list const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_relate_in_list o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_relate_in_list o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE relate_in_list_fat_id operator*() const noexcept {
@@ -4993,6 +4556,12 @@ namespace dcon {
 			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_relate_in_list const& o) const noexcept {
 				return !(*this == o);
 			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_relate_in_list o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_relate_in_list o) const noexcept {
+				return !(*this == o);
+			}
 			DCON_RELEASE_INLINE relate_in_list_const_fat_id operator*() const noexcept {
 				return relate_in_list_const_fat_id(container, relate_in_list_id(relate_in_list_id::value_base_t(index)));
 			}
@@ -5030,6 +4599,11 @@ namespace dcon {
 			}
 		};
 		
+		class object_term_iterator_many_many {
+			public:
+			const uint32_t index = 0;
+			object_term_iterator_many_many(uint32_t i) noexcept;
+		};
 		class object_iterator_many_many {
 			private:
 			data_container& container;
@@ -5042,6 +4616,12 @@ namespace dcon {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(object_iterator_many_many const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_many_many o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_many_many o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE many_many_fat_id operator*() const noexcept {
@@ -5062,11 +4642,22 @@ namespace dcon {
 			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_many_many const& o) const noexcept {
 				return !(*this == o);
 			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_many_many o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_many_many o) const noexcept {
+				return !(*this == o);
+			}
 			DCON_RELEASE_INLINE many_many_const_fat_id operator*() const noexcept {
 				return many_many_const_fat_id(container, many_many_id(many_many_id::value_base_t(index)));
 			}
 		};
 		
+		class object_term_iterator_relate_as_optional {
+			public:
+			const uint32_t index = 0;
+			object_term_iterator_relate_as_optional(uint32_t i) noexcept;
+		};
 		class object_iterator_relate_as_optional {
 			private:
 			data_container& container;
@@ -5079,6 +4670,12 @@ namespace dcon {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(object_iterator_relate_as_optional const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_relate_as_optional o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_relate_as_optional o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE relate_as_optional_fat_id operator*() const noexcept {
@@ -5099,11 +4696,22 @@ namespace dcon {
 			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_relate_as_optional const& o) const noexcept {
 				return !(*this == o);
 			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_relate_as_optional o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_relate_as_optional o) const noexcept {
+				return !(*this == o);
+			}
 			DCON_RELEASE_INLINE relate_as_optional_const_fat_id operator*() const noexcept {
 				return relate_as_optional_const_fat_id(container, relate_as_optional_id(relate_as_optional_id::value_base_t(index)));
 			}
 		};
 		
+		class object_term_iterator_relate_as_non_optional {
+			public:
+			const uint32_t index = 0;
+			object_term_iterator_relate_as_non_optional(uint32_t i) noexcept;
+		};
 		class object_iterator_relate_as_non_optional {
 			private:
 			data_container& container;
@@ -5116,6 +4724,12 @@ namespace dcon {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(object_iterator_relate_as_non_optional const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_relate_as_non_optional o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_relate_as_non_optional o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE relate_as_non_optional_fat_id operator*() const noexcept {
@@ -5136,11 +4750,22 @@ namespace dcon {
 			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_relate_as_non_optional const& o) const noexcept {
 				return !(*this == o);
 			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_relate_as_non_optional o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_relate_as_non_optional o) const noexcept {
+				return !(*this == o);
+			}
 			DCON_RELEASE_INLINE relate_as_non_optional_const_fat_id operator*() const noexcept {
 				return relate_as_non_optional_const_fat_id(container, relate_as_non_optional_id(relate_as_non_optional_id::value_base_t(index)));
 			}
 		};
 		
+		class object_term_iterator_relate_as_multipleA {
+			public:
+			const uint32_t index = 0;
+			object_term_iterator_relate_as_multipleA(uint32_t i) noexcept;
+		};
 		class object_iterator_relate_as_multipleA {
 			private:
 			data_container& container;
@@ -5153,6 +4778,12 @@ namespace dcon {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(object_iterator_relate_as_multipleA const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_relate_as_multipleA o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_relate_as_multipleA o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE relate_as_multipleA_fat_id operator*() const noexcept {
@@ -5173,11 +4804,22 @@ namespace dcon {
 			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_relate_as_multipleA const& o) const noexcept {
 				return !(*this == o);
 			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_relate_as_multipleA o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_relate_as_multipleA o) const noexcept {
+				return !(*this == o);
+			}
 			DCON_RELEASE_INLINE relate_as_multipleA_const_fat_id operator*() const noexcept {
 				return relate_as_multipleA_const_fat_id(container, relate_as_multipleA_id(relate_as_multipleA_id::value_base_t(index)));
 			}
 		};
 		
+		class object_term_iterator_relate_as_multipleB {
+			public:
+			const uint32_t index = 0;
+			object_term_iterator_relate_as_multipleB(uint32_t i) noexcept;
+		};
 		class object_iterator_relate_as_multipleB {
 			private:
 			data_container& container;
@@ -5190,6 +4832,12 @@ namespace dcon {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(object_iterator_relate_as_multipleB const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_relate_as_multipleB o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_relate_as_multipleB o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE relate_as_multipleB_fat_id operator*() const noexcept {
@@ -5210,11 +4858,22 @@ namespace dcon {
 			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_relate_as_multipleB const& o) const noexcept {
 				return !(*this == o);
 			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_relate_as_multipleB o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_relate_as_multipleB o) const noexcept {
+				return !(*this == o);
+			}
 			DCON_RELEASE_INLINE relate_as_multipleB_const_fat_id operator*() const noexcept {
 				return relate_as_multipleB_const_fat_id(container, relate_as_multipleB_id(relate_as_multipleB_id::value_base_t(index)));
 			}
 		};
 		
+		class object_term_iterator_relate_as_multipleC {
+			public:
+			const uint32_t index = 0;
+			object_term_iterator_relate_as_multipleC(uint32_t i) noexcept;
+		};
 		class object_iterator_relate_as_multipleC {
 			private:
 			data_container& container;
@@ -5227,6 +4886,12 @@ namespace dcon {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(object_iterator_relate_as_multipleC const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_relate_as_multipleC o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_relate_as_multipleC o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE relate_as_multipleC_fat_id operator*() const noexcept {
@@ -5247,11 +4912,22 @@ namespace dcon {
 			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_relate_as_multipleC const& o) const noexcept {
 				return !(*this == o);
 			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_relate_as_multipleC o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_relate_as_multipleC o) const noexcept {
+				return !(*this == o);
+			}
 			DCON_RELEASE_INLINE relate_as_multipleC_const_fat_id operator*() const noexcept {
 				return relate_as_multipleC_const_fat_id(container, relate_as_multipleC_id(relate_as_multipleC_id::value_base_t(index)));
 			}
 		};
 		
+		class object_term_iterator_relate_as_multipleD {
+			public:
+			const uint32_t index = 0;
+			object_term_iterator_relate_as_multipleD(uint32_t i) noexcept;
+		};
 		class object_iterator_relate_as_multipleD {
 			private:
 			data_container& container;
@@ -5264,6 +4940,12 @@ namespace dcon {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(object_iterator_relate_as_multipleD const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_relate_as_multipleD o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_relate_as_multipleD o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE relate_as_multipleD_fat_id operator*() const noexcept {
@@ -5282,6 +4964,12 @@ namespace dcon {
 				return &container == &o.container && index == o.index;
 			}
 			DCON_RELEASE_INLINE bool operator!=(const_object_iterator_relate_as_multipleD const& o) const noexcept {
+				return !(*this == o);
+			}
+			DCON_RELEASE_INLINE bool operator==(object_term_iterator_relate_as_multipleD o) const noexcept {
+				return index >= o.index;
+			}
+			DCON_RELEASE_INLINE bool operator!=(object_term_iterator_relate_as_multipleD o) const noexcept {
 				return !(*this == o);
 			}
 			DCON_RELEASE_INLINE relate_as_multipleD_const_fat_id operator*() const noexcept {
@@ -8519,7 +8207,7 @@ namespace dcon {
 		}
 		
 		template <typename T>
-		DCON_RELEASE_INLINE void for_each_pop(T&& func) {
+		DCON_RELEASE_INLINE void for_each_pop(T&& func) const {
 			for(uint32_t i = 0; i < pop.size_used; ++i) {
 				pop_id tmp = pop_id(pop_id::value_base_t(i));
 				if(pop.m__index.vptr()[tmp.index()] == tmp) func(tmp);
@@ -8532,22 +8220,18 @@ namespace dcon {
 				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_pop));
 				return internal::object_iterator_pop(*container, uint32_t(0));
 			}
-			internal::object_iterator_pop end() {
-				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_pop));
-				return internal::object_iterator_pop(*container, container->pop_size());
+			internal::object_term_iterator_pop end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_pop));
+				return internal::object_term_iterator_pop(container->pop_size());
 			}
 			internal::const_object_iterator_pop begin() const {
 				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_pop));
 				return internal::const_object_iterator_pop(*container, uint32_t(0));
 			}
-			internal::const_object_iterator_pop end() const {
-				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_pop));
-				return internal::const_object_iterator_pop(*container, container->pop_size());
-			}
 		}  in_pop ;
 		
 		template <typename T>
-		DCON_RELEASE_INLINE void for_each_employment(T&& func) {
+		DCON_RELEASE_INLINE void for_each_employment(T&& func) const {
 			for(uint32_t i = 0; i < pop.size_used; ++i) {
 				employment_id tmp = employment_id(employment_id::value_base_t(i));
 				func(tmp);
@@ -8560,22 +8244,18 @@ namespace dcon {
 				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_employment));
 				return internal::object_iterator_employment(*container, uint32_t(0));
 			}
-			internal::object_iterator_employment end() {
-				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_employment));
-				return internal::object_iterator_employment(*container, container->employment_size());
+			internal::object_term_iterator_employment end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_employment));
+				return internal::object_term_iterator_employment(container->employment_size());
 			}
 			internal::const_object_iterator_employment begin() const {
 				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_employment));
 				return internal::const_object_iterator_employment(*container, uint32_t(0));
 			}
-			internal::const_object_iterator_employment end() const {
-				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_employment));
-				return internal::const_object_iterator_employment(*container, container->employment_size());
-			}
 		}  in_employment ;
 		
 		template <typename T>
-		DCON_RELEASE_INLINE void for_each_job(T&& func) {
+		DCON_RELEASE_INLINE void for_each_job(T&& func) const {
 			for(uint32_t i = 0; i < job.size_used; ++i) {
 				job_id tmp = job_id(job_id::value_base_t(i));
 				func(tmp);
@@ -8588,22 +8268,18 @@ namespace dcon {
 				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_job));
 				return internal::object_iterator_job(*container, uint32_t(0));
 			}
-			internal::object_iterator_job end() {
-				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_job));
-				return internal::object_iterator_job(*container, container->job_size());
+			internal::object_term_iterator_job end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_job));
+				return internal::object_term_iterator_job(container->job_size());
 			}
 			internal::const_object_iterator_job begin() const {
 				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_job));
 				return internal::const_object_iterator_job(*container, uint32_t(0));
 			}
-			internal::const_object_iterator_job end() const {
-				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_job));
-				return internal::const_object_iterator_job(*container, container->job_size());
-			}
 		}  in_job ;
 		
 		template <typename T>
-		DCON_RELEASE_INLINE void for_each_thingyA(T&& func) {
+		DCON_RELEASE_INLINE void for_each_thingyA(T&& func) const {
 			for(uint32_t i = 0; i < thingyA.size_used; ++i) {
 				thingyA_id tmp = thingyA_id(thingyA_id::value_base_t(i));
 				func(tmp);
@@ -8616,22 +8292,18 @@ namespace dcon {
 				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_thingyA));
 				return internal::object_iterator_thingyA(*container, uint32_t(0));
 			}
-			internal::object_iterator_thingyA end() {
-				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_thingyA));
-				return internal::object_iterator_thingyA(*container, container->thingyA_size());
+			internal::object_term_iterator_thingyA end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_thingyA));
+				return internal::object_term_iterator_thingyA(container->thingyA_size());
 			}
 			internal::const_object_iterator_thingyA begin() const {
 				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_thingyA));
 				return internal::const_object_iterator_thingyA(*container, uint32_t(0));
 			}
-			internal::const_object_iterator_thingyA end() const {
-				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_thingyA));
-				return internal::const_object_iterator_thingyA(*container, container->thingyA_size());
-			}
 		}  in_thingyA ;
 		
 		template <typename T>
-		DCON_RELEASE_INLINE void for_each_thingyB(T&& func) {
+		DCON_RELEASE_INLINE void for_each_thingyB(T&& func) const {
 			for(uint32_t i = 0; i < thingyB.size_used; ++i) {
 				thingyB_id tmp = thingyB_id(thingyB_id::value_base_t(i));
 				if(thingyB.m__index.vptr()[tmp.index()] == tmp) func(tmp);
@@ -8644,22 +8316,18 @@ namespace dcon {
 				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_thingyB));
 				return internal::object_iterator_thingyB(*container, uint32_t(0));
 			}
-			internal::object_iterator_thingyB end() {
-				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_thingyB));
-				return internal::object_iterator_thingyB(*container, container->thingyB_size());
+			internal::object_term_iterator_thingyB end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_thingyB));
+				return internal::object_term_iterator_thingyB(container->thingyB_size());
 			}
 			internal::const_object_iterator_thingyB begin() const {
 				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_thingyB));
 				return internal::const_object_iterator_thingyB(*container, uint32_t(0));
 			}
-			internal::const_object_iterator_thingyB end() const {
-				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_thingyB));
-				return internal::const_object_iterator_thingyB(*container, container->thingyB_size());
-			}
 		}  in_thingyB ;
 		
 		template <typename T>
-		DCON_RELEASE_INLINE void for_each_relate_same(T&& func) {
+		DCON_RELEASE_INLINE void for_each_relate_same(T&& func) const {
 			for(uint32_t i = 0; i < thingyA.size_used; ++i) {
 				relate_same_id tmp = relate_same_id(relate_same_id::value_base_t(i));
 				func(tmp);
@@ -8672,22 +8340,18 @@ namespace dcon {
 				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_relate_same));
 				return internal::object_iterator_relate_same(*container, uint32_t(0));
 			}
-			internal::object_iterator_relate_same end() {
-				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_relate_same));
-				return internal::object_iterator_relate_same(*container, container->relate_same_size());
+			internal::object_term_iterator_relate_same end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_same));
+				return internal::object_term_iterator_relate_same(container->relate_same_size());
 			}
 			internal::const_object_iterator_relate_same begin() const {
 				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_same));
 				return internal::const_object_iterator_relate_same(*container, uint32_t(0));
 			}
-			internal::const_object_iterator_relate_same end() const {
-				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_same));
-				return internal::const_object_iterator_relate_same(*container, container->relate_same_size());
-			}
 		}  in_relate_same ;
 		
 		template <typename T>
-		DCON_RELEASE_INLINE void for_each_relate_in_array(T&& func) {
+		DCON_RELEASE_INLINE void for_each_relate_in_array(T&& func) const {
 			for(uint32_t i = 0; i < thingyA.size_used; ++i) {
 				relate_in_array_id tmp = relate_in_array_id(relate_in_array_id::value_base_t(i));
 				func(tmp);
@@ -8700,22 +8364,18 @@ namespace dcon {
 				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_relate_in_array));
 				return internal::object_iterator_relate_in_array(*container, uint32_t(0));
 			}
-			internal::object_iterator_relate_in_array end() {
-				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_relate_in_array));
-				return internal::object_iterator_relate_in_array(*container, container->relate_in_array_size());
+			internal::object_term_iterator_relate_in_array end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_in_array));
+				return internal::object_term_iterator_relate_in_array(container->relate_in_array_size());
 			}
 			internal::const_object_iterator_relate_in_array begin() const {
 				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_in_array));
 				return internal::const_object_iterator_relate_in_array(*container, uint32_t(0));
 			}
-			internal::const_object_iterator_relate_in_array end() const {
-				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_in_array));
-				return internal::const_object_iterator_relate_in_array(*container, container->relate_in_array_size());
-			}
 		}  in_relate_in_array ;
 		
 		template <typename T>
-		DCON_RELEASE_INLINE void for_each_relate_in_list(T&& func) {
+		DCON_RELEASE_INLINE void for_each_relate_in_list(T&& func) const {
 			for(uint32_t i = 0; i < thingyA.size_used; ++i) {
 				relate_in_list_id tmp = relate_in_list_id(relate_in_list_id::value_base_t(i));
 				func(tmp);
@@ -8728,22 +8388,18 @@ namespace dcon {
 				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_relate_in_list));
 				return internal::object_iterator_relate_in_list(*container, uint32_t(0));
 			}
-			internal::object_iterator_relate_in_list end() {
-				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_relate_in_list));
-				return internal::object_iterator_relate_in_list(*container, container->relate_in_list_size());
+			internal::object_term_iterator_relate_in_list end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_in_list));
+				return internal::object_term_iterator_relate_in_list(container->relate_in_list_size());
 			}
 			internal::const_object_iterator_relate_in_list begin() const {
 				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_in_list));
 				return internal::const_object_iterator_relate_in_list(*container, uint32_t(0));
 			}
-			internal::const_object_iterator_relate_in_list end() const {
-				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_in_list));
-				return internal::const_object_iterator_relate_in_list(*container, container->relate_in_list_size());
-			}
 		}  in_relate_in_list ;
 		
 		template <typename T>
-		DCON_RELEASE_INLINE void for_each_many_many(T&& func) {
+		DCON_RELEASE_INLINE void for_each_many_many(T&& func) const {
 			for(uint32_t i = 0; i < many_many.size_used; ++i) {
 				many_many_id tmp = many_many_id(many_many_id::value_base_t(i));
 				if(many_many.m__index.vptr()[tmp.index()] == tmp) func(tmp);
@@ -8756,22 +8412,18 @@ namespace dcon {
 				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_many_many));
 				return internal::object_iterator_many_many(*container, uint32_t(0));
 			}
-			internal::object_iterator_many_many end() {
-				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_many_many));
-				return internal::object_iterator_many_many(*container, container->many_many_size());
+			internal::object_term_iterator_many_many end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_many_many));
+				return internal::object_term_iterator_many_many(container->many_many_size());
 			}
 			internal::const_object_iterator_many_many begin() const {
 				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_many_many));
 				return internal::const_object_iterator_many_many(*container, uint32_t(0));
 			}
-			internal::const_object_iterator_many_many end() const {
-				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_many_many));
-				return internal::const_object_iterator_many_many(*container, container->many_many_size());
-			}
 		}  in_many_many ;
 		
 		template <typename T>
-		DCON_RELEASE_INLINE void for_each_relate_as_optional(T&& func) {
+		DCON_RELEASE_INLINE void for_each_relate_as_optional(T&& func) const {
 			for(uint32_t i = 0; i < relate_as_optional.size_used; ++i) {
 				relate_as_optional_id tmp = relate_as_optional_id(relate_as_optional_id::value_base_t(i));
 				if(relate_as_optional.m__index.vptr()[tmp.index()] == tmp) func(tmp);
@@ -8784,22 +8436,18 @@ namespace dcon {
 				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_relate_as_optional));
 				return internal::object_iterator_relate_as_optional(*container, uint32_t(0));
 			}
-			internal::object_iterator_relate_as_optional end() {
-				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_relate_as_optional));
-				return internal::object_iterator_relate_as_optional(*container, container->relate_as_optional_size());
+			internal::object_term_iterator_relate_as_optional end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_as_optional));
+				return internal::object_term_iterator_relate_as_optional(container->relate_as_optional_size());
 			}
 			internal::const_object_iterator_relate_as_optional begin() const {
 				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_as_optional));
 				return internal::const_object_iterator_relate_as_optional(*container, uint32_t(0));
 			}
-			internal::const_object_iterator_relate_as_optional end() const {
-				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_as_optional));
-				return internal::const_object_iterator_relate_as_optional(*container, container->relate_as_optional_size());
-			}
 		}  in_relate_as_optional ;
 		
 		template <typename T>
-		DCON_RELEASE_INLINE void for_each_relate_as_non_optional(T&& func) {
+		DCON_RELEASE_INLINE void for_each_relate_as_non_optional(T&& func) const {
 			for(uint32_t i = 0; i < relate_as_non_optional.size_used; ++i) {
 				relate_as_non_optional_id tmp = relate_as_non_optional_id(relate_as_non_optional_id::value_base_t(i));
 				if(relate_as_non_optional.m__index.vptr()[tmp.index()] == tmp) func(tmp);
@@ -8812,22 +8460,18 @@ namespace dcon {
 				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_relate_as_non_optional));
 				return internal::object_iterator_relate_as_non_optional(*container, uint32_t(0));
 			}
-			internal::object_iterator_relate_as_non_optional end() {
-				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_relate_as_non_optional));
-				return internal::object_iterator_relate_as_non_optional(*container, container->relate_as_non_optional_size());
+			internal::object_term_iterator_relate_as_non_optional end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_as_non_optional));
+				return internal::object_term_iterator_relate_as_non_optional(container->relate_as_non_optional_size());
 			}
 			internal::const_object_iterator_relate_as_non_optional begin() const {
 				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_as_non_optional));
 				return internal::const_object_iterator_relate_as_non_optional(*container, uint32_t(0));
 			}
-			internal::const_object_iterator_relate_as_non_optional end() const {
-				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_as_non_optional));
-				return internal::const_object_iterator_relate_as_non_optional(*container, container->relate_as_non_optional_size());
-			}
 		}  in_relate_as_non_optional ;
 		
 		template <typename T>
-		DCON_RELEASE_INLINE void for_each_relate_as_multipleA(T&& func) {
+		DCON_RELEASE_INLINE void for_each_relate_as_multipleA(T&& func) const {
 			for(uint32_t i = 0; i < relate_as_multipleA.size_used; ++i) {
 				relate_as_multipleA_id tmp = relate_as_multipleA_id(relate_as_multipleA_id::value_base_t(i));
 				if(relate_as_multipleA.m__index.vptr()[tmp.index()] == tmp) func(tmp);
@@ -8840,22 +8484,18 @@ namespace dcon {
 				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_relate_as_multipleA));
 				return internal::object_iterator_relate_as_multipleA(*container, uint32_t(0));
 			}
-			internal::object_iterator_relate_as_multipleA end() {
-				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_relate_as_multipleA));
-				return internal::object_iterator_relate_as_multipleA(*container, container->relate_as_multipleA_size());
+			internal::object_term_iterator_relate_as_multipleA end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_as_multipleA));
+				return internal::object_term_iterator_relate_as_multipleA(container->relate_as_multipleA_size());
 			}
 			internal::const_object_iterator_relate_as_multipleA begin() const {
 				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_as_multipleA));
 				return internal::const_object_iterator_relate_as_multipleA(*container, uint32_t(0));
 			}
-			internal::const_object_iterator_relate_as_multipleA end() const {
-				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_as_multipleA));
-				return internal::const_object_iterator_relate_as_multipleA(*container, container->relate_as_multipleA_size());
-			}
 		}  in_relate_as_multipleA ;
 		
 		template <typename T>
-		DCON_RELEASE_INLINE void for_each_relate_as_multipleB(T&& func) {
+		DCON_RELEASE_INLINE void for_each_relate_as_multipleB(T&& func) const {
 			for(uint32_t i = 0; i < relate_as_multipleB.size_used; ++i) {
 				relate_as_multipleB_id tmp = relate_as_multipleB_id(relate_as_multipleB_id::value_base_t(i));
 				if(relate_as_multipleB.m__index.vptr()[tmp.index()] == tmp) func(tmp);
@@ -8868,22 +8508,18 @@ namespace dcon {
 				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_relate_as_multipleB));
 				return internal::object_iterator_relate_as_multipleB(*container, uint32_t(0));
 			}
-			internal::object_iterator_relate_as_multipleB end() {
-				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_relate_as_multipleB));
-				return internal::object_iterator_relate_as_multipleB(*container, container->relate_as_multipleB_size());
+			internal::object_term_iterator_relate_as_multipleB end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_as_multipleB));
+				return internal::object_term_iterator_relate_as_multipleB(container->relate_as_multipleB_size());
 			}
 			internal::const_object_iterator_relate_as_multipleB begin() const {
 				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_as_multipleB));
 				return internal::const_object_iterator_relate_as_multipleB(*container, uint32_t(0));
 			}
-			internal::const_object_iterator_relate_as_multipleB end() const {
-				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_as_multipleB));
-				return internal::const_object_iterator_relate_as_multipleB(*container, container->relate_as_multipleB_size());
-			}
 		}  in_relate_as_multipleB ;
 		
 		template <typename T>
-		DCON_RELEASE_INLINE void for_each_relate_as_multipleC(T&& func) {
+		DCON_RELEASE_INLINE void for_each_relate_as_multipleC(T&& func) const {
 			for(uint32_t i = 0; i < relate_as_multipleC.size_used; ++i) {
 				relate_as_multipleC_id tmp = relate_as_multipleC_id(relate_as_multipleC_id::value_base_t(i));
 				if(relate_as_multipleC.m__index.vptr()[tmp.index()] == tmp) func(tmp);
@@ -8896,22 +8532,18 @@ namespace dcon {
 				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_relate_as_multipleC));
 				return internal::object_iterator_relate_as_multipleC(*container, uint32_t(0));
 			}
-			internal::object_iterator_relate_as_multipleC end() {
-				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_relate_as_multipleC));
-				return internal::object_iterator_relate_as_multipleC(*container, container->relate_as_multipleC_size());
+			internal::object_term_iterator_relate_as_multipleC end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_as_multipleC));
+				return internal::object_term_iterator_relate_as_multipleC(container->relate_as_multipleC_size());
 			}
 			internal::const_object_iterator_relate_as_multipleC begin() const {
 				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_as_multipleC));
 				return internal::const_object_iterator_relate_as_multipleC(*container, uint32_t(0));
 			}
-			internal::const_object_iterator_relate_as_multipleC end() const {
-				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_as_multipleC));
-				return internal::const_object_iterator_relate_as_multipleC(*container, container->relate_as_multipleC_size());
-			}
 		}  in_relate_as_multipleC ;
 		
 		template <typename T>
-		DCON_RELEASE_INLINE void for_each_relate_as_multipleD(T&& func) {
+		DCON_RELEASE_INLINE void for_each_relate_as_multipleD(T&& func) const {
 			for(uint32_t i = 0; i < relate_as_multipleD.size_used; ++i) {
 				relate_as_multipleD_id tmp = relate_as_multipleD_id(relate_as_multipleD_id::value_base_t(i));
 				if(relate_as_multipleD.m__index.vptr()[tmp.index()] == tmp) func(tmp);
@@ -8924,17 +8556,13 @@ namespace dcon {
 				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_relate_as_multipleD));
 				return internal::object_iterator_relate_as_multipleD(*container, uint32_t(0));
 			}
-			internal::object_iterator_relate_as_multipleD end() {
-				data_container* container = reinterpret_cast<data_container*>(reinterpret_cast<std::byte*>(this) - offsetof(data_container, in_relate_as_multipleD));
-				return internal::object_iterator_relate_as_multipleD(*container, container->relate_as_multipleD_size());
+			internal::object_term_iterator_relate_as_multipleD end() const {
+				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_as_multipleD));
+				return internal::object_term_iterator_relate_as_multipleD(container->relate_as_multipleD_size());
 			}
 			internal::const_object_iterator_relate_as_multipleD begin() const {
 				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_as_multipleD));
 				return internal::const_object_iterator_relate_as_multipleD(*container, uint32_t(0));
-			}
-			internal::const_object_iterator_relate_as_multipleD end() const {
-				data_container const* container = reinterpret_cast<data_container const*>(reinterpret_cast<std::byte const*>(this) - offsetof(data_container, in_relate_as_multipleD));
-				return internal::const_object_iterator_relate_as_multipleD(*container, container->relate_as_multipleD_size());
 			}
 		}  in_relate_as_multipleD ;
 		
@@ -9547,6 +9175,7 @@ namespace dcon {
 			if(serialize_selection.pop__index) {
 				dcon::record_header header(sizeof(pop_id) * pop.size_used, "uint8_t", "pop", "_index");
 				header.serialize(output_buffer);
+				if(pop.size_used > 0)
 				std::memcpy(reinterpret_cast<pop_id*>(output_buffer), pop.m__index.vptr(), sizeof(pop_id) * pop.size_used);
 				output_buffer += sizeof(pop_id) * pop.size_used;
 			}
@@ -9565,6 +9194,7 @@ namespace dcon {
 			if(serialize_selection.thingyA_some_value) {
 				dcon::record_header header(sizeof(int32_t) * thingyA.size_used, "int32_t", "thingyA", "some_value");
 				header.serialize(output_buffer);
+				if(thingyA.size_used > 0)
 				std::memcpy(reinterpret_cast<int32_t*>(output_buffer), thingyA.m_some_value.vptr(), sizeof(int32_t) * thingyA.size_used);
 				output_buffer += sizeof(int32_t) * thingyA.size_used;
 			}
@@ -9577,12 +9207,14 @@ namespace dcon {
 			if(serialize_selection.thingyB__index) {
 				dcon::record_header header(sizeof(thingyB_id) * thingyB.size_used, "uint16_t", "thingyB", "_index");
 				header.serialize(output_buffer);
+				if(thingyB.size_used > 0)
 				std::memcpy(reinterpret_cast<thingyB_id*>(output_buffer), thingyB.m__index.vptr(), sizeof(thingyB_id) * thingyB.size_used);
 				output_buffer += sizeof(thingyB_id) * thingyB.size_used;
 			}
 			if(serialize_selection.thingyB_some_value) {
 				dcon::record_header header(sizeof(int32_t) * thingyB.size_used, "int32_t", "thingyB", "some_value");
 				header.serialize(output_buffer);
+				if(thingyB.size_used > 0)
 				std::memcpy(reinterpret_cast<int32_t*>(output_buffer), thingyB.m_some_value.vptr(), sizeof(int32_t) * thingyB.size_used);
 				output_buffer += sizeof(int32_t) * thingyB.size_used;
 			}
@@ -9597,6 +9229,7 @@ namespace dcon {
 			if(serialize_selection.employment_job) {
 				dcon::record_header header(sizeof(job_id) * pop.size_used, "job_id", "employment", "job");
 				header.serialize(output_buffer);
+				if(pop.size_used > 0)
 				std::memcpy(reinterpret_cast<job_id*>(output_buffer), employment.m_job.vptr(), sizeof(job_id) * pop.size_used);
 				output_buffer += sizeof(job_id) * pop.size_used;
 			}
@@ -9608,6 +9241,7 @@ namespace dcon {
 				 {
 					dcon::record_header iheader(sizeof(thingyA_id) * thingyA.size_used, "uint16_t", "relate_same", "right");
 					iheader.serialize(output_buffer);
+					if(thingyA.size_used > 0)
 					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), relate_same.m_right.vptr(), sizeof(thingyA_id) * thingyA.size_used);
 					output_buffer += sizeof(thingyA_id) *  thingyA.size_used;
 				}
@@ -9622,6 +9256,7 @@ namespace dcon {
 				 {
 					dcon::record_header iheader(sizeof(thingyB_id) * thingyA.size_used, "uint16_t", "relate_in_array", "right");
 					iheader.serialize(output_buffer);
+					if(thingyA.size_used > 0)
 					std::memcpy(reinterpret_cast<thingyB_id*>(output_buffer), relate_in_array.m_right.vptr(), sizeof(thingyB_id) * thingyA.size_used);
 					output_buffer += sizeof(thingyB_id) *  thingyA.size_used;
 				}
@@ -9636,6 +9271,7 @@ namespace dcon {
 				 {
 					dcon::record_header iheader(sizeof(thingyB_id) * thingyA.size_used, "uint16_t", "relate_in_list", "right");
 					iheader.serialize(output_buffer);
+					if(thingyA.size_used > 0)
 					std::memcpy(reinterpret_cast<thingyB_id*>(output_buffer), relate_in_list.m_right.vptr(), sizeof(thingyB_id) * thingyA.size_used);
 					output_buffer += sizeof(thingyB_id) *  thingyA.size_used;
 				}
@@ -9650,42 +9286,49 @@ namespace dcon {
 				 {
 					dcon::record_header iheader(sizeof(thingyA_id) * many_many.size_used, "uint16_t", "many_many", "A");
 					iheader.serialize(output_buffer);
+					if(many_many.size_used > 0)
 					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), many_many.m_A.vptr(), sizeof(thingyA_id) * many_many.size_used);
 					output_buffer += sizeof(thingyA_id) *  many_many.size_used;
 				}
 				 {
 					dcon::record_header iheader(sizeof(thingyA_id) * many_many.size_used, "uint16_t", "many_many", "B");
 					iheader.serialize(output_buffer);
+					if(many_many.size_used > 0)
 					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), many_many.m_B.vptr(), sizeof(thingyA_id) * many_many.size_used);
 					output_buffer += sizeof(thingyA_id) *  many_many.size_used;
 				}
 				 {
 					dcon::record_header iheader(sizeof(thingyA_id) * many_many.size_used, "uint16_t", "many_many", "C");
 					iheader.serialize(output_buffer);
+					if(many_many.size_used > 0)
 					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), many_many.m_C.vptr(), sizeof(thingyA_id) * many_many.size_used);
 					output_buffer += sizeof(thingyA_id) *  many_many.size_used;
 				}
 				 {
 					dcon::record_header iheader(sizeof(thingyA_id) * many_many.size_used, "uint16_t", "many_many", "D");
 					iheader.serialize(output_buffer);
+					if(many_many.size_used > 0)
 					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), many_many.m_D.vptr(), sizeof(thingyA_id) * many_many.size_used);
 					output_buffer += sizeof(thingyA_id) *  many_many.size_used;
 				}
 				 {
 					dcon::record_header iheader(sizeof(thingyA_id) * many_many.size_used, "uint16_t", "many_many", "E");
 					iheader.serialize(output_buffer);
+					if(many_many.size_used > 0)
 					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), many_many.m_E.vptr(), sizeof(thingyA_id) * many_many.size_used);
 					output_buffer += sizeof(thingyA_id) *  many_many.size_used;
 				}
 				 {
 					dcon::record_header iheader(sizeof(thingyA_id) * many_many.size_used, "uint16_t", "many_many", "F");
 					iheader.serialize(output_buffer);
+					if(many_many.size_used > 0)
 					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), many_many.m_F.vptr(), sizeof(thingyA_id) * many_many.size_used);
 					output_buffer += sizeof(thingyA_id) *  many_many.size_used;
 				}
 				 {
 					dcon::record_header iheader(sizeof(thingyA_id) * many_many.size_used, "uint16_t", "many_many", "ignore");
 					iheader.serialize(output_buffer);
+					if(many_many.size_used > 0)
 					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), many_many.m_ignore.vptr(), sizeof(thingyA_id) * many_many.size_used);
 					output_buffer += sizeof(thingyA_id) *  many_many.size_used;
 				}
@@ -9695,6 +9338,7 @@ namespace dcon {
 			if(serialize_selection.many_many__index) {
 				dcon::record_header header(sizeof(many_many_id) * many_many.size_used, "uint16_t", "many_many", "_index");
 				header.serialize(output_buffer);
+				if(many_many.size_used > 0)
 				std::memcpy(reinterpret_cast<many_many_id*>(output_buffer), many_many.m__index.vptr(), sizeof(many_many_id) * many_many.size_used);
 				output_buffer += sizeof(many_many_id) * many_many.size_used;
 			}
@@ -9706,12 +9350,14 @@ namespace dcon {
 				 {
 					dcon::record_header iheader(sizeof(thingyA_id) * relate_as_optional.size_used, "uint16_t", "relate_as_optional", "left");
 					iheader.serialize(output_buffer);
+					if(relate_as_optional.size_used > 0)
 					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), relate_as_optional.m_left.vptr(), sizeof(thingyA_id) * relate_as_optional.size_used);
 					output_buffer += sizeof(thingyA_id) *  relate_as_optional.size_used;
 				}
 				 {
 					dcon::record_header iheader(sizeof(thingyB_id) * relate_as_optional.size_used, "uint16_t", "relate_as_optional", "right");
 					iheader.serialize(output_buffer);
+					if(relate_as_optional.size_used > 0)
 					std::memcpy(reinterpret_cast<thingyB_id*>(output_buffer), relate_as_optional.m_right.vptr(), sizeof(thingyB_id) * relate_as_optional.size_used);
 					output_buffer += sizeof(thingyB_id) *  relate_as_optional.size_used;
 				}
@@ -9721,6 +9367,7 @@ namespace dcon {
 			if(serialize_selection.relate_as_optional__index) {
 				dcon::record_header header(sizeof(relate_as_optional_id) * relate_as_optional.size_used, "uint16_t", "relate_as_optional", "_index");
 				header.serialize(output_buffer);
+				if(relate_as_optional.size_used > 0)
 				std::memcpy(reinterpret_cast<relate_as_optional_id*>(output_buffer), relate_as_optional.m__index.vptr(), sizeof(relate_as_optional_id) * relate_as_optional.size_used);
 				output_buffer += sizeof(relate_as_optional_id) * relate_as_optional.size_used;
 			}
@@ -9732,12 +9379,14 @@ namespace dcon {
 				 {
 					dcon::record_header iheader(sizeof(thingyA_id) * relate_as_non_optional.size_used, "uint16_t", "relate_as_non_optional", "left");
 					iheader.serialize(output_buffer);
+					if(relate_as_non_optional.size_used > 0)
 					std::memcpy(reinterpret_cast<thingyA_id*>(output_buffer), relate_as_non_optional.m_left.vptr(), sizeof(thingyA_id) * relate_as_non_optional.size_used);
 					output_buffer += sizeof(thingyA_id) *  relate_as_non_optional.size_used;
 				}
 				 {
 					dcon::record_header iheader(sizeof(thingyB_id) * relate_as_non_optional.size_used, "uint16_t", "relate_as_non_optional", "right");
 					iheader.serialize(output_buffer);
+					if(relate_as_non_optional.size_used > 0)
 					std::memcpy(reinterpret_cast<thingyB_id*>(output_buffer), relate_as_non_optional.m_right.vptr(), sizeof(thingyB_id) * relate_as_non_optional.size_used);
 					output_buffer += sizeof(thingyB_id) *  relate_as_non_optional.size_used;
 				}
@@ -9747,6 +9396,7 @@ namespace dcon {
 			if(serialize_selection.relate_as_non_optional__index) {
 				dcon::record_header header(sizeof(relate_as_non_optional_id) * relate_as_non_optional.size_used, "uint16_t", "relate_as_non_optional", "_index");
 				header.serialize(output_buffer);
+				if(relate_as_non_optional.size_used > 0)
 				std::memcpy(reinterpret_cast<relate_as_non_optional_id*>(output_buffer), relate_as_non_optional.m__index.vptr(), sizeof(relate_as_non_optional_id) * relate_as_non_optional.size_used);
 				output_buffer += sizeof(relate_as_non_optional_id) * relate_as_non_optional.size_used;
 			}
@@ -9758,6 +9408,7 @@ namespace dcon {
 				 {
 					dcon::record_header iheader(sizeof(std::array<thingyA_id, 2>) * relate_as_multipleA.size_used, "std::array<uint16_t,2>", "relate_as_multipleA", "left");
 					iheader.serialize(output_buffer);
+					if(relate_as_multipleA.size_used > 0)
 					std::memcpy(reinterpret_cast<std::array<thingyA_id, 2>*>(output_buffer), relate_as_multipleA.m_left.vptr(), sizeof(std::array<thingyA_id, 2>) * relate_as_multipleA.size_used);
 					output_buffer += sizeof(std::array<thingyA_id, 2>) *  relate_as_multipleA.size_used;
 				}
@@ -9767,6 +9418,7 @@ namespace dcon {
 			if(serialize_selection.relate_as_multipleA__index) {
 				dcon::record_header header(sizeof(relate_as_multipleA_id) * relate_as_multipleA.size_used, "uint16_t", "relate_as_multipleA", "_index");
 				header.serialize(output_buffer);
+				if(relate_as_multipleA.size_used > 0)
 				std::memcpy(reinterpret_cast<relate_as_multipleA_id*>(output_buffer), relate_as_multipleA.m__index.vptr(), sizeof(relate_as_multipleA_id) * relate_as_multipleA.size_used);
 				output_buffer += sizeof(relate_as_multipleA_id) * relate_as_multipleA.size_used;
 			}
@@ -9778,6 +9430,7 @@ namespace dcon {
 				 {
 					dcon::record_header iheader(sizeof(std::array<thingyA_id, 2>) * relate_as_multipleB.size_used, "std::array<uint16_t,2>", "relate_as_multipleB", "left");
 					iheader.serialize(output_buffer);
+					if(relate_as_multipleB.size_used > 0)
 					std::memcpy(reinterpret_cast<std::array<thingyA_id, 2>*>(output_buffer), relate_as_multipleB.m_left.vptr(), sizeof(std::array<thingyA_id, 2>) * relate_as_multipleB.size_used);
 					output_buffer += sizeof(std::array<thingyA_id, 2>) *  relate_as_multipleB.size_used;
 				}
@@ -9787,6 +9440,7 @@ namespace dcon {
 			if(serialize_selection.relate_as_multipleB__index) {
 				dcon::record_header header(sizeof(relate_as_multipleB_id) * relate_as_multipleB.size_used, "uint16_t", "relate_as_multipleB", "_index");
 				header.serialize(output_buffer);
+				if(relate_as_multipleB.size_used > 0)
 				std::memcpy(reinterpret_cast<relate_as_multipleB_id*>(output_buffer), relate_as_multipleB.m__index.vptr(), sizeof(relate_as_multipleB_id) * relate_as_multipleB.size_used);
 				output_buffer += sizeof(relate_as_multipleB_id) * relate_as_multipleB.size_used;
 			}
@@ -9798,6 +9452,7 @@ namespace dcon {
 				 {
 					dcon::record_header iheader(sizeof(std::array<thingyA_id, 2>) * relate_as_multipleC.size_used, "std::array<uint16_t,2>", "relate_as_multipleC", "left");
 					iheader.serialize(output_buffer);
+					if(relate_as_multipleC.size_used > 0)
 					std::memcpy(reinterpret_cast<std::array<thingyA_id, 2>*>(output_buffer), relate_as_multipleC.m_left.vptr(), sizeof(std::array<thingyA_id, 2>) * relate_as_multipleC.size_used);
 					output_buffer += sizeof(std::array<thingyA_id, 2>) *  relate_as_multipleC.size_used;
 				}
@@ -9807,6 +9462,7 @@ namespace dcon {
 			if(serialize_selection.relate_as_multipleC__index) {
 				dcon::record_header header(sizeof(relate_as_multipleC_id) * relate_as_multipleC.size_used, "uint16_t", "relate_as_multipleC", "_index");
 				header.serialize(output_buffer);
+				if(relate_as_multipleC.size_used > 0)
 				std::memcpy(reinterpret_cast<relate_as_multipleC_id*>(output_buffer), relate_as_multipleC.m__index.vptr(), sizeof(relate_as_multipleC_id) * relate_as_multipleC.size_used);
 				output_buffer += sizeof(relate_as_multipleC_id) * relate_as_multipleC.size_used;
 			}
@@ -9818,6 +9474,7 @@ namespace dcon {
 				 {
 					dcon::record_header iheader(sizeof(std::array<thingyA_id, 2>) * relate_as_multipleD.size_used, "std::array<uint16_t,2>", "relate_as_multipleD", "left");
 					iheader.serialize(output_buffer);
+					if(relate_as_multipleD.size_used > 0)
 					std::memcpy(reinterpret_cast<std::array<thingyA_id, 2>*>(output_buffer), relate_as_multipleD.m_left.vptr(), sizeof(std::array<thingyA_id, 2>) * relate_as_multipleD.size_used);
 					output_buffer += sizeof(std::array<thingyA_id, 2>) *  relate_as_multipleD.size_used;
 				}
@@ -9827,1156 +9484,1134 @@ namespace dcon {
 			if(serialize_selection.relate_as_multipleD__index) {
 				dcon::record_header header(sizeof(relate_as_multipleD_id) * relate_as_multipleD.size_used, "uint16_t", "relate_as_multipleD", "_index");
 				header.serialize(output_buffer);
+				if(relate_as_multipleD.size_used > 0)
 				std::memcpy(reinterpret_cast<relate_as_multipleD_id*>(output_buffer), relate_as_multipleD.m__index.vptr(), sizeof(relate_as_multipleD_id) * relate_as_multipleD.size_used);
 				output_buffer += sizeof(relate_as_multipleD_id) * relate_as_multipleD.size_used;
 			}
 		}
 		
+		private:
+		void deserialize_helper(std::byte const*& input_buffer, std::byte const* end, dcon::record_header& header, load_record& serialize_selection, load_record const& mask) {
+			if(input_buffer + header.record_size <= end) {
+				if(header.is_object("pop") && mask.pop) {
+					if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+						pop_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+						serialize_selection.pop = true;
+						return;
+					}
+					if(header.is_property("_index") && mask.pop__index) {
+						if(header.is_type("uint8_t")) {
+							std::memcpy(pop.m__index.vptr(), reinterpret_cast<uint8_t const*>(input_buffer), std::min(size_t(pop.size_used) * sizeof(uint8_t), size_t(header.record_size)));
+							serialize_selection.pop__index = true;
+						}
+						else if(header.is_type("uint16_t")) {
+							for(uint32_t i = 0; i < std::min(pop.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+								pop.m__index.vptr()[i].value = uint8_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+							}
+							serialize_selection.pop__index = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(pop.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								pop.m__index.vptr()[i].value = uint8_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.pop__index = true;
+						}
+						if(serialize_selection.pop__index == true) {
+							pop.first_free = pop_id();
+							for(int32_t j = 1 - 1; j >= 0; --j) {
+								if(pop.m__index.vptr()[j] != pop_id(uint8_t(j))) {
+									pop.m__index.vptr()[j] = pop.first_free;
+									pop.first_free = pop_id(uint8_t(j));
+								} else {
+								}
+							}
+						}
+						return;
+					}
+					return;
+				}
+				if(header.is_object("employment") && mask.employment) {
+					if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+						if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= pop.size_used) {
+							employment_resize(0);
+						}
+						employment_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+						serialize_selection.employment = true;
+						return;
+					}
+					if(header.is_property("$index_end") && mask.employment) {
+						return;
+					}
+					if(header.is_property("job") && mask.employment_job) {
+						if(header.is_type("job_id")) {
+							if(pop.size_used > 0)
+							std::memcpy(employment.m_job.vptr(), reinterpret_cast<job_id const*>(input_buffer), std::min(size_t(pop.size_used) * sizeof(job_id), size_t(header.record_size)));
+							serialize_selection.employment_job = true;
+						}
+						return;
+					}
+					return;
+				}
+				if(header.is_object("job") && mask.job) {
+					if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+						job_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+						serialize_selection.job = true;
+						return;
+					}
+					return;
+				}
+				if(header.is_object("thingyA") && mask.thingyA) {
+					if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+						thingyA_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+						serialize_selection.thingyA = true;
+						return;
+					}
+					if(header.is_property("some_value") && mask.thingyA_some_value) {
+						if(header.is_type("int32_t")) {
+							if(thingyA.size_used > 0)
+							std::memcpy(thingyA.m_some_value.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(thingyA.size_used) * sizeof(int32_t), size_t(header.record_size)));
+							serialize_selection.thingyA_some_value = true;
+						}
+						else if(header.is_type("int8_t")) {
+							for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
+								thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.thingyA_some_value = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.thingyA_some_value = true;
+						}
+						else if(header.is_type("int16_t")) {
+							for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
+								thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+							}
+							serialize_selection.thingyA_some_value = true;
+						}
+						else if(header.is_type("uint16_t")) {
+							for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+								thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+							}
+							serialize_selection.thingyA_some_value = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.thingyA_some_value = true;
+						}
+						else if(header.is_type("int64_t")) {
+							for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
+								thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+							}
+							serialize_selection.thingyA_some_value = true;
+						}
+						else if(header.is_type("uint64_t")) {
+							for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
+								thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+							}
+							serialize_selection.thingyA_some_value = true;
+						}
+						else if(header.is_type("float")) {
+							for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(float))); ++i) {
+								thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<float const*>(input_buffer) + i));
+							}
+							serialize_selection.thingyA_some_value = true;
+						}
+						else if(header.is_type("double")) {
+							for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
+								thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<double const*>(input_buffer) + i));
+							}
+							serialize_selection.thingyA_some_value = true;
+						}
+						return;
+					}
+					return;
+				}
+				if(header.is_object("thingyB") && mask.thingyB) {
+					if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+						thingyB_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+						serialize_selection.thingyB = true;
+						return;
+					}
+					if(header.is_property("_index") && mask.thingyB__index) {
+						if(header.is_type("uint16_t")) {
+							std::memcpy(thingyB.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingyB.size_used) * sizeof(uint16_t), size_t(header.record_size)));
+							serialize_selection.thingyB__index = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								thingyB.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.thingyB__index = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								thingyB.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.thingyB__index = true;
+						}
+						if(serialize_selection.thingyB__index == true) {
+							thingyB.first_free = thingyB_id();
+							for(int32_t j = 1200 - 1; j >= 0; --j) {
+								if(thingyB.m__index.vptr()[j] != thingyB_id(uint16_t(j))) {
+									thingyB.m__index.vptr()[j] = thingyB.first_free;
+									thingyB.first_free = thingyB_id(uint16_t(j));
+								} else {
+								}
+							}
+						}
+						return;
+					}
+					if(header.is_property("some_value") && mask.thingyB_some_value) {
+						if(header.is_type("int32_t")) {
+							if(thingyB.size_used > 0)
+							std::memcpy(thingyB.m_some_value.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(thingyB.size_used) * sizeof(int32_t), size_t(header.record_size)));
+							serialize_selection.thingyB_some_value = true;
+						}
+						else if(header.is_type("int8_t")) {
+							for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
+								thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.thingyB_some_value = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.thingyB_some_value = true;
+						}
+						else if(header.is_type("int16_t")) {
+							for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
+								thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
+							}
+							serialize_selection.thingyB_some_value = true;
+						}
+						else if(header.is_type("uint16_t")) {
+							for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
+								thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
+							}
+							serialize_selection.thingyB_some_value = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.thingyB_some_value = true;
+						}
+						else if(header.is_type("int64_t")) {
+							for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
+								thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
+							}
+							serialize_selection.thingyB_some_value = true;
+						}
+						else if(header.is_type("uint64_t")) {
+							for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
+								thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
+							}
+							serialize_selection.thingyB_some_value = true;
+						}
+						else if(header.is_type("float")) {
+							for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(float))); ++i) {
+								thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<float const*>(input_buffer) + i));
+							}
+							serialize_selection.thingyB_some_value = true;
+						}
+						else if(header.is_type("double")) {
+							for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
+								thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<double const*>(input_buffer) + i));
+							}
+							serialize_selection.thingyB_some_value = true;
+						}
+						return;
+					}
+					return;
+				}
+				if(header.is_object("relate_same") && mask.relate_same) {
+					if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+						if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= thingyA.size_used) {
+							relate_same_resize(0);
+						}
+						relate_same_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+						serialize_selection.relate_same = true;
+						return;
+					}
+					if(header.is_property("right") && mask.relate_same_right) {
+						if(header.is_type("uint16_t")) {
+							std::memcpy(relate_same.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingyA.size_used) * sizeof(uint16_t), size_t(header.record_size)));
+							serialize_selection.relate_same_right = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								relate_same.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_same_right = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								relate_same.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_same_right = true;
+						}
+						return;
+					}
+					if(header.is_property("$index_end") && mask.relate_same) {
+						if(serialize_selection.relate_same_right == true) {
+							for(uint32_t i = 0; i < thingyA.size_used; ++i) {
+								auto tmp = relate_same.m_right.vptr()[i];
+								relate_same.m_right.vptr()[i] = thingyA_id();
+								internal_relate_same_set_right(relate_same_id(relate_same_id::value_base_t(i)), tmp);
+							}
+						}
+						relate_same.hashm_joint.clear();
+						for(uint32_t idx = 0; idx < thingyA.size_used; ++idx) {
+							auto this_key = relate_same_id(relate_same_id::value_base_t(idx));
+							if(relate_same_is_valid(relate_same_id(relate_same_id::value_base_t(idx)))) {
+								auto key_dat = relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(idx)), relate_same.m_right.vptr()[idx]);
+								relate_same.hashm_joint.insert_or_assign(key_dat, this_key);
+							}
+						}
+						return;
+					}
+					return;
+				}
+				if(header.is_object("relate_in_array") && mask.relate_in_array) {
+					if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+						if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= thingyA.size_used) {
+							relate_in_array_resize(0);
+						}
+						relate_in_array_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+						serialize_selection.relate_in_array = true;
+						return;
+					}
+					if(header.is_property("right") && mask.relate_in_array_right) {
+						if(header.is_type("uint16_t")) {
+							std::memcpy(relate_in_array.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingyA.size_used) * sizeof(uint16_t), size_t(header.record_size)));
+							serialize_selection.relate_in_array_right = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								relate_in_array.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_in_array_right = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								relate_in_array.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_in_array_right = true;
+						}
+						return;
+					}
+					if(header.is_property("$index_end") && mask.relate_in_array) {
+						if(serialize_selection.relate_in_array_right == true) {
+							for(uint32_t i = 0; i < thingyA.size_used; ++i) {
+								auto tmp = relate_in_array.m_right.vptr()[i];
+								relate_in_array.m_right.vptr()[i] = thingyB_id();
+								internal_relate_in_array_set_right(relate_in_array_id(relate_in_array_id::value_base_t(i)), tmp);
+							}
+						}
+						return;
+					}
+					return;
+				}
+				if(header.is_object("relate_in_list") && mask.relate_in_list) {
+					if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+						if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= thingyA.size_used) {
+							relate_in_list_resize(0);
+						}
+						relate_in_list_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+						serialize_selection.relate_in_list = true;
+						return;
+					}
+					if(header.is_property("right") && mask.relate_in_list_right) {
+						if(header.is_type("uint16_t")) {
+							std::memcpy(relate_in_list.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingyA.size_used) * sizeof(uint16_t), size_t(header.record_size)));
+							serialize_selection.relate_in_list_right = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								relate_in_list.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_in_list_right = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								relate_in_list.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_in_list_right = true;
+						}
+						return;
+					}
+					if(header.is_property("$index_end") && mask.relate_in_list) {
+						if(serialize_selection.relate_in_list_right == true) {
+							for(uint32_t i = 0; i < thingyA.size_used; ++i) {
+								auto tmp = relate_in_list.m_right.vptr()[i];
+								relate_in_list.m_right.vptr()[i] = thingyB_id();
+								internal_relate_in_list_set_right(relate_in_list_id(relate_in_list_id::value_base_t(i)), tmp);
+							}
+						}
+						return;
+					}
+					return;
+				}
+				if(header.is_object("many_many") && mask.many_many) {
+					if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+						if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= many_many.size_used) {
+							many_many_resize(0);
+						}
+						many_many_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+						serialize_selection.many_many = true;
+						return;
+					}
+					if(header.is_property("_index") && mask.many_many__index) {
+						if(header.is_type("uint16_t")) {
+							std::memcpy(many_many.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
+							serialize_selection.many_many__index = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								many_many.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.many_many__index = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								many_many.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.many_many__index = true;
+						}
+						if(serialize_selection.many_many__index == true) {
+							many_many.first_free = many_many_id();
+							for(int32_t j = 200 - 1; j >= 0; --j) {
+								if(many_many.m__index.vptr()[j] != many_many_id(uint16_t(j))) {
+									many_many.m__index.vptr()[j] = many_many.first_free;
+									many_many.first_free = many_many_id(uint16_t(j));
+								} else {
+								}
+							}
+						}
+						return;
+					}
+					if(header.is_property("A") && mask.many_many_A) {
+						if(header.is_type("uint16_t")) {
+							std::memcpy(many_many.m_A.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
+							serialize_selection.many_many_A = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								many_many.m_A.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.many_many_A = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								many_many.m_A.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.many_many_A = true;
+						}
+						return;
+					}
+					if(header.is_property("B") && mask.many_many_B) {
+						if(header.is_type("uint16_t")) {
+							std::memcpy(many_many.m_B.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
+							serialize_selection.many_many_B = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								many_many.m_B.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.many_many_B = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								many_many.m_B.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.many_many_B = true;
+						}
+						return;
+					}
+					if(header.is_property("C") && mask.many_many_C) {
+						if(header.is_type("uint16_t")) {
+							std::memcpy(many_many.m_C.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
+							serialize_selection.many_many_C = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								many_many.m_C.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.many_many_C = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								many_many.m_C.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.many_many_C = true;
+						}
+						return;
+					}
+					if(header.is_property("D") && mask.many_many_D) {
+						if(header.is_type("uint16_t")) {
+							std::memcpy(many_many.m_D.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
+							serialize_selection.many_many_D = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								many_many.m_D.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.many_many_D = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								many_many.m_D.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.many_many_D = true;
+						}
+						return;
+					}
+					if(header.is_property("E") && mask.many_many_E) {
+						if(header.is_type("uint16_t")) {
+							std::memcpy(many_many.m_E.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
+							serialize_selection.many_many_E = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								many_many.m_E.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.many_many_E = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								many_many.m_E.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.many_many_E = true;
+						}
+						return;
+					}
+					if(header.is_property("F") && mask.many_many_F) {
+						if(header.is_type("uint16_t")) {
+							std::memcpy(many_many.m_F.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
+							serialize_selection.many_many_F = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								many_many.m_F.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.many_many_F = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								many_many.m_F.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.many_many_F = true;
+						}
+						return;
+					}
+					if(header.is_property("ignore") && mask.many_many_ignore) {
+						if(header.is_type("uint16_t")) {
+							std::memcpy(many_many.m_ignore.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
+							serialize_selection.many_many_ignore = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								many_many.m_ignore.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.many_many_ignore = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								many_many.m_ignore.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.many_many_ignore = true;
+						}
+						return;
+					}
+					if(header.is_property("$index_end") && mask.many_many) {
+						if(serialize_selection.many_many_A == true) {
+							for(uint32_t i = 0; i < many_many.size_used; ++i) {
+								auto tmp = many_many.m_A.vptr()[i];
+								many_many.m_A.vptr()[i] = thingyA_id();
+								internal_many_many_set_A(many_many_id(many_many_id::value_base_t(i)), tmp);
+							}
+						}
+						if(serialize_selection.many_many_B == true) {
+							for(uint32_t i = 0; i < many_many.size_used; ++i) {
+								auto tmp = many_many.m_B.vptr()[i];
+								many_many.m_B.vptr()[i] = thingyA_id();
+								internal_many_many_set_B(many_many_id(many_many_id::value_base_t(i)), tmp);
+							}
+						}
+						if(serialize_selection.many_many_C == true) {
+							for(uint32_t i = 0; i < many_many.size_used; ++i) {
+								auto tmp = many_many.m_C.vptr()[i];
+								many_many.m_C.vptr()[i] = thingyA_id();
+								internal_many_many_set_C(many_many_id(many_many_id::value_base_t(i)), tmp);
+							}
+						}
+						if(serialize_selection.many_many_D == true) {
+							for(uint32_t i = 0; i < many_many.size_used; ++i) {
+								auto tmp = many_many.m_D.vptr()[i];
+								many_many.m_D.vptr()[i] = thingyA_id();
+								internal_many_many_set_D(many_many_id(many_many_id::value_base_t(i)), tmp);
+							}
+						}
+						if(serialize_selection.many_many_E == true) {
+							for(uint32_t i = 0; i < many_many.size_used; ++i) {
+								auto tmp = many_many.m_E.vptr()[i];
+								many_many.m_E.vptr()[i] = thingyA_id();
+								internal_many_many_set_E(many_many_id(many_many_id::value_base_t(i)), tmp);
+							}
+						}
+						if(serialize_selection.many_many_F == true) {
+							for(uint32_t i = 0; i < many_many.size_used; ++i) {
+								auto tmp = many_many.m_F.vptr()[i];
+								many_many.m_F.vptr()[i] = thingyA_id();
+								internal_many_many_set_F(many_many_id(many_many_id::value_base_t(i)), tmp);
+							}
+						}
+						if(serialize_selection.many_many_ignore == true) {
+							for(uint32_t i = 0; i < many_many.size_used; ++i) {
+								auto tmp = many_many.m_ignore.vptr()[i];
+								many_many.m_ignore.vptr()[i] = thingyA_id();
+								internal_many_many_set_ignore(many_many_id(many_many_id::value_base_t(i)), tmp);
+							}
+						}
+						many_many.hashm_joint.clear();
+						for(uint32_t idx = 0; idx < many_many.size_used; ++idx) {
+							auto this_key = many_many_id(many_many_id::value_base_t(idx));
+							if(many_many_is_valid(many_many_id(many_many_id::value_base_t(idx)))) {
+								auto key_dat = many_many.to_joint_keydata(many_many.m_A.vptr()[idx], many_many.m_B.vptr()[idx], many_many.m_C.vptr()[idx], many_many.m_D.vptr()[idx], many_many.m_E.vptr()[idx], many_many.m_F.vptr()[idx]);
+								many_many.hashm_joint.insert_or_assign(key_dat, this_key);
+							}
+						}
+						return;
+					}
+					return;
+				}
+				if(header.is_object("relate_as_optional") && mask.relate_as_optional) {
+					if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+						if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_as_optional.size_used) {
+							relate_as_optional_resize(0);
+						}
+						relate_as_optional_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+						serialize_selection.relate_as_optional = true;
+						return;
+					}
+					if(header.is_property("_index") && mask.relate_as_optional__index) {
+						if(header.is_type("uint16_t")) {
+							std::memcpy(relate_as_optional.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_optional.size_used) * sizeof(uint16_t), size_t(header.record_size)));
+							serialize_selection.relate_as_optional__index = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								relate_as_optional.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_as_optional__index = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								relate_as_optional.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_as_optional__index = true;
+						}
+						if(serialize_selection.relate_as_optional__index == true) {
+							relate_as_optional.first_free = relate_as_optional_id();
+							for(int32_t j = 400 - 1; j >= 0; --j) {
+								if(relate_as_optional.m__index.vptr()[j] != relate_as_optional_id(uint16_t(j))) {
+									relate_as_optional.m__index.vptr()[j] = relate_as_optional.first_free;
+									relate_as_optional.first_free = relate_as_optional_id(uint16_t(j));
+								} else {
+								}
+							}
+						}
+						return;
+					}
+					if(header.is_property("left") && mask.relate_as_optional_left) {
+						if(header.is_type("uint16_t")) {
+							std::memcpy(relate_as_optional.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_optional.size_used) * sizeof(uint16_t), size_t(header.record_size)));
+							serialize_selection.relate_as_optional_left = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								relate_as_optional.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_as_optional_left = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								relate_as_optional.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_as_optional_left = true;
+						}
+						return;
+					}
+					if(header.is_property("right") && mask.relate_as_optional_right) {
+						if(header.is_type("uint16_t")) {
+							std::memcpy(relate_as_optional.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_optional.size_used) * sizeof(uint16_t), size_t(header.record_size)));
+							serialize_selection.relate_as_optional_right = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								relate_as_optional.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_as_optional_right = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								relate_as_optional.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_as_optional_right = true;
+						}
+						return;
+					}
+					if(header.is_property("$index_end") && mask.relate_as_optional) {
+						if(serialize_selection.relate_as_optional_left == true) {
+							for(uint32_t i = 0; i < relate_as_optional.size_used; ++i) {
+								auto tmp = relate_as_optional.m_left.vptr()[i];
+								relate_as_optional.m_left.vptr()[i] = thingyA_id();
+								internal_relate_as_optional_set_left(relate_as_optional_id(relate_as_optional_id::value_base_t(i)), tmp);
+							}
+						}
+						if(serialize_selection.relate_as_optional_right == true) {
+							for(uint32_t i = 0; i < relate_as_optional.size_used; ++i) {
+								auto tmp = relate_as_optional.m_right.vptr()[i];
+								relate_as_optional.m_right.vptr()[i] = thingyB_id();
+								internal_relate_as_optional_set_right(relate_as_optional_id(relate_as_optional_id::value_base_t(i)), tmp);
+							}
+						}
+						return;
+					}
+					return;
+				}
+				if(header.is_object("relate_as_non_optional") && mask.relate_as_non_optional) {
+					if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+						if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_as_non_optional.size_used) {
+							relate_as_non_optional_resize(0);
+						}
+						relate_as_non_optional_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+						serialize_selection.relate_as_non_optional = true;
+						return;
+					}
+					if(header.is_property("_index") && mask.relate_as_non_optional__index) {
+						if(header.is_type("uint16_t")) {
+							std::memcpy(relate_as_non_optional.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_non_optional.size_used) * sizeof(uint16_t), size_t(header.record_size)));
+							serialize_selection.relate_as_non_optional__index = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								relate_as_non_optional.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_as_non_optional__index = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								relate_as_non_optional.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_as_non_optional__index = true;
+						}
+						if(serialize_selection.relate_as_non_optional__index == true) {
+							relate_as_non_optional.first_free = relate_as_non_optional_id();
+							for(int32_t j = 400 - 1; j >= 0; --j) {
+								if(relate_as_non_optional.m__index.vptr()[j] != relate_as_non_optional_id(uint16_t(j))) {
+									relate_as_non_optional.m__index.vptr()[j] = relate_as_non_optional.first_free;
+									relate_as_non_optional.first_free = relate_as_non_optional_id(uint16_t(j));
+								} else {
+								}
+							}
+						}
+						return;
+					}
+					if(header.is_property("left") && mask.relate_as_non_optional_left) {
+						if(header.is_type("uint16_t")) {
+							std::memcpy(relate_as_non_optional.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_non_optional.size_used) * sizeof(uint16_t), size_t(header.record_size)));
+							serialize_selection.relate_as_non_optional_left = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								relate_as_non_optional.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_as_non_optional_left = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								relate_as_non_optional.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_as_non_optional_left = true;
+						}
+						return;
+					}
+					if(header.is_property("right") && mask.relate_as_non_optional_right) {
+						if(header.is_type("uint16_t")) {
+							std::memcpy(relate_as_non_optional.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_non_optional.size_used) * sizeof(uint16_t), size_t(header.record_size)));
+							serialize_selection.relate_as_non_optional_right = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								relate_as_non_optional.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_as_non_optional_right = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								relate_as_non_optional.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_as_non_optional_right = true;
+						}
+						return;
+					}
+					if(header.is_property("$index_end") && mask.relate_as_non_optional) {
+						if(serialize_selection.relate_as_non_optional_left == true) {
+							for(uint32_t i = 0; i < relate_as_non_optional.size_used; ++i) {
+								auto tmp = relate_as_non_optional.m_left.vptr()[i];
+								relate_as_non_optional.m_left.vptr()[i] = thingyA_id();
+								internal_relate_as_non_optional_set_left(relate_as_non_optional_id(relate_as_non_optional_id::value_base_t(i)), tmp);
+							}
+						}
+						if(serialize_selection.relate_as_non_optional_right == true) {
+							for(uint32_t i = 0; i < relate_as_non_optional.size_used; ++i) {
+								auto tmp = relate_as_non_optional.m_right.vptr()[i];
+								relate_as_non_optional.m_right.vptr()[i] = thingyB_id();
+								internal_relate_as_non_optional_set_right(relate_as_non_optional_id(relate_as_non_optional_id::value_base_t(i)), tmp);
+							}
+						}
+						return;
+					}
+					return;
+				}
+				if(header.is_object("relate_as_multipleA") && mask.relate_as_multipleA) {
+					if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+						if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_as_multipleA.size_used) {
+							relate_as_multipleA_resize(0);
+						}
+						relate_as_multipleA_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+						serialize_selection.relate_as_multipleA = true;
+						return;
+					}
+					if(header.is_property("_index") && mask.relate_as_multipleA__index) {
+						if(header.is_type("uint16_t")) {
+							std::memcpy(relate_as_multipleA.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_multipleA.size_used) * sizeof(uint16_t), size_t(header.record_size)));
+							serialize_selection.relate_as_multipleA__index = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(relate_as_multipleA.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								relate_as_multipleA.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_as_multipleA__index = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(relate_as_multipleA.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								relate_as_multipleA.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_as_multipleA__index = true;
+						}
+						if(serialize_selection.relate_as_multipleA__index == true) {
+							relate_as_multipleA.first_free = relate_as_multipleA_id();
+							for(int32_t j = 400 - 1; j >= 0; --j) {
+								if(relate_as_multipleA.m__index.vptr()[j] != relate_as_multipleA_id(uint16_t(j))) {
+									relate_as_multipleA.m__index.vptr()[j] = relate_as_multipleA.first_free;
+									relate_as_multipleA.first_free = relate_as_multipleA_id(uint16_t(j));
+								} else {
+								}
+							}
+						}
+						return;
+					}
+					if(header.is_property("left") && mask.relate_as_multipleA_left) {
+						if(header.is_type("std::array<uint16_t,2>")) {
+							std::memcpy(relate_as_multipleA.m_left.vptr(), reinterpret_cast<std::array<uint16_t,2> const*>(input_buffer), std::min(size_t(relate_as_multipleA.size_used) * sizeof(std::array<uint16_t, 2>), size_t(header.record_size)));
+							serialize_selection.relate_as_multipleA_left = true;
+						}
+						else if(header.is_type("std::array<uint8_t,2>")) {
+							for(uint32_t i = 0; i < std::min(relate_as_multipleA.size_used, uint32_t(header.record_size / sizeof(std::array<uint8_t,2>))); ++i) {
+								relate_as_multipleA.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[0]);
+								relate_as_multipleA.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[1]);
+							}
+							serialize_selection.relate_as_multipleA_left = true;
+						}
+						else if(header.is_type("std::array<uint32_t,2>")) {
+							for(uint32_t i = 0; i < std::min(relate_as_multipleA.size_used, uint32_t(header.record_size / sizeof(std::array<uint32_t,2>))); ++i) {
+								relate_as_multipleA.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[0]);
+								relate_as_multipleA.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[1]);
+							}
+							serialize_selection.relate_as_multipleA_left = true;
+						}
+						return;
+					}
+					if(header.is_property("$index_end") && mask.relate_as_multipleA) {
+						if(serialize_selection.relate_as_multipleA_left == true) {
+							for(uint32_t i = 0; i < relate_as_multipleA.size_used; ++i) {
+								 {
+									auto tmp = relate_as_multipleA.m_left.vptr()[i][0];
+									relate_as_multipleA.m_left.vptr()[i][0] = thingyA_id();
+									internal_relate_as_multipleA_set_left(relate_as_multipleA_id(relate_as_multipleA_id::value_base_t(i)), 0, tmp);
+								}
+								 {
+									auto tmp = relate_as_multipleA.m_left.vptr()[i][1];
+									relate_as_multipleA.m_left.vptr()[i][1] = thingyA_id();
+									internal_relate_as_multipleA_set_left(relate_as_multipleA_id(relate_as_multipleA_id::value_base_t(i)), 1, tmp);
+								}
+							}
+						}
+						relate_as_multipleA.hashm_joint.clear();
+						for(uint32_t idx = 0; idx < relate_as_multipleA.size_used; ++idx) {
+							auto this_key = relate_as_multipleA_id(relate_as_multipleA_id::value_base_t(idx));
+							if(relate_as_multipleA_is_valid(relate_as_multipleA_id(relate_as_multipleA_id::value_base_t(idx)))) {
+								auto key_dat = relate_as_multipleA.to_joint_keydata(relate_as_multipleA.m_left.vptr()[idx]);
+								relate_as_multipleA.hashm_joint.insert_or_assign(key_dat, this_key);
+							}
+						}
+						return;
+					}
+					return;
+				}
+				if(header.is_object("relate_as_multipleB") && mask.relate_as_multipleB) {
+					if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+						if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_as_multipleB.size_used) {
+							relate_as_multipleB_resize(0);
+						}
+						relate_as_multipleB_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+						serialize_selection.relate_as_multipleB = true;
+						return;
+					}
+					if(header.is_property("_index") && mask.relate_as_multipleB__index) {
+						if(header.is_type("uint16_t")) {
+							std::memcpy(relate_as_multipleB.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_multipleB.size_used) * sizeof(uint16_t), size_t(header.record_size)));
+							serialize_selection.relate_as_multipleB__index = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(relate_as_multipleB.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								relate_as_multipleB.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_as_multipleB__index = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(relate_as_multipleB.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								relate_as_multipleB.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_as_multipleB__index = true;
+						}
+						if(serialize_selection.relate_as_multipleB__index == true) {
+							relate_as_multipleB.first_free = relate_as_multipleB_id();
+							for(int32_t j = 400 - 1; j >= 0; --j) {
+								if(relate_as_multipleB.m__index.vptr()[j] != relate_as_multipleB_id(uint16_t(j))) {
+									relate_as_multipleB.m__index.vptr()[j] = relate_as_multipleB.first_free;
+									relate_as_multipleB.first_free = relate_as_multipleB_id(uint16_t(j));
+								} else {
+								}
+							}
+						}
+						return;
+					}
+					if(header.is_property("left") && mask.relate_as_multipleB_left) {
+						if(header.is_type("std::array<uint16_t,2>")) {
+							std::memcpy(relate_as_multipleB.m_left.vptr(), reinterpret_cast<std::array<uint16_t,2> const*>(input_buffer), std::min(size_t(relate_as_multipleB.size_used) * sizeof(std::array<uint16_t, 2>), size_t(header.record_size)));
+							serialize_selection.relate_as_multipleB_left = true;
+						}
+						else if(header.is_type("std::array<uint8_t,2>")) {
+							for(uint32_t i = 0; i < std::min(relate_as_multipleB.size_used, uint32_t(header.record_size / sizeof(std::array<uint8_t,2>))); ++i) {
+								relate_as_multipleB.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[0]);
+								relate_as_multipleB.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[1]);
+							}
+							serialize_selection.relate_as_multipleB_left = true;
+						}
+						else if(header.is_type("std::array<uint32_t,2>")) {
+							for(uint32_t i = 0; i < std::min(relate_as_multipleB.size_used, uint32_t(header.record_size / sizeof(std::array<uint32_t,2>))); ++i) {
+								relate_as_multipleB.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[0]);
+								relate_as_multipleB.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[1]);
+							}
+							serialize_selection.relate_as_multipleB_left = true;
+						}
+						return;
+					}
+					if(header.is_property("$index_end") && mask.relate_as_multipleB) {
+						if(serialize_selection.relate_as_multipleB_left == true) {
+							for(uint32_t i = 0; i < relate_as_multipleB.size_used; ++i) {
+								 {
+									auto tmp = relate_as_multipleB.m_left.vptr()[i][0];
+									relate_as_multipleB.m_left.vptr()[i][0] = thingyA_id();
+									internal_relate_as_multipleB_set_left(relate_as_multipleB_id(relate_as_multipleB_id::value_base_t(i)), 0, tmp);
+								}
+								 {
+									auto tmp = relate_as_multipleB.m_left.vptr()[i][1];
+									relate_as_multipleB.m_left.vptr()[i][1] = thingyA_id();
+									internal_relate_as_multipleB_set_left(relate_as_multipleB_id(relate_as_multipleB_id::value_base_t(i)), 1, tmp);
+								}
+							}
+						}
+						return;
+					}
+					return;
+				}
+				if(header.is_object("relate_as_multipleC") && mask.relate_as_multipleC) {
+					if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+						if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_as_multipleC.size_used) {
+							relate_as_multipleC_resize(0);
+						}
+						relate_as_multipleC_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+						serialize_selection.relate_as_multipleC = true;
+						return;
+					}
+					if(header.is_property("_index") && mask.relate_as_multipleC__index) {
+						if(header.is_type("uint16_t")) {
+							std::memcpy(relate_as_multipleC.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_multipleC.size_used) * sizeof(uint16_t), size_t(header.record_size)));
+							serialize_selection.relate_as_multipleC__index = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(relate_as_multipleC.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								relate_as_multipleC.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_as_multipleC__index = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(relate_as_multipleC.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								relate_as_multipleC.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_as_multipleC__index = true;
+						}
+						if(serialize_selection.relate_as_multipleC__index == true) {
+							relate_as_multipleC.first_free = relate_as_multipleC_id();
+							for(int32_t j = 400 - 1; j >= 0; --j) {
+								if(relate_as_multipleC.m__index.vptr()[j] != relate_as_multipleC_id(uint16_t(j))) {
+									relate_as_multipleC.m__index.vptr()[j] = relate_as_multipleC.first_free;
+									relate_as_multipleC.first_free = relate_as_multipleC_id(uint16_t(j));
+								} else {
+								}
+							}
+						}
+						return;
+					}
+					if(header.is_property("left") && mask.relate_as_multipleC_left) {
+						if(header.is_type("std::array<uint16_t,2>")) {
+							std::memcpy(relate_as_multipleC.m_left.vptr(), reinterpret_cast<std::array<uint16_t,2> const*>(input_buffer), std::min(size_t(relate_as_multipleC.size_used) * sizeof(std::array<uint16_t, 2>), size_t(header.record_size)));
+							serialize_selection.relate_as_multipleC_left = true;
+						}
+						else if(header.is_type("std::array<uint8_t,2>")) {
+							for(uint32_t i = 0; i < std::min(relate_as_multipleC.size_used, uint32_t(header.record_size / sizeof(std::array<uint8_t,2>))); ++i) {
+								relate_as_multipleC.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[0]);
+								relate_as_multipleC.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[1]);
+							}
+							serialize_selection.relate_as_multipleC_left = true;
+						}
+						else if(header.is_type("std::array<uint32_t,2>")) {
+							for(uint32_t i = 0; i < std::min(relate_as_multipleC.size_used, uint32_t(header.record_size / sizeof(std::array<uint32_t,2>))); ++i) {
+								relate_as_multipleC.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[0]);
+								relate_as_multipleC.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[1]);
+							}
+							serialize_selection.relate_as_multipleC_left = true;
+						}
+						return;
+					}
+					if(header.is_property("$index_end") && mask.relate_as_multipleC) {
+						if(serialize_selection.relate_as_multipleC_left == true) {
+							for(uint32_t i = 0; i < relate_as_multipleC.size_used; ++i) {
+								 {
+									auto tmp = relate_as_multipleC.m_left.vptr()[i][0];
+									relate_as_multipleC.m_left.vptr()[i][0] = thingyA_id();
+									internal_relate_as_multipleC_set_left(relate_as_multipleC_id(relate_as_multipleC_id::value_base_t(i)), 0, tmp);
+								}
+								 {
+									auto tmp = relate_as_multipleC.m_left.vptr()[i][1];
+									relate_as_multipleC.m_left.vptr()[i][1] = thingyA_id();
+									internal_relate_as_multipleC_set_left(relate_as_multipleC_id(relate_as_multipleC_id::value_base_t(i)), 1, tmp);
+								}
+							}
+						}
+						return;
+					}
+					return;
+				}
+				if(header.is_object("relate_as_multipleD") && mask.relate_as_multipleD) {
+					if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
+						if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_as_multipleD.size_used) {
+							relate_as_multipleD_resize(0);
+						}
+						relate_as_multipleD_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
+						serialize_selection.relate_as_multipleD = true;
+						return;
+					}
+					if(header.is_property("_index") && mask.relate_as_multipleD__index) {
+						if(header.is_type("uint16_t")) {
+							std::memcpy(relate_as_multipleD.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_multipleD.size_used) * sizeof(uint16_t), size_t(header.record_size)));
+							serialize_selection.relate_as_multipleD__index = true;
+						}
+						else if(header.is_type("uint8_t")) {
+							for(uint32_t i = 0; i < std::min(relate_as_multipleD.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
+								relate_as_multipleD.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_as_multipleD__index = true;
+						}
+						else if(header.is_type("uint32_t")) {
+							for(uint32_t i = 0; i < std::min(relate_as_multipleD.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
+								relate_as_multipleD.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
+							}
+							serialize_selection.relate_as_multipleD__index = true;
+						}
+						if(serialize_selection.relate_as_multipleD__index == true) {
+							relate_as_multipleD.first_free = relate_as_multipleD_id();
+							for(int32_t j = 400 - 1; j >= 0; --j) {
+								if(relate_as_multipleD.m__index.vptr()[j] != relate_as_multipleD_id(uint16_t(j))) {
+									relate_as_multipleD.m__index.vptr()[j] = relate_as_multipleD.first_free;
+									relate_as_multipleD.first_free = relate_as_multipleD_id(uint16_t(j));
+								} else {
+								}
+							}
+						}
+						return;
+					}
+					if(header.is_property("left") && mask.relate_as_multipleD_left) {
+						if(header.is_type("std::array<uint16_t,2>")) {
+							std::memcpy(relate_as_multipleD.m_left.vptr(), reinterpret_cast<std::array<uint16_t,2> const*>(input_buffer), std::min(size_t(relate_as_multipleD.size_used) * sizeof(std::array<uint16_t, 2>), size_t(header.record_size)));
+							serialize_selection.relate_as_multipleD_left = true;
+						}
+						else if(header.is_type("std::array<uint8_t,2>")) {
+							for(uint32_t i = 0; i < std::min(relate_as_multipleD.size_used, uint32_t(header.record_size / sizeof(std::array<uint8_t,2>))); ++i) {
+								relate_as_multipleD.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[0]);
+								relate_as_multipleD.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[1]);
+							}
+							serialize_selection.relate_as_multipleD_left = true;
+						}
+						else if(header.is_type("std::array<uint32_t,2>")) {
+							for(uint32_t i = 0; i < std::min(relate_as_multipleD.size_used, uint32_t(header.record_size / sizeof(std::array<uint32_t,2>))); ++i) {
+								relate_as_multipleD.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[0]);
+								relate_as_multipleD.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[1]);
+							}
+							serialize_selection.relate_as_multipleD_left = true;
+						}
+						return;
+					}
+					if(header.is_property("$index_end") && mask.relate_as_multipleD) {
+						if(serialize_selection.relate_as_multipleD_left == true) {
+							for(uint32_t i = 0; i < relate_as_multipleD.size_used; ++i) {
+								 {
+									auto tmp = relate_as_multipleD.m_left.vptr()[i][0];
+									relate_as_multipleD.m_left.vptr()[i][0] = thingyA_id();
+									internal_relate_as_multipleD_set_left(relate_as_multipleD_id(relate_as_multipleD_id::value_base_t(i)), 0, tmp);
+								}
+								 {
+									auto tmp = relate_as_multipleD.m_left.vptr()[i][1];
+									relate_as_multipleD.m_left.vptr()[i][1] = thingyA_id();
+									internal_relate_as_multipleD_set_left(relate_as_multipleD_id(relate_as_multipleD_id::value_base_t(i)), 1, tmp);
+								}
+							}
+						}
+						return;
+					}
+					return;
+				}
+			}
+		}
+		public:
 		//
 		// deserialize the desired objects, relationships, and properties
 		//
 		void deserialize(std::byte const*& input_buffer, std::byte const* end, load_record& serialize_selection) {
+			auto mask = serialize_entire_container_record();
 			while(input_buffer < end) {
 				dcon::record_header header;
 				header.deserialize(input_buffer, end);
-				if(input_buffer + header.record_size <= end) {
-					do {
-						if(header.is_object("pop")) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									pop_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.pop = true;
-									break;
-								}
-								if(header.is_property("_index")) {
-									if(header.is_type("uint8_t")) {
-										std::memcpy(pop.m__index.vptr(), reinterpret_cast<uint8_t const*>(input_buffer), std::min(size_t(pop.size_used) * sizeof(uint8_t), size_t(header.record_size)));
-										serialize_selection.pop__index = true;
-									}
-									else if(header.is_type("uint16_t")) {
-										for(uint32_t i = 0; i < std::min(pop.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-											pop.m__index.vptr()[i].value = uint8_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
-										}
-										serialize_selection.pop__index = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(pop.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											pop.m__index.vptr()[i].value = uint8_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.pop__index = true;
-									}
-									if(serialize_selection.pop__index == true) {
-										pop.first_free = pop_id();
-										for(int32_t j = 1 - 1; j >= 0; --j) {
-											if(pop.m__index.vptr()[j] != pop_id(uint8_t(j))) {
-												pop.m__index.vptr()[j] = pop.first_free;
-												pop.first_free = pop_id(uint8_t(j));
-											} else {
-											}
-										}
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("employment")) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= pop.size_used) {
-										employment_resize(0);
-									}
-									employment_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.employment = true;
-									break;
-								}
-								if(header.is_property("$index_end")) {
-									break;
-								}
-								if(header.is_property("job")) {
-									if(header.is_type("job_id")) {
-										std::memcpy(employment.m_job.vptr(), reinterpret_cast<job_id const*>(input_buffer), std::min(size_t(pop.size_used) * sizeof(job_id), size_t(header.record_size)));
-										serialize_selection.employment_job = true;
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("job")) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									job_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.job = true;
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("thingyA")) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									thingyA_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.thingyA = true;
-									break;
-								}
-								if(header.is_property("some_value")) {
-									if(header.is_type("int32_t")) {
-										std::memcpy(thingyA.m_some_value.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(thingyA.size_used) * sizeof(int32_t), size_t(header.record_size)));
-										serialize_selection.thingyA_some_value = true;
-									}
-									else if(header.is_type("int8_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
-											thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyA_some_value = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyA_some_value = true;
-									}
-									else if(header.is_type("int16_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
-											thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyA_some_value = true;
-									}
-									else if(header.is_type("uint16_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-											thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyA_some_value = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyA_some_value = true;
-									}
-									else if(header.is_type("int64_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
-											thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyA_some_value = true;
-									}
-									else if(header.is_type("uint64_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
-											thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyA_some_value = true;
-									}
-									else if(header.is_type("float")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(float))); ++i) {
-											thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<float const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyA_some_value = true;
-									}
-									else if(header.is_type("double")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
-											thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<double const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyA_some_value = true;
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("thingyB")) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									thingyB_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.thingyB = true;
-									break;
-								}
-								if(header.is_property("_index")) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(thingyB.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingyB.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.thingyB__index = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											thingyB.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyB__index = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											thingyB.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyB__index = true;
-									}
-									if(serialize_selection.thingyB__index == true) {
-										thingyB.first_free = thingyB_id();
-										for(int32_t j = 1200 - 1; j >= 0; --j) {
-											if(thingyB.m__index.vptr()[j] != thingyB_id(uint16_t(j))) {
-												thingyB.m__index.vptr()[j] = thingyB.first_free;
-												thingyB.first_free = thingyB_id(uint16_t(j));
-											} else {
-											}
-										}
-									}
-									break;
-								}
-								if(header.is_property("some_value")) {
-									if(header.is_type("int32_t")) {
-										std::memcpy(thingyB.m_some_value.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(thingyB.size_used) * sizeof(int32_t), size_t(header.record_size)));
-										serialize_selection.thingyB_some_value = true;
-									}
-									else if(header.is_type("int8_t")) {
-										for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
-											thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyB_some_value = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyB_some_value = true;
-									}
-									else if(header.is_type("int16_t")) {
-										for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
-											thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyB_some_value = true;
-									}
-									else if(header.is_type("uint16_t")) {
-										for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-											thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyB_some_value = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyB_some_value = true;
-									}
-									else if(header.is_type("int64_t")) {
-										for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
-											thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyB_some_value = true;
-									}
-									else if(header.is_type("uint64_t")) {
-										for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
-											thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyB_some_value = true;
-									}
-									else if(header.is_type("float")) {
-										for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(float))); ++i) {
-											thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<float const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyB_some_value = true;
-									}
-									else if(header.is_type("double")) {
-										for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
-											thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<double const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyB_some_value = true;
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("relate_same")) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= thingyA.size_used) {
-										relate_same_resize(0);
-									}
-									relate_same_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.relate_same = true;
-									break;
-								}
-								if(header.is_property("right")) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_same.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingyA.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_same_right = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_same.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_same_right = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_same.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_same_right = true;
-									}
-									break;
-								}
-								if(header.is_property("$index_end")) {
-									if(serialize_selection.relate_same_right == true) {
-										for(uint32_t i = 0; i < thingyA.size_used; ++i) {
-											auto tmp = relate_same.m_right.vptr()[i];
-											relate_same.m_right.vptr()[i] = thingyA_id();
-											internal_relate_same_set_right(relate_same_id(relate_same_id::value_base_t(i)), tmp);
-										}
-									}
-									relate_same.hashm_joint.clear();
-									for(uint32_t idx = 0; idx < thingyA.size_used; ++idx) {
-										auto this_key = relate_same_id(relate_same_id::value_base_t(idx));
-										if(relate_same_is_valid(relate_same_id(relate_same_id::value_base_t(idx)))) {
-											auto key_dat = relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(idx)), relate_same.m_right.vptr()[idx]);
-											relate_same.hashm_joint.insert_or_assign(key_dat, this_key);
-										}
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("relate_in_array")) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= thingyA.size_used) {
-										relate_in_array_resize(0);
-									}
-									relate_in_array_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.relate_in_array = true;
-									break;
-								}
-								if(header.is_property("right")) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_in_array.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingyA.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_in_array_right = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_in_array.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_in_array_right = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_in_array.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_in_array_right = true;
-									}
-									break;
-								}
-								if(header.is_property("$index_end")) {
-									if(serialize_selection.relate_in_array_right == true) {
-										for(uint32_t i = 0; i < thingyA.size_used; ++i) {
-											auto tmp = relate_in_array.m_right.vptr()[i];
-											relate_in_array.m_right.vptr()[i] = thingyB_id();
-											internal_relate_in_array_set_right(relate_in_array_id(relate_in_array_id::value_base_t(i)), tmp);
-										}
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("relate_in_list")) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= thingyA.size_used) {
-										relate_in_list_resize(0);
-									}
-									relate_in_list_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.relate_in_list = true;
-									break;
-								}
-								if(header.is_property("right")) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_in_list.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingyA.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_in_list_right = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_in_list.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_in_list_right = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_in_list.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_in_list_right = true;
-									}
-									break;
-								}
-								if(header.is_property("$index_end")) {
-									if(serialize_selection.relate_in_list_right == true) {
-										for(uint32_t i = 0; i < thingyA.size_used; ++i) {
-											auto tmp = relate_in_list.m_right.vptr()[i];
-											relate_in_list.m_right.vptr()[i] = thingyB_id();
-											internal_relate_in_list_set_right(relate_in_list_id(relate_in_list_id::value_base_t(i)), tmp);
-										}
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("many_many")) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= many_many.size_used) {
-										many_many_resize(0);
-									}
-									many_many_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.many_many = true;
-									break;
-								}
-								if(header.is_property("_index")) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(many_many.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.many_many__index = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											many_many.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many__index = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											many_many.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many__index = true;
-									}
-									if(serialize_selection.many_many__index == true) {
-										many_many.first_free = many_many_id();
-										for(int32_t j = 200 - 1; j >= 0; --j) {
-											if(many_many.m__index.vptr()[j] != many_many_id(uint16_t(j))) {
-												many_many.m__index.vptr()[j] = many_many.first_free;
-												many_many.first_free = many_many_id(uint16_t(j));
-											} else {
-											}
-										}
-									}
-									break;
-								}
-								if(header.is_property("A")) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(many_many.m_A.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.many_many_A = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											many_many.m_A.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_A = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											many_many.m_A.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_A = true;
-									}
-									break;
-								}
-								if(header.is_property("B")) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(many_many.m_B.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.many_many_B = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											many_many.m_B.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_B = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											many_many.m_B.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_B = true;
-									}
-									break;
-								}
-								if(header.is_property("C")) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(many_many.m_C.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.many_many_C = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											many_many.m_C.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_C = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											many_many.m_C.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_C = true;
-									}
-									break;
-								}
-								if(header.is_property("D")) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(many_many.m_D.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.many_many_D = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											many_many.m_D.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_D = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											many_many.m_D.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_D = true;
-									}
-									break;
-								}
-								if(header.is_property("E")) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(many_many.m_E.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.many_many_E = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											many_many.m_E.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_E = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											many_many.m_E.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_E = true;
-									}
-									break;
-								}
-								if(header.is_property("F")) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(many_many.m_F.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.many_many_F = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											many_many.m_F.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_F = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											many_many.m_F.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_F = true;
-									}
-									break;
-								}
-								if(header.is_property("ignore")) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(many_many.m_ignore.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.many_many_ignore = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											many_many.m_ignore.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_ignore = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											many_many.m_ignore.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_ignore = true;
-									}
-									break;
-								}
-								if(header.is_property("$index_end")) {
-									if(serialize_selection.many_many_A == true) {
-										for(uint32_t i = 0; i < many_many.size_used; ++i) {
-											auto tmp = many_many.m_A.vptr()[i];
-											many_many.m_A.vptr()[i] = thingyA_id();
-											internal_many_many_set_A(many_many_id(many_many_id::value_base_t(i)), tmp);
-										}
-									}
-									if(serialize_selection.many_many_B == true) {
-										for(uint32_t i = 0; i < many_many.size_used; ++i) {
-											auto tmp = many_many.m_B.vptr()[i];
-											many_many.m_B.vptr()[i] = thingyA_id();
-											internal_many_many_set_B(many_many_id(many_many_id::value_base_t(i)), tmp);
-										}
-									}
-									if(serialize_selection.many_many_C == true) {
-										for(uint32_t i = 0; i < many_many.size_used; ++i) {
-											auto tmp = many_many.m_C.vptr()[i];
-											many_many.m_C.vptr()[i] = thingyA_id();
-											internal_many_many_set_C(many_many_id(many_many_id::value_base_t(i)), tmp);
-										}
-									}
-									if(serialize_selection.many_many_D == true) {
-										for(uint32_t i = 0; i < many_many.size_used; ++i) {
-											auto tmp = many_many.m_D.vptr()[i];
-											many_many.m_D.vptr()[i] = thingyA_id();
-											internal_many_many_set_D(many_many_id(many_many_id::value_base_t(i)), tmp);
-										}
-									}
-									if(serialize_selection.many_many_E == true) {
-										for(uint32_t i = 0; i < many_many.size_used; ++i) {
-											auto tmp = many_many.m_E.vptr()[i];
-											many_many.m_E.vptr()[i] = thingyA_id();
-											internal_many_many_set_E(many_many_id(many_many_id::value_base_t(i)), tmp);
-										}
-									}
-									if(serialize_selection.many_many_F == true) {
-										for(uint32_t i = 0; i < many_many.size_used; ++i) {
-											auto tmp = many_many.m_F.vptr()[i];
-											many_many.m_F.vptr()[i] = thingyA_id();
-											internal_many_many_set_F(many_many_id(many_many_id::value_base_t(i)), tmp);
-										}
-									}
-									if(serialize_selection.many_many_ignore == true) {
-										for(uint32_t i = 0; i < many_many.size_used; ++i) {
-											auto tmp = many_many.m_ignore.vptr()[i];
-											many_many.m_ignore.vptr()[i] = thingyA_id();
-											internal_many_many_set_ignore(many_many_id(many_many_id::value_base_t(i)), tmp);
-										}
-									}
-									many_many.hashm_joint.clear();
-									for(uint32_t idx = 0; idx < many_many.size_used; ++idx) {
-										auto this_key = many_many_id(many_many_id::value_base_t(idx));
-										if(many_many_is_valid(many_many_id(many_many_id::value_base_t(idx)))) {
-											auto key_dat = many_many.to_joint_keydata(many_many.m_A.vptr()[idx], many_many.m_B.vptr()[idx], many_many.m_C.vptr()[idx], many_many.m_D.vptr()[idx], many_many.m_E.vptr()[idx], many_many.m_F.vptr()[idx]);
-											many_many.hashm_joint.insert_or_assign(key_dat, this_key);
-										}
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("relate_as_optional")) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_as_optional.size_used) {
-										relate_as_optional_resize(0);
-									}
-									relate_as_optional_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.relate_as_optional = true;
-									break;
-								}
-								if(header.is_property("_index")) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_as_optional.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_optional.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_as_optional__index = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_as_optional.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_optional__index = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_as_optional.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_optional__index = true;
-									}
-									if(serialize_selection.relate_as_optional__index == true) {
-										relate_as_optional.first_free = relate_as_optional_id();
-										for(int32_t j = 400 - 1; j >= 0; --j) {
-											if(relate_as_optional.m__index.vptr()[j] != relate_as_optional_id(uint16_t(j))) {
-												relate_as_optional.m__index.vptr()[j] = relate_as_optional.first_free;
-												relate_as_optional.first_free = relate_as_optional_id(uint16_t(j));
-											} else {
-											}
-										}
-									}
-									break;
-								}
-								if(header.is_property("left")) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_as_optional.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_optional.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_as_optional_left = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_as_optional.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_optional_left = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_as_optional.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_optional_left = true;
-									}
-									break;
-								}
-								if(header.is_property("right")) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_as_optional.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_optional.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_as_optional_right = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_as_optional.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_optional_right = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_as_optional.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_optional_right = true;
-									}
-									break;
-								}
-								if(header.is_property("$index_end")) {
-									if(serialize_selection.relate_as_optional_left == true) {
-										for(uint32_t i = 0; i < relate_as_optional.size_used; ++i) {
-											auto tmp = relate_as_optional.m_left.vptr()[i];
-											relate_as_optional.m_left.vptr()[i] = thingyA_id();
-											internal_relate_as_optional_set_left(relate_as_optional_id(relate_as_optional_id::value_base_t(i)), tmp);
-										}
-									}
-									if(serialize_selection.relate_as_optional_right == true) {
-										for(uint32_t i = 0; i < relate_as_optional.size_used; ++i) {
-											auto tmp = relate_as_optional.m_right.vptr()[i];
-											relate_as_optional.m_right.vptr()[i] = thingyB_id();
-											internal_relate_as_optional_set_right(relate_as_optional_id(relate_as_optional_id::value_base_t(i)), tmp);
-										}
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("relate_as_non_optional")) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_as_non_optional.size_used) {
-										relate_as_non_optional_resize(0);
-									}
-									relate_as_non_optional_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.relate_as_non_optional = true;
-									break;
-								}
-								if(header.is_property("_index")) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_as_non_optional.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_non_optional.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_as_non_optional__index = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_as_non_optional.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_non_optional__index = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_as_non_optional.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_non_optional__index = true;
-									}
-									if(serialize_selection.relate_as_non_optional__index == true) {
-										relate_as_non_optional.first_free = relate_as_non_optional_id();
-										for(int32_t j = 400 - 1; j >= 0; --j) {
-											if(relate_as_non_optional.m__index.vptr()[j] != relate_as_non_optional_id(uint16_t(j))) {
-												relate_as_non_optional.m__index.vptr()[j] = relate_as_non_optional.first_free;
-												relate_as_non_optional.first_free = relate_as_non_optional_id(uint16_t(j));
-											} else {
-											}
-										}
-									}
-									break;
-								}
-								if(header.is_property("left")) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_as_non_optional.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_non_optional.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_as_non_optional_left = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_as_non_optional.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_non_optional_left = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_as_non_optional.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_non_optional_left = true;
-									}
-									break;
-								}
-								if(header.is_property("right")) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_as_non_optional.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_non_optional.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_as_non_optional_right = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_as_non_optional.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_non_optional_right = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_as_non_optional.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_non_optional_right = true;
-									}
-									break;
-								}
-								if(header.is_property("$index_end")) {
-									if(serialize_selection.relate_as_non_optional_left == true) {
-										for(uint32_t i = 0; i < relate_as_non_optional.size_used; ++i) {
-											auto tmp = relate_as_non_optional.m_left.vptr()[i];
-											relate_as_non_optional.m_left.vptr()[i] = thingyA_id();
-											internal_relate_as_non_optional_set_left(relate_as_non_optional_id(relate_as_non_optional_id::value_base_t(i)), tmp);
-										}
-									}
-									if(serialize_selection.relate_as_non_optional_right == true) {
-										for(uint32_t i = 0; i < relate_as_non_optional.size_used; ++i) {
-											auto tmp = relate_as_non_optional.m_right.vptr()[i];
-											relate_as_non_optional.m_right.vptr()[i] = thingyB_id();
-											internal_relate_as_non_optional_set_right(relate_as_non_optional_id(relate_as_non_optional_id::value_base_t(i)), tmp);
-										}
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("relate_as_multipleA")) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_as_multipleA.size_used) {
-										relate_as_multipleA_resize(0);
-									}
-									relate_as_multipleA_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.relate_as_multipleA = true;
-									break;
-								}
-								if(header.is_property("_index")) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_as_multipleA.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_multipleA.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_as_multipleA__index = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleA.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_as_multipleA.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_multipleA__index = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleA.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_as_multipleA.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_multipleA__index = true;
-									}
-									if(serialize_selection.relate_as_multipleA__index == true) {
-										relate_as_multipleA.first_free = relate_as_multipleA_id();
-										for(int32_t j = 400 - 1; j >= 0; --j) {
-											if(relate_as_multipleA.m__index.vptr()[j] != relate_as_multipleA_id(uint16_t(j))) {
-												relate_as_multipleA.m__index.vptr()[j] = relate_as_multipleA.first_free;
-												relate_as_multipleA.first_free = relate_as_multipleA_id(uint16_t(j));
-											} else {
-											}
-										}
-									}
-									break;
-								}
-								if(header.is_property("left")) {
-									if(header.is_type("std::array<uint16_t,2>")) {
-										std::memcpy(relate_as_multipleA.m_left.vptr(), reinterpret_cast<std::array<uint16_t,2> const*>(input_buffer), std::min(size_t(relate_as_multipleA.size_used) * sizeof(std::array<uint16_t, 2>), size_t(header.record_size)));
-										serialize_selection.relate_as_multipleA_left = true;
-									}
-									else if(header.is_type("std::array<uint8_t,2>")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleA.size_used, uint32_t(header.record_size / sizeof(std::array<uint8_t,2>))); ++i) {
-											relate_as_multipleA.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[0]);
-											relate_as_multipleA.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[1]);
-										}
-										serialize_selection.relate_as_multipleA_left = true;
-									}
-									else if(header.is_type("std::array<uint32_t,2>")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleA.size_used, uint32_t(header.record_size / sizeof(std::array<uint32_t,2>))); ++i) {
-											relate_as_multipleA.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[0]);
-											relate_as_multipleA.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[1]);
-										}
-										serialize_selection.relate_as_multipleA_left = true;
-									}
-									break;
-								}
-								if(header.is_property("$index_end")) {
-									if(serialize_selection.relate_as_multipleA_left == true) {
-										for(uint32_t i = 0; i < relate_as_multipleA.size_used; ++i) {
-											 {
-												auto tmp = relate_as_multipleA.m_left.vptr()[i][0];
-												relate_as_multipleA.m_left.vptr()[i][0] = thingyA_id();
-												internal_relate_as_multipleA_set_left(relate_as_multipleA_id(relate_as_multipleA_id::value_base_t(i)), 0, tmp);
-											}
-											 {
-												auto tmp = relate_as_multipleA.m_left.vptr()[i][1];
-												relate_as_multipleA.m_left.vptr()[i][1] = thingyA_id();
-												internal_relate_as_multipleA_set_left(relate_as_multipleA_id(relate_as_multipleA_id::value_base_t(i)), 1, tmp);
-											}
-										}
-									}
-									relate_as_multipleA.hashm_joint.clear();
-									for(uint32_t idx = 0; idx < relate_as_multipleA.size_used; ++idx) {
-										auto this_key = relate_as_multipleA_id(relate_as_multipleA_id::value_base_t(idx));
-										if(relate_as_multipleA_is_valid(relate_as_multipleA_id(relate_as_multipleA_id::value_base_t(idx)))) {
-											auto key_dat = relate_as_multipleA.to_joint_keydata(relate_as_multipleA.m_left.vptr()[idx]);
-											relate_as_multipleA.hashm_joint.insert_or_assign(key_dat, this_key);
-										}
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("relate_as_multipleB")) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_as_multipleB.size_used) {
-										relate_as_multipleB_resize(0);
-									}
-									relate_as_multipleB_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.relate_as_multipleB = true;
-									break;
-								}
-								if(header.is_property("_index")) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_as_multipleB.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_multipleB.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_as_multipleB__index = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleB.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_as_multipleB.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_multipleB__index = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleB.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_as_multipleB.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_multipleB__index = true;
-									}
-									if(serialize_selection.relate_as_multipleB__index == true) {
-										relate_as_multipleB.first_free = relate_as_multipleB_id();
-										for(int32_t j = 400 - 1; j >= 0; --j) {
-											if(relate_as_multipleB.m__index.vptr()[j] != relate_as_multipleB_id(uint16_t(j))) {
-												relate_as_multipleB.m__index.vptr()[j] = relate_as_multipleB.first_free;
-												relate_as_multipleB.first_free = relate_as_multipleB_id(uint16_t(j));
-											} else {
-											}
-										}
-									}
-									break;
-								}
-								if(header.is_property("left")) {
-									if(header.is_type("std::array<uint16_t,2>")) {
-										std::memcpy(relate_as_multipleB.m_left.vptr(), reinterpret_cast<std::array<uint16_t,2> const*>(input_buffer), std::min(size_t(relate_as_multipleB.size_used) * sizeof(std::array<uint16_t, 2>), size_t(header.record_size)));
-										serialize_selection.relate_as_multipleB_left = true;
-									}
-									else if(header.is_type("std::array<uint8_t,2>")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleB.size_used, uint32_t(header.record_size / sizeof(std::array<uint8_t,2>))); ++i) {
-											relate_as_multipleB.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[0]);
-											relate_as_multipleB.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[1]);
-										}
-										serialize_selection.relate_as_multipleB_left = true;
-									}
-									else if(header.is_type("std::array<uint32_t,2>")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleB.size_used, uint32_t(header.record_size / sizeof(std::array<uint32_t,2>))); ++i) {
-											relate_as_multipleB.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[0]);
-											relate_as_multipleB.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[1]);
-										}
-										serialize_selection.relate_as_multipleB_left = true;
-									}
-									break;
-								}
-								if(header.is_property("$index_end")) {
-									if(serialize_selection.relate_as_multipleB_left == true) {
-										for(uint32_t i = 0; i < relate_as_multipleB.size_used; ++i) {
-											 {
-												auto tmp = relate_as_multipleB.m_left.vptr()[i][0];
-												relate_as_multipleB.m_left.vptr()[i][0] = thingyA_id();
-												internal_relate_as_multipleB_set_left(relate_as_multipleB_id(relate_as_multipleB_id::value_base_t(i)), 0, tmp);
-											}
-											 {
-												auto tmp = relate_as_multipleB.m_left.vptr()[i][1];
-												relate_as_multipleB.m_left.vptr()[i][1] = thingyA_id();
-												internal_relate_as_multipleB_set_left(relate_as_multipleB_id(relate_as_multipleB_id::value_base_t(i)), 1, tmp);
-											}
-										}
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("relate_as_multipleC")) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_as_multipleC.size_used) {
-										relate_as_multipleC_resize(0);
-									}
-									relate_as_multipleC_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.relate_as_multipleC = true;
-									break;
-								}
-								if(header.is_property("_index")) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_as_multipleC.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_multipleC.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_as_multipleC__index = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleC.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_as_multipleC.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_multipleC__index = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleC.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_as_multipleC.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_multipleC__index = true;
-									}
-									if(serialize_selection.relate_as_multipleC__index == true) {
-										relate_as_multipleC.first_free = relate_as_multipleC_id();
-										for(int32_t j = 400 - 1; j >= 0; --j) {
-											if(relate_as_multipleC.m__index.vptr()[j] != relate_as_multipleC_id(uint16_t(j))) {
-												relate_as_multipleC.m__index.vptr()[j] = relate_as_multipleC.first_free;
-												relate_as_multipleC.first_free = relate_as_multipleC_id(uint16_t(j));
-											} else {
-											}
-										}
-									}
-									break;
-								}
-								if(header.is_property("left")) {
-									if(header.is_type("std::array<uint16_t,2>")) {
-										std::memcpy(relate_as_multipleC.m_left.vptr(), reinterpret_cast<std::array<uint16_t,2> const*>(input_buffer), std::min(size_t(relate_as_multipleC.size_used) * sizeof(std::array<uint16_t, 2>), size_t(header.record_size)));
-										serialize_selection.relate_as_multipleC_left = true;
-									}
-									else if(header.is_type("std::array<uint8_t,2>")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleC.size_used, uint32_t(header.record_size / sizeof(std::array<uint8_t,2>))); ++i) {
-											relate_as_multipleC.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[0]);
-											relate_as_multipleC.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[1]);
-										}
-										serialize_selection.relate_as_multipleC_left = true;
-									}
-									else if(header.is_type("std::array<uint32_t,2>")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleC.size_used, uint32_t(header.record_size / sizeof(std::array<uint32_t,2>))); ++i) {
-											relate_as_multipleC.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[0]);
-											relate_as_multipleC.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[1]);
-										}
-										serialize_selection.relate_as_multipleC_left = true;
-									}
-									break;
-								}
-								if(header.is_property("$index_end")) {
-									if(serialize_selection.relate_as_multipleC_left == true) {
-										for(uint32_t i = 0; i < relate_as_multipleC.size_used; ++i) {
-											 {
-												auto tmp = relate_as_multipleC.m_left.vptr()[i][0];
-												relate_as_multipleC.m_left.vptr()[i][0] = thingyA_id();
-												internal_relate_as_multipleC_set_left(relate_as_multipleC_id(relate_as_multipleC_id::value_base_t(i)), 0, tmp);
-											}
-											 {
-												auto tmp = relate_as_multipleC.m_left.vptr()[i][1];
-												relate_as_multipleC.m_left.vptr()[i][1] = thingyA_id();
-												internal_relate_as_multipleC_set_left(relate_as_multipleC_id(relate_as_multipleC_id::value_base_t(i)), 1, tmp);
-											}
-										}
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("relate_as_multipleD")) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_as_multipleD.size_used) {
-										relate_as_multipleD_resize(0);
-									}
-									relate_as_multipleD_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.relate_as_multipleD = true;
-									break;
-								}
-								if(header.is_property("_index")) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_as_multipleD.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_multipleD.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_as_multipleD__index = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleD.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_as_multipleD.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_multipleD__index = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleD.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_as_multipleD.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_multipleD__index = true;
-									}
-									if(serialize_selection.relate_as_multipleD__index == true) {
-										relate_as_multipleD.first_free = relate_as_multipleD_id();
-										for(int32_t j = 400 - 1; j >= 0; --j) {
-											if(relate_as_multipleD.m__index.vptr()[j] != relate_as_multipleD_id(uint16_t(j))) {
-												relate_as_multipleD.m__index.vptr()[j] = relate_as_multipleD.first_free;
-												relate_as_multipleD.first_free = relate_as_multipleD_id(uint16_t(j));
-											} else {
-											}
-										}
-									}
-									break;
-								}
-								if(header.is_property("left")) {
-									if(header.is_type("std::array<uint16_t,2>")) {
-										std::memcpy(relate_as_multipleD.m_left.vptr(), reinterpret_cast<std::array<uint16_t,2> const*>(input_buffer), std::min(size_t(relate_as_multipleD.size_used) * sizeof(std::array<uint16_t, 2>), size_t(header.record_size)));
-										serialize_selection.relate_as_multipleD_left = true;
-									}
-									else if(header.is_type("std::array<uint8_t,2>")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleD.size_used, uint32_t(header.record_size / sizeof(std::array<uint8_t,2>))); ++i) {
-											relate_as_multipleD.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[0]);
-											relate_as_multipleD.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[1]);
-										}
-										serialize_selection.relate_as_multipleD_left = true;
-									}
-									else if(header.is_type("std::array<uint32_t,2>")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleD.size_used, uint32_t(header.record_size / sizeof(std::array<uint32_t,2>))); ++i) {
-											relate_as_multipleD.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[0]);
-											relate_as_multipleD.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[1]);
-										}
-										serialize_selection.relate_as_multipleD_left = true;
-									}
-									break;
-								}
-								if(header.is_property("$index_end")) {
-									if(serialize_selection.relate_as_multipleD_left == true) {
-										for(uint32_t i = 0; i < relate_as_multipleD.size_used; ++i) {
-											 {
-												auto tmp = relate_as_multipleD.m_left.vptr()[i][0];
-												relate_as_multipleD.m_left.vptr()[i][0] = thingyA_id();
-												internal_relate_as_multipleD_set_left(relate_as_multipleD_id(relate_as_multipleD_id::value_base_t(i)), 0, tmp);
-											}
-											 {
-												auto tmp = relate_as_multipleD.m_left.vptr()[i][1];
-												relate_as_multipleD.m_left.vptr()[i][1] = thingyA_id();
-												internal_relate_as_multipleD_set_left(relate_as_multipleD_id(relate_as_multipleD_id::value_base_t(i)), 1, tmp);
-											}
-										}
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-					} while(false);
-				}
+				deserialize_helper(input_buffer, end, header, serialize_selection, mask);
 				input_buffer += header.record_size;
 			}
 		}
@@ -10988,1144 +10623,7 @@ namespace dcon {
 			while(input_buffer < end) {
 				dcon::record_header header;
 				header.deserialize(input_buffer, end);
-				if(input_buffer + header.record_size <= end) {
-					do {
-						if(header.is_object("pop") && mask.pop) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									pop_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.pop = true;
-									break;
-								}
-								if(header.is_property("_index") && mask.pop__index) {
-									if(header.is_type("uint8_t")) {
-										std::memcpy(pop.m__index.vptr(), reinterpret_cast<uint8_t const*>(input_buffer), std::min(size_t(pop.size_used) * sizeof(uint8_t), size_t(header.record_size)));
-										serialize_selection.pop__index = true;
-									}
-									else if(header.is_type("uint16_t")) {
-										for(uint32_t i = 0; i < std::min(pop.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-											pop.m__index.vptr()[i].value = uint8_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
-										}
-										serialize_selection.pop__index = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(pop.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											pop.m__index.vptr()[i].value = uint8_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.pop__index = true;
-									}
-									if(serialize_selection.pop__index == true) {
-										pop.first_free = pop_id();
-										for(int32_t j = 1 - 1; j >= 0; --j) {
-											if(pop.m__index.vptr()[j] != pop_id(uint8_t(j))) {
-												pop.m__index.vptr()[j] = pop.first_free;
-												pop.first_free = pop_id(uint8_t(j));
-											} else {
-											}
-										}
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("employment") && mask.employment) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= pop.size_used) {
-										employment_resize(0);
-									}
-									employment_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.employment = true;
-									break;
-								}
-								if(header.is_property("$index_end") && mask.employment) {
-									break;
-								}
-								if(header.is_property("job") && mask.employment_job) {
-									if(header.is_type("job_id")) {
-										std::memcpy(employment.m_job.vptr(), reinterpret_cast<job_id const*>(input_buffer), std::min(size_t(pop.size_used) * sizeof(job_id), size_t(header.record_size)));
-										serialize_selection.employment_job = true;
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("job") && mask.job) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									job_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.job = true;
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("thingyA") && mask.thingyA) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									thingyA_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.thingyA = true;
-									break;
-								}
-								if(header.is_property("some_value") && mask.thingyA_some_value) {
-									if(header.is_type("int32_t")) {
-										std::memcpy(thingyA.m_some_value.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(thingyA.size_used) * sizeof(int32_t), size_t(header.record_size)));
-										serialize_selection.thingyA_some_value = true;
-									}
-									else if(header.is_type("int8_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
-											thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyA_some_value = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyA_some_value = true;
-									}
-									else if(header.is_type("int16_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
-											thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyA_some_value = true;
-									}
-									else if(header.is_type("uint16_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-											thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyA_some_value = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyA_some_value = true;
-									}
-									else if(header.is_type("int64_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
-											thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyA_some_value = true;
-									}
-									else if(header.is_type("uint64_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
-											thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyA_some_value = true;
-									}
-									else if(header.is_type("float")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(float))); ++i) {
-											thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<float const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyA_some_value = true;
-									}
-									else if(header.is_type("double")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
-											thingyA.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<double const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyA_some_value = true;
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("thingyB") && mask.thingyB) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									thingyB_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.thingyB = true;
-									break;
-								}
-								if(header.is_property("_index") && mask.thingyB__index) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(thingyB.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingyB.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.thingyB__index = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											thingyB.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyB__index = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											thingyB.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyB__index = true;
-									}
-									if(serialize_selection.thingyB__index == true) {
-										thingyB.first_free = thingyB_id();
-										for(int32_t j = 1200 - 1; j >= 0; --j) {
-											if(thingyB.m__index.vptr()[j] != thingyB_id(uint16_t(j))) {
-												thingyB.m__index.vptr()[j] = thingyB.first_free;
-												thingyB.first_free = thingyB_id(uint16_t(j));
-											} else {
-											}
-										}
-									}
-									break;
-								}
-								if(header.is_property("some_value") && mask.thingyB_some_value) {
-									if(header.is_type("int32_t")) {
-										std::memcpy(thingyB.m_some_value.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(thingyB.size_used) * sizeof(int32_t), size_t(header.record_size)));
-										serialize_selection.thingyB_some_value = true;
-									}
-									else if(header.is_type("int8_t")) {
-										for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(int8_t))); ++i) {
-											thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<int8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyB_some_value = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyB_some_value = true;
-									}
-									else if(header.is_type("int16_t")) {
-										for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(int16_t))); ++i) {
-											thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<int16_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyB_some_value = true;
-									}
-									else if(header.is_type("uint16_t")) {
-										for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(uint16_t))); ++i) {
-											thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint16_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyB_some_value = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyB_some_value = true;
-									}
-									else if(header.is_type("int64_t")) {
-										for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(int64_t))); ++i) {
-											thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<int64_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyB_some_value = true;
-									}
-									else if(header.is_type("uint64_t")) {
-										for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(uint64_t))); ++i) {
-											thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<uint64_t const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyB_some_value = true;
-									}
-									else if(header.is_type("float")) {
-										for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(float))); ++i) {
-											thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<float const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyB_some_value = true;
-									}
-									else if(header.is_type("double")) {
-										for(uint32_t i = 0; i < std::min(thingyB.size_used, uint32_t(header.record_size / sizeof(double))); ++i) {
-											thingyB.m_some_value.vptr()[i] = int32_t(*(reinterpret_cast<double const*>(input_buffer) + i));
-										}
-										serialize_selection.thingyB_some_value = true;
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("relate_same") && mask.relate_same) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= thingyA.size_used) {
-										relate_same_resize(0);
-									}
-									relate_same_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.relate_same = true;
-									break;
-								}
-								if(header.is_property("right") && mask.relate_same_right) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_same.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingyA.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_same_right = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_same.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_same_right = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_same.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_same_right = true;
-									}
-									break;
-								}
-								if(header.is_property("$index_end") && mask.relate_same) {
-									if(serialize_selection.relate_same_right == true) {
-										for(uint32_t i = 0; i < thingyA.size_used; ++i) {
-											auto tmp = relate_same.m_right.vptr()[i];
-											relate_same.m_right.vptr()[i] = thingyA_id();
-											internal_relate_same_set_right(relate_same_id(relate_same_id::value_base_t(i)), tmp);
-										}
-									}
-									relate_same.hashm_joint.clear();
-									for(uint32_t idx = 0; idx < thingyA.size_used; ++idx) {
-										auto this_key = relate_same_id(relate_same_id::value_base_t(idx));
-										if(relate_same_is_valid(relate_same_id(relate_same_id::value_base_t(idx)))) {
-											auto key_dat = relate_same.to_joint_keydata(thingyA_id(thingyA_id::value_base_t(idx)), relate_same.m_right.vptr()[idx]);
-											relate_same.hashm_joint.insert_or_assign(key_dat, this_key);
-										}
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("relate_in_array") && mask.relate_in_array) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= thingyA.size_used) {
-										relate_in_array_resize(0);
-									}
-									relate_in_array_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.relate_in_array = true;
-									break;
-								}
-								if(header.is_property("right") && mask.relate_in_array_right) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_in_array.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingyA.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_in_array_right = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_in_array.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_in_array_right = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_in_array.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_in_array_right = true;
-									}
-									break;
-								}
-								if(header.is_property("$index_end") && mask.relate_in_array) {
-									if(serialize_selection.relate_in_array_right == true) {
-										for(uint32_t i = 0; i < thingyA.size_used; ++i) {
-											auto tmp = relate_in_array.m_right.vptr()[i];
-											relate_in_array.m_right.vptr()[i] = thingyB_id();
-											internal_relate_in_array_set_right(relate_in_array_id(relate_in_array_id::value_base_t(i)), tmp);
-										}
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("relate_in_list") && mask.relate_in_list) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= thingyA.size_used) {
-										relate_in_list_resize(0);
-									}
-									relate_in_list_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.relate_in_list = true;
-									break;
-								}
-								if(header.is_property("right") && mask.relate_in_list_right) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_in_list.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(thingyA.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_in_list_right = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_in_list.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_in_list_right = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(thingyA.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_in_list.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_in_list_right = true;
-									}
-									break;
-								}
-								if(header.is_property("$index_end") && mask.relate_in_list) {
-									if(serialize_selection.relate_in_list_right == true) {
-										for(uint32_t i = 0; i < thingyA.size_used; ++i) {
-											auto tmp = relate_in_list.m_right.vptr()[i];
-											relate_in_list.m_right.vptr()[i] = thingyB_id();
-											internal_relate_in_list_set_right(relate_in_list_id(relate_in_list_id::value_base_t(i)), tmp);
-										}
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("many_many") && mask.many_many) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= many_many.size_used) {
-										many_many_resize(0);
-									}
-									many_many_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.many_many = true;
-									break;
-								}
-								if(header.is_property("_index") && mask.many_many__index) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(many_many.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.many_many__index = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											many_many.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many__index = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											many_many.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many__index = true;
-									}
-									if(serialize_selection.many_many__index == true) {
-										many_many.first_free = many_many_id();
-										for(int32_t j = 200 - 1; j >= 0; --j) {
-											if(many_many.m__index.vptr()[j] != many_many_id(uint16_t(j))) {
-												many_many.m__index.vptr()[j] = many_many.first_free;
-												many_many.first_free = many_many_id(uint16_t(j));
-											} else {
-											}
-										}
-									}
-									break;
-								}
-								if(header.is_property("A") && mask.many_many_A) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(many_many.m_A.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.many_many_A = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											many_many.m_A.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_A = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											many_many.m_A.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_A = true;
-									}
-									break;
-								}
-								if(header.is_property("B") && mask.many_many_B) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(many_many.m_B.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.many_many_B = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											many_many.m_B.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_B = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											many_many.m_B.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_B = true;
-									}
-									break;
-								}
-								if(header.is_property("C") && mask.many_many_C) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(many_many.m_C.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.many_many_C = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											many_many.m_C.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_C = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											many_many.m_C.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_C = true;
-									}
-									break;
-								}
-								if(header.is_property("D") && mask.many_many_D) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(many_many.m_D.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.many_many_D = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											many_many.m_D.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_D = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											many_many.m_D.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_D = true;
-									}
-									break;
-								}
-								if(header.is_property("E") && mask.many_many_E) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(many_many.m_E.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.many_many_E = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											many_many.m_E.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_E = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											many_many.m_E.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_E = true;
-									}
-									break;
-								}
-								if(header.is_property("F") && mask.many_many_F) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(many_many.m_F.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.many_many_F = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											many_many.m_F.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_F = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											many_many.m_F.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_F = true;
-									}
-									break;
-								}
-								if(header.is_property("ignore") && mask.many_many_ignore) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(many_many.m_ignore.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(many_many.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.many_many_ignore = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											many_many.m_ignore.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_ignore = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(many_many.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											many_many.m_ignore.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.many_many_ignore = true;
-									}
-									break;
-								}
-								if(header.is_property("$index_end") && mask.many_many) {
-									if(serialize_selection.many_many_A == true) {
-										for(uint32_t i = 0; i < many_many.size_used; ++i) {
-											auto tmp = many_many.m_A.vptr()[i];
-											many_many.m_A.vptr()[i] = thingyA_id();
-											internal_many_many_set_A(many_many_id(many_many_id::value_base_t(i)), tmp);
-										}
-									}
-									if(serialize_selection.many_many_B == true) {
-										for(uint32_t i = 0; i < many_many.size_used; ++i) {
-											auto tmp = many_many.m_B.vptr()[i];
-											many_many.m_B.vptr()[i] = thingyA_id();
-											internal_many_many_set_B(many_many_id(many_many_id::value_base_t(i)), tmp);
-										}
-									}
-									if(serialize_selection.many_many_C == true) {
-										for(uint32_t i = 0; i < many_many.size_used; ++i) {
-											auto tmp = many_many.m_C.vptr()[i];
-											many_many.m_C.vptr()[i] = thingyA_id();
-											internal_many_many_set_C(many_many_id(many_many_id::value_base_t(i)), tmp);
-										}
-									}
-									if(serialize_selection.many_many_D == true) {
-										for(uint32_t i = 0; i < many_many.size_used; ++i) {
-											auto tmp = many_many.m_D.vptr()[i];
-											many_many.m_D.vptr()[i] = thingyA_id();
-											internal_many_many_set_D(many_many_id(many_many_id::value_base_t(i)), tmp);
-										}
-									}
-									if(serialize_selection.many_many_E == true) {
-										for(uint32_t i = 0; i < many_many.size_used; ++i) {
-											auto tmp = many_many.m_E.vptr()[i];
-											many_many.m_E.vptr()[i] = thingyA_id();
-											internal_many_many_set_E(many_many_id(many_many_id::value_base_t(i)), tmp);
-										}
-									}
-									if(serialize_selection.many_many_F == true) {
-										for(uint32_t i = 0; i < many_many.size_used; ++i) {
-											auto tmp = many_many.m_F.vptr()[i];
-											many_many.m_F.vptr()[i] = thingyA_id();
-											internal_many_many_set_F(many_many_id(many_many_id::value_base_t(i)), tmp);
-										}
-									}
-									if(serialize_selection.many_many_ignore == true) {
-										for(uint32_t i = 0; i < many_many.size_used; ++i) {
-											auto tmp = many_many.m_ignore.vptr()[i];
-											many_many.m_ignore.vptr()[i] = thingyA_id();
-											internal_many_many_set_ignore(many_many_id(many_many_id::value_base_t(i)), tmp);
-										}
-									}
-									many_many.hashm_joint.clear();
-									for(uint32_t idx = 0; idx < many_many.size_used; ++idx) {
-										auto this_key = many_many_id(many_many_id::value_base_t(idx));
-										if(many_many_is_valid(many_many_id(many_many_id::value_base_t(idx)))) {
-											auto key_dat = many_many.to_joint_keydata(many_many.m_A.vptr()[idx], many_many.m_B.vptr()[idx], many_many.m_C.vptr()[idx], many_many.m_D.vptr()[idx], many_many.m_E.vptr()[idx], many_many.m_F.vptr()[idx]);
-											many_many.hashm_joint.insert_or_assign(key_dat, this_key);
-										}
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("relate_as_optional") && mask.relate_as_optional) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_as_optional.size_used) {
-										relate_as_optional_resize(0);
-									}
-									relate_as_optional_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.relate_as_optional = true;
-									break;
-								}
-								if(header.is_property("_index") && mask.relate_as_optional__index) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_as_optional.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_optional.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_as_optional__index = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_as_optional.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_optional__index = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_as_optional.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_optional__index = true;
-									}
-									if(serialize_selection.relate_as_optional__index == true) {
-										relate_as_optional.first_free = relate_as_optional_id();
-										for(int32_t j = 400 - 1; j >= 0; --j) {
-											if(relate_as_optional.m__index.vptr()[j] != relate_as_optional_id(uint16_t(j))) {
-												relate_as_optional.m__index.vptr()[j] = relate_as_optional.first_free;
-												relate_as_optional.first_free = relate_as_optional_id(uint16_t(j));
-											} else {
-											}
-										}
-									}
-									break;
-								}
-								if(header.is_property("left") && mask.relate_as_optional_left) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_as_optional.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_optional.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_as_optional_left = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_as_optional.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_optional_left = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_as_optional.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_optional_left = true;
-									}
-									break;
-								}
-								if(header.is_property("right") && mask.relate_as_optional_right) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_as_optional.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_optional.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_as_optional_right = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_as_optional.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_optional_right = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_as_optional.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_optional_right = true;
-									}
-									break;
-								}
-								if(header.is_property("$index_end") && mask.relate_as_optional) {
-									if(serialize_selection.relate_as_optional_left == true) {
-										for(uint32_t i = 0; i < relate_as_optional.size_used; ++i) {
-											auto tmp = relate_as_optional.m_left.vptr()[i];
-											relate_as_optional.m_left.vptr()[i] = thingyA_id();
-											internal_relate_as_optional_set_left(relate_as_optional_id(relate_as_optional_id::value_base_t(i)), tmp);
-										}
-									}
-									if(serialize_selection.relate_as_optional_right == true) {
-										for(uint32_t i = 0; i < relate_as_optional.size_used; ++i) {
-											auto tmp = relate_as_optional.m_right.vptr()[i];
-											relate_as_optional.m_right.vptr()[i] = thingyB_id();
-											internal_relate_as_optional_set_right(relate_as_optional_id(relate_as_optional_id::value_base_t(i)), tmp);
-										}
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("relate_as_non_optional") && mask.relate_as_non_optional) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_as_non_optional.size_used) {
-										relate_as_non_optional_resize(0);
-									}
-									relate_as_non_optional_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.relate_as_non_optional = true;
-									break;
-								}
-								if(header.is_property("_index") && mask.relate_as_non_optional__index) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_as_non_optional.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_non_optional.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_as_non_optional__index = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_as_non_optional.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_non_optional__index = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_as_non_optional.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_non_optional__index = true;
-									}
-									if(serialize_selection.relate_as_non_optional__index == true) {
-										relate_as_non_optional.first_free = relate_as_non_optional_id();
-										for(int32_t j = 400 - 1; j >= 0; --j) {
-											if(relate_as_non_optional.m__index.vptr()[j] != relate_as_non_optional_id(uint16_t(j))) {
-												relate_as_non_optional.m__index.vptr()[j] = relate_as_non_optional.first_free;
-												relate_as_non_optional.first_free = relate_as_non_optional_id(uint16_t(j));
-											} else {
-											}
-										}
-									}
-									break;
-								}
-								if(header.is_property("left") && mask.relate_as_non_optional_left) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_as_non_optional.m_left.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_non_optional.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_as_non_optional_left = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_as_non_optional.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_non_optional_left = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_as_non_optional.m_left.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_non_optional_left = true;
-									}
-									break;
-								}
-								if(header.is_property("right") && mask.relate_as_non_optional_right) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_as_non_optional.m_right.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_non_optional.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_as_non_optional_right = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_as_non_optional.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_non_optional_right = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_non_optional.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_as_non_optional.m_right.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_non_optional_right = true;
-									}
-									break;
-								}
-								if(header.is_property("$index_end") && mask.relate_as_non_optional) {
-									if(serialize_selection.relate_as_non_optional_left == true) {
-										for(uint32_t i = 0; i < relate_as_non_optional.size_used; ++i) {
-											auto tmp = relate_as_non_optional.m_left.vptr()[i];
-											relate_as_non_optional.m_left.vptr()[i] = thingyA_id();
-											internal_relate_as_non_optional_set_left(relate_as_non_optional_id(relate_as_non_optional_id::value_base_t(i)), tmp);
-										}
-									}
-									if(serialize_selection.relate_as_non_optional_right == true) {
-										for(uint32_t i = 0; i < relate_as_non_optional.size_used; ++i) {
-											auto tmp = relate_as_non_optional.m_right.vptr()[i];
-											relate_as_non_optional.m_right.vptr()[i] = thingyB_id();
-											internal_relate_as_non_optional_set_right(relate_as_non_optional_id(relate_as_non_optional_id::value_base_t(i)), tmp);
-										}
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("relate_as_multipleA") && mask.relate_as_multipleA) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_as_multipleA.size_used) {
-										relate_as_multipleA_resize(0);
-									}
-									relate_as_multipleA_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.relate_as_multipleA = true;
-									break;
-								}
-								if(header.is_property("_index") && mask.relate_as_multipleA__index) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_as_multipleA.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_multipleA.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_as_multipleA__index = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleA.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_as_multipleA.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_multipleA__index = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleA.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_as_multipleA.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_multipleA__index = true;
-									}
-									if(serialize_selection.relate_as_multipleA__index == true) {
-										relate_as_multipleA.first_free = relate_as_multipleA_id();
-										for(int32_t j = 400 - 1; j >= 0; --j) {
-											if(relate_as_multipleA.m__index.vptr()[j] != relate_as_multipleA_id(uint16_t(j))) {
-												relate_as_multipleA.m__index.vptr()[j] = relate_as_multipleA.first_free;
-												relate_as_multipleA.first_free = relate_as_multipleA_id(uint16_t(j));
-											} else {
-											}
-										}
-									}
-									break;
-								}
-								if(header.is_property("left") && mask.relate_as_multipleA_left) {
-									if(header.is_type("std::array<uint16_t,2>")) {
-										std::memcpy(relate_as_multipleA.m_left.vptr(), reinterpret_cast<std::array<uint16_t,2> const*>(input_buffer), std::min(size_t(relate_as_multipleA.size_used) * sizeof(std::array<uint16_t, 2>), size_t(header.record_size)));
-										serialize_selection.relate_as_multipleA_left = true;
-									}
-									else if(header.is_type("std::array<uint8_t,2>")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleA.size_used, uint32_t(header.record_size / sizeof(std::array<uint8_t,2>))); ++i) {
-											relate_as_multipleA.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[0]);
-											relate_as_multipleA.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[1]);
-										}
-										serialize_selection.relate_as_multipleA_left = true;
-									}
-									else if(header.is_type("std::array<uint32_t,2>")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleA.size_used, uint32_t(header.record_size / sizeof(std::array<uint32_t,2>))); ++i) {
-											relate_as_multipleA.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[0]);
-											relate_as_multipleA.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[1]);
-										}
-										serialize_selection.relate_as_multipleA_left = true;
-									}
-									break;
-								}
-								if(header.is_property("$index_end") && mask.relate_as_multipleA) {
-									if(serialize_selection.relate_as_multipleA_left == true) {
-										for(uint32_t i = 0; i < relate_as_multipleA.size_used; ++i) {
-											 {
-												auto tmp = relate_as_multipleA.m_left.vptr()[i][0];
-												relate_as_multipleA.m_left.vptr()[i][0] = thingyA_id();
-												internal_relate_as_multipleA_set_left(relate_as_multipleA_id(relate_as_multipleA_id::value_base_t(i)), 0, tmp);
-											}
-											 {
-												auto tmp = relate_as_multipleA.m_left.vptr()[i][1];
-												relate_as_multipleA.m_left.vptr()[i][1] = thingyA_id();
-												internal_relate_as_multipleA_set_left(relate_as_multipleA_id(relate_as_multipleA_id::value_base_t(i)), 1, tmp);
-											}
-										}
-									}
-									relate_as_multipleA.hashm_joint.clear();
-									for(uint32_t idx = 0; idx < relate_as_multipleA.size_used; ++idx) {
-										auto this_key = relate_as_multipleA_id(relate_as_multipleA_id::value_base_t(idx));
-										if(relate_as_multipleA_is_valid(relate_as_multipleA_id(relate_as_multipleA_id::value_base_t(idx)))) {
-											auto key_dat = relate_as_multipleA.to_joint_keydata(relate_as_multipleA.m_left.vptr()[idx]);
-											relate_as_multipleA.hashm_joint.insert_or_assign(key_dat, this_key);
-										}
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("relate_as_multipleB") && mask.relate_as_multipleB) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_as_multipleB.size_used) {
-										relate_as_multipleB_resize(0);
-									}
-									relate_as_multipleB_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.relate_as_multipleB = true;
-									break;
-								}
-								if(header.is_property("_index") && mask.relate_as_multipleB__index) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_as_multipleB.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_multipleB.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_as_multipleB__index = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleB.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_as_multipleB.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_multipleB__index = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleB.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_as_multipleB.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_multipleB__index = true;
-									}
-									if(serialize_selection.relate_as_multipleB__index == true) {
-										relate_as_multipleB.first_free = relate_as_multipleB_id();
-										for(int32_t j = 400 - 1; j >= 0; --j) {
-											if(relate_as_multipleB.m__index.vptr()[j] != relate_as_multipleB_id(uint16_t(j))) {
-												relate_as_multipleB.m__index.vptr()[j] = relate_as_multipleB.first_free;
-												relate_as_multipleB.first_free = relate_as_multipleB_id(uint16_t(j));
-											} else {
-											}
-										}
-									}
-									break;
-								}
-								if(header.is_property("left") && mask.relate_as_multipleB_left) {
-									if(header.is_type("std::array<uint16_t,2>")) {
-										std::memcpy(relate_as_multipleB.m_left.vptr(), reinterpret_cast<std::array<uint16_t,2> const*>(input_buffer), std::min(size_t(relate_as_multipleB.size_used) * sizeof(std::array<uint16_t, 2>), size_t(header.record_size)));
-										serialize_selection.relate_as_multipleB_left = true;
-									}
-									else if(header.is_type("std::array<uint8_t,2>")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleB.size_used, uint32_t(header.record_size / sizeof(std::array<uint8_t,2>))); ++i) {
-											relate_as_multipleB.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[0]);
-											relate_as_multipleB.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[1]);
-										}
-										serialize_selection.relate_as_multipleB_left = true;
-									}
-									else if(header.is_type("std::array<uint32_t,2>")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleB.size_used, uint32_t(header.record_size / sizeof(std::array<uint32_t,2>))); ++i) {
-											relate_as_multipleB.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[0]);
-											relate_as_multipleB.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[1]);
-										}
-										serialize_selection.relate_as_multipleB_left = true;
-									}
-									break;
-								}
-								if(header.is_property("$index_end") && mask.relate_as_multipleB) {
-									if(serialize_selection.relate_as_multipleB_left == true) {
-										for(uint32_t i = 0; i < relate_as_multipleB.size_used; ++i) {
-											 {
-												auto tmp = relate_as_multipleB.m_left.vptr()[i][0];
-												relate_as_multipleB.m_left.vptr()[i][0] = thingyA_id();
-												internal_relate_as_multipleB_set_left(relate_as_multipleB_id(relate_as_multipleB_id::value_base_t(i)), 0, tmp);
-											}
-											 {
-												auto tmp = relate_as_multipleB.m_left.vptr()[i][1];
-												relate_as_multipleB.m_left.vptr()[i][1] = thingyA_id();
-												internal_relate_as_multipleB_set_left(relate_as_multipleB_id(relate_as_multipleB_id::value_base_t(i)), 1, tmp);
-											}
-										}
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("relate_as_multipleC") && mask.relate_as_multipleC) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_as_multipleC.size_used) {
-										relate_as_multipleC_resize(0);
-									}
-									relate_as_multipleC_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.relate_as_multipleC = true;
-									break;
-								}
-								if(header.is_property("_index") && mask.relate_as_multipleC__index) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_as_multipleC.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_multipleC.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_as_multipleC__index = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleC.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_as_multipleC.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_multipleC__index = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleC.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_as_multipleC.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_multipleC__index = true;
-									}
-									if(serialize_selection.relate_as_multipleC__index == true) {
-										relate_as_multipleC.first_free = relate_as_multipleC_id();
-										for(int32_t j = 400 - 1; j >= 0; --j) {
-											if(relate_as_multipleC.m__index.vptr()[j] != relate_as_multipleC_id(uint16_t(j))) {
-												relate_as_multipleC.m__index.vptr()[j] = relate_as_multipleC.first_free;
-												relate_as_multipleC.first_free = relate_as_multipleC_id(uint16_t(j));
-											} else {
-											}
-										}
-									}
-									break;
-								}
-								if(header.is_property("left") && mask.relate_as_multipleC_left) {
-									if(header.is_type("std::array<uint16_t,2>")) {
-										std::memcpy(relate_as_multipleC.m_left.vptr(), reinterpret_cast<std::array<uint16_t,2> const*>(input_buffer), std::min(size_t(relate_as_multipleC.size_used) * sizeof(std::array<uint16_t, 2>), size_t(header.record_size)));
-										serialize_selection.relate_as_multipleC_left = true;
-									}
-									else if(header.is_type("std::array<uint8_t,2>")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleC.size_used, uint32_t(header.record_size / sizeof(std::array<uint8_t,2>))); ++i) {
-											relate_as_multipleC.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[0]);
-											relate_as_multipleC.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[1]);
-										}
-										serialize_selection.relate_as_multipleC_left = true;
-									}
-									else if(header.is_type("std::array<uint32_t,2>")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleC.size_used, uint32_t(header.record_size / sizeof(std::array<uint32_t,2>))); ++i) {
-											relate_as_multipleC.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[0]);
-											relate_as_multipleC.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[1]);
-										}
-										serialize_selection.relate_as_multipleC_left = true;
-									}
-									break;
-								}
-								if(header.is_property("$index_end") && mask.relate_as_multipleC) {
-									if(serialize_selection.relate_as_multipleC_left == true) {
-										for(uint32_t i = 0; i < relate_as_multipleC.size_used; ++i) {
-											 {
-												auto tmp = relate_as_multipleC.m_left.vptr()[i][0];
-												relate_as_multipleC.m_left.vptr()[i][0] = thingyA_id();
-												internal_relate_as_multipleC_set_left(relate_as_multipleC_id(relate_as_multipleC_id::value_base_t(i)), 0, tmp);
-											}
-											 {
-												auto tmp = relate_as_multipleC.m_left.vptr()[i][1];
-												relate_as_multipleC.m_left.vptr()[i][1] = thingyA_id();
-												internal_relate_as_multipleC_set_left(relate_as_multipleC_id(relate_as_multipleC_id::value_base_t(i)), 1, tmp);
-											}
-										}
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-						if(header.is_object("relate_as_multipleD") && mask.relate_as_multipleD) {
-							do {
-								if(header.is_property("$size") && header.record_size == sizeof(uint32_t)) {
-									if(*(reinterpret_cast<uint32_t const*>(input_buffer)) >= relate_as_multipleD.size_used) {
-										relate_as_multipleD_resize(0);
-									}
-									relate_as_multipleD_resize(*(reinterpret_cast<uint32_t const*>(input_buffer)));
-									serialize_selection.relate_as_multipleD = true;
-									break;
-								}
-								if(header.is_property("_index") && mask.relate_as_multipleD__index) {
-									if(header.is_type("uint16_t")) {
-										std::memcpy(relate_as_multipleD.m__index.vptr(), reinterpret_cast<uint16_t const*>(input_buffer), std::min(size_t(relate_as_multipleD.size_used) * sizeof(uint16_t), size_t(header.record_size)));
-										serialize_selection.relate_as_multipleD__index = true;
-									}
-									else if(header.is_type("uint8_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleD.size_used, uint32_t(header.record_size / sizeof(uint8_t))); ++i) {
-											relate_as_multipleD.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint8_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_multipleD__index = true;
-									}
-									else if(header.is_type("uint32_t")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleD.size_used, uint32_t(header.record_size / sizeof(uint32_t))); ++i) {
-											relate_as_multipleD.m__index.vptr()[i].value = uint16_t(*(reinterpret_cast<uint32_t const*>(input_buffer) + i));
-										}
-										serialize_selection.relate_as_multipleD__index = true;
-									}
-									if(serialize_selection.relate_as_multipleD__index == true) {
-										relate_as_multipleD.first_free = relate_as_multipleD_id();
-										for(int32_t j = 400 - 1; j >= 0; --j) {
-											if(relate_as_multipleD.m__index.vptr()[j] != relate_as_multipleD_id(uint16_t(j))) {
-												relate_as_multipleD.m__index.vptr()[j] = relate_as_multipleD.first_free;
-												relate_as_multipleD.first_free = relate_as_multipleD_id(uint16_t(j));
-											} else {
-											}
-										}
-									}
-									break;
-								}
-								if(header.is_property("left") && mask.relate_as_multipleD_left) {
-									if(header.is_type("std::array<uint16_t,2>")) {
-										std::memcpy(relate_as_multipleD.m_left.vptr(), reinterpret_cast<std::array<uint16_t,2> const*>(input_buffer), std::min(size_t(relate_as_multipleD.size_used) * sizeof(std::array<uint16_t, 2>), size_t(header.record_size)));
-										serialize_selection.relate_as_multipleD_left = true;
-									}
-									else if(header.is_type("std::array<uint8_t,2>")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleD.size_used, uint32_t(header.record_size / sizeof(std::array<uint8_t,2>))); ++i) {
-											relate_as_multipleD.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[0]);
-											relate_as_multipleD.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint8_t,2> const*>(input_buffer) + i))[1]);
-										}
-										serialize_selection.relate_as_multipleD_left = true;
-									}
-									else if(header.is_type("std::array<uint32_t,2>")) {
-										for(uint32_t i = 0; i < std::min(relate_as_multipleD.size_used, uint32_t(header.record_size / sizeof(std::array<uint32_t,2>))); ++i) {
-											relate_as_multipleD.m_left.vptr()[i][0].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[0]);
-											relate_as_multipleD.m_left.vptr()[i][1].value = uint16_t((*(reinterpret_cast<std::array<uint32_t,2> const*>(input_buffer) + i))[1]);
-										}
-										serialize_selection.relate_as_multipleD_left = true;
-									}
-									break;
-								}
-								if(header.is_property("$index_end") && mask.relate_as_multipleD) {
-									if(serialize_selection.relate_as_multipleD_left == true) {
-										for(uint32_t i = 0; i < relate_as_multipleD.size_used; ++i) {
-											 {
-												auto tmp = relate_as_multipleD.m_left.vptr()[i][0];
-												relate_as_multipleD.m_left.vptr()[i][0] = thingyA_id();
-												internal_relate_as_multipleD_set_left(relate_as_multipleD_id(relate_as_multipleD_id::value_base_t(i)), 0, tmp);
-											}
-											 {
-												auto tmp = relate_as_multipleD.m_left.vptr()[i][1];
-												relate_as_multipleD.m_left.vptr()[i][1] = thingyA_id();
-												internal_relate_as_multipleD_set_left(relate_as_multipleD_id(relate_as_multipleD_id::value_base_t(i)), 1, tmp);
-											}
-										}
-									}
-									break;
-								}
-							} while(false);
-							break;
-						}
-					} while(false);
-				}
+				deserialize_helper(input_buffer, end, header, serialize_selection, mask);
 				input_buffer += header.record_size;
 			}
 		}
@@ -13058,6 +11556,8 @@ namespace dcon {
 	
 
 	namespace internal {
+		DCON_RELEASE_INLINE object_term_iterator_pop::object_term_iterator_pop(uint32_t i) noexcept : index(i) {
+		}
 		DCON_RELEASE_INLINE object_iterator_pop::object_iterator_pop(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.pop.m__index.vptr()[index] != pop_id(pop_id::value_base_t(index)) && index < container.pop.size_used) {
 				++index;
@@ -13097,6 +11597,8 @@ namespace dcon {
 			return *this;
 		}
 		
+		DCON_RELEASE_INLINE object_term_iterator_employment::object_term_iterator_employment(uint32_t i) noexcept : index(i) {
+		}
 		DCON_RELEASE_INLINE object_iterator_employment::object_iterator_employment(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 		}
 		DCON_RELEASE_INLINE const_object_iterator_employment::const_object_iterator_employment(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
@@ -13118,6 +11620,8 @@ namespace dcon {
 			return *this;
 		}
 		
+		DCON_RELEASE_INLINE object_term_iterator_job::object_term_iterator_job(uint32_t i) noexcept : index(i) {
+		}
 		DCON_RELEASE_INLINE object_iterator_job::object_iterator_job(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 		}
 		DCON_RELEASE_INLINE const_object_iterator_job::const_object_iterator_job(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
@@ -13139,6 +11643,8 @@ namespace dcon {
 			return *this;
 		}
 		
+		DCON_RELEASE_INLINE object_term_iterator_thingyA::object_term_iterator_thingyA(uint32_t i) noexcept : index(i) {
+		}
 		DCON_RELEASE_INLINE object_iterator_thingyA::object_iterator_thingyA(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 		}
 		DCON_RELEASE_INLINE const_object_iterator_thingyA::const_object_iterator_thingyA(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
@@ -13276,6 +11782,8 @@ namespace dcon {
 			return *this;
 		}
 		
+		DCON_RELEASE_INLINE object_term_iterator_thingyB::object_term_iterator_thingyB(uint32_t i) noexcept : index(i) {
+		}
 		DCON_RELEASE_INLINE object_iterator_thingyB::object_iterator_thingyB(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.thingyB.m__index.vptr()[index] != thingyB_id(thingyB_id::value_base_t(index)) && index < container.thingyB.size_used) {
 				++index;
@@ -13425,6 +11933,8 @@ namespace dcon {
 			return *this;
 		}
 		
+		DCON_RELEASE_INLINE object_term_iterator_relate_same::object_term_iterator_relate_same(uint32_t i) noexcept : index(i) {
+		}
 		DCON_RELEASE_INLINE object_iterator_relate_same::object_iterator_relate_same(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 		}
 		DCON_RELEASE_INLINE const_object_iterator_relate_same::const_object_iterator_relate_same(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
@@ -13446,6 +11956,8 @@ namespace dcon {
 			return *this;
 		}
 		
+		DCON_RELEASE_INLINE object_term_iterator_relate_in_array::object_term_iterator_relate_in_array(uint32_t i) noexcept : index(i) {
+		}
 		DCON_RELEASE_INLINE object_iterator_relate_in_array::object_iterator_relate_in_array(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 		}
 		DCON_RELEASE_INLINE const_object_iterator_relate_in_array::const_object_iterator_relate_in_array(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
@@ -13467,6 +11979,8 @@ namespace dcon {
 			return *this;
 		}
 		
+		DCON_RELEASE_INLINE object_term_iterator_relate_in_list::object_term_iterator_relate_in_list(uint32_t i) noexcept : index(i) {
+		}
 		DCON_RELEASE_INLINE object_iterator_relate_in_list::object_iterator_relate_in_list(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 		}
 		DCON_RELEASE_INLINE const_object_iterator_relate_in_list::const_object_iterator_relate_in_list(data_container const& c, uint32_t i) noexcept : container(c), index(i) {
@@ -13488,6 +12002,8 @@ namespace dcon {
 			return *this;
 		}
 		
+		DCON_RELEASE_INLINE object_term_iterator_many_many::object_term_iterator_many_many(uint32_t i) noexcept : index(i) {
+		}
 		DCON_RELEASE_INLINE object_iterator_many_many::object_iterator_many_many(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.many_many.m__index.vptr()[index] != many_many_id(many_many_id::value_base_t(index)) && index < container.many_many.size_used) {
 				++index;
@@ -13527,6 +12043,8 @@ namespace dcon {
 			return *this;
 		}
 		
+		DCON_RELEASE_INLINE object_term_iterator_relate_as_optional::object_term_iterator_relate_as_optional(uint32_t i) noexcept : index(i) {
+		}
 		DCON_RELEASE_INLINE object_iterator_relate_as_optional::object_iterator_relate_as_optional(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.relate_as_optional.m__index.vptr()[index] != relate_as_optional_id(relate_as_optional_id::value_base_t(index)) && index < container.relate_as_optional.size_used) {
 				++index;
@@ -13566,6 +12084,8 @@ namespace dcon {
 			return *this;
 		}
 		
+		DCON_RELEASE_INLINE object_term_iterator_relate_as_non_optional::object_term_iterator_relate_as_non_optional(uint32_t i) noexcept : index(i) {
+		}
 		DCON_RELEASE_INLINE object_iterator_relate_as_non_optional::object_iterator_relate_as_non_optional(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.relate_as_non_optional.m__index.vptr()[index] != relate_as_non_optional_id(relate_as_non_optional_id::value_base_t(index)) && index < container.relate_as_non_optional.size_used) {
 				++index;
@@ -13605,6 +12125,8 @@ namespace dcon {
 			return *this;
 		}
 		
+		DCON_RELEASE_INLINE object_term_iterator_relate_as_multipleA::object_term_iterator_relate_as_multipleA(uint32_t i) noexcept : index(i) {
+		}
 		DCON_RELEASE_INLINE object_iterator_relate_as_multipleA::object_iterator_relate_as_multipleA(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.relate_as_multipleA.m__index.vptr()[index] != relate_as_multipleA_id(relate_as_multipleA_id::value_base_t(index)) && index < container.relate_as_multipleA.size_used) {
 				++index;
@@ -13644,6 +12166,8 @@ namespace dcon {
 			return *this;
 		}
 		
+		DCON_RELEASE_INLINE object_term_iterator_relate_as_multipleB::object_term_iterator_relate_as_multipleB(uint32_t i) noexcept : index(i) {
+		}
 		DCON_RELEASE_INLINE object_iterator_relate_as_multipleB::object_iterator_relate_as_multipleB(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.relate_as_multipleB.m__index.vptr()[index] != relate_as_multipleB_id(relate_as_multipleB_id::value_base_t(index)) && index < container.relate_as_multipleB.size_used) {
 				++index;
@@ -13683,6 +12207,8 @@ namespace dcon {
 			return *this;
 		}
 		
+		DCON_RELEASE_INLINE object_term_iterator_relate_as_multipleC::object_term_iterator_relate_as_multipleC(uint32_t i) noexcept : index(i) {
+		}
 		DCON_RELEASE_INLINE object_iterator_relate_as_multipleC::object_iterator_relate_as_multipleC(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.relate_as_multipleC.m__index.vptr()[index] != relate_as_multipleC_id(relate_as_multipleC_id::value_base_t(index)) && index < container.relate_as_multipleC.size_used) {
 				++index;
@@ -13722,6 +12248,8 @@ namespace dcon {
 			return *this;
 		}
 		
+		DCON_RELEASE_INLINE object_term_iterator_relate_as_multipleD::object_term_iterator_relate_as_multipleD(uint32_t i) noexcept : index(i) {
+		}
 		DCON_RELEASE_INLINE object_iterator_relate_as_multipleD::object_iterator_relate_as_multipleD(data_container& c, uint32_t i) noexcept : container(c), index(i) {
 			while(container.relate_as_multipleD.m__index.vptr()[index] != relate_as_multipleD_id(relate_as_multipleD_id::value_base_t(index)) && index < container.relate_as_multipleD.size_used) {
 				++index;
@@ -13767,6 +12295,7 @@ namespace dcon {
 }
 
 #undef DCON_RELEASE_INLINE
+#undef DCON_RESTRICT
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif

@@ -23,11 +23,18 @@
 #ifdef NDEBUG
 #ifdef _MSC_VER
 #define DCON_RELEASE_INLINE __forceinline
+#define DCON_RESTRICT __restrict
 #else
 #define DCON_RELEASE_INLINE inline __attribute__((always_inline))
+#define DCON_RESTRICT __restrict__
 #endif
 #else
 #define DCON_RELEASE_INLINE inline
+#ifdef _MSC_VER
+#define DCON_RESTRICT __restrict
+#else
+#define DCON_RESTRICT __restrict__
+#endif
 #endif
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -97,203 +104,9 @@ namespace dcon {
 			dummy_rel_B_right = false;
 		}
 	};
-	//
-	// definition of strongly typed index for thingy_id
-	//
-	class thingy_id {
-		public:
-		using value_base_t = uint16_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint16_t value = 0;
-		
-		constexpr thingy_id() noexcept = default;
-		explicit constexpr thingy_id(uint16_t v) noexcept : value(v + 1) {}
-		constexpr thingy_id(thingy_id const& v) noexcept = default;
-		constexpr thingy_id(thingy_id&& v) noexcept = default;
-		
-		thingy_id& operator=(thingy_id const& v) noexcept = default;
-		thingy_id& operator=(thingy_id&& v) noexcept = default;
-		constexpr bool operator==(thingy_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(thingy_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class thingy_id_pair {
-		public:
-		thingy_id left;
-		thingy_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(thingy_id id) { return bool(id); }
-	
-	//
-	// definition of strongly typed index for thingy2_id
-	//
-	class thingy2_id {
-		public:
-		using value_base_t = uint32_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint32_t value = 0;
-		
-		constexpr thingy2_id() noexcept = default;
-		explicit constexpr thingy2_id(uint32_t v) noexcept : value(v + 1) {}
-		constexpr thingy2_id(thingy2_id const& v) noexcept = default;
-		constexpr thingy2_id(thingy2_id&& v) noexcept = default;
-		
-		thingy2_id& operator=(thingy2_id const& v) noexcept = default;
-		thingy2_id& operator=(thingy2_id&& v) noexcept = default;
-		constexpr bool operator==(thingy2_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(thingy2_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint32_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class thingy2_id_pair {
-		public:
-		thingy2_id left;
-		thingy2_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(thingy2_id id) { return bool(id); }
-	
-	//
-	// definition of strongly typed index for dummy_rel_id
-	//
-	class dummy_rel_id {
-		public:
-		using value_base_t = uint16_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint16_t value = 0;
-		
-		constexpr dummy_rel_id() noexcept = default;
-		explicit constexpr dummy_rel_id(uint16_t v) noexcept : value(v + 1) {}
-		constexpr dummy_rel_id(dummy_rel_id const& v) noexcept = default;
-		constexpr dummy_rel_id(dummy_rel_id&& v) noexcept = default;
-		
-		dummy_rel_id& operator=(dummy_rel_id const& v) noexcept = default;
-		dummy_rel_id& operator=(dummy_rel_id&& v) noexcept = default;
-		constexpr bool operator==(dummy_rel_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(dummy_rel_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class dummy_rel_id_pair {
-		public:
-		dummy_rel_id left;
-		dummy_rel_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(dummy_rel_id id) { return bool(id); }
-	
-	//
-	// definition of strongly typed index for oop_thingy_id
-	//
-	class oop_thingy_id {
-		public:
-		using value_base_t = uint16_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint16_t value = 0;
-		
-		constexpr oop_thingy_id() noexcept = default;
-		explicit constexpr oop_thingy_id(uint16_t v) noexcept : value(v + 1) {}
-		constexpr oop_thingy_id(oop_thingy_id const& v) noexcept = default;
-		constexpr oop_thingy_id(oop_thingy_id&& v) noexcept = default;
-		
-		oop_thingy_id& operator=(oop_thingy_id const& v) noexcept = default;
-		oop_thingy_id& operator=(oop_thingy_id&& v) noexcept = default;
-		constexpr bool operator==(oop_thingy_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(oop_thingy_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class oop_thingy_id_pair {
-		public:
-		oop_thingy_id left;
-		oop_thingy_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(oop_thingy_id id) { return bool(id); }
-	
-	//
-	// definition of strongly typed index for dummy_rel_B_id
-	//
-	class dummy_rel_B_id {
-		public:
-		using value_base_t = uint16_t;
-		using zero_is_null_t = std::true_type;
-		
-		uint16_t value = 0;
-		
-		constexpr dummy_rel_B_id() noexcept = default;
-		explicit constexpr dummy_rel_B_id(uint16_t v) noexcept : value(v + 1) {}
-		constexpr dummy_rel_B_id(dummy_rel_B_id const& v) noexcept = default;
-		constexpr dummy_rel_B_id(dummy_rel_B_id&& v) noexcept = default;
-		
-		dummy_rel_B_id& operator=(dummy_rel_B_id const& v) noexcept = default;
-		dummy_rel_B_id& operator=(dummy_rel_B_id&& v) noexcept = default;
-		constexpr bool operator==(dummy_rel_B_id v) const noexcept { return value == v.value; }
-		constexpr bool operator!=(dummy_rel_B_id v) const noexcept { return value != v.value; }
-		explicit constexpr operator bool() const noexcept { return value != uint16_t(0); }
-		constexpr DCON_RELEASE_INLINE int32_t index() const noexcept {
-			return int32_t(value) - 1;
-		}
-	};
-	
-	class dummy_rel_B_id_pair {
-		public:
-		dummy_rel_B_id left;
-		dummy_rel_B_id right;
-	};
-	
-	DCON_RELEASE_INLINE bool is_valid_index(dummy_rel_B_id id) { return bool(id); }
-	
 }
 
-#ifndef DCON_NO_VE
-namespace ve {
-	template<>
-	struct value_to_vector_type_s<dcon::thingy_id> {
-		using type = ::ve::tagged_vector<dcon::thingy_id>;
-	};
-	
-	template<>
-	struct value_to_vector_type_s<dcon::thingy2_id> {
-		using type = ::ve::tagged_vector<dcon::thingy2_id>;
-	};
-	
-	template<>
-	struct value_to_vector_type_s<dcon::dummy_rel_id> {
-		using type = ::ve::tagged_vector<dcon::dummy_rel_id>;
-	};
-	
-	template<>
-	struct value_to_vector_type_s<dcon::oop_thingy_id> {
-		using type = ::ve::tagged_vector<dcon::oop_thingy_id>;
-	};
-	
-	template<>
-	struct value_to_vector_type_s<dcon::dummy_rel_B_id> {
-		using type = ::ve::tagged_vector<dcon::dummy_rel_B_id>;
-	};
-	
-}
-
-#endif
+#include "objects_def_ids.hpp"
 namespace dcon {
 	namespace detail {
 	}
@@ -315,8 +128,8 @@ namespace dcon {
 			struct alignas(64) dtype_some_value {
 				uint8_t padding[(63 + sizeof(int32_t)) & ~uint64_t(63)];
 				int32_t values[(sizeof(int32_t) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(int32_t))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(int32_t)) - uint32_t(1)) : uint32_t(1200))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE int32_t const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE int32_t* DCON_RESTRICT vptr() { return values; }
 				dtype_some_value() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(int32_t) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(int32_t))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(int32_t)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_some_value;
@@ -327,8 +140,8 @@ namespace dcon {
 			struct alignas(64) dtype_bf_value {
 				uint8_t padding[(63 + sizeof(dcon::bitfield_type)) & ~uint64_t(63)];
 				dcon::bitfield_type values[((uint32_t(1200 + 7)) / uint32_t(8) + uint32_t(63)) & ~uint32_t(63)];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE dcon::bitfield_type const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE dcon::bitfield_type* DCON_RESTRICT vptr() { return values; }
 				dtype_bf_value() { std::uninitialized_value_construct_n(values - 1, 1 + ((uint32_t(1200 + 7)) / uint32_t(8) + uint32_t(63)) & ~uint32_t(63)); }
 			}
 			m_bf_value;
@@ -338,8 +151,8 @@ namespace dcon {
 			//
 			struct dtype_obj_value {
 				std::vector<float> values[1200];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE std::vector<float> const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE std::vector<float>* DCON_RESTRICT vptr() { return values; }
 				dtype_obj_value() { std::uninitialized_value_construct_n(values, 1200); }
 			}
 			m_obj_value;
@@ -350,8 +163,8 @@ namespace dcon {
 			struct alignas(64) dtype_pooled_v {
 				uint8_t padding[(63 + sizeof(dcon::stable_mk_2_tag)) & ~uint64_t(63)];
 				dcon::stable_mk_2_tag values[1200];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE dcon::stable_mk_2_tag const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE dcon::stable_mk_2_tag* DCON_RESTRICT vptr() { return values; }
 				dtype_pooled_v() { std::uninitialized_fill_n(values - 1, 1 + 1200, std::numeric_limits<dcon::stable_mk_2_tag>::max()); }
 			}
 			m_pooled_v;
@@ -361,12 +174,12 @@ namespace dcon {
 			// storage space for big_array of type array of float
 			//
 			struct dtype_big_array {
-				std::byte* values = nullptr;
+				std::byte* DCON_RESTRICT values = nullptr;
 				uint32_t size = 0;
-				DCON_RELEASE_INLINE auto vptr(int32_t i) const {
+				DCON_RELEASE_INLINE float const* vptr(int32_t i) const {
 					return reinterpret_cast<float const*>(values  + sizeof(float) + 64 - (sizeof(float) & 63)+ (i + 1) * (sizeof(float) + 64 - (sizeof(float) & 63) + sizeof(float) * 1200 + 64 - ((1200 * sizeof(float)) & 63)));
 				}
-				DCON_RELEASE_INLINE auto vptr(int32_t i) {
+				DCON_RELEASE_INLINE float* vptr(int32_t i) {
 					return reinterpret_cast<float*>(values + sizeof(float) + 64 - (sizeof(float) & 63) + (i + 1) * (sizeof(float) + 64 - (sizeof(float) & 63) + sizeof(float) * 1200 + 64 - ((1200 * sizeof(float)) & 63)));
 				}
 				DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t) {
@@ -403,12 +216,12 @@ namespace dcon {
 			// storage space for big_array_alt of type array of float
 			//
 			struct dtype_big_array_alt {
-				std::byte* values = nullptr;
+				std::byte* DCON_RESTRICT values = nullptr;
 				uint32_t size = 0;
-				DCON_RELEASE_INLINE auto vptr(int32_t i) const {
+				DCON_RELEASE_INLINE float const* vptr(int32_t i) const {
 					return reinterpret_cast<float const*>(values  + sizeof(float) + 64 - (sizeof(float) & 63)+ (i + 1) * (sizeof(float) + 64 - (sizeof(float) & 63) + sizeof(float) * 1200 + 64 - ((1200 * sizeof(float)) & 63)));
 				}
-				DCON_RELEASE_INLINE auto vptr(int32_t i) {
+				DCON_RELEASE_INLINE float* vptr(int32_t i) {
 					return reinterpret_cast<float*>(values + sizeof(float) + 64 - (sizeof(float) & 63) + (i + 1) * (sizeof(float) + 64 - (sizeof(float) & 63) + sizeof(float) * 1200 + 64 - ((1200 * sizeof(float)) & 63)));
 				}
 				DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t) {
@@ -445,12 +258,12 @@ namespace dcon {
 			// storage space for big_array_bf of type array of dcon::bitfield_type
 			//
 			struct dtype_big_array_bf {
-				std::byte* values = nullptr;
+				std::byte* DCON_RESTRICT values = nullptr;
 				uint32_t size = 0;
-				DCON_RELEASE_INLINE auto vptr(int32_t i) const {
+				DCON_RELEASE_INLINE dcon::bitfield_type const* vptr(int32_t i) const {
 					return reinterpret_cast<dcon::bitfield_type const*>(values  + 64+ (i + 1) * (64 + (1200 + 7) / 8 + 64 - (( (1200 + 7) / 8) & 63)));
 				}
-				DCON_RELEASE_INLINE auto vptr(int32_t i) {
+				DCON_RELEASE_INLINE dcon::bitfield_type* vptr(int32_t i) {
 					return reinterpret_cast<dcon::bitfield_type*>(values + 64 + (i + 1) * (64 + (1200 + 7) / 8 + 64 - (( (1200 + 7) / 8) & 63)));
 				}
 				DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t) {
@@ -505,8 +318,8 @@ namespace dcon {
 			//
 			struct alignas(64) dtype_some_value {
 				std::vector<int32_t> values;
-				DCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }
-				DCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }
+				DCON_RELEASE_INLINE int32_t const* DCON_RESTRICT vptr() const { return values.data() + 1; }
+				DCON_RELEASE_INLINE int32_t* DCON_RESTRICT vptr() { return values.data() + 1; }
 				dtype_some_value() { values.emplace_back(); }
 			}
 			m_some_value;
@@ -516,8 +329,8 @@ namespace dcon {
 			//
 			struct alignas(64) dtype_bf_value {
 				std::vector<dcon::bitfield_type> values;
-				DCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }
-				DCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }
+				DCON_RELEASE_INLINE dcon::bitfield_type const* DCON_RESTRICT vptr() const { return values.data() + 1; }
+				DCON_RELEASE_INLINE dcon::bitfield_type* DCON_RESTRICT vptr() { return values.data() + 1; }
 				dtype_bf_value() { values.emplace_back(); }
 			}
 			m_bf_value;
@@ -527,8 +340,8 @@ namespace dcon {
 			//
 			struct dtype_obj_value {
 				std::vector<std::vector<float>> values;
-				DCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }
-				DCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }
+				DCON_RELEASE_INLINE std::vector<float> const* DCON_RESTRICT vptr() const { return values.data() + 1; }
+				DCON_RELEASE_INLINE std::vector<float>* DCON_RESTRICT vptr() { return values.data() + 1; }
 				dtype_obj_value() { values.emplace_back(); }
 			}
 			m_obj_value;
@@ -538,8 +351,8 @@ namespace dcon {
 			//
 			struct alignas(64) dtype_pooled_v {
 				std::vector<dcon::stable_mk_2_tag> values;
-				DCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }
-				DCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }
+				DCON_RELEASE_INLINE dcon::stable_mk_2_tag const* DCON_RESTRICT vptr() const { return values.data() + 1; }
+				DCON_RELEASE_INLINE dcon::stable_mk_2_tag* DCON_RESTRICT vptr() { return values.data() + 1; }
 				dtype_pooled_v() { values.push_back( std::numeric_limits<dcon::stable_mk_2_tag>::max() ); }
 			}
 			m_pooled_v;
@@ -551,8 +364,8 @@ namespace dcon {
 			struct dtype_big_array {
 				std::vector<std::vector<float>> values;
 				uint32_t size = 0;
-				DCON_RELEASE_INLINE auto vptr(int32_t i) const { return values[i].data() + 1; }
-				DCON_RELEASE_INLINE auto vptr(int32_t i) { return values[i].data() + 1; }
+				DCON_RELEASE_INLINE float const* vptr(int32_t i) const { return values[i].data() + 1; }
+				DCON_RELEASE_INLINE float* vptr(int32_t i) { return values[i].data() + 1; }
 				DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t container_size) {
 					values.resize(sz + 1);
 					for(uint32_t i = size; i < sz + 1; ++i) values[i].resize(container_size + 1);
@@ -585,8 +398,8 @@ namespace dcon {
 			struct dtype_big_array_bf {
 				std::vector<std::vector<dcon::bitfield_type>> values;
 				uint32_t size = 0;
-				DCON_RELEASE_INLINE auto vptr(int32_t i) const { return values[i].data() + 1; }
-				DCON_RELEASE_INLINE auto vptr(int32_t i) { return values[i].data() + 1; }
+				DCON_RELEASE_INLINE dcon::bitfield_type const* vptr(int32_t i) const { return values[i].data() + 1; }
+				DCON_RELEASE_INLINE dcon::bitfield_type* vptr(int32_t i) { return values[i].data() + 1; }
 				DCON_RELEASE_INLINE void resize(uint32_t sz, uint32_t container_size) {
 					values.resize(sz + 1);
 					for(uint32_t i = size; i < sz + 1; ++i) values[i].resize((container_size + 7) / 8 + 1);
@@ -636,8 +449,8 @@ namespace dcon {
 			struct alignas(64) dtype_right {
 				uint8_t padding[(63 + sizeof(thingy2_id)) & ~uint64_t(63)];
 				thingy2_id values[(sizeof(thingy2_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(thingy2_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingy2_id)) - uint32_t(1)) : uint32_t(1200))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE thingy2_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE thingy2_id* DCON_RESTRICT vptr() { return values; }
 				dtype_right() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(thingy2_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(thingy2_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(thingy2_id)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_right;
@@ -647,8 +460,8 @@ namespace dcon {
 			//
 			struct alignas(64) dtype_link_back_right {
 				std::vector<dummy_rel_id> values;
-				DCON_RELEASE_INLINE auto vptr() const { return values.data() + 1; }
-				DCON_RELEASE_INLINE auto vptr() { return values.data() + 1; }
+				DCON_RELEASE_INLINE dummy_rel_id const* DCON_RESTRICT vptr() const { return values.data() + 1; }
+				DCON_RELEASE_INLINE dummy_rel_id* DCON_RESTRICT vptr() { return values.data() + 1; }
 				dtype_link_back_right() { values.emplace_back(); }
 			}
 			m_link_back_right;
@@ -674,8 +487,8 @@ namespace dcon {
 			struct alignas(64) dtype_pstruct {
 				uint8_t padding[(63 + sizeof(my_struct)) & ~uint64_t(63)];
 				my_struct values[(sizeof(my_struct) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(my_struct))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(my_struct)) - uint32_t(1)) : uint32_t(1200))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE my_struct const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE my_struct* DCON_RESTRICT vptr() { return values; }
 				dtype_pstruct() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(my_struct) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(my_struct))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(my_struct)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_pstruct;
@@ -686,8 +499,8 @@ namespace dcon {
 			struct alignas(64) dtype_pfloat {
 				uint8_t padding[(63 + sizeof(float)) & ~uint64_t(63)];
 				float values[(sizeof(float) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(float))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(float)) - uint32_t(1)) : uint32_t(1200))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE float const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE float* DCON_RESTRICT vptr() { return values; }
 				dtype_pfloat() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(float) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(float))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(float)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_pfloat;
@@ -715,8 +528,8 @@ namespace dcon {
 			struct alignas(64) dtype_left {
 				uint8_t padding[(63 + sizeof(oop_thingy_id)) & ~uint64_t(63)];
 				oop_thingy_id values[(sizeof(oop_thingy_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(oop_thingy_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(oop_thingy_id)) - uint32_t(1)) : uint32_t(1200))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE oop_thingy_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE oop_thingy_id* DCON_RESTRICT vptr() { return values; }
 				dtype_left() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(oop_thingy_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(oop_thingy_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(oop_thingy_id)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_left;
@@ -727,8 +540,8 @@ namespace dcon {
 			struct alignas(64) dtype_link_back_left {
 				uint8_t padding[(63 + sizeof(dummy_rel_B_id)) & ~uint64_t(63)];
 				dummy_rel_B_id values[(sizeof(dummy_rel_B_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(dummy_rel_B_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(dummy_rel_B_id)) - uint32_t(1)) : uint32_t(1200))];
-				DCON_RELEASE_INLINE auto vptr() const { return values; }
-				DCON_RELEASE_INLINE auto vptr() { return values; }
+				DCON_RELEASE_INLINE dummy_rel_B_id const* DCON_RESTRICT vptr() const { return values; }
+				DCON_RELEASE_INLINE dummy_rel_B_id* DCON_RESTRICT vptr() { return values; }
 				dtype_link_back_left() { std::uninitialized_value_construct_n(values - 1, 1 + (sizeof(dummy_rel_B_id) <= 64 ? (uint32_t(1200) + (uint32_t(64) / uint32_t(sizeof(dummy_rel_B_id))) - uint32_t(1)) & ~(uint32_t(64) / uint32_t(sizeof(dummy_rel_B_id)) - uint32_t(1)) : uint32_t(1200))); }
 			}
 			m_link_back_left;
@@ -3319,7 +3132,7 @@ namespace dcon {
 		}
 		
 		template <typename T>
-		DCON_RELEASE_INLINE void for_each_thingy(T&& func) {
+		DCON_RELEASE_INLINE void for_each_thingy(T&& func) const {
 			for(uint32_t i = 0; i < thingy.size_used; ++i) {
 				thingy_id tmp = thingy_id(thingy_id::value_base_t(i));
 				func(tmp);
@@ -3343,7 +3156,7 @@ namespace dcon {
 		}  in_thingy ;
 		
 		template <typename T>
-		DCON_RELEASE_INLINE void for_each_thingy2(T&& func) {
+		DCON_RELEASE_INLINE void for_each_thingy2(T&& func) const {
 			for(uint32_t i = 0; i < thingy2.size_used; ++i) {
 				thingy2_id tmp = thingy2_id(thingy2_id::value_base_t(i));
 				func(tmp);
@@ -3367,7 +3180,7 @@ namespace dcon {
 		}  in_thingy2 ;
 		
 		template <typename T>
-		DCON_RELEASE_INLINE void for_each_dummy_rel(T&& func) {
+		DCON_RELEASE_INLINE void for_each_dummy_rel(T&& func) const {
 			for(uint32_t i = 0; i < thingy.size_used; ++i) {
 				dummy_rel_id tmp = dummy_rel_id(dummy_rel_id::value_base_t(i));
 				func(tmp);
@@ -3391,7 +3204,7 @@ namespace dcon {
 		}  in_dummy_rel ;
 		
 		template <typename T>
-		DCON_RELEASE_INLINE void for_each_oop_thingy(T&& func) {
+		DCON_RELEASE_INLINE void for_each_oop_thingy(T&& func) const {
 			for(uint32_t i = 0; i < oop_thingy.size_used; ++i) {
 				oop_thingy_id tmp = oop_thingy_id(oop_thingy_id::value_base_t(i));
 				func(tmp);
@@ -3415,7 +3228,7 @@ namespace dcon {
 		}  in_oop_thingy ;
 		
 		template <typename T>
-		DCON_RELEASE_INLINE void for_each_dummy_rel_B(T&& func) {
+		DCON_RELEASE_INLINE void for_each_dummy_rel_B(T&& func) const {
 			for(uint32_t i = 0; i < oop_thingy.size_used; ++i) {
 				dummy_rel_B_id tmp = dummy_rel_B_id(dummy_rel_B_id::value_base_t(i));
 				func(tmp);
@@ -3727,12 +3540,14 @@ namespace dcon {
 			if(serialize_selection.thingy_some_value) {
 				dcon::record_header header(sizeof(int32_t) * thingy.size_used, "int32_t", "thingy", "some_value");
 				header.serialize(output_buffer);
+				if(thingy.size_used > 0)
 				std::memcpy(reinterpret_cast<int32_t*>(output_buffer), thingy.m_some_value.vptr(), sizeof(int32_t) * thingy.size_used);
 				output_buffer += sizeof(int32_t) * thingy.size_used;
 			}
 			if(serialize_selection.thingy_bf_value) {
 				dcon::record_header header((thingy.size_used + 7) / 8, "bitfield", "thingy", "bf_value");
 				header.serialize(output_buffer);
+				if(thingy.size_used > 0)
 				std::memcpy(reinterpret_cast<dcon::bitfield_type*>(output_buffer), thingy.m_bf_value.vptr(), (thingy.size_used + 7) / 8);
 				output_buffer += (thingy.size_used + 7) / 8;
 			}
@@ -3754,12 +3569,14 @@ namespace dcon {
 				total_size += 8;
 				dcon::record_header header(total_size, "stable_mk_2_tag", "thingy", "pooled_v");
 				header.serialize(output_buffer);
+				if(8 > 0)
 				std::memcpy(reinterpret_cast<char*>(output_buffer), "int16_t", 8);
 				output_buffer += 8;
 				std::for_each(thingy.m_pooled_v.vptr(), thingy.m_pooled_v.vptr() + thingy.size_used, [t = this, &output_buffer](dcon::stable_mk_2_tag obj) {
 					auto rng = dcon::get_range(t->thingy.pooled_v_storage, obj);
 					*(reinterpret_cast<uint16_t*>(output_buffer)) = uint16_t(rng.second - rng.first);
 					output_buffer += sizeof(uint16_t);
+					if((rng.second - rng.first) > 0)
 					std::memcpy(reinterpret_cast<int16_t*>(output_buffer), rng.first, sizeof(int16_t) * (rng.second - rng.first));
 					output_buffer += sizeof(int16_t) * (rng.second - rng.first);
 				} );
@@ -3767,11 +3584,13 @@ namespace dcon {
 			if(serialize_selection.thingy_big_array) {
 				dcon::record_header header(6 + sizeof(uint16_t) + sizeof(float) * thingy.m_big_array.size * thingy.size_used, "$array", "thingy", "big_array");
 				header.serialize(output_buffer);
+				if(6 > 0)
 				std::memcpy(reinterpret_cast<char*>(output_buffer), "float", 6);
 				output_buffer += 6;
 				*(reinterpret_cast<uint16_t*>(output_buffer)) = uint16_t(thingy.m_big_array.size);
 				output_buffer += sizeof(uint16_t);
 				for(int32_t s = 0; s < int32_t(thingy.m_big_array.size); ++s) {
+					if(thingy.size_used > 0)
 					std::memcpy(reinterpret_cast<float*>(output_buffer), thingy.m_big_array.vptr(s), sizeof(float) * thingy.size_used);
 					output_buffer +=  sizeof(float) * thingy.size_used;
 				}
@@ -3779,11 +3598,13 @@ namespace dcon {
 			if(serialize_selection.thingy_big_array_alt) {
 				dcon::record_header header(6 + sizeof(uint16_t) + sizeof(float) * thingy.m_big_array_alt.size * thingy.size_used, "$array", "thingy", "big_array_alt");
 				header.serialize(output_buffer);
+				if(6 > 0)
 				std::memcpy(reinterpret_cast<char*>(output_buffer), "float", 6);
 				output_buffer += 6;
 				*(reinterpret_cast<uint16_t*>(output_buffer)) = uint16_t(thingy.m_big_array_alt.size);
 				output_buffer += sizeof(uint16_t);
 				for(int32_t s = 0; s < int32_t(thingy.m_big_array_alt.size); ++s) {
+					if(thingy.size_used > 0)
 					std::memcpy(reinterpret_cast<float*>(output_buffer), thingy.m_big_array_alt.vptr(s), sizeof(float) * thingy.size_used);
 					output_buffer +=  sizeof(float) * thingy.size_used;
 				}
@@ -3791,11 +3612,13 @@ namespace dcon {
 			if(serialize_selection.thingy_big_array_bf) {
 				dcon::record_header header(9 + sizeof(uint16_t) + thingy.m_big_array_bf.size * ((thingy.size_used + 7) / 8), "$array", "thingy", "big_array_bf");
 				header.serialize(output_buffer);
+				if(9 > 0)
 				std::memcpy(reinterpret_cast<char*>(output_buffer), "bitfield", 9);
 				output_buffer += 9;
 				*(reinterpret_cast<uint16_t*>(output_buffer)) = uint16_t(thingy.m_big_array_bf.size);
 				output_buffer += sizeof(uint16_t);
 				for(int32_t s = 0; s < int32_t(thingy.m_big_array_bf.size); ++s) {
+					if(thingy.size_used > 0)
 					std::memcpy(reinterpret_cast<dcon::bitfield_type*>(output_buffer), thingy.m_big_array_bf.vptr(s), (thingy.size_used + 7) / 8);
 					output_buffer += (thingy.size_used + 7) / 8;
 				}
@@ -3809,12 +3632,14 @@ namespace dcon {
 			if(serialize_selection.thingy2_some_value) {
 				dcon::record_header header(sizeof(int32_t) * thingy2.size_used, "int32_t", "thingy2", "some_value");
 				header.serialize(output_buffer);
+				if(thingy2.size_used > 0)
 				std::memcpy(reinterpret_cast<int32_t*>(output_buffer), thingy2.m_some_value.vptr(), sizeof(int32_t) * thingy2.size_used);
 				output_buffer += sizeof(int32_t) * thingy2.size_used;
 			}
 			if(serialize_selection.thingy2_bf_value) {
 				dcon::record_header header((thingy2.size_used + 7) / 8, "bitfield", "thingy2", "bf_value");
 				header.serialize(output_buffer);
+				if(thingy2.size_used > 0)
 				std::memcpy(reinterpret_cast<dcon::bitfield_type*>(output_buffer), thingy2.m_bf_value.vptr(), (thingy2.size_used + 7) / 8);
 				output_buffer += (thingy2.size_used + 7) / 8;
 			}
@@ -3836,12 +3661,14 @@ namespace dcon {
 				total_size += 8;
 				dcon::record_header header(total_size, "stable_mk_2_tag", "thingy2", "pooled_v");
 				header.serialize(output_buffer);
+				if(8 > 0)
 				std::memcpy(reinterpret_cast<char*>(output_buffer), "int16_t", 8);
 				output_buffer += 8;
 				std::for_each(thingy2.m_pooled_v.vptr(), thingy2.m_pooled_v.vptr() + thingy2.size_used, [t = this, &output_buffer](dcon::stable_mk_2_tag obj) {
 					auto rng = dcon::get_range(t->thingy2.pooled_v_storage, obj);
 					*(reinterpret_cast<uint16_t*>(output_buffer)) = uint16_t(rng.second - rng.first);
 					output_buffer += sizeof(uint16_t);
+					if((rng.second - rng.first) > 0)
 					std::memcpy(reinterpret_cast<int16_t*>(output_buffer), rng.first, sizeof(int16_t) * (rng.second - rng.first));
 					output_buffer += sizeof(int16_t) * (rng.second - rng.first);
 				} );
@@ -3849,11 +3676,13 @@ namespace dcon {
 			if(serialize_selection.thingy2_big_array) {
 				dcon::record_header header(6 + sizeof(uint16_t) + sizeof(float) * thingy2.m_big_array.size * thingy2.size_used, "$array", "thingy2", "big_array");
 				header.serialize(output_buffer);
+				if(6 > 0)
 				std::memcpy(reinterpret_cast<char*>(output_buffer), "float", 6);
 				output_buffer += 6;
 				*(reinterpret_cast<uint16_t*>(output_buffer)) = uint16_t(thingy2.m_big_array.size);
 				output_buffer += sizeof(uint16_t);
 				for(int32_t s = 0; s < int32_t(thingy2.m_big_array.size); ++s) {
+					if(thingy2.size_used > 0)
 					std::memcpy(reinterpret_cast<float*>(output_buffer), thingy2.m_big_array.vptr(s), sizeof(float) * thingy2.size_used);
 					output_buffer +=  sizeof(float) * thingy2.size_used;
 				}
@@ -3861,11 +3690,13 @@ namespace dcon {
 			if(serialize_selection.thingy2_big_array_bf) {
 				dcon::record_header header(9 + sizeof(uint16_t) + thingy2.m_big_array_bf.size * ((thingy2.size_used + 7) / 8), "$array", "thingy2", "big_array_bf");
 				header.serialize(output_buffer);
+				if(9 > 0)
 				std::memcpy(reinterpret_cast<char*>(output_buffer), "bitfield", 9);
 				output_buffer += 9;
 				*(reinterpret_cast<uint16_t*>(output_buffer)) = uint16_t(thingy2.m_big_array_bf.size);
 				output_buffer += sizeof(uint16_t);
 				for(int32_t s = 0; s < int32_t(thingy2.m_big_array_bf.size); ++s) {
+					if(thingy2.size_used > 0)
 					std::memcpy(reinterpret_cast<dcon::bitfield_type*>(output_buffer), thingy2.m_big_array_bf.vptr(s), (thingy2.size_used + 7) / 8);
 					output_buffer += (thingy2.size_used + 7) / 8;
 				}
@@ -3879,12 +3710,14 @@ namespace dcon {
 			if(serialize_selection.oop_thingy_pstruct) {
 				dcon::record_header header(sizeof(my_struct) * oop_thingy.size_used, "my_struct", "oop_thingy", "pstruct");
 				header.serialize(output_buffer);
+				if(oop_thingy.size_used > 0)
 				std::memcpy(reinterpret_cast<my_struct*>(output_buffer), oop_thingy.m_pstruct.vptr(), sizeof(my_struct) * oop_thingy.size_used);
 				output_buffer += sizeof(my_struct) * oop_thingy.size_used;
 			}
 			if(serialize_selection.oop_thingy_pfloat) {
 				dcon::record_header header(sizeof(float) * oop_thingy.size_used, "float", "oop_thingy", "pfloat");
 				header.serialize(output_buffer);
+				if(oop_thingy.size_used > 0)
 				std::memcpy(reinterpret_cast<float*>(output_buffer), oop_thingy.m_pfloat.vptr(), sizeof(float) * oop_thingy.size_used);
 				output_buffer += sizeof(float) * oop_thingy.size_used;
 			}
@@ -3896,6 +3729,7 @@ namespace dcon {
 				 {
 					dcon::record_header iheader(sizeof(thingy2_id) * thingy.size_used, "uint32_t", "dummy_rel", "right");
 					iheader.serialize(output_buffer);
+					if(thingy.size_used > 0)
 					std::memcpy(reinterpret_cast<thingy2_id*>(output_buffer), dummy_rel.m_right.vptr(), sizeof(thingy2_id) * thingy.size_used);
 					output_buffer += sizeof(thingy2_id) *  thingy.size_used;
 				}
@@ -3910,6 +3744,7 @@ namespace dcon {
 				 {
 					dcon::record_header iheader(sizeof(oop_thingy_id) * oop_thingy.size_used, "uint16_t", "dummy_rel_B", "left");
 					iheader.serialize(output_buffer);
+					if(oop_thingy.size_used > 0)
 					std::memcpy(reinterpret_cast<oop_thingy_id*>(output_buffer), dummy_rel_B.m_left.vptr(), sizeof(oop_thingy_id) * oop_thingy.size_used);
 					output_buffer += sizeof(oop_thingy_id) *  oop_thingy.size_used;
 				}
@@ -3929,6 +3764,7 @@ namespace dcon {
 					}
 					if(header.is_property("some_value") && mask.thingy_some_value) {
 						if(header.is_type("int32_t")) {
+							if(thingy.size_used > 0)
 							std::memcpy(thingy.m_some_value.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(thingy.size_used) * sizeof(int32_t), size_t(header.record_size)));
 							serialize_selection.thingy_some_value = true;
 						}
@@ -3990,6 +3826,7 @@ namespace dcon {
 					}
 					if(header.is_property("bf_value") && mask.thingy_bf_value) {
 						if(header.is_type("bitfield")) {
+							if(thingy.size_used > 0)
 							std::memcpy(thingy.m_bf_value.vptr(), reinterpret_cast<dcon::bitfield_type const*>(input_buffer), std::min(size_t(thingy.size_used + 7) / 8, size_t(header.record_size)));
 							serialize_selection.thingy_bf_value = true;
 						}
@@ -4187,6 +4024,7 @@ namespace dcon {
 									thingy.m_big_array.resize(0, thingy.size_used);
 								}
 								for(int32_t s = 0; s < int32_t(thingy.m_big_array.size) && icpy < input_buffer + header.record_size; ++s) {
+									if(thingy.size_used > 0)
 									std::memcpy(thingy.m_big_array.vptr(s), reinterpret_cast<float const*>(icpy), std::min(sizeof(float) * thingy.size_used, size_t(input_buffer + header.record_size - icpy)));
 									icpy += sizeof(float) * thingy.size_used;
 								}
@@ -4342,6 +4180,7 @@ namespace dcon {
 									thingy.m_big_array_alt.resize(0, thingy.size_used);
 								}
 								for(int32_t s = 0; s < int32_t(thingy.m_big_array_alt.size) && icpy < input_buffer + header.record_size; ++s) {
+									if(thingy.size_used > 0)
 									std::memcpy(thingy.m_big_array_alt.vptr(s), reinterpret_cast<float const*>(icpy), std::min(sizeof(float) * thingy.size_used, size_t(input_buffer + header.record_size - icpy)));
 									icpy += sizeof(float) * thingy.size_used;
 								}
@@ -4497,6 +4336,7 @@ namespace dcon {
 									thingy.m_big_array_bf.resize(0, thingy.size_used);
 								}
 								for(int32_t s = 0; s < int32_t(thingy.m_big_array_bf.size) && icpy < input_buffer + header.record_size; ++s) {
+									if(thingy.size_used > 0)
 									std::memcpy(thingy.m_big_array_bf.vptr(s), reinterpret_cast<dcon::bitfield_type const*>(icpy), std::min(size_t(thingy.size_used + 7) / 8, size_t(input_buffer + header.record_size - icpy)));
 									icpy += (thingy.size_used + 7) / 8;
 								}
@@ -4515,6 +4355,7 @@ namespace dcon {
 					}
 					if(header.is_property("some_value") && mask.thingy2_some_value) {
 						if(header.is_type("int32_t")) {
+							if(thingy2.size_used > 0)
 							std::memcpy(thingy2.m_some_value.vptr(), reinterpret_cast<int32_t const*>(input_buffer), std::min(size_t(thingy2.size_used) * sizeof(int32_t), size_t(header.record_size)));
 							serialize_selection.thingy2_some_value = true;
 						}
@@ -4576,6 +4417,7 @@ namespace dcon {
 					}
 					if(header.is_property("bf_value") && mask.thingy2_bf_value) {
 						if(header.is_type("bitfield")) {
+							if(thingy2.size_used > 0)
 							std::memcpy(thingy2.m_bf_value.vptr(), reinterpret_cast<dcon::bitfield_type const*>(input_buffer), std::min(size_t(thingy2.size_used + 7) / 8, size_t(header.record_size)));
 							serialize_selection.thingy2_bf_value = true;
 						}
@@ -4773,6 +4615,7 @@ namespace dcon {
 									thingy2.m_big_array.resize(0, thingy2.size_used);
 								}
 								for(int32_t s = 0; s < int32_t(thingy2.m_big_array.size) && icpy < input_buffer + header.record_size; ++s) {
+									if(thingy2.size_used > 0)
 									std::memcpy(thingy2.m_big_array.vptr(s), reinterpret_cast<float const*>(icpy), std::min(sizeof(float) * thingy2.size_used, size_t(input_buffer + header.record_size - icpy)));
 									icpy += sizeof(float) * thingy2.size_used;
 								}
@@ -4928,6 +4771,7 @@ namespace dcon {
 									thingy2.m_big_array_bf.resize(0, thingy2.size_used);
 								}
 								for(int32_t s = 0; s < int32_t(thingy2.m_big_array_bf.size) && icpy < input_buffer + header.record_size; ++s) {
+									if(thingy2.size_used > 0)
 									std::memcpy(thingy2.m_big_array_bf.vptr(s), reinterpret_cast<dcon::bitfield_type const*>(icpy), std::min(size_t(thingy2.size_used + 7) / 8, size_t(input_buffer + header.record_size - icpy)));
 									icpy += (thingy2.size_used + 7) / 8;
 								}
@@ -4986,6 +4830,7 @@ namespace dcon {
 					}
 					if(header.is_property("pstruct") && mask.oop_thingy_pstruct) {
 						if(header.is_type("my_struct")) {
+							if(oop_thingy.size_used > 0)
 							std::memcpy(oop_thingy.m_pstruct.vptr(), reinterpret_cast<my_struct const*>(input_buffer), std::min(size_t(oop_thingy.size_used) * sizeof(my_struct), size_t(header.record_size)));
 							serialize_selection.oop_thingy_pstruct = true;
 						}
@@ -4993,6 +4838,7 @@ namespace dcon {
 					}
 					if(header.is_property("pfloat") && mask.oop_thingy_pfloat) {
 						if(header.is_type("float")) {
+							if(oop_thingy.size_used > 0)
 							std::memcpy(oop_thingy.m_pfloat.vptr(), reinterpret_cast<float const*>(input_buffer), std::min(size_t(oop_thingy.size_used) * sizeof(float), size_t(header.record_size)));
 							serialize_selection.oop_thingy_pfloat = true;
 						}
@@ -5595,6 +5441,7 @@ namespace dcon {
 }
 
 #undef DCON_RELEASE_INLINE
+#undef DCON_RESTRICT
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif

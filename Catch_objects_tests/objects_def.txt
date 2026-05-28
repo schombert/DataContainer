@@ -57,6 +57,7 @@ object{
 	}
 }
 
+
 object{
 	name{thingy2}
 	storage_type{compactable}
