@@ -2568,7 +2568,7 @@ basic_builder& make_composite_key_declarations(basic_builder& o, std::string con
 	if(cc.total_bytes > 8) {
 		o + "ankerl::unordered_dense::map<dcon::key_data_extended<@intvalue@>, "
 			"@obj@_id, detail::internal_hash_@intvalue@> hashm_@ccname@;";
-		o + "dcon::key_data_extended<@intvalue@> to_@ccname@_keydata(@params@)" + block{
+		o + "dcon::key_data_extended<@intvalue@> to_@ccname@_keydata(@params@) const" + block{
 			o + "dcon::key_data_extended<@intvalue@> result;";
 			for(auto& k : cc.component_indexes) {
 				if(k.multiplicity == 1) {
