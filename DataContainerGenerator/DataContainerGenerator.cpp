@@ -874,7 +874,7 @@ int main(int argc, char *argv[]) {
 			output += "\t\t}\n";
 			if(!ob.is_expandable) {
 				output += "\t\ttemplate<typename F>\n";
-				output += "\t\tDCON_RELEASE_INLINE void execute_serial_over_" + ob.name + "(F&& functor) {\n";
+				output += "\t\tDCON_RELEASE_INLINE void execute_serial_over_" + ob.name + "(F&& functor) const {\n";
 				if (!ob.primary_key.points_to)
 					output += "\t\t\tve::execute_serial<" + ob.name + "_id>(" + ob.name + ".size_used, functor);\n";
 				else
@@ -882,7 +882,7 @@ int main(int argc, char *argv[]) {
 				output += "\t\t}\n";
 				output += "#ifndef VE_NO_TBB\n";
 				output += "\t\ttemplate<typename F>\n";
-				output += "\t\tDCON_RELEASE_INLINE void execute_parallel_over_" + ob.name + "(F&& functor) {\n";
+				output += "\t\tDCON_RELEASE_INLINE void execute_parallel_over_" + ob.name + "(F&& functor) const {\n";
 				if (!ob.primary_key.points_to)
 					output += "\t\t\tve::execute_parallel_exact<" + ob.name + "_id>(" + ob.name + ".size_used, functor);\n";
 				else
@@ -891,7 +891,7 @@ int main(int argc, char *argv[]) {
 				output += "#endif\n";
 			} else {
 				output += "\t\ttemplate<typename F>\n";
-				output += "\t\tDCON_RELEASE_INLINE void execute_serial_over_" + ob.name + "(F&& functor) {\n";
+				output += "\t\tDCON_RELEASE_INLINE void execute_serial_over_" + ob.name + "(F&& functor) const {\n";
 				if (!ob.primary_key.points_to)
 					output += "\t\t\tve::execute_serial_unaligned<" + ob.name + "_id>(" + ob.name + ".size_used, functor);\n";
 				else
@@ -899,7 +899,7 @@ int main(int argc, char *argv[]) {
 				output += "\t\t}\n";
 				output += "#ifndef VE_NO_TBB\n";
 				output += "\t\ttemplate<typename F>\n";
-				output += "\t\tDCON_RELEASE_INLINE void execute_parallel_over_" + ob.name + "(F&& functor) {\n";
+				output += "\t\tDCON_RELEASE_INLINE void execute_parallel_over_" + ob.name + "(F&& functor) const {\n";
 				if (!ob.primary_key.points_to)
 					output += "\t\t\tve::execute_parallel_unaligned<" + ob.name + "_id>(" + ob.name + ".size_used, functor);\n";
 				else
