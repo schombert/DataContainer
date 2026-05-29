@@ -2705,7 +2705,7 @@ basic_builder& make_composite_key_getter(basic_builder& o, std::string const& ob
 	
 	o + substitute{"obj", obj_name } +substitute{ "ckname", cc.name }+substitute{ "oparams", outer_params }
 		+ substitute{ "iparams", inner_params };
-	o + "@obj@_id get_@obj@_by_@ckname@(@oparams@)" + block{
+	o + "@obj@_id get_@obj@_by_@ckname@(@oparams@) const" + block{
 		for(auto& k : cc.component_indexes) {
 			if(k.multiplicity > 1) {
 				o + substitute{ "prop", k.property_name };
