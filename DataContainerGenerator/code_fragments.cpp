@@ -2615,7 +2615,7 @@ basic_builder& make_composite_key_declarations(basic_builder& o, std::string con
 	} else if(cc.total_bytes > 4) {
 		o + "ankerl::unordered_dense::map<uint64_t, "
 			"@obj@_id, ankerl::unordered_dense::hash<uint64_t>> hashm_@ccname@;";
-		o + "uint64_t to_@ccname@_keydata(@params@)" + block{
+		o + "uint64_t to_@ccname@_keydata(@params@) const" + block{
 			o + "uint64_t result = 0;";
 			for(auto& k : cc.component_indexes) {
 				if(k.multiplicity == 1) {
@@ -2636,7 +2636,7 @@ basic_builder& make_composite_key_declarations(basic_builder& o, std::string con
 	} else if(cc.total_bytes > 2) {
 		o + "ankerl::unordered_dense::map<uint32_t, "
 			"@obj@_id, ankerl::unordered_dense::hash<uint32_t>> hashm_@ccname@;";
-		o + "uint32_t to_@ccname@_keydata(@params@)" + block{
+		o + "uint32_t to_@ccname@_keydata(@params@) const" + block{
 			o + "uint32_t result = 0;";
 			for(auto& k : cc.component_indexes) {
 				if(k.multiplicity == 1) {
@@ -2657,7 +2657,7 @@ basic_builder& make_composite_key_declarations(basic_builder& o, std::string con
 	} else { // case uint16_t
 		o + "ankerl::unordered_dense::map<uint16_t, "
 			"@obj@_id, ankerl::unordered_dense::hash<uint16_t>> hashm_@ccname@;";
-		o + "uint16_t to_@ccname@_keydata(@params@)" + block{
+		o + "uint16_t to_@ccname@_keydata(@params@) const" + block{
 			o + "uint16_t result = 0;";
 			for(auto& k : cc.component_indexes) {
 				if(k.multiplicity == 1) {
