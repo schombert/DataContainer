@@ -32,6 +32,11 @@ namespace concurrency = oneapi::tbb;
 #define RELEASE_INLINE inline
 #endif
 
+#ifdef _MSC_VER 
+#define VE_RESTRICT __restrict
+#else
+#define VE_RESTRICT __restrict__
+#endif
 
 #ifdef __AVX512BW__
 #include "ve_avx512.hpp"
@@ -57,7 +62,7 @@ namespace ve {
 	template<typename T, typename index_type>
 	class vectorizable_buffer {
 	private:
-		T* values = nullptr;
+		T* VE_RESTRICT values = nullptr;
 	public:
 		vectorizable_buffer(uint32_t count) {
 			values = (T*)(::operator new(uint64_t(64) + ((count * sizeof(T) + uint64_t(63)) & ~uint64_t(63)), std::align_val_t{ 64 }));
@@ -76,7 +81,7 @@ namespace ve {
 			return *this;
 		}
 
-		T* vptr() const noexcept { return values + uint64_t(64) / sizeof(T); }
+		RELEASE_INLINE T* vptr() const noexcept { return values + uint64_t(64) / sizeof(T); }
 
 		RELEASE_INLINE T const& get(index_type i) const noexcept { return vptr()[i.index()]; }
 		RELEASE_INLINE T& get(index_type i) noexcept { return vptr()[i.index()]; }
@@ -403,3 +408,4 @@ namespace ve {
 }
 
 #undef RELEASE_INLINE
+#undef VE_RESTRICT

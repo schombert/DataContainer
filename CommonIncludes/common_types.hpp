@@ -36,12 +36,20 @@
 #ifdef NDEBUG 
 #ifdef _MSC_VER 
 #define COM_RELEASE_INLINE __forceinline
+#define COM_RESTRICT __restrict
 #else
 #define COM_RELEASE_INLINE inline __attribute__((always_inline))
+#define COM_RESTRICT __restrict__
 #endif
 #else
 #define COM_RELEASE_INLINE inline
+#ifdef _MSC_VER 
+#define COM_RESTRICT __restrict
+#else
+#define COM_RESTRICT __restrict__
 #endif
+#endif
+
 
 namespace dcon {
 	struct bitfield_type {
@@ -362,7 +370,7 @@ namespace dcon {
 
 	class stable_variable_vector3_backing {
 	public:
-		uint64_t*  allocation = nullptr;
+		uint64_t* allocation = nullptr;
 		uint64_t qword_page_size = 0;
 		std::atomic<uint32_t> first_free = uint32_t(0);
 
@@ -896,3 +904,4 @@ namespace dcon {
 }
 
 #undef COM_RELEASE_INLINE
+#undef COM_RESTRICT
