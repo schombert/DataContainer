@@ -953,7 +953,7 @@ namespace ve {
 	}
 	template<typename T>
 	RELEASE_INLINE vbitfield_type load(partial_contiguous_tags<T> e, dcon::bitfield_type const* source) {
-		return vbitfield_type{ uint8_t((0x00FF >> (8 - e.subcount)) & (
+		return vbitfield_type{ uint8_t((0x0F >> (4 - e.subcount)) & (
 			((source[e.value / uint32_t(8)].v) >> (e.value & 0x07))
 			| ((((e.value & 0x7) > 4) ? (source[1 + e.value / uint32_t(8)].v) : 0) << (8 - (e.value & 0x07))))
 		) };
@@ -1443,7 +1443,7 @@ namespace ve {
 	RELEASE_INLINE void store(partial_contiguous_tags<T> e, dcon::bitfield_type* dest, vbitfield_type values) {
 		{
 			auto old_value = dest[e.value / uint32_t(8)].v;
-			auto mask = (0x0F >> e.subcount) << (e.value & 0x07);
+			auto mask = (0x0F >> (4 - e.subcount)) << (e.value & 0x07);
 			auto adju_value = values.v << (e.value & 0x07);
 			dest[e.value / uint32_t(8)].v = uint8_t((old_value & ~mask) | (adju_value & mask));
 		}
