@@ -1691,7 +1691,7 @@ namespace ve {
 		{
 			if((e.value & 0x07) > 4) {
 				auto old_value = dest[1 + e.value / uint32_t(8)].v;
-				auto mask = (0x0F >> e.subcount) >> (8 - (e.value & 0x07));
+				auto mask = (0x0F >> (4 - e.subcount)) >> (8 - (e.value & 0x07));
 				auto adju_value = values.v >> (8 - (e.value & 0x07));
 				dest[1 + e.value / uint32_t(8)].v = uint8_t((old_value & ~mask) | (adju_value & mask));
 			}
