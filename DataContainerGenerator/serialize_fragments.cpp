@@ -908,7 +908,7 @@ basic_builder& make_deserialize_helper(basic_builder& o, file_def const& parsed_
 
 	for(auto& ob : parsed_file.relationship_objects) {
 		o + "private:";
-		o + "void deserialize_helper_" + ob.name + "(std::byte const*& input_buffer, std::byte const* end, dcon::record_header& header, load_record& serialize_selection, load_record const& mask)" + block{
+		o + ("void deserialize_helper_" + ob.name + "(std::byte const*& input_buffer, std::byte const* end, dcon::record_header& header, load_record& serialize_selection, load_record const& mask)") + block{
 			o + substitute{ "obj", ob.name }
 				+ substitute{ "obj_sz", std::to_string(ob.size) }
 				+ substitute{ "mcon",  std::string(" && mask.") + ob.name }
