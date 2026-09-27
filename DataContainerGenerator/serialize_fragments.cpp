@@ -905,42 +905,48 @@ void deserialize_individual_property_fragment(basic_builder& o, file_def const& 
 }
 
 basic_builder& make_deserialize_helper(basic_builder& o, file_def const& parsed_file) {
+
+	for(auto& ob : parsed_file.relationship_objects) {
+		o + "private:";
+		o + "void deserialize_helper_" + ob.name + "(std::byte const*& input_buffer, std::byte const* end, dcon::record_header& header, load_record& serialize_selection, load_record const& mask)" + block{
+			o + substitute{ "obj", ob.name }
+				+ substitute{ "obj_sz", std::to_string(ob.size) }
+				+ substitute{ "mcon",  std::string(" && mask.") + ob.name }
+				+ substitute{ "pk_obj", ob.primary_key.points_to ? ob.primary_key.points_to->name : ob.name };
+
+			o + "if(header.is_object(\"@obj@\")@mcon@)" + block{ //has matched object
+
+				deserialize_size_fragment(o, ob);
+
+				if(ob.store_type == storage_type::erasable) {
+					deserialize_erasable_index_fragment(o, ob, true, parsed_file.emit_type_conversions);
+				} // end: load index handling for erasable
+
+				for(auto& iob : ob.indexed_objects) {
+					deserialize_individual_link_fragment(o, ob, iob, true, parsed_file.emit_type_conversions);
+				} // end index properties
+
+				if(ob.is_relationship) {
+					deserialize_relationship_end_links_fragment(o, ob, true);
+				}
+
+				for(auto& prop : ob.properties) {
+					deserialize_individual_property_fragment(o, parsed_file, ob, prop, true);
+				} // end loop over object properties
+
+				o + "return;";
+			}; // end "header object == object type" in output
+		}
+	}
+
 	o + "private:";
 	o + "void deserialize_helper(std::byte const*& input_buffer, std::byte const* end, dcon::record_header& header, load_record& serialize_selection, load_record const& mask)" + block{
-
 		// wrap: guarantee enough space to read entire buffer
 		o + "if(input_buffer + header.record_size <= end)" + block{
 			//bool first_header_if = true;
 			for(auto& ob : parsed_file.relationship_objects) {
-				o + substitute{ "obj", ob.name } + substitute{ "obj_sz", std::to_string(ob.size) }
-					+ substitute{ "mcon",  std::string(" && mask.") + ob.name }
-				+ substitute{ "pk_obj", ob.primary_key.points_to ? ob.primary_key.points_to->name : ob.name };
-
-				o + "if(header.is_object(\"@obj@\")@mcon@)" + block{ //has matched object
-
-					deserialize_size_fragment(o, ob);
-
-					if(ob.store_type == storage_type::erasable) {
-						deserialize_erasable_index_fragment(o, ob, true, parsed_file.emit_type_conversions);
-					} // end: load index handling for erasable
-
-					for(auto& iob : ob.indexed_objects) {
-						deserialize_individual_link_fragment(o, ob, iob, true, parsed_file.emit_type_conversions);
-					} // end index properties
-
-					if(ob.is_relationship) {
-						deserialize_relationship_end_links_fragment(o, ob, true);
-					}
-
-					for(auto& prop : ob.properties) {
-						deserialize_individual_property_fragment(o, parsed_file, ob, prop, true);
-					} // end loop over object properties
-
-					o + "return;";
-				}; // end "header object == object type" in output
-
+				o + "deserialize_helper_(input_buffer, end, header, serialize_selection, mask);";
 			} // end loop over object and relation types
-
 	}; // end if ensuring that buffer has enough space to read entire record
 
 	};
