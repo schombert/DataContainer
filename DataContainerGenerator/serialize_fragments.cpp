@@ -936,7 +936,7 @@ basic_builder& make_deserialize_helper(basic_builder& o, file_def const& parsed_
 
 				o + "return;";
 			}; // end "header object == object type" in output
-		}
+		};
 	}
 
 	o + "private:";
@@ -945,7 +945,7 @@ basic_builder& make_deserialize_helper(basic_builder& o, file_def const& parsed_
 		o + "if(input_buffer + header.record_size <= end)" + block{
 			//bool first_header_if = true;
 			for(auto& ob : parsed_file.relationship_objects) {
-				o + "deserialize_helper_(input_buffer, end, header, serialize_selection, mask);";
+				o + ("deserialize_helper_" + ob.name + "(input_buffer, end, header, serialize_selection, mask);");
 			} // end loop over object and relation types
 	}; // end if ensuring that buffer has enough space to read entire record
 
