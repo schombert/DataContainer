@@ -108,8 +108,22 @@ int main(int argc, char *argv[]) {
 
 
 
-		std::string file_contents((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
-
+		std::string original_contents((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
+		std::string file_contents{};
+		bool in_comment = false;
+		for (size_t i = 0; i < original_contents.size(); ++i) {
+			if (original_contents[i] == '\n' || original_contents[i] == '\r') {
+				in_comment = false;
+			} else if (original_contents[i] == '#') {
+				in_comment = true;
+			} else if (i + 1 < original_contents.size() && original_contents[i + 0] == '/' && original_contents[i + 1] == '/') {
+				in_comment = true;
+			} else if (in_comment) {
+				// ignore
+			} else {
+				file_contents += original_contents[i];
+			}
+		}
 		file_def parsed_file = parse_file(file_contents.c_str(), file_contents.c_str() + file_contents.length(), err);
 
 		input_file.close();
