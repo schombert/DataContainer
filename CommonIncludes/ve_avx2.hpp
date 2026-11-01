@@ -754,6 +754,25 @@ namespace ve {
 		return _mm256_cvtps_epi32(v);
 	}
 
+	// raw bit reinterpretation, truncating conversion (independent of the rounding mode) and logical shifts
+	RELEASE_INLINE int_vector bit_cast_to_int(fp_vector v) {
+		return _mm256_castps_si256(v.value);
+	}
+	RELEASE_INLINE fp_vector bit_cast_to_float(int_vector v) {
+		return _mm256_castsi256_ps(v.value);
+	}
+	RELEASE_INLINE int_vector truncate_to_int(fp_vector v) {
+		return _mm256_cvttps_epi32(v.value);
+	}
+	template<int32_t bits>
+	RELEASE_INLINE int_vector shift_left(int_vector v) {
+		return _mm256_slli_epi32(v.value, bits);
+	}
+	template<int32_t bits>
+	RELEASE_INLINE int_vector shift_right_logical(int_vector v) {
+		return _mm256_srli_epi32(v.value, bits);
+	}
+
 	RELEASE_INLINE fp_vector operator+(fp_vector a, fp_vector b) {
 		return _mm256_add_ps(a, b);
 	}

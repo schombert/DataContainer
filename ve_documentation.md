@@ -202,6 +202,26 @@ int_vector * int_vector
 - `ve::negate_multiply_and_add(fp_vector a, fp_vector b, fp_vector c)` yields a `ve::fp_vector` containing the result of `-(a * b) + c`. This will be implemented using a single instruction where possible.
 - `ve::negate_multiply_and_subtract(fp_vector a, fp_vector b, fp_vector c)` yields a `ve::fp_vector` containing the result of `-(a * b) - c`. This will be implemented using a single instruction where possible.
 
+### Elementary and special functions
+
+All of these take and return `ve::fp_vector`, and are implemented in `ve.hpp` as plain vector code, without calling the C library and without per-lane fallbacks. Accuracy is typically 1 to 4 units in the last place (at worst around 6).
+
+- Trigonometry: `ve::sin`, `ve::cos`, `ve::tan`, `ve::asin`, `ve::acos`, `ve::atan`, `ve::atan2(y, x)`
+- Trigonometry in degrees: `ve::sind`, `ve::cosd`, `ve::tand`, `ve::asind`, `ve::acosd`, `ve::atand`, `ve::atan2d(y, x)`
+- `ve::sincos(x)` and `ve::sincos_pi2(x)` yield a `ve::sincos_result` with the members `sine` and `cosine`, computed together
+- `ve::sin_pi2`, `ve::cos_pi2`, `ve::tan_pi2` and `ve::sincos_pi2` accept only `[-pi/2, pi/2]`. They skip range reduction, which makes them faster when the range is known
+- Hyperbolic: `ve::sinh`, `ve::cosh`, `ve::tanh`, `ve::asinh`, `ve::acosh`, `ve::atanh`
+- Exponentials: `ve::exp`, `ve::exp2`, `ve::exp10`, `ve::expm1`, `ve::pow(x, y)`
+- Logarithms: `ve::log`, `ve::log2`, `ve::log10`, `ve::log1p`, `ve::logb` (the exponent as a floating point value)
+- Roots and lengths: `ve::cbrt`, `ve::invcbrt`, `ve::hypot(x, y)`
+- Error function and normal distribution: `ve::erf`, `ve::erfc`, `ve::erfinv`, `ve::erfcinv`, `ve::cdfnorm`, `ve::cdfnorminv`
+
+**Results are not portable.** Fused multiply-add is used wherever the backend has it (see `ve::multiply_and_add`), so results may differ between backends. Different compilers and floating point flags may also produce different results for these functions on the same backend; this is expected. Within one build of one backend the same input is meant to give the same output in every lane. That assumes the default floating point environment (round to nearest, denormals enabled) and a build without `-ffast-math` or similar reassociation.
+
+**Invalid inputs are the caller's responsibility.** NaN, infinities, poles (such as `ve::log(0.0f)` or `ve::tand(90.0f)`), values outside the domain of a function (such as `ve::asin(2.0f)`), and magnitudes above 6000 for `sin`, `cos`, `tan` and `sincos` or above 2^23 for `sind`, `cosd` and `tand` are asserted in debug builds and assumed not to occur in release builds, where the result is unspecified. This applies to every lane, so in debug builds a lane that is about to be discarded, or the padding of a partial vector, still has to be a valid input.
+
+- `ve::clamp(value, low, high)` yields `value` limited to `[low, high]`, for both `ve::fp_vector` and `ve::int_vector`
+
 ### Conversions
 
 - `ve::to_float(int_vector)` yields a `ve::fp_vector` containing the values stored in the `ve::int_vector` (for sufficiently large integer values some of the low bits may be lost by this conversion)

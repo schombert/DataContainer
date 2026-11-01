@@ -2168,3 +2168,271 @@ TEST_CASE("id variations", "[ve_tests]") {
 }
 
 #undef RELEASE_INLINE
+
+namespace ve_math_tests {
+	using unary_fn = ve::fp_vector(*)(ve::fp_vector);
+
+	// each function with a range of valid inputs
+	struct unary_entry {
+		char const* name;
+		unary_fn function;
+		float low;
+		float high;
+	};
+
+#define VE_UNARY(name, low, high) unary_entry{ #name, [](ve::fp_vector x) { return ve::name(x); }, low, high }
+
+	unary_entry const unary_functions[] = {
+		VE_UNARY(sin, -6000.0f, 6000.0f), VE_UNARY(cos, -6000.0f, 6000.0f), VE_UNARY(tan, -6000.0f, 6000.0f),
+		VE_UNARY(sin_pi2, -1.5707963f, 1.5707963f), VE_UNARY(cos_pi2, -1.5707963f, 1.5707963f), VE_UNARY(tan_pi2, -1.5707f, 1.5707f),
+		VE_UNARY(sind, -8.0e6f, 8.0e6f), VE_UNARY(cosd, -8.0e6f, 8.0e6f), VE_UNARY(tand, -89.5f, 89.5f),
+		VE_UNARY(asin, -1.0f, 1.0f), VE_UNARY(acos, -1.0f, 1.0f), VE_UNARY(atan, -3.0e38f, 3.0e38f),
+		VE_UNARY(asind, -1.0f, 1.0f), VE_UNARY(acosd, -1.0f, 1.0f), VE_UNARY(atand, -3.0e38f, 3.0e38f),
+		VE_UNARY(sinh, -100.0f, 100.0f), VE_UNARY(cosh, -100.0f, 100.0f), VE_UNARY(tanh, -100.0f, 100.0f),
+		VE_UNARY(asinh, -3.0e38f, 3.0e38f), VE_UNARY(acosh, 1.0f, 3.0e38f), VE_UNARY(atanh, -0.999f, 0.999f),
+		VE_UNARY(exp, -200.0f, 200.0f), VE_UNARY(exp2, -200.0f, 200.0f), VE_UNARY(exp10, -60.0f, 60.0f), VE_UNARY(expm1, -200.0f, 200.0f),
+		VE_UNARY(log, 1.0e-42f, 3.0e38f), VE_UNARY(log2, 1.0e-42f, 3.0e38f), VE_UNARY(log10, 1.0e-42f, 3.0e38f),
+		VE_UNARY(log1p, -0.999f, 3.0e38f), VE_UNARY(logb, 1.0e-42f, 3.0e38f),
+		VE_UNARY(cbrt, -3.0e38f, 3.0e38f), VE_UNARY(invcbrt, 1.0e-42f, 3.0e38f),
+		VE_UNARY(erf, -100.0f, 100.0f), VE_UNARY(erfc, -100.0f, 100.0f), VE_UNARY(cdfnorm, -100.0f, 100.0f),
+		VE_UNARY(erfinv, -0.999999f, 0.999999f), VE_UNARY(erfcinv, 1.0e-40f, 1.999999f), VE_UNARY(cdfnorminv, 1.0e-40f, 0.999999f),
+	};
+
+#undef VE_UNARY
+
+	inline uint32_t float_bits(float f) {
+		uint32_t u;
+		std::memcpy(&u, &f, sizeof(float));
+		return u;
+	}
+	inline bool same_bits(float a, float b) {
+		return float_bits(a) == float_bits(b);
+	}
+	inline float sample_at(unary_entry const& entry, int32_t i, int32_t count) {
+		double const t = double(i) / double(count - 1);
+		double const low = entry.low;
+		double const high = entry.high;
+		// half of the samples are bunched towards the middle, for ranges that span many orders of magnitude
+		double const shaped = t * t * t * t * t * t * t;
+		double const middle = 0.5 * low + 0.5 * high;
+		return float(i % 2 == 0 ? low + (high - low) * t : middle + (high - middle) * shaped);
+	}
+
+	// a value in lane i must not depend on the other lanes, nor on i, nor on how the call was optimized
+	inline void check_lanes(unary_entry const& entry) {
+		constexpr int32_t count = 257;
+		float const fillers[] = { entry.low, entry.high };
+		for(int32_t s = 0; s < count; ++s) {
+			float const sample = sample_at(entry, s, count);
+			float const reference = entry.function(ve::fp_vector(sample))[0];
+			for(float filler : fillers) {
+				for(int32_t lane = 0; lane < ve::vector_size; ++lane) {
+					ve::fp_vector x(filler);
+					x.set(lane, sample);
+					REQUIRE(same_bits(entry.function(x)[lane], reference));
+				}
+			}
+		}
+	}
+
+	template<typename F, typename G>
+	void check_close(F&& f, G&& reference, float low, float high, double tolerance) {
+		constexpr int32_t steps = 4096;
+		for(int32_t step = 0; step <= steps; step += ve::vector_size) {
+			ve::fp_vector x;
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				x.set(i, low + (high - low) * (float(step + i) / float(steps + ve::vector_size)));
+			}
+			ve::fp_vector const r = f(x);
+			for(int32_t i = 0; i < ve::vector_size; ++i) {
+				double const expected = reference(double(x[i]));
+				REQUIRE(std::abs(double(r[i]) - expected) <= tolerance * std::max(std::abs(expected), 1.0e-30));
+			}
+		}
+	}
+}
+
+TEST_CASE("ve math: same input gives the same output in every lane", "[ve_math]") {
+	for(auto const& entry : ve_math_tests::unary_functions) {
+		INFO(entry.name);
+		ve_math_tests::check_lanes(entry);
+	}
+	for(float y : { -3.0f, -0.5f, 0.5f, 2.0f }) {
+		for(float x : { 0.25f, 1.5f, 40.0f }) {
+			for(int32_t lane = 0; lane < ve::vector_size; ++lane) {
+				ve::fp_vector a(1.0e30f);
+				ve::fp_vector b(1.0f);
+				a.set(lane, x);
+				b.set(lane, y);
+				REQUIRE(ve_math_tests::same_bits(ve::pow(a, b)[lane], ve::pow(ve::fp_vector(x), ve::fp_vector(y))[0]));
+				REQUIRE(ve_math_tests::same_bits(ve::atan2(b, a)[lane], ve::atan2(ve::fp_vector(y), ve::fp_vector(x))[0]));
+				REQUIRE(ve_math_tests::same_bits(ve::hypot(a, b)[lane], ve::hypot(ve::fp_vector(x), ve::fp_vector(y))[0]));
+			}
+		}
+	}
+}
+
+TEST_CASE("ve math: accuracy against the C library", "[ve_math]") {
+	using namespace ve_math_tests;
+	constexpr double pi = 3.14159265358979323846;
+	constexpr double tolerance = 8.0e-7;
+#define VE_CHECK(name, low, high, reference) \
+	check_close([](ve::fp_vector x) { return ve::name(x); }, reference, low, high, tolerance);
+
+	VE_CHECK(sin, -20.0f, 20.0f, [](double x) { return std::sin(x); })
+	VE_CHECK(cos, -20.0f, 20.0f, [](double x) { return std::cos(x); })
+	VE_CHECK(tan, -1.5f, 1.5f, [](double x) { return std::tan(x); })
+	VE_CHECK(sin_pi2, -1.5707f, 1.5707f, [](double x) { return std::sin(x); })
+	VE_CHECK(cos_pi2, -1.5707f, 1.5707f, [](double x) { return std::cos(x); })
+	VE_CHECK(tan_pi2, -1.5707f, 1.5707f, [](double x) { return std::tan(x); })
+	VE_CHECK(sind, -719.9f, 719.9f, [=](double x) { return std::sin(x * pi / 180.0); })
+	VE_CHECK(cosd, -719.9f, 719.9f, [=](double x) { return std::cos(x * pi / 180.0); })
+	VE_CHECK(tand, -80.0f, 80.0f, [=](double x) { return std::tan(x * pi / 180.0); })
+	VE_CHECK(asin, -1.0f, 1.0f, [](double x) { return std::asin(x); })
+	VE_CHECK(acos, -1.0f, 1.0f, [](double x) { return std::acos(x); })
+	VE_CHECK(atan, -30.0f, 30.0f, [](double x) { return std::atan(x); })
+	VE_CHECK(asind, -1.0f, 1.0f, [=](double x) { return std::asin(x) * 180.0 / pi; })
+	VE_CHECK(acosd, -1.0f, 1.0f, [=](double x) { return std::acos(x) * 180.0 / pi; })
+	VE_CHECK(atand, -30.0f, 30.0f, [=](double x) { return std::atan(x) * 180.0 / pi; })
+	VE_CHECK(sinh, -20.0f, 20.0f, [](double x) { return std::sinh(x); })
+	VE_CHECK(cosh, -20.0f, 20.0f, [](double x) { return std::cosh(x); })
+	VE_CHECK(tanh, -6.0f, 6.0f, [](double x) { return std::tanh(x); })
+	VE_CHECK(asinh, -500.0f, 500.0f, [](double x) { return std::asinh(x); })
+	VE_CHECK(acosh, 1.0f, 500.0f, [](double x) { return std::acosh(x); })
+	VE_CHECK(atanh, -0.99f, 0.99f, [](double x) { return std::atanh(x); })
+	VE_CHECK(exp, -30.0f, 30.0f, [](double x) { return std::exp(x); })
+	VE_CHECK(exp2, -30.0f, 30.0f, [](double x) { return std::exp2(x); })
+	VE_CHECK(exp10, -15.0f, 15.0f, [](double x) { return std::pow(10.0, x); })
+	VE_CHECK(expm1, -3.0f, 8.0f, [](double x) { return std::expm1(x); })
+	VE_CHECK(log, 1.0e-3f, 1000.0f, [](double x) { return std::log(x); })
+	VE_CHECK(log2, 1.0e-3f, 1000.0f, [](double x) { return std::log2(x); })
+	VE_CHECK(log10, 1.0e-3f, 1000.0f, [](double x) { return std::log10(x); })
+	VE_CHECK(log1p, -0.9f, 100.0f, [](double x) { return std::log1p(x); })
+	VE_CHECK(cbrt, -1000.0f, 1000.0f, [](double x) { return std::cbrt(x); })
+	VE_CHECK(invcbrt, 0.01f, 1000.0f, [](double x) { return 1.0 / std::cbrt(x); })
+	VE_CHECK(erf, -4.0f, 4.0f, [](double x) { return std::erf(x); })
+	VE_CHECK(erfc, -4.0f, 8.0f, [](double x) { return std::erfc(x); })
+	VE_CHECK(cdfnorm, -10.0f, 6.0f, [](double x) { return 0.5 * std::erfc(-x / std::sqrt(2.0)); })
+#undef VE_CHECK
+
+	// inverses are checked by going around: erf(erfinv(x)) etc. in double precision
+	for(float x = -0.999f; x < 0.999f; x += 0.0013f) {
+		REQUIRE(std::erf(double(ve::erfinv(ve::fp_vector(x))[0])) == Approx(double(x)).epsilon(2.0e-6).margin(1.0e-6));
+		REQUIRE(std::erfc(double(ve::erfcinv(ve::fp_vector(x + 1.0f))[0])) == Approx(double(x + 1.0f)).epsilon(2.0e-6).margin(1.0e-6));
+		float const p = 0.5f * (x + 1.0f);
+		REQUIRE(0.5 * std::erfc(-double(ve::cdfnorminv(ve::fp_vector(p))[0]) / std::sqrt(2.0)) == Approx(double(p)).epsilon(2.0e-6).margin(1.0e-6));
+	}
+	for(float x = -9.0f; x < 9.0f; x += 0.037f) {
+		for(float y = -9.0f; y < 9.0f; y += 0.41f) {
+			REQUIRE(double(ve::atan2(ve::fp_vector(y), ve::fp_vector(x))[0]) == Approx(std::atan2(double(y), double(x))).epsilon(1.0e-6));
+			REQUIRE(double(ve::atan2d(ve::fp_vector(y), ve::fp_vector(x))[0]) == Approx(std::atan2(double(y), double(x)) * 180.0 / pi).epsilon(1.0e-6));
+			REQUIRE(double(ve::hypot(ve::fp_vector(y), ve::fp_vector(x))[0]) == Approx(std::hypot(double(y), double(x))).epsilon(1.0e-6));
+			if(x > 0.0f) {
+				REQUIRE(double(ve::pow(ve::fp_vector(x), ve::fp_vector(y))[0]) == Approx(std::pow(double(x), double(y))).epsilon(1.0e-6));
+			}
+		}
+	}
+	// the far end of the supported ranges
+	for(float x : { 1000.5f, -2345.75f, 5999.0f, 6000.0f, -6000.0f }) {
+		REQUIRE(double(ve::sin(ve::fp_vector(x))[0]) == Approx(std::sin(double(x))).epsilon(1.0e-6).margin(1.0e-7));
+		REQUIRE(double(ve::cos(ve::fp_vector(x))[0]) == Approx(std::cos(double(x))).epsilon(1.0e-6).margin(1.0e-7));
+	}
+	for(float x : { 123456.5f, -7654321.0f, 8388607.0f }) {
+		REQUIRE(double(ve::sind(ve::fp_vector(x))[0]) == Approx(std::sin(std::fmod(double(x), 360.0) * pi / 180.0)).epsilon(1.0e-6).margin(1.0e-7));
+		REQUIRE(double(ve::cosd(ve::fp_vector(x))[0]) == Approx(std::cos(std::fmod(double(x), 360.0) * pi / 180.0)).epsilon(1.0e-6).margin(1.0e-7));
+	}
+}
+
+TEST_CASE("ve math: edge values of the valid domains", "[ve_math]") {
+	using namespace ve_math_tests;
+	float const inf = std::numeric_limits<float>::infinity();
+	auto const v = [](float f) { return ve::fp_vector(f); };
+
+	REQUIRE(same_bits(ve::sin(v(-0.0f))[0], -0.0f));
+	REQUIRE(same_bits(ve::sin_pi2(v(-0.0f))[0], -0.0f));
+	REQUIRE(ve::cos(v(0.0f))[0] == 1.0f);
+	REQUIRE(ve::sind(v(180.0f))[0] == 0.0f);
+	REQUIRE(ve::sind(v(90.0f))[0] == 1.0f);
+	REQUIRE(ve::cosd(v(90.0f))[0] == 0.0f);
+	REQUIRE(ve::cosd(v(360.0f))[0] == 1.0f);
+	REQUIRE(ve::acos(v(1.0f))[0] == 0.0f);
+	REQUIRE(ve::exp(v(0.0f))[0] == 1.0f);
+	REQUIRE(ve::exp(v(100.0f))[0] == inf);
+	REQUIRE(ve::exp(v(-120.0f))[0] == 0.0f);
+	REQUIRE(ve::exp2(v(10.0f))[0] == 1024.0f);
+	REQUIRE(ve::exp2(v(-149.0f))[0] == 0x1.0p-149f);
+	REQUIRE(ve::log(v(1.0f))[0] == 0.0f);
+	REQUIRE(ve::log2(v(1024.0f))[0] == 10.0f);
+	REQUIRE(ve::log2(v(0x1.0p-149f))[0] == -149.0f);
+	REQUIRE(same_bits(ve::log1p(v(-0.0f))[0], -0.0f));
+	REQUIRE(ve::logb(v(1024.5f))[0] == 10.0f);
+	REQUIRE(ve::logb(v(-0.75f))[0] == -1.0f);
+	REQUIRE(ve::logb(v(0x1.0p-149f))[0] == -149.0f);
+	REQUIRE(ve::acosh(v(1.0f))[0] == 0.0f);
+	REQUIRE(ve::cbrt(v(27.0f))[0] == Approx(3.0f));
+	REQUIRE(ve::cbrt(v(-8.0f))[0] == Approx(-2.0f));
+	REQUIRE(same_bits(ve::cbrt(v(-0.0f))[0], -0.0f));
+	REQUIRE(ve::tanh(v(100.0f))[0] == 1.0f);
+	REQUIRE(ve::erf(v(100.0f))[0] == 1.0f);
+	REQUIRE(ve::erfc(v(100.0f))[0] == 0.0f);
+	REQUIRE(ve::erfc(v(-100.0f))[0] == 2.0f);
+	REQUIRE(ve::erfcinv(v(1.0f))[0] == 0.0f);
+	REQUIRE(ve::cdfnorm(v(0.0f))[0] == 0.5f);
+	REQUIRE(ve::cdfnorm(v(100.0f))[0] == 1.0f);
+	REQUIRE(ve::cdfnorm(v(-100.0f))[0] == 0.0f);
+
+	REQUIRE(ve::hypot(v(3.0f), v(4.0f))[0] == 5.0f);
+	REQUIRE(ve::hypot(v(0.0f), v(0.0f))[0] == 0.0f);
+	REQUIRE(ve::hypot(v(1.0e30f), v(1.0e30f))[0] == Approx(1.4142135e30f));
+	REQUIRE(ve::hypot(v(1.0e-40f), v(0.0f))[0] == 1.0e-40f);
+
+	REQUIRE(same_bits(ve::atan2(v(0.0f), v(1.0f))[0], 0.0f));
+	REQUIRE(same_bits(ve::atan2(v(-0.0f), v(1.0f))[0], -0.0f));
+	REQUIRE(ve::atan2(v(0.0f), v(-1.0f))[0] == Approx(3.14159265f));
+	REQUIRE(ve::atan2(v(-0.0f), v(-1.0f))[0] == Approx(-3.14159265f));
+	REQUIRE(ve::atan2(v(1.0f), v(0.0f))[0] == Approx(1.57079633f));
+	REQUIRE(ve::atan2(v(-1.0f), v(0.0f))[0] == Approx(-1.57079633f));
+	REQUIRE(ve::atan2d(v(1.0f), v(1.0f))[0] == Approx(45.0f));
+
+	REQUIRE(ve::pow(v(2.0f), v(10.0f))[0] == 1024.0f);
+	REQUIRE(ve::pow(v(-2.0f), v(3.0f))[0] == -8.0f);
+	REQUIRE(ve::pow(v(-2.0f), v(2.0f))[0] == 4.0f);
+	REQUIRE(ve::pow(v(0.0f), v(0.0f))[0] == 1.0f);
+	REQUIRE(ve::pow(v(1.0f), v(1.0e30f))[0] == 1.0f);
+	REQUIRE(ve::pow(v(0.0f), v(2.0f))[0] == 0.0f);
+	REQUIRE(ve::pow(v(2.0f), v(500.0f))[0] == inf);
+	REQUIRE(ve::pow(v(2.0f), v(-500.0f))[0] == 0.0f);
+	REQUIRE(ve::pow(v(0.5f), v(1.0e30f))[0] == 0.0f);
+	REQUIRE(ve::pow(v(0.5f), v(-1.0e30f))[0] == inf);
+}
+
+TEST_CASE("ve math: sincos matches sin and cos", "[ve_math]") {
+	using namespace ve_math_tests;
+	for(float x = -40.0f; x < 40.0f; x += 0.173f) {
+		auto const both = ve::sincos(ve::fp_vector(x));
+		REQUIRE(same_bits(both.sine[0], ve::sin(ve::fp_vector(x))[0]));
+		REQUIRE(same_bits(both.cosine[0], ve::cos(ve::fp_vector(x))[0]));
+	}
+	for(float x = -1.57f; x < 1.57f; x += 0.0173f) {
+		auto const both = ve::sincos_pi2(ve::fp_vector(x));
+		REQUIRE(same_bits(both.sine[0], ve::sin_pi2(ve::fp_vector(x))[0]));
+		REQUIRE(same_bits(both.cosine[0], ve::cos_pi2(ve::fp_vector(x))[0]));
+	}
+}
+
+TEST_CASE("ve::clamp", "[ve_math]") {
+	ve::fp_vector const f = ve::clamp(ve::fp_vector(5.0f), ve::fp_vector(-1.0f), ve::fp_vector(2.0f));
+	ve::fp_vector const g = ve::clamp(ve::fp_vector(-5.0f), ve::fp_vector(-1.0f), ve::fp_vector(2.0f));
+	ve::fp_vector const h = ve::clamp(ve::fp_vector(0.5f), ve::fp_vector(-1.0f), ve::fp_vector(2.0f));
+	ve::int_vector const i = ve::clamp(ve::int_vector(5), ve::int_vector(-1), ve::int_vector(2));
+	ve::int_vector const j = ve::clamp(ve::int_vector(-5), ve::int_vector(-1), ve::int_vector(2));
+	ve::int_vector const k = ve::clamp(ve::int_vector(1), ve::int_vector(-1), ve::int_vector(2));
+	for(int32_t l = 0; l < ve::vector_size; ++l) {
+		REQUIRE(f[l] == 2.0f);
+		REQUIRE(g[l] == -1.0f);
+		REQUIRE(h[l] == 0.5f);
+		REQUIRE(i[l] == 2);
+		REQUIRE(j[l] == -1);
+		REQUIRE(k[l] == 1);
+	}
+}
